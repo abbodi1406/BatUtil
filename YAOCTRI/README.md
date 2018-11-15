@@ -84,7 +84,7 @@ system is KMS activated with external online KMS server, or installed SppExtComO
 
 - on Windows 7:
 SppExtComObjPatcher is installed, or external online KMS server is added manually to OSPP registry
-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform
+`HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform`
 
 * C2R_Config ini files are system-specific (architecture and Windows version level):
 
@@ -98,8 +98,9 @@ while it is possible to install Office C2R on top of already installed C2R, it i
 
 * If you want to update Office manually, you may disable Updates option
 
-and after installation, you can execute this in command prompt as administrator to update Office:
-"%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeC2RClient.exe" /update user updatepromptuser=True displaylevel=True
+and after installation, you can execute this in command prompt as administrator to update Office
+
+`"%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeC2RClient.exe" /update user updatepromptuser=True displaylevel=True`
 
 ## Special Thanks
 
