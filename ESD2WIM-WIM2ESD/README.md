@@ -20,20 +20,31 @@
 - Run convert.cmd and you will be prompted to enter the file path
 
 - Open command prompt in the script folder, and execute: convert FileNameAndPath
+
 this method allow you to use ESD/WIM file from any location.
+
 examples:
-convert install.wim
-convert "C:\Win8.1 ISO\sources\install.esd"
-convert C:\RecoveryImage\install.esd
+
+`convert install.wim`
+
+`convert "C:\Win8.1 ISO\sources\install.esd"`
+
+`convert C:\RecoveryImage\install.esd`
 
 * You will have these options (varies depending on the number of indexes):
+
 0 - Quit
+
 1 - Export single index
+
 2 - Export all indexes
+
 3 - Export consecutive range of indexes
+
 4 - Export randomly selected indexes
 
 this option will be available only with administrator privileges:
+
 5 - Apply single index to another drive
 
 ## Notes:

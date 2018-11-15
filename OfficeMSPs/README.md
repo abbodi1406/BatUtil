@@ -19,7 +19,9 @@
 After the process is completed, manually delete msp files that have newer similar files (based on timestamps)
 
 example:
+
 z_word2010-kb2965313-x86.msp <- delete
+
 z_word2010-kb3128034-x86.msp <- keep
 
 ## Credits:

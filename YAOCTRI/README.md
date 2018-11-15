@@ -27,6 +27,7 @@
 - For each menu, press the corresponding number or letter beside an option to change its state or proceed
 
 - To exit at any menu press X, to return to previous menu press 9
+
 (Version/Arch/Lang/Type menus have no return option, only proceed or exit)
 
 - At first, enter the path for Office offline source
@@ -44,6 +45,7 @@ you can also place YAOCTRI_Configurator.cmd inside "Office" folder, and the path
 - If multiple languages are detected in the specified version, you will be prompted to choose one, or all
 
 - If you chose all languages, you will be prompted to choose primary language
+
 (determines the setup and Office Shell UI culture, including shortcuts, right-click context menus, and tooltips)
 
 - Select the installation type: complete product suites, or single apps separately
@@ -57,12 +59,15 @@ you can also place YAOCTRI_Configurator.cmd inside "Office" folder, and the path
 - At the end, you will have three options:
 
 1. Install Now
+
 start normal installation now with the selected options (C2R_Config ini will be created too)
 
 2. Create setup configuration (Normal Install)
+
 create C2R_Config ini file, to be used later with YAOCTRI_Installer.cmd
 
 3. Create setup configuration (Auto Install)
+
 create C2R_Config ini file with unattended option, which allow YAOCTRI_Installer.cmd to start the installation immediately
 
 ## Remarks:
@@ -80,10 +85,13 @@ a better choice would be to select Mondo directly, which include Project/Visio
 * Auto Activate option will only work in these scenarios:
 
 - on Windows 10 or 8.1:
+
 system is KMS activated with external online KMS server, or installed SppExtComObjPatcher (or similar KMS service solutions)
 
 - on Windows 7:
+
 SppExtComObjPatcher is installed, or external online KMS server is added manually to OSPP registry
+
 `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform`
 
 * C2R_Config ini files are system-specific (architecture and Windows version level):
@@ -98,11 +106,12 @@ while it is possible to install Office C2R on top of already installed C2R, it i
 
 * If you want to update Office manually, you may disable Updates option
 
-and after installation, you can execute this in command prompt as administrator to update Office
+and after installation, you can execute this in command prompt as administrator to update Office:
 
 `"%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeC2RClient.exe" /update user updatepromptuser=True displaylevel=True`
 
 ## Special Thanks
 
 @ratzlefatz / OfficeRTool
+
 @Krakatoa   / WOTOK

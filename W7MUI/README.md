@@ -34,34 +34,53 @@
 	> Edit the script with notepad and adjust the following variables to suite your needs, or leave it as-is:
 
 **DVDPATH**
+
 Path for Windows 7 sp1 distribution (without quotation marks)
+
 you can use the iso file path directly, or path to custom extracted folder, or DVD/USB dive letter.
+
 leave it blank if you want to use iso file placed next to the script, or prompted to enter path.
 
 **ISO** (set 1 or 0)
+
 Create iso file afterwards or not
 
 **WINPE** (set 1 or 0)
+
 when enabled "1":
+
 require WinPE lang packs from WAIK supplement, winre.wim and boot.wim will be updated.
+
 when disabled "0":
+
 boot.wim index 2 (setup image) will be updated manually with setup resources found in the main lang pack.
+
 when adding East-Asian lang, both boot.wim indices will be updated with font support
 
 **SLIM** (set 1 or 0)
+
 when disabled "0":
+
 all applicable WinPE lang packs will be added to boot.wim and winre.wim
+
 all lang resources files will be added to ISO sources directory and keep it as default.
+
 when enabled "1":
+
 only necessary WinPE LPs for setup/recovery will be added to boot.wim and winre.wim (Main, Setup, SRT).
+
 ISO payload files will be deleted, and keep required files for boot-setup (iso can be used only for clean install).
 
 **DEFAULTLANGUAGE**
+
 culture code of the default language that will be set in the Windows images and as initial setup language
+
 it will be changed later when/if you choose another language at setup
+
 leave it blank if you want to keep the current default language in install image.
 
 **MOUNTDIR**
+
 Optional, set mount directory on another partition if available to speed integration, or leave it blank
 
 * Step 5

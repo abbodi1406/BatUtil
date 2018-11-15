@@ -31,34 +31,52 @@ however, if it's created using option:
 * If you want the Standard WinPE localization, Windows 10 ADK (Deployment Tools & Preinstallation Environment).
 
 - Build 17763 - Windows 10 version 1809:
+
 http://download.microsoft.com/download/0/1/C/01CC78AA-B53B-4884-B7EA-74F2878AA79F/adk/adksetup.exe
+
 http://download.microsoft.com/download/D/7/E/D7E22261-D0B3-4ED6-8151-5E002C7F823D/adkwinpeaddons/adkwinpesetup.exe
+
 full ISO
+
 http://software-download.microsoft.com/download/pr/17763.1.180914-1434.rs5_release_amd64fre_ADK.iso
+
 http://software-download.microsoft.com/download/pr/17763.1.180914-1434.rs5_release_amd64fre_ADKwinpeaddons.iso
 
 - Build 17134 - Windows 10 version 1803:
+
 http://download.microsoft.com/download/6/8/9/689E62E5-C50F-407B-9C3C-B7F00F8C93C0/adk/adksetup.exe
+
 full ISO
+
 https://software-download.microsoft.com/download/pr/17134.1.180410-1804.rs4_release_amd64fre_ADK.iso
 
 - Build 16299 - Windows 10 version 1709:
+
 http://download.microsoft.com/download/3/1/E/31EC1AAF-3501-4BB4-B61C-8BD8A07B4E8A/adk/adksetup.exe
+
 full ISO
+
 http://download.microsoft.com/download/3/1/E/31EC1AAF-3501-4BB4-B61C-8BD8A07B4E8A/16299.15.170928-1534.rs3_release_amd64fre_ADK.iso
 
 - Build 15063 - Windows 10 version 1703:
+
+
 http://download.microsoft.com/download/5/D/9/5D915042-FCAA-4859-A1C3-29E198690493/adk/adksetup.exe
+
 full ISO
+
 http://download.microsoft.com/download/5/D/9/5D915042-FCAA-4859-A1C3-29E198690493/15063.0.170317-1834.rs2_release_amd64fre_ADK.iso
 
 - Build 14393 - Windows 10 version 1607:
+
 http://download.microsoft.com/download/9/A/E/9AE69DD5-BA93-44E0-864E-180F5E700AB4/adk/adksetup.exe
 
 - Build 10586 - Windows 10 version 1511:
+
 http://download.microsoft.com/download/3/8/B/38BBCA6A-ADC9-4245-BCD8-DAA136F63C8B/adk/adksetup.exe
 
 - Build 10240 - Windows 10 version 1507:
+
 http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe
 
 ## How To:
@@ -76,51 +94,79 @@ http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D870958671
 	> Edit the script with notepad and adjust the following variables to suite your needs, or leave it as-is:
 
 **DVDPATH**
+
 Path for Windows 10 distribution (without quotation marks)
+
 you can use the iso file path directly, or path to custom extracted folder, or DVD/USB dive letter.
+
 leave it blank if you want to use iso file placed next to the script, or prompted to enter path.
 
 **ISO** (set 1 or 0)
+
 Create iso file afterwards or not
 
 **WINPE** (set 1 or 0)
+
 when enabled "1":
+
 require WinPE lang packs from ADK (Preinstallation Environment), winre.wim and boot.wim will be updated
+
 when disabled "0":
+
 boot.wim index 2 (setup image) will be updated manually with setup resources found in the main lang pack.
+
 when adding East-Asian lang, both boot.wim indices will be updated with font support
 
 **SLIM** (set 1 or 0)
+
 when disabled "0":
+
 all applicable WinPE lang packs will be added to boot.wim and winre.wim
+
 all lang resources files will be added to ISO sources directory and keep it as default.
+
 when enabled "1":
+
 only necessary WinPE LPs for setup/recovery will be added to boot.wim and winre.wim (Main, Setup, SRT).
+
 ISO payload files will be deleted, and keep required files for boot-setup (iso can be used only for clean install).
 
 **NET35** (set 1 or 0)
+
 Enable .NET Framework feature or not
+
 if you enable it, microsoft-windows-netfx3-ondemand-package.cab file will be removed from iso\sources\sxs afterwards
 
 **WINPEPATH**
+
 optional, custom directory path for WinPE language packs files, in case you do not want to install whole ADK WinPE feature
+
 you must keep the same directory hierarchy as original installed ADK
 
 example:
+
 x64 German files:
-C:\MUIDVD\WinPE\amd64\WinPE_OCs\de-de
+
+`C:\MUIDVD\WinPE\amd64\WinPE_OCs\de-de`
+
 x86 Arabic files:
-C:\MUIDVD\WinPE\x86\WinPE_OCs\ar-sa
+
+`C:\MUIDVD\WinPE\x86\WinPE_OCs\ar-sa`
 
 then you set the parent WinPE directory as path:
-set WINPEPATH=C:\MUIDVD\WinPE
+
+`set WINPEPATH=C:\MUIDVD\WinPE`
 
 **DEFAULTLANGUAGE**
+
 culture code of the default language that will be set in the Windows images and as initial setup language
+
 it will be changed later when/if you choose another language at setup
+
 leave it blank if you want to keep the current default language in install image.
 
 **MOUNTDIR**
+
 optional, mount directory on another partition if available to speed integration, or leave it blank
 
 * Step 5

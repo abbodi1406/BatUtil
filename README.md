@@ -2,6 +2,8 @@
 
 * Collection of batch scripts utilities for Windows
 
+* For download releases, see [here](https://github.com/abbodi1406/WHD/tree/master/scripts)
+
 ## ActionListUUP
 
 * Create ActionList.xml file to be used with WindowsUpdateBox.exe to directly upgrade from Windows 10 UUP files set.

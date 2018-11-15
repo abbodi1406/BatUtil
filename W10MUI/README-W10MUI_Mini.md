@@ -19,39 +19,59 @@
 	> Edit the script with notepad and adjust the following variables to suite your needs, or leave it as-is:
 
 **WIMPATH**
+
 Path for Windows 10 install.wim file (without quotation marks)
+
 leave it blank if you want to use install.wim placed next to the script, or prompted to enter path.
 
 **WINPE** (set 1 or 0)
+
 when enabled "1":
+
 require WinPE lang packs from ADK (Preinstallation Environment) to update winre.wim
+
 when disabled "0":
+
 winre.wim won't be updated
 
 **SLIM** (set 1 or 0)
+
 when disabled "0":
+
 all applicable WinPE lang packs will be added to winre.wim
+
 when enabled "1":
+
 only necessary WinPE LPs will be added to winre.wim (Main, Setup, SRT)
 
 **WINPEPATH**
+
 optional, custom directory path for WinPE language packs files, in case you do not want to install whole ADK WinPE feature
+
 you must keep the same directory hierarchy as original installed ADK
 
 example:
+
 x64 German files:
-C:\MUIDVD\WinPE\amd64\WinPE_OCs\de-de
+
+`C:\MUIDVD\WinPE\amd64\WinPE_OCs\de-de`
+
 x86 Arabic files:
-C:\MUIDVD\WinPE\x86\WinPE_OCs\ar-sa
+
+`C:\MUIDVD\WinPE\x86\WinPE_OCs\ar-sa`
 
 then you set the parent WinPE directory as path:
-set WINPEPATH=C:\MUIDVD\WinPE
+
+`set WINPEPATH=C:\MUIDVD\WinPE`
 
 **DEFAULTLANGUAGE**
+
 culture code of the default language that will be set in the Windows images
+
 leave it blank if you want to keep the current default language in install image.
 
 **MOUNTDIR**
+
 optional, set mount directory on another partition if available to speed integration, or leave it blank
 
 * Step 5

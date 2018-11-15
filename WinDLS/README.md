@@ -1,22 +1,22 @@
 # Windows Display Language Switcher
 
-* A mostly automated script to install and change "Display Language" for
-Windows Editions (SKUs) that are not alllowed to have multiple languages by default
+* A mostly automated script to install and change "Display Language" for Windows Editions (SKUs) that are not alllowed to have multiple languages by default
 
 * Supports the following editions:
-Windows 10 Home Single Language
-Windows 8.1 Single Language
-Windows 8 Single Language
-Windows 7 SP1 Starter
-Windows 7 SP1 Starter N
-Windows 7 SP1 Home Basic
-Windows 7 SP1 Home Basic N
-Windows 7 SP1 Home Premium
-Windows 7 SP1 Home Premium N
-Windows 7 SP1 Professional
-Windows 7 SP1 Professional N
+- Windows 10 Home Single Language
+- Windows 8.1 Single Language
+- Windows 8 Single Language
+- Windows 7 SP1 Starter
+- Windows 7 SP1 Starter N
+- Windows 7 SP1 Home Basic
+- Windows 7 SP1 Home Basic N
+- Windows 7 SP1 Home Premium
+- Windows 7 SP1 Home Premium N
+- Windows 7 SP1 Professional
+- Windows 7 SP1 Professional N
 
 * Supports the following languages:
+
 Arabic, Bulgarian, Chinese (Simplified), Chinese (Hong Kong S.A.R.), Chinese (Taiwan), Croatian, 
 Czech, Danish, Dutch, English, English (United Kingdom), Estonian, Finnish, French, French (Canada), 
 German, Greek, Hungarian, Italian, Japanese, Korean, Latvian, Lithuanian, Norwegian, Polish, 
@@ -44,6 +44,7 @@ you can let Windows Update to install them later after changing the language
 * If you later want to go back to original language or already installed multiple languages, run the script and you will be prompted to select one of detected languages to set as primary
 
 * The script will not set or change the local language preferences:
+
 Formats, Location, Keyboards, language for non-unicode programs (system locale)
 
 you can set them manually, before or after changing the display language:
