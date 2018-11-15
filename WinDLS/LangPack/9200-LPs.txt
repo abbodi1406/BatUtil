@@ -1,0 +1,153 @@
+Windows 8 Language Packs
+
+============================================================
+x86 (32 Bit)
+
+ar-sa (Arabic)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-ara_c3d59c0d530b4d31ad99ffb098c7b4bb224840a9.cab
+bg-bg (Bulgarian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-bgr_a3fb720899b74af903bec3939e62fa5632bbd8e0.cab
+cs-cz (Czech)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-csy_b65e72f5bd2ffcd8450d03976928b5c487c50fbf.cab
+da-dk (Danish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-dan_b3ae7f634248795ea2b9fd4fd87f4710c4657281.cab
+de-de (German)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-deu_6e1302992c19a67c22210f11e75543e8f60bae21.cab
+el-gr (Greek)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-ell_1134e70e6f3340db25fb33b66c0586d244dbb312.cab
+en-gb (English - United Kingdom)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-eng_f0fa22663a5adcb24c36907c4252d8948241c53c.cab
+en-us (English - United States)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-enu_c39d4d4c8cd465c37f957ac0d1eb2ac3b50acdb7.cab
+es-es (Spanish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-esn_2d292f36e071d103c448b9bae76133b5ac62956a.cab
+et-ee (Estonian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-eti_64200fb0eabf57d13e9160a04d14bb31188fff68.cab
+fi-fi (Finnish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-fin_50d61af8356d3ceb7585cc06b6af1c94a6c23586.cab
+fr-fr (French)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-fra_8cd60998609ba80263d9177fb392219f4481e6cf.cab
+he-il (Hebrew)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-heb_f8546fc2872e11cdd4b3574edceb67b58912148b.cab
+hr-hr (Croatian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-hrv_af792fd0ca0dac79b30067ae44d1a2a79c40f80e.cab
+hu-hu (Hungarian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-hun_b42317bdf87722af4cd984496833d191a9920118.cab
+it-it (Italian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-ita_4a92392a5fac1a60fde02b86f1f53e884ffe1204.cab
+ja-jp (Japanese)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-jpn_c0daf9262b007af8d3c968435f81b671a8765519.cab
+ko-kr (Korean)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-kor_c1dd86ea71f9c1d382f2417931043d7a1a8a9151.cab
+lt-lt (Lithuanian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-lth_9d681d1584e676889c73d70b0f54e2a57bc6dd25.cab
+lv-lv (Latvian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-lvi_1aa5003941c9ae0aabb4ee4e9542c194324f95f4.cab
+nb-no (Norwegian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-nor_70ea87a656ead13f869bc7fd5ed6900b1576504b.cab
+nl-nl (Dutch)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-nld_0b93a4ba2cfbe9488037c2999a16de599fde770a.cab
+pl-pl (Polish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-plk_68a4092c7b478e2a5a425c5e832c239fa3824ff1.cab
+pt-br (Portuguese - Brazil)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-ptb_ab50528c4254edf5610cdb575bb0248df4d8ca95.cab
+pt-pt (Portuguese - Portugal)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-ptg_cbbe70ccbe14e4ffd5507353ce046d50eda2dedd.cab
+ro-ro (Romanian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-rom_aeaac3e32331ecaaf4c64f88c9176782c5a87aee.cab
+ru-ru (Russian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-rus_45a3d7b1bfcb0174e9b938fe0cc339620b6ff3ab.cab
+sk-sk (Slovak)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-sky_0b45818ab6d5c81b92297332f4dcff11583fe97c.cab
+sl-si (Slovenian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-slv_362b2d0e778c86f5cc11a40e07349c9753b5c974.cab
+sr-latn-cs (Serbian - Latin)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-srl_b0311b9a42800f6991f3dc539ea5554471a67886.cab
+sv-se (Swedish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-sve_0390b8c05ab6ad375bf0a7fcea6f7fadf165b0d6.cab
+th-th (Thai)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-tha_46d74da92122e4cda05c6d4ef2eed6451d68ef65.cab
+tr-tr (Turkish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-trk_10a97344b5d1d6fac3073c6fa6e0559ffdb7baeb.cab
+uk-ua (Ukrainian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-ukr_f8164f44db125b5fa3ee032be5759a3f6e0daa6c.cab
+zh-cn (Chinese - Simplified)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-chs_d6987385ae26c86ea601d9c0e4d5190b2dcfb2b3.cab
+zh-hk (Chinese - Traditional)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x86-zhh_16e2a22c8583925084949319ebdf40fa9624e657.cab
+
+============================================================
+x64 (64 Bit)
+
+ar-sa (Arabic)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-ara_b45a2a3a690f20c07e394bb745589c97509a0f3d.cab
+bg-bg (Bulgarian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-bgr_1bfd961850974cc901e1f0e7f73ffff9f213cefd.cab
+cs-cz (Czech)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-csy_188fe68bd59e9b0b5a15d1af35ebb970b9b43764.cab
+da-dk (Danish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-dan_b29a2dbe8679887cae087aca7ff00808ef5470b9.cab
+de-de (German)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-deu_807da664995dacf6f2a6e78034a4583e6bc4a69c.cab
+el-gr (Greek)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-ell_dbec5df671b23eebb69508663c384ad4fb425d31.cab
+en-gb (English - United Kingdom)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-eng_5359d31b8f4e3de3fa91b4e45a2307ece82365b6.cab
+en-us (English - United States)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-enu_881757c27fbcdf3170fedf7760a8a78858ca11c7.cab
+es-es (Spanish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-esn_d67b19aa3366744d8249d4a9fd0e8cdf01fc5c9c.cab
+et-ee (Estonian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-eti_9e6879ac3f78d5e933554dafed97473327803a7e.cab
+fi-fi (Finnish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-fin_62cf50190f9fd5911f179bf76fb92c5e6db51ffa.cab
+fr-fr (French)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-fra_bee4cae23a0846c4338cdb036175a23f640237f9.cab
+he-il (Hebrew)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-heb_1ce36ba7bdf85317ea7a287784d20f0edd92595c.cab
+hr-hr (Croatian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-hrv_4a36ca3ec1b0d9acbe15ff8cd8fe0a98f4ba482e.cab
+hu-hu (Hungarian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-hun_861db8b784725d58423849306ed2383998ab15c3.cab
+it-it (Italian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-ita_a3e3178c9d2273987dbc41ab7ca89fe1f7326989.cab
+ja-jp (Japanese)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-jpn_60b1149b37e0fda9d2d8115eb8f931dedc16f77c.cab
+ko-kr (Korean)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-kor_8b6aae9f69d9919fa5a93ad68031b0ab04123493.cab
+lt-lt (Lithuanian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-lth_534d1402efba1d7195e39fc513c17c8b542f9cba.cab
+lv-lv (Latvian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-lvi_9424a6417327ccf9e98aa5f34ae8d8f16401d404.cab
+nb-no (Norwegian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-nor_63833b180b00f59b984852984a9e97ef95b92ccc.cab
+nl-nl (Dutch)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-nld_655deaefad08a76d95e5d82e0fa9dc3c38879e3e.cab
+pl-pl (Polish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-plk_943db46676cbbfd66c7b592c2bd6192419680eb7.cab
+pt-br (Portuguese - Brazil)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-ptb_29786be718dc83386ef5abacc2afb5a9996a5ea5.cab
+pt-pt (Portuguese - Portugal)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-ptg_ac781905a6d0c2937b93b6ff665d0edfecad46b4.cab
+ro-ro (Romanian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-rom_58a112e04d8ae9770e9532baa5d5fe6b563b3eea.cab
+ru-ru (Russian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-rus_a8f1e9e5c3a113e810cc4b43697c6546ebc6f12d.cab
+sk-sk (Slovak)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-sky_661c8fffe841125b43b669e13f7228d8df4e3eeb.cab
+sl-si (Slovenian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-slv_4b33b6f88ac5f0ac500039f0418c3f8e5656aa81.cab
+sr-latn-cs (Serbian - Latin)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-srl_5cc525026346da75eb816067931cbd881f8ba74a.cab
+sv-se (Swedish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-sve_e264d40ba874e0e8ff5b48a0add3001ded06744c.cab
+th-th (Thai)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-tha_7c00710748a87d6afce2f798c1cc2ff1edfa758c.cab
+tr-tr (Turkish)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-trk_f416e487f0b4a5d3b4da1fbe530980d9d2df8c86.cab
+uk-ua (Ukrainian)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-ukr_2119c62df52d4f8a9d843690c0f12661a4342bb8.cab
+zh-cn (Chinese - Simplified)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-chs_b505138c3b1721cfb72015d0a8e1ea44a8fc18ae.cab
+zh-hk (Chinese - Traditional)
+http://download.windowsupdate.com/msdownload/update/software/updt/2012/10/windows8-kb2607607-x64-zhh_3feda171c0fc3eeb6ba5c3b39db069446c20c756.cab

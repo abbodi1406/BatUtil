@@ -1,0 +1,339 @@
+Windows 10 version 1507 Language Features On Demand Packs
+
+=================================================================================================
+x86 (32 Bit)
+
+ar-sa / Arabic
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-ar-sa-package_90f4b4e7176f4e4f4c6a0d95b0e09a8306cc3587.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-arab-package_8ea8bafd7c836d46663d3aa303b4a2dfa9f4191d.cab
+bg-bg / Bulgarian
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-bg-bg-package_ef9dc6af4356f426293341d754138744da8bc18f.cab
+cs-cz / Czech
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-cs-cz-package_85b2e18f3c936109515ca9c769d2f1eec65466bc.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-cs-cz-package_321605718cee2e8c2ab4156b9c76c9b1f48d3a2f.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-cs-cz-package_3b526f4cc15136f4115c2167d8c90b3b794ce549.cab
+da-dk / Danish
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-da-dk-package_e61686963886af98755286ed8500efba29d4dab0.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-da-dk-package_fe047c9c09d03ef99e6b32ca820dddfda05322b7.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-da-dk-package_62984b3a8e582fa7fbe6f693bcdc17ee14c60bce.cab
+de-de / German
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-de-de-package_31725013d696cb3b8707f437e2142906f7ec6307.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-de-de-package_338c6820c34ec52aab7f5ede94d5492e2db1dcc2.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-de-de-package_4e706110cddd71ed4044d882a003b5ea0e76b472.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-de-de-package_421efc633cf7c87caa13b371e33a0b4818ade2fb.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-de-de-package_07d81db33bc5ca7c094d22dedfa46e06a274c654.cab
+el-gr / Greek
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-el-gr-package_4044d607a9721dd83a6edec1f549aba88e479ceb.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-el-gr-package_dbcfc1e54d31b9f45cd98e85dbede945190f3256.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-el-gr-package_fbe438cb8578432fd6cad97c5a3df327de7d395e.cab
+en-gb / English (United Kingdom)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-en-gb-package_0d96dc68c2b8f61eae7ec2d9649be2464be45222.cabc
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-en-gb-package_63ce274697e721429bb6f413508e65831b66a7b8.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-en-gb-package_705a5355a81e924eb66afa06b2d6273906d7dc8a.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-en-gb-package_1e72eb9f699adcb1997a825b3db0c956b267d389.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-en-gb-package_be0bae3a613672c3ec6b7f4e16dfc8568e73070e.cab
+en-us / English (United States)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-en-us-package_3b1f516c7cff8777359ee10c752c333729f0dd75.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-en-us-package_8894eac8416e66da4cbe1d06d81fe77cf7e7345f.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-en-us-package_13dc908829c090009ca6ae8d45512a01a6c81774.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-en-us-package_2d0c3b0e85e65b54dc514365017fd8aea2c500ce.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-en-us-package_9cd2e6666c4c3789af56d877b66f5e9686ac6708.cab
+es-es / Spanish (Spain)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-es-es-package_b1700213b840620c937ac7183c7a4fa6020ddcfe.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-es-es-package_ed6631f2575425651863f76b43028b55a078fbe4.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-es-es-package_7c1390e2ad2f0aedf0c24d741ad60a506d3a2af8.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-es-es-package_32227764f0c30bb029bc48fffecbf96dbea92a89.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-es-es-package_242128b4747ad8f890b6d64305e4888c145c9e5d.cab
+es-mx / Spanish (Mexico)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-es-mx-package_6d25a99c082badfea29f3a0d24f4a41ff0aa213c.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-es-mx-package_f6e62f96f5c2b51b20c6ee75f6afb4e64d1c040c.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-es-mx-package_fcb7f93e7caa5dd49c6f1884a307a85b15f02999.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-es-mx-package_376112075c75fd5398733117f6cfc5c555ada525.cab
+et-ee / Estonian
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-et-ee-package_02f1bdd8a9a25a56e0c437a0f4d5389256262483.cab
+fi-fi / Finnish
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-fi-fi-package_e6449868f131a5ead95126961952ffea680bbd23.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-fi-fi-package_99b0330d9e735f547148a3dd8da191c8fdec6022.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-fi-fi-package_c9adb7aa0c6e27963220516785461983977cf9f9.cab
+fr-ca / French (Canada)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-fr-ca-package_066d0c4c3874fac660c6d9b5fd782e9814bcd400.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-cans-package_f082e51487b05720677151046bd00b5f87751452.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-fr-ca-package_40f27c9cccc0968a050697447f72ef0800b68bcd.cab
+fr-fr / French (France)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-fr-fr-package_41d5b422f9e86dc5016c8404e56af6549987395d.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-fr-fr-package_e4aac2f3ba61c4bc106e22bd24cf1cace71d45db.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-fr-fr-package_4e278ccc0e4270d1af92cfe43011c17080a926f4.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-fr-fr-package_4e65fcd0d7685971f4da42d387147a93c83b22da.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-fr-fr-package_8b5b94ad27f152c71f3cd392e0b18e6b8745e282.cab
+he-il / Hebrew
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-he-il-package_b0c83b71cc735ecfed97f33e8b0990aebbca3db6.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-hebr-package_d91451469e11d4f12919570242edeb95b61e3324.cab
+hr-hr / Croatian
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-hr-hr-package_07da8afe76dac73ee6ca92483c3b1b1a9aa19770.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-hr-hr-package_b8a8bdec752a12d4007f7a73797979fb697527e3.cab
+hu-hu / Hungarian
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-hu-hu-package_a49ac69b84ab6db44bd531e02c7f9a08c5ffe677.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-hu-hu-package_adca6733815776949fd0249cbbe372259f4029b2.cab
+it-it / Italian
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-it-it-package_faac78be39dd99c0c0c59b3e1ed384788267f4e9.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-it-it-package_d09195927e89a0f18d711ed2b20f4466b854b5ad.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-it-it-package_1f4af88eafb90062d846ff2506a7bc1b714ca447.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-it-it-package_edee1fe84020e5e9d7a0c04e5e32166b5ac6a9a6.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-it-it-package_a2217bd66764469557be5fcfe6d40216c04b29d4.cab
+ja-jp / Japanese
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-ja-jp-package_85385d5866338818d6009e308a8e6f7e7938fd36.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-jpan-package_335fe7db192a6465561b6714e8583f184fefd9cb.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-ja-jp-package_26a56e8725df6d642e078045cd5682a89691cb67.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-ja-jp-package_c35ac7016c07b73bde20b6630a16ef828a03784f.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-ja-jp-package_a5d3ecd2fd6ff9bee72efb06d107122c321705ce.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-ja-jp-package_ab562d8a83dbc2bb7d8b7737129e8f7b2080751b.cab
+ko-kr / Korean
+http://fg.v4.download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-ko-kr-package_f52c1761ccc00d224363a1158088fb2ecad26ab1.cab
+http://fg.v4.download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-kore-package_a6fa7169f4e488ab96d622253dd9fec9137098cb.cab
+http://fg.v4.download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-ko-kr-package_c4f6ebd7f927520c65839fa01dcd88a5356c2fb7.cab
+http://fg.v4.download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-ko-kr-package_5e05c2b0cc3850a07367cb40f6d495f28a5dae97.cab
+http://fg.v4.download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-ko-kr-package_48ab53924a33797300f305275dc308cf48ecb948.cab
+lt-lt / Lithuanian
+http://fg.v4.download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-lt-lt-package_3fa869bd31ea1f6f0c5a0f91930a433997906e4a.cab
+lv-lv / Latvian
+http://fg.v4.download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-lv-lv-package_686d730d545ddef0b5e54994e9a2b54b23d9cfdc.cab
+nb-no / Norwegian (Bokmal)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-nb-no-package_f21b7436b55113a9aca6dbd44a3e9b9783cfec82.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-nb-no-package_80cfdee936851cca764926dc5744e637976c2eed.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-nb-no-package_22ecc75ae09b698acfcb2a7eef8d4c23d346ae81.cab
+nl-nl / Dutch
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-nl-nl-package_3d7dd2216df5d8e0632ed68d8a36ee4ce5edb30f.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-nl-nl-package_3ce534bf5c4c8828f4737fbfc67fb3b4f219f4de.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-nl-nl-package_fc9b1e842ef78d75ddbd6614f78247a70774dc78.cab
+pl-pl / Polish
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-pl-pl-package_806340deeb6eefd18cb3df4cc4fee1be279655f8.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-pl-pl-package_1a0fcf839f7ad3155de3fb1afe5387c6de183b3e.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-pl-pl-package_82ac1f364e28e5f816d79d96c409d480666322cd.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-pl-pl-package_861b229ebdd500381a53433bdba958f5a21ad436.cab
+pt-br / Portuguese (Brazil)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-pt-br-package_05037d2cac7566a0a10a74fd49d837807fb33aba.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-pt-br-package_876365e26897a47f4f38e07a8c52b484f83fb98c.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-pt-br-package_42463da633d7ed7038fb3a989fc8e228f5d19d54.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-pt-br-package_06b570a91570e9879e86db39b8ea6cdc79fdb0d1.cab
+pt-pt / Portuguese (Portugal)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-pt-pt-package_ff637cccce86f5f32b942cc788254b6e237951c3.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-pt-pt-package_f7593afaa88ca5ceab1720b4383f502f8f1a5bcb.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-pt-pt-package_6b3fed85e8a793ccc690bc20ba2b9624ee3c36ea.cab
+ro-ro / Romanian
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-ro-ro-package_29601acc6db4bd8abd9e8ea957a610795a077e0b.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-ro-ro-package_9ab776d30ba938a75b83866e97fcf6acf336cfa9.cab
+ru-ru / Russian
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-ru-ru-package_dc1350511a3480a77bbfe872825869d3dbf8d470.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-ru-ru-package_4bfcfad317e3a1c7b98ebdcdaec82b9740f29343.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-ru-ru-package_163c0221d3030dfc105c226896ecdc64830ddabf.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-ru-ru-package_20515865b2e41e088b8fe78659ba099af705075a.cab
+sk-sk / Slovak
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-sk-sk-package_9a07818bcb5995378bb116d6caa1a0dc3456d0df.cab
+sl-si / Slovenian
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-sl-si-package_dad1bb41eb040039c772820e4dd8b9c4b50241fd.cab
+sr-latn-rs / Serbian (Latin)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-sr-latn-rs-package_4ccc362233e41d13ab9b83df236e55c09212b97f.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-sr-latn-rs-package_8897bcb6542b3167aaa0b2aa6cb16ad2ac857ef6.cab
+sv-se / Swedish
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-sv-se-package_f3efab221d057f939317e510297ceb3331f7f27a.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-sv-se-package_284fe3518f43eea6f0d63421f9eab8ccf10b0468.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-sv-se-package_8efbdfd0e2dbf985c91c929ebbf8085e528c6018.cab
+th-th / Thai
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-th-th-package_f88a6605c012ffde1c9eb71c86321a60f6b00456.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-thai-package_a49767d1fece055b984263dec04affeed9c06fd5.cab
+tr-tr / Turkish
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-tr-tr-package_fa257fcdd86cd140a8eddf15117a16e4158bc917.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-tr-tr-package_b3035223abd9e8226b9d521d8e3f05243f133d62.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-tr-tr-package_22bb88a669d461258ab3565e1310d49af56a3a4a.cab
+uk-ua / Ukrainian
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-uk-ua-package_ee5ba0660845ab98b4f9c56629c7f4682a60ee39.cab
+zh-cn / Chinese (Simplified)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-zh-cn-package_d88c0712fdff3d133e0ccb035a9b142e0c3dd303.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-hans-package_4410d3ff0613b294ce1f0d8bce27b50853c4ee07.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-zh-cn-package_2a91bde4215b19b536a7c8942fc4829a5ca4388b.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-zh-cn-package_439bf996fcfbbf5b67a447fc89f6d52aa6ec0408.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-zh-cn-package_861b7eb1c03788b696623d83719ca62566bb377c.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-zh-cn-package_98d70b445f67b55129449fe3ad11a287295c063e.cab
+zh-hk / Chinese (Hong Kong S.A.R.)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-zh-hk-package_ba60b42003d6372d06921236caee69cad91983f7.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-hant-package_8b52bec60e0f5fa496961032060ec8e3078db5b0.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-zh-hk-package_04181fc61a98e2f878976ded407ae4414733e2ec.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-zh-hk-package_0c3142f9dacce58dcea234bab8fb46477d957774.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-zh-hk-package_59e3ddcb5d03bf0d7099d5d7c180560f5d9e2640.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-zh-hk-package_d697a14aa3509bb09472b879e8a76601bc27e596.cab
+zh-tw / Chinese (Taiwan)
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-zh-tw-package_4b163eedd1ae35c1fa5aa239457dfc1af6e08560.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-hant-package_8b52bec60e0f5fa496961032060ec8e3078db5b0.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-zh-tw-package_f9017a949b0ea2ad4c30e6c51b671ec54aa0e7ec.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-zh-tw-package_d43e996e9db66533707a7f1d2434517cf70c4efa.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-zh-tw-package_22cefb16e96a82e691278ef6848f544838560733.cab
+http://fg.v4.download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-zh-tw-package_e6b55446295fc8b5decc2afa413f5086d3ac27a0.cab
+
+=================================================================================================
+x64 (64 Bit)
+
+ar-sa / Arabic
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-ar-sa-package_e66c7397a48852a8dd5724f7ae37c264f602125a.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-arab-package_31e99360ca4369ec74869a599a2998f6adab9679.cab
+bg-bg / Bulgarian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-bg-bg-package_1a2ef7a7de0b7388f2124eda1cec41abfa8285c2.cab
+cs-cz / Czech
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-cs-cz-package_4f18b4e4392fea08c7916c6367cc71a5b5cc4345.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-cs-cz-package_57d3094057c43b8adbc206d18016e74b7b2383b9.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-cs-cz-package_fdef64d795a0cf2fd8cfdd271728eae871dce191.cab
+da-dk / Danish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-da-dk-package_62def713d293cebf7dbccfd69f77d9a1c8092146.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-da-dk-package_ec4843a281def841e0ca1e48b26576cdebcd7613.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-da-dk-package_e4f22845ad190b9232c06bc2a8257ac8d3f5a0dc.cab
+de-de / German
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-de-de-package_fb7b866877ebb6c8add5ad16b0d13dd202e79109.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-de-de-package_602fb5f12dc02ffe64a958c85fffe405ffb2a603.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-de-de-package_9bc6f8f0f88e58b652ebc7e6e2a20f02e9b94564.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-de-de-package_fcf19683bd8f3e0140cd0288b932bc2f3cdbac0d.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-de-de-package_564ccfa720ffea0c0cb73f91ba07adf4abb6f829.cab
+el-gr / Greek
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-el-gr-package_163c5cd73d5585377bc1091ac26d4c7ef9600b63.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-el-gr-package_d4ee623058bc6814942d786d9bdf3dba9af4b02f.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-el-gr-package_9dff263a00748f85b56aa37c09101142ec18cd60.cab
+en-gb / English (United Kingdom)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-en-gb-package_f83fa4a80f2c63e40774954582556c113cf38cdd.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-en-gb-package_d9ad691c336cf3c9066dad8c7dece2af293db098.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-en-gb-package_7787c6659b3c5da21083a7b464e1d89a9625ddd7.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-en-gb-package_509ce9e7ff49f64c31769165e74bee1877b99370.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-en-gb-package_32ac74c8139849f5b26fdfc8160d8f3c1b3ec70b.cab
+en-us / English (United States)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-en-us-package_ff54cabe0c165383aa7d4e38ca1aa8e5bd325cb2.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-en-us-package_c86afa082f6a4fbf495745abcc304a06823f1731.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-en-us-package_9a2f3c6408dedaa14e200b99abb494b8698b52e2.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-en-us-package_225e00b7c7273faedb2875750a37a1b2604321b1.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-en-us-package_5646bcb316dd015ce02fddb690228631c1dfcf57.cab
+es-es / Spanish (Spain)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-es-es-package_7c2f8a3f2b5fbf41059145fa8a51bb0954dfe546.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-es-es-package_45799512feb2bfd14bd36ab2c980341c9ed54795.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-es-es-package_a6a97bd110604ee512fca176a2276c40d6ac6db4.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-es-es-package_2f035a6bb478382ad14a31d4486ad065b7c815b2.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-es-es-package_610071482495921d8062a144646fae8bc6f89ca1.cab
+es-mx / Spanish (Mexico)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-es-mx-package_1401af3261f998245bcf656c347db0a8efc6548c.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-es-mx-package_f2a46c4077928d255294bdf09a2827d8946a4d74.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-es-mx-package_8c21c6e7c1a3339e7c33973f20d621dbc65bcfb3.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-es-mx-package_e79238cff971697b61d51587e6fc87073f556ed1.cab
+et-ee / Estonian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-et-ee-package_4e8ec719d4723e680d42b04442cd64c44b3069f1.cab
+fi-fi / Finnish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-fi-fi-package_9adc0064af82ae4fbc2c3442a84638831be3b113.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-fi-fi-package_dc2c32f918d7ad4c648923e2669cda78b7558ca1.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-fi-fi-package_4ad30350dee5e55bfa6b920542c850549ed4f722.cab
+fr-ca / French (Canada)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-fr-ca-package_be269f60466d19423d75b4ae7ab6391e08e24a33.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-cans-package_20b07dbd5e461c45733c5cdbdcc4b13eaffc220c.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-fr-ca-package_54253db1d2aa2e67973c31b98fa6bf8f6242f647.cab
+fr-fr / French (France)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-fr-fr-package_1daae2d2b922bc2a80a3e439a8f4c061be893d26.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-fr-fr-package_4576cbcc3f0727968d890e4ed5b92c6e34db07c6.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-fr-fr-package_ee621c1eef0b21be9c6827f904644595c8fdf9ff.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-fr-fr-package_50c3ed099fa6ed3b1282fa1e9966268498e46ed8.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-fr-fr-package_b71c60648fdaa5a14ac6aacc6f27f2b56a53e9dc.cab
+he-il / Hebrew
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-he-il-package_77eaef21b4a42ed5bbf3e64621809053c5ca71f6.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-hebr-package_3a97d93b4feaec80d1af1b4c89dd167e9141125b.cab
+hr-hr / Croatian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-hr-hr-package_ebf263b5a679fcc43b4b001549cee86e0fcdae62.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-hr-hr-package_d70cc65d2578fd3d63a482e9ff5642d4ec8e8b31.cab
+hu-hu / Hungarian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-hu-hu-package_f042cd9d9277df06cf33d815779da8bb73c2178f.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-hu-hu-package_992ef9a2a3dc8d7acfb98f6f982ba72cee672bfd.cab
+it-it / Italian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-it-it-package_c9984b94a3c78c59cca8ccf435d6f54c089d57e6.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-it-it-package_06d13e056590663bff56ffa792ce02670bb19664.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-it-it-package_7f9702f36769b113b07c0c39da3e97d5ce35f7ed.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-it-it-package_c065be241c6af01a96e027d70cfbc18e797e5a3a.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-it-it-package_c9fdedff89a3d15bb68cd026d7e73957e5cb1e68.cab
+ja-jp / Japanese
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-ja-jp-package_a9a26d60a2599511050fafecc2a8ad7e08d2377f.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-jpan-package_ffa951d5b342f8af881e4c3639b59535705b0d94.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-ja-jp-package_962c9701e4dd406a6facc9500c74933733f30999.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-ja-jp-package_15efd28d62940fc9edfc47a9ef5e72bdbd2901be.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-ja-jp-package_1636183ff63a6c959654cd612259c3c41f7cf242.cab
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-ja-jp-package_f5d7121a5a76c909e94eea00cb08ec58f4b6e749.cab
+ko-kr / Korean
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-ko-kr-package_6faa6c2306b53a33d54a9239d51b64c45b66ccfa.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-kore-package_b13554c8aa904ac022f4a72e935467e9afdaad02.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-ko-kr-package_7dc49fb28660d65128ab0f425cdac2703297e78d.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-ko-kr-package_01c117f37075bf0c3793848d95f649f5df89a2f1.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-ko-kr-package_3bfae6e16d44eecb5bcf579157e4b911efc239c2.cab
+lt-lt / Lithuanian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-lt-lt-package_e88dc7c27b0b9fb7779da083b300da058cc1b25b.cab
+lv-lv / Latvian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-lv-lv-package_f2b6c587c1dea1e2754585ca76a5f3905002e9a5.cab
+nb-no / Norwegian (Bokmal)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-nb-no-package_c8bc685be9dc8e26291d7008d675c7622332047f.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-nb-no-package_aa80704a43209ca33f876f21d51fea4b73a02696.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-nb-no-package_5d544778de93d8e165ca5935d6793dd92cde49e4.cab
+nl-nl / Dutch
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-nl-nl-package_4ae3168d44b6bbc61b0d983767888b51075fae65.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-nl-nl-package_7ea92b32a2371a10cb0f3eb3814f36572ff57d26.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-nl-nl-package_abac73db5736003d710488ba428ea1549f447dec.cab
+pl-pl / Polish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-pl-pl-package_2d404a77e44a21993ef0c670928f682b0339d39d.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-pl-pl-package_2e2380be50617877d59d7e6913a839cce27f1cb0.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-pl-pl-package_bbd94025eb00339927367ed8413fc3c1209bcceb.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-pl-pl-package_e5ef68cc92b3d9e27eaaccc4b48a32e027158548.cab
+pt-br / Portuguese (Brazil)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-pt-br-package_cd29b792d86d8443a5ad9c14f7049f74b152030a.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-pt-br-package_4d68e89cf9e16ced39579ce7c0b39a50c1e96dd8.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-pt-br-package_a10d40256de51b5ebbe97dfc90452c8450f55610.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-pt-br-package_dc9ffdcdb001b6c99bd8bf9c21c2c6f28c39d0fc.cab
+pt-pt / Portuguese (Portugal)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-pt-pt-package_21d817e1bc8ce7d462ca1922720dc07bddad8429.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-pt-pt-package_f60711c389e0c707593ab8efc944403348656e0e.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-pt-pt-package_7048b59a8516bffb3c1b4258afdb508135a2efab.cab
+ro-ro / Romanian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-ro-ro-package_9a8cd849ddf3ef9e7749d224d1d2dfeb769a432e.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-ro-ro-package_7fbcf53f62a24336cd42a33f8719f7f8a649562b.cab
+ru-ru / Russian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-ru-ru-package_da66db5c37fc4046197ec5be67942fe81a3ba2d8.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-ru-ru-package_c5cfd5edba18410428a11ace76ac34fab2f91e62.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-ru-ru-package_39b776789450a28501877ae46d42c38457834af1.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-ru-ru-package_a6b37f7c68e28d0198c7ad4d867423912860ca55.cab
+sk-sk / Slovak
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-sk-sk-package_1d7516cafdb021dfc5cb061fa38c5f6fcf3e1c11.cab
+sl-si / Slovenian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-sl-si-package_7e947dbeee20741d1bb329762f07326082714c1c.cab
+sr-latn-rs / Serbian (Latin)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-sr-latn-rs-package_ca71e6fd83ef809c8acdaf80905ffbe14f95c3c8.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-sr-latn-rs-package_8e48ffc5fdcc5921fdeb791522049ff272fa1c9e.cab
+sv-se / Swedish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-sv-se-package_e8c3dd4404b00b9d641cbf87e92d7f44b0ec0362.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-sv-se-package_896ae63510a07364878dd2ceee3202353629a746.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-sv-se-package_d8f6c107fd28aa855342640adc6b0de910f24f9d.cab
+th-th / Thai
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-th-th-package_8ba8f8c9118ae201fdf3c5a28fe154317c2e640d.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-thai-package_bb5bc9093d09e7e4cd399b5359c9d107b53344bf.cab
+tr-tr / Turkish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-tr-tr-package_da7299330c9ac0ec0a0acb11f6625c1ef00e26c0.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-tr-tr-package_de4b40102b493a5ab9a39711ddca776356adf986.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-tr-tr-package_0a53a91321df42ae6b077e66b22e3c8d4ee07e3c.cab
+uk-ua / Ukrainian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-uk-ua-package_5ec96ff23e4ff49da1104bc21f83a265dcab5b9b.cab
+zh-cn / Chinese (Simplified)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-zh-cn-package_b99fffc70de2cf9f79a254fed43b527c009ac348.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-hans-package_4f01e44d1c4fa5103ef26643d388300d278a3e24.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-zh-cn-package_e62d1fc91b63a20cd349b60691de87cb4a498636.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-zh-cn-package_9e9b267b589fc10866c5ec02f772d76b3f259d01.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-zh-cn-package_93ac6130b11c1a5ad640bef2c4b2e22dc101cc16.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-zh-cn-package_5c2a465eb39d90133e21737ac213a4ab32943b41.cab
+zh-hk / Chinese (Hong Kong S.A.R.)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-zh-hk-package_e8f52b884bce85e55d7a6f9c5ddd8edc10279370.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-hant-package_292d16a8246a9c550d4a144a05b68499cfbc033f.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-zh-hk-package_eacd7100ddff86a6bc50113d2db7077ae1a7d4dd.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-zh-hk-package_9d07aef57227a89a858a7bbaccb7126e9e5fb8a6.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-zh-hk-package_6caaf3b34a8f1a0adc2d6cdac07c9f46cca647ad.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-zh-hk-package_e55d96bee9a15d3168ecfb6f67e7d2cb182a1e86.cab
+zh-tw / Chinese (Taiwan)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-basic-zh-tw-package_b3c154362dd2f2054142f60167e44e3677a57c9c.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-fonts-hant-package_292d16a8246a9c550d4a144a05b68499cfbc033f.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-handwriting-zh-tw-package_d5067537ad11dbbeb049bf25e3ae5de664a4363b.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-ocr-zh-tw-package_f1e0022d1d1b289296210a51898270ec4b6227ac.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-texttospeech-zh-tw-package_60baaec2719f877ef0ab2591a11f072f42273842.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/microsoft-windows-languagefeatures-speech-zh-tw-package_86d473d1928ffcfcd54c5b6415df865dc56c203a.cab

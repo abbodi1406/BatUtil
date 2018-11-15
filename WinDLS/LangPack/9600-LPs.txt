@@ -1,0 +1,157 @@
+Windows 8.1 Language Packs
+
+============================================================
+x86 (32 Bit)
+
+ar-sa (Arabic)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-ar-sa-client_8d67e84dd9afd47df5752f313cbfc9c3584ac3f4.cab
+bg-bg (Bulgarian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-bg-bg-client_c70720347962c06a2e28ed5a97d5614c7d3d9d52.cab
+cs-cz (Czech)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-cs-cz-client_2d5d4c8ce13ed4c88d5429a5c155d109da7d7d93.cab
+da-dk (Danish)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-da-dk-client_3888bd782e1a32e3c8e8ed3edf1a49a7bddfd865.cab
+de-de (German)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-de-de-client_561247380f029040c1574a5ec976e34452060b76.cab
+el-gr (Greek)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-el-gr-client_dd7addb825f3785acdb625996d9ee369eb8730b1.cab
+en-gb (English - United Kingdom)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-en-gb-client_1e236f8f2b8e24cb5aa4a1f9202ca2fd6225fac5.cab
+en-us (English - United States)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-en-us-client_d4c1f3ac02803ae50ef89988b685a05f2d0f2479.cab
+es-es (Spanish)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-es-es-client_f80d44c869cec373f5022afc312a07f6d2db7521.cab
+et-ee (Estonian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-et-ee-client_dff80b8516877a4c5419ae167972ccdcd1d25bae.cab
+fi-fi (Finnish)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-fi-fi-client_35e41ff0fa5b3dd81257ef5e0994fecd4d06e7b3.cab
+fr-fr (French)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-fr-fr-client_fe7e43eeef4e946ee4adffb8491463eeb1f3c8cf.cab
+he-il (Hebrew)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-he-il-client_b5c8237e516afd4ebc3fc9c462fa01a3522d9603.cab
+hr-hr (Croatian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-hr-hr-client_fa7999b04ea16c159cce5026c839bd457e4ec777.cab
+hu-hu (Hungarian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-hu-hu-client_2f67f71791980dc06bdcf769c90e27dd0e43601d.cab
+it-it (Italian)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-it-it-client_0876c2cdb7339cdb1cf5fbefc65f18d6f4ed9d1a.cab
+ja-jp (Japanese)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-ja-jp-client_bd942470cf4c87e98770e80ae671ae1e9e44d1c2.cab
+ko-kr (Korean)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-ko-kr-client_cedd687f6cfd6a7244a8a646f5b3a871198c9305.cab
+lt-lt (Lithuanian)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-lt-lt-client_4f2e2b5f3798aa927fe9225a5acdb4a31c960e05.cab
+lv-lv (Latvian)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-lv-lv-client_9c53e75020ed1b8ec437a5466d96f21aec508608.cab
+nb-no (Norwegian - Bokmal)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-nb-no-client_d2cb2cbaa11de0d7a4f67a6caf90bfab602b8645.cab
+nl-nl (Dutch)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-nl-nl-client_43efa0695a6bc0952ce5022869dc222864214806.cab
+pl-pl (Polish)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-pl-pl-client_dec425abccfe8cd7b98243c16b90fe0fd9214ebc.cab
+pt-br (Portuguese - Brazil)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-pt-br-client_9aa0b02d4af44e95cf7295c4b8785f6e84354320.cab
+pt-pt (Portuguese - Portugal)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-pt-pt-client_d12b518f0cf4226f03b80e93512fbefb54029d3b.cab
+ro-ro (Romanian)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-ro-ro-client_7dc1e96b9a5060b3f4696b41c8c0e3b131c9d03a.cab
+ru-ru (Russian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-ru-ru-client_272ee7c6055fcd61f0ee6d27ade05e9540dc3982.cab
+sk-sk (Slovak)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-sk-sk-client_39b8e9f56b0a974649324b225bde85cfcb61a776.cab
+sl-si (Slovenian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-sl-si-client_3fc0f04db15bc58b56a08d4dac64497ee9b3828d.cab
+sr-latn-rs (Serbian - Latin)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-sr-latn-rs-client_183286f7d80ef48e45df256baf714ab040e24418.cab
+sv-se (Swedish)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-sv-se-client_8e2bf7db607ba24c23068cfa08b718c949b5ffcf.cab
+th-th (Thai)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-th-th-client_5f13359f05cbdf92b11d4566917008fd8fdd5596.cab
+tr-tr (Turkish)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-tr-tr-client_d68e0513e789377a09969f5764fa96bed2c27e7a.cab
+uk-ua (Ukrainian)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-uk-ua-client_633c476dfaaece86127d262f913d9591f02f9c22.cab
+zh-cn (Chinese - Simplified)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-zh-cn-client_2cc63aa264e6d69c72e94d5881e8454dd8743e83.cab
+zh-hk (Chinese - Traditional, Hong Kong)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-zh-hk-client_5182fc68e7bec7f9741cf7d57a5d42a03e34d67f.cab
+zh-hk (Chinese - Traditional, Taiwan)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x86-zh-tw-client_0dee0342fad0e3e1ee00fc6802157b0c69c22b39.cab
+
+============================================================
+x64 (64 Bit)
+
+ar-sa (Arabic)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-ar-sa-client_3e7da70d500a9511257a009a6b65ebe2b76af385.cab
+bg-bg (Bulgarian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-bg-bg-client_ae74a5addf8d3c8b1b1df06c5cfbb487fb7ef23a.cab
+cs-cz (Czech)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-cs-cz-client_a1be48cd0dd10065225c522d09114e1f03cd44e9.cab
+da-dk (Danish)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-da-dk-client_101bc1172a0d3d0678b4840bb03426d64fd63ca4.cab
+de-de (German)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-de-de-client_dee84541b4de632ce0bdea196effa848b08ec585.cab
+el-gr (Greek)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-el-gr-client_b64a8be5f7284260b7725b1c10114be557b6563d.cab
+en-gb (English - United Kingdom)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-en-gb-client_4e73cb1a127bfaf20a27c09c58456f5715fd7a39.cab
+en-us (English - United States)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-en-us-client_a7c55879fa34baad8fef641f316488e3b45de9f6.cab
+es-es (Spanish)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-es-es-client_f6f2d368b8cef9161a1fedc6bde1ed32bb4a353f.cab
+et-ee (Estonian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-et-ee-client_337a5c1f9060fc2333c3d95085b7be793bbecbbe.cab
+fi-fi (Finnish)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-fi-fi-client_432c662f138346d072772f88e51db29bce2c4462.cab
+fr-fr (French)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-fr-fr-client_134770b2c1e1abaab223d584d0de5f3b4d683697.cab
+he-il (Hebrew)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-he-il-client_7964df925ac57882b016f4dfbb17f748c38dabd6.cab
+hr-hr (Croatian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-hr-hr-client_4866f636367d09dc94c1b3ec53bd84f5b5c8e93c.cab
+hu-hu (Hungarian)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-hu-hu-client_63ddae5a417f51cea18c2a82138eba84428e7428.cab
+it-it (Italian)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-it-it-client_2aada2ee902555c73e3c80f06d8f688ff3f427bc.cab
+ja-jp (Japanese)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-ja-jp-client_015f05b5222e363add36e0588fc491d99b047b01.cab
+ko-kr (Korean)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-ko-kr-client_b3762fb18545927d20f34c0751c01ba2b786ca0f.cab
+lt-lt (Lithuanian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-lt-lt-client_47bab1317a2b345b2e7ef03ced47f02022d55a78.cab
+lv-lv (Latvian)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-lv-lv-client_92d44fc2a8c54e44c9265a4f7c3d4d486ec8b4cc.cab
+nb-no (Norwegian - Bokmal)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-nb-no-client_93f76ff4cdc22f4fa4e25f374ee37d0200076089.cab
+nl-nl (Dutch)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-nl-nl-client_601bf2290f1ed205c82fe5537651bcb151a067a5.cab
+pl-pl (Polish)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-pl-pl-client_4824af56e24fbae186a278014549c85fb93b7218.cab
+pt-br (Portuguese - Brazil)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-pt-br-client_01cb1a515d99cad911ba81fead439a5a64514a5d.cab
+pt-pt (Portuguese - Portugal)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-pt-pt-client_e8085482f6aa0d13c4f972035aa7cb6e4812ed04.cab
+ro-ro (Romanian)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-ro-ro-client_aedbdf1a526c891683fa18be32fa407ebdb52305.cab
+ru-ru (Russian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-ru-ru-client_402e43ccf0bedaf01783a6ab43bf9d195dfc94c1.cab
+sk-sk (Slovak)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-sk-sk-client_de7ae38a3729faae85d9cdb1484c67a2adcd6032.cab
+sl-si (Slovenian)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-sl-si-client_e695453b23b97827414b8ce769a373aca885a4fe.cab
+sr-latn-rs (Serbian - Latin)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-sr-latn-rs-client_a9665eb291007f5031e97e7c86c5017402b916f4.cab
+sv-se (Swedish)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-sv-se-client_7dab22f002d69d88c36ba9398461105d2d1d5dca.cab
+th-th (Thai)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-th-th-client_679d20e231a08eade0864c72d39234c3253ed1c7.cab
+tr-tr (Turkish)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-tr-tr-client_29a7f18bd7bfa610cf92a887e0bb60a0952d0341.cab
+uk-ua (Ukrainian)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-uk-ua-client_49dd7a8816a55f6c63a89007d3362360ca0577e6.cab
+zh-cn (Chinese - Simplified)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-zh-cn-client_e90502ffad2cd573686a92d9e0fa2c2414633fb4.cab
+zh-hk (Chinese - Traditional, Hong Kong)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-zh-hk-client_69b538d71a82b42131a3d750f98eb2b5a13a1ec7.cab
+zh-hk (Chinese - Traditional, Taiwan)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2014/11/windows8.1-kb3012997-x64-zh-tw-client_2af02ae47bb6bc84c169dc6fc7045b41fe6834b1.cab

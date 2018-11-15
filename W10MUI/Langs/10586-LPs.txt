@@ -1,0 +1,165 @@
+Download the correct Languages Packs for your needs, and put them in this folder.
+
+=================================================================================================
+x86 (32 Bit)
+
+ar-sa / Arabic
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_a129f6fb879e8a9cbd21046044bffd17a75b942e.cab
+bg-bg / Bulgarian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_5d7883d0bc9b91a58fad2ff065453b2d0a34db3b.cab
+cs-cz / Czech
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_53d822844ee17ffa98557e90cec378a5f19595a3.cab
+da-dk / Danish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_a54ef9acad4257c5a7eaa98611cce4d28ecd4109.cab
+de-de / German
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_9268bfefa63a82965df54a78af9074279b11bc20.cab
+el-gr / Greek
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_e9a9fbab875249e726064ac222c71ca4d0bd9cd0.cab
+en-gb / English (United Kingdom)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_01c913db49c1dc911dfa69140ffca3cdf5ab4f9c.cab
+en-us / English (United States)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_884bf1d8230c008e30bf4c2d06d1077c0ef6adb5.cab
+es-es / Spanish (Spain)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_ab48e731d5f98e68d853960f83341887f0d29f3e.cab
+es-mx / Spanish (Mexico)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_733ae2048e292bbae3e0b900d0bb0f8e64f98167.cab
+et-ee / Estonian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_abcc7928b396bb265efcfdcc818027822dced30c.cab
+fi-fi / Finnish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_fcfb7b0fe4dee44ea71b91c7a9f54e92ce519d02.cab
+fr-ca / French (Canada)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_459ab17b2487d92cbc27c58dfc2e4a0ba3d7ddeb.cab
+fr-fr / French (France)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_8fef6c231f656c59c95c4871d0c39c1d7863cc5a.cab
+he-il / Hebrew
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_16add46479b60d859548574c014c2014cb03b451.cab
+hr-hr / Croatian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_27fb91f211b036114cdfedb1ad7d779e40b318de.cab
+hu-hu / Hungarian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_48cbfb51378c9f11e5af430403a9fac70bba05f4.cab
+it-it / Italian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_5cc0cc952259608b0f025fda76d3f2b70a4106e6.cab
+ja-jp / Japanese
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_abceab90d77cb4238373122a0c1f2624ccaaad75.cab
+ko-kr / Korean
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_dac9310ce5003c1f98d2047b96baee32537f19f9.cab
+lt-lt / Lithuanian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_74198d325ebe100388b938d88e0112c394124fa3.cab
+lv-lv / Latvian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_4924d9087ea39edfb4da43825b0fde373affecc3.cab
+nb-no / Norwegian (Bokmal)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_6072065820b7b57d766867de61147fdb3d95ebcc.cab
+nl-nl / Dutch
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_139f2171b2945c497a0f92b4a995102cdf74bd1b.cab
+pl-pl / Polish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_698585fa7a9b499ec095b56c77f8c226ee07852a.cab
+pt-br / Portuguese (Brazil)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_d32803916f3606fb5e137147dd848fe4922f6d02.cab
+pt-pt / Portuguese (Portugal)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_94f3b5fe92f251752e7f4fa1866e551538f5d177.cab
+ro-ro / Romanian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_21311f5c29635d6e69c74ac527e6d6766ca936c9.cab
+ru-ru / Russian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_4e94c21dc64601be169d1658f63066da76889630.cab
+sk-sk / Slovak
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_975d359a526861bd8c2a42d58d4f509128090407.cab
+sl-si / Slovenian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_3d64e5173a6cc130b76b91497eb25975d8e91387.cab
+sr-latn-rs / Serbian (Latin)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_2f9150feec619f388ec6b92f1355abfb97c47ba1.cab
+sv-se / Swedish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_e3e8de7078f47b42c97edecbbc7c07b4592ce249.cab
+th-th / Thai
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_896cf87c464330f537c1cff1e7332a853d6f5c34.cab
+tr-tr / Turkish
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_a24c6223e272ad84007e39e6c9b8c28e955d20c9.cab
+uk-ua / Ukrainian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_7bb7f51f57eca4ef92b2ad96dbcc90455b13a47d.cab
+zh-cn / Chinese (Simplified)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_1da5cafdb54cde6cc8aadd3d7c91c35ab8987a5f.cab
+zh-hk / Chinese (Hong Kong S.A.R.)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_8fe6bad0048c5609a8eb992089f24568a2274491.cab
+zh-tw / Chinese (Taiwan)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_46b35538017b5b26bea7beef2e59843d050ea097.cab
+
+=================================================================================================
+x64 (64 Bit)
+
+ar-sa / Arabic
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_6637a400aabbe68088dd60d63a278d72f664ea85.cab
+bg-bg / Bulgarian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_e6ae593018fd427f8022a1587aa2928ef535a1bc.cab
+cs-cz / Czech
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_ae9efaa8187d51c360223a438194fff04503709b.cab
+da-dk / Danish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_9776f16b42a998214c80cbe013a9e6acd6726fdd.cab
+de-de / German
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_5c4aac6b290e2bdf305298fa0f4c49ad31c2e5f1.cab
+el-gr / Greek
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_668add2f19af0439f38d2adc4d5cbef71c3536a6.cab
+en-gb / English (United Kingdom)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_b60be9ebdcd67432e738ae082021383c14ede051.cab
+en-us / English (United States)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_cde3e6fcf3e36d655948c41fc1dd847c09f7d23f.cab
+es-es / Spanish (Spain)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_47afd6de9c3f3f5e56eb65a4232ebb76b9d77c60.cab
+es-mx / Spanish (Mexico)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_fc6d97b2a4400652ced512f38218c316a020441f.cab
+et-ee / Estonian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_1051ab774c0df0942223198b8cd25ec8672afcfd.cab
+fi-fi / Finnish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_80256dc4428a9b12c23190c54b5a5b4e5831cbe1.cab
+fr-ca / French (Canada)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_7f834b68030b2e216d529c565305ea0ee8bb2489.cab
+fr-fr / French (France)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_261edf9ccbe6e3a1a52e9488862f6a1e55c5d671.cab
+he-il / Hebrew
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_e0f0ee545e1e4d762704f1376873dfddfe26d5a4.cab
+hr-hr / Croatian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_76b46b6212ee7f4de5ddff09be097efd15ef69cd.cab
+hu-hu / Hungarian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_e9dcfefe184d9177dac066af6110f1f7f2d826ff.cab
+it-it / Italian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_b7e30dbc9fd06b34116a61a90a21a472ae90a08f.cab
+ja-jp / Japanese
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_cd96d6c98451fe3c3efa0665fe865b1a7612fda2.cab
+ko-kr / Korean
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_250cd28c044258bfecb412c4637cce7c59386e4a.cab
+lt-lt / Lithuanian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_0e3e50bdf2f9e724325e8ebbfa9348333c95dc78.cab
+lv-lv / Latvian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_69f40996e50473f5a1143612a3d580d6fd842b89.cab
+nb-no / Norwegian (Bokmal)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_95e5dcd8d2e017084917c8608a2e5b7ca2bb2891.cab
+nl-nl / Dutch
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_4dd047e5c9316321022904c36eb4728cda6c7644.cab
+pl-pl / Polish
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_8a8e94abfe477bd7c362a2cc7f656082033309c1.cab
+pt-br / Portuguese (Brazil)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_80ef02766fddeb5767b4a5345af8101bb9af1f3b.cab
+pt-pt / Portuguese (Portugal)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_e8a5eb2c660a6f98176b084165a156d4d425b40b.cab
+ro-ro / Romanian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_5c43b644073d78c2466eb4acc2bb93243637ff36.cab
+ru-ru / Russian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_7233236d65ef7c920ccab4637562cf947234f8a0.cab
+sk-sk / Slovak
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_5fb94915f9372ad6dd5ebde667a323a860d00d23.cab
+sl-si / Slovenian
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_92020bb6526dcdd71f5deb576f781a7a738fa184.cab
+sr-latn-rs / Serbian (Latin)
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_44d106ddd6096a142ddd71c6b4d89ae8afb2453e.cab
+sv-se / Swedish
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_7a6c9bf2843eed63efdbe2f26925dc1a453a7a72.cab
+th-th / Thai
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_28a518a9374e4d695087cb23286722eafe7d6d6f.cab
+tr-tr / Turkish
+http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/11/lp_bf3469eb0624f16abaa9bbb39afb3af1739f0097.cab
+uk-ua / Ukrainian
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_e87e81bddf38a51c942bb801b16dd4944ce4d9b4.cab
+zh-cn / Chinese (Simplified)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_4f1f6ca4c7868dde260e0c91f49e137ddf7d7d0b.cab
+zh-hk / Chinese (Hong Kong S.A.R.)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_bdf3e21ecac534492802136b3a9f638e5498fab8.cab
+zh-tw / Chinese (Taiwan)
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/11/lp_e3238161f53c4a69250280f68decd24dc787c2ec.cab

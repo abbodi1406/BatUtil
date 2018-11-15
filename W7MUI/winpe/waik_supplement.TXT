@@ -1,0 +1,36 @@
+- If you want the Standard WinPE localization, download Windows AIK Supplement for Windows 7 SP1:
+http://www.microsoft.com/downloads/en/details.aspx?FamilyID=0aee2b4b-494b-4adc-b174-33bc62f02c5d
+
+you can choose any language iso, all the internal winpe lang packs are the same.
+however, it's best not to select one of (english, german, french, japaneese, korean, chineese)
+because they have Server 2008 R2 IA64 LP files, which make the iso size larger and unneeded
+
+- copy the Supplement iso file to this directory 
+in order to be detected, make sure the file retains its name or at least contain the word "supplement"
+
+=====================
+http://download.microsoft.com/download/5/4/8/548440B6-7669-40E9-93D6-712AAD8698C5/waik_supplement_ar-sa.iso
+http://download.microsoft.com/download/2/E/A/2EA50F4B-911B-4F72-AEFF-0E6B59A17224/waik_supplement_cs-cz.iso
+http://download.microsoft.com/download/4/A/5/4A512E24-84E9-4780-B2E4-90DB38ACDB13/waik_supplement_da-dk.iso
+http://download.microsoft.com/download/4/9/7/497553F9-B14D-4654-88BE-B8A972308C96/waik_supplement_de-de.iso
+http://download.microsoft.com/download/2/8/4/284F4675-072A-405E-8925-310311A62C7D/waik_supplement_el-gr.iso
+http://download.microsoft.com/download/0/4/C/04C805CC-4C04-4D76-BE80-7D67B951CF73/waik_supplement_en-us.iso
+http://download.microsoft.com/download/E/E/E/EEEEA22B-3028-4AE2-8944-9D244C757AA5/waik_supplement_es-es.iso
+http://download.microsoft.com/download/8/5/2/8527AC71-F222-43A2-A3D2-2096B9634B95/waik_supplement_fi-fi.iso
+http://download.microsoft.com/download/2/3/D/23D0B35C-4F90-4639-B5ED-D6BB4B4EC35E/waik_supplement_fr-fr.iso
+http://download.microsoft.com/download/B/2/0/B2090AD4-3340-41D1-A0DD-93C909532CA2/waik_supplement_he-il.iso
+http://download.microsoft.com/download/A/A/4/AA407061-4A9B-416D-B177-981757D8E895/waik_supplement_hu-hu.iso
+http://download.microsoft.com/download/0/9/F/09F08F0F-810B-4B41-827C-AB7AB56102B1/waik_supplement_it-it.iso
+http://download.microsoft.com/download/A/0/2/A028549A-51F8-4F57-9D32-EB6FDEEF0648/waik_supplement_ja-jp.iso
+http://download.microsoft.com/download/0/B/1/0B1E7E06-EC8E-48F5-B3FE-41980ACAD418/waik_supplement_ko-kr.iso
+http://download.microsoft.com/download/1/0/C/10C5496C-49FC-4FFF-BB04-CEF126136941/waik_supplement_nb-no.iso
+http://download.microsoft.com/download/C/D/7/CD72B161-CBF2-4249-B09F-F114A5F3F0F0/waik_supplement_nl-nl.iso
+http://download.microsoft.com/download/0/8/D/08D006C5-E126-42BF-B693-71E8B9B79B12/waik_supplement_pl-pl.iso
+http://download.microsoft.com/download/1/D/2/1D263BF8-1250-4BAB-A37A-0BB20069D7AB/waik_supplement_pt-br.iso
+http://download.microsoft.com/download/7/B/5/7B5A43D2-46F5-417F-B28F-D22C1E40B452/waik_supplement_pt-pt.iso
+http://download.microsoft.com/download/C/B/5/CB58D6F5-9FAC-48A6-9161-20CB482EFAC5/waik_supplement_ru-ru.iso
+http://download.microsoft.com/download/7/D/0/7D030E3D-31BC-4D27-AFBF-08A369B704F7/waik_supplement_sv-se.iso
+http://download.microsoft.com/download/1/7/E/17EED247-DF31-499B-B15B-0581C44EBAD3/waik_supplement_tr-tr.iso
+http://download.microsoft.com/download/8/C/C/8CC3C3AD-066C-4B11-88CE-CE9D1B3B034F/waik_supplement_zh-cn.iso
+http://download.microsoft.com/download/6/C/5/6C5DD90A-3AEB-45C2-8797-E2E11ABC8779/waik_supplement_zh-hk.iso
+http://download.microsoft.com/download/2/7/5/275A07FD-1F33-42BA-828B-7119CE056E71/waik_supplement_zh-tw.iso

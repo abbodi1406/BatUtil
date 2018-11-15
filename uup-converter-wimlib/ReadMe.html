@@ -1,0 +1,280 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>UUP to ISO</title>
+    <style type="text/css">
+        #nav {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 200px;
+            overflow: auto;
+        }
+
+        main {
+            position: fixed;
+            top: 0;
+            left: 200px;
+            right: 0;
+            bottom: 0;
+            overflow: auto;
+        }
+
+        .innertube {
+            margin: 15px;
+        }
+
+        * html main {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="innertube">
+
+            <h2><a name="Overview"></a>Overview</h2>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>Automated windows command script to process Microsoft Windows 10 Unified Update Platform files, allowing to build/convert them into a usable state (ISO / WIM).</li>
+				<br />
+                <li>You can get UUP files by performing upgrade from Windows 10 build to later build (starting 15063).</li>
+				<br />
+				<li>You can also obtain UUP canonical source using one of these projects:<br />
+				<a href="https://uupdump.ml/">UUP dump website</a><br />
+				<a href="https://gitlab.com/uup-dump/miniserver">UUP dump MiniServer</a><br />
+				<a href="https://gitlab.com/uup-dump/uupdl">UUPDL</a><br />
+				<a href="https://uup.rg-adguard.net/">UUP Generation Project</a>
+				</li>
+            </ul>
+			<br />
+
+            <h2><a name="Remarks"></a>Remarks</h2>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>Administrator privileges are required to run the script.</li>
+				<br />
+                <li>
+				    Creating normal boot.wim from UUP require Windows 10 host OS, or installed Windows 10 ADK (Deployment Tools).<br />
+				    Otherwise, you will get winre.wim acting as setup boot.wim, without recovery options.
+				</li>
+				<br />
+                <li>
+                    If the upgrade is done via Express UUP (multiple expanded folders in the download directory), you need to perform the UUP &gt; ISO operation before starting the upgrade process (before first restart).<br />
+                    to do so, when WU prompt you to restart, start convert-UUP.cmd and paste the path to download directory, example:
+                <ul style="margin-top:0in;margin-bottom:0in">
+                    <li>C:\Windows\SoftwareDistribution\Download\07172dda91861218ecc095600216d792</li>
+                </ul>
+				<br />
+                    Alternatively, if you are testing in VM machine or have multi boot systems, you can choose to Shut down/Restart the system without upgrading.<br />
+					on Desktop, press Alt+F4 and choose option withou Update
+                </li>
+            </ul>
+			<br />
+
+            <h2><a name="Using"></a>How To Use</h2>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>Optional: temporary disable AV or protection program so it doesn't interfere with the process.</li>
+				<br />
+                <li>Make sure the files are not read-only or blocked.</li>
+				<br />
+                <li>Extract this pack to a folder with simple spaceless path to avoid troubles (example: C:\UUP).</li>
+				<br />
+                <li>Place the files in "UUPs" folder to be detected automatically. Alternatively, you will be prompted to enter other UUP folder path.</li>
+				<br />
+                <li>If multiple Editions detected, you will be prompted first to select one of them, or create AIO.</li>
+				<br />
+                <li>To exit of the prompt or options menu just press "Enter".</li>
+                </li>
+            </ul>
+			<br />
+
+            <h2><a name="Options"></a>Options</h2>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>
+                    <b>1 - Create ISO with install.wim</b><br />
+                    <b>4 - Create ISO with install.esd</b><br />
+                    convert UUP files to a regular ISO distribution that contains install.wim or install.esd file.
+                </li>
+				<br />
+                <li>
+                    <b>2 - Create install.wim</b><br />
+                    <b>5 - Create install.esd</b><br />
+                    create install.wim/install.esd file only, which can be used with other ISO with the same version or for manual apply using dism/wimlib.
+                </li>
+				<br />
+                <li>
+                    <b>3 - UUP Edition info</b><br />
+                    Display info about detected editions (architecture, language, build version, build branch, editions name).
+                </li>
+            </ul>
+			<br />
+
+            <h2><a name="Manual"></a>Manual Options</h2>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>for advanced users, edit convert-UUP.cmd to change the default value.</li>
+				<br />
+                <li>
+                    <b>AutoStart</b><br />
+                    If you want to start the conversion process directly without prompts. By default this will create ISO with install.wim. For multiple UUP editions it will create AIO ISO with install.wim.<br /><br />
+					to do so, change "SET AutoStart=0" to "SET AutoStart=1"
+                </li>
+				<br />
+                <li>
+                    <b>SkipISO</b><br />
+                    If you are not interested to create ISO file currently, or intend to create Multi-Architecture ISO (x86/x64) later with multi_arch_iso.cmd<br /><br />
+					to do so, change "SET SkipISO=0" to "SET SkipISO=1"
+                </li>
+				<br />
+                <li>
+                    <b>SkipWinRE</b><br />
+                    If you are not interested to have recovery environment or want to reduce ISO size/conversion period.. etc, 
+					it is possible to skip adding winre.wim to install.wim/install.esd<br /><br />
+					to do so, change "SET SkipWinRE=0" to "SET SkipWinRE=1"<br /><br />
+					note: adding winre.wim to install<b>.esd</b> will consume high amount of CPU/RAM
+                </li>
+				<br />
+                <li>
+                    <b>RefESD</b><br />
+                    If you plan to use your local UUP source repeatedly, you can choose to keep converted reference ESD files
+					for future operations instead converting them each time.<br /><br />
+					to do so, change "SET RefESD=0" to "SET RefESD=1"<br /><br />
+					if UUP source is Express, Reference ESDs and Edition ESDs will be copied to new folder "CanonicalUUP"
+					practically, this convert/backup Express UUP source to Canonical<br /><br />
+					if UUP source is Canonical, Reference ESDs will be copied to the same UUP source folder
+					and original CAB files will be moved to subdirectory "Original"
+                </li>
+            </ul>
+			<br />
+
+            <h2><a name="Multi"></a>Multi-Architecture ISO (x86/x64)</h2>
+
+            <h3><a name="MultiHow"></a>How To</h3>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>Optional: if you do not intend to keep single architecture ISOs, edit convert-UUP.cmd and SET SkipISO=1</li>
+                <br />
+                <li>Use convert-UUP.cmd to create two ISO distributions, one for x64 and another for x86, you may select the desired editions to include in each one</li>
+                <br />
+                <li>Run multi_arch_iso.cmd and choose the desired option from menu</li>
+            </ul>
+            <br />
+            <h3><a name="MultiOps"></a>Options</h3>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>
+                    <b>1 - Create ISO with 1 combined install.wim/install.esd</b><br />
+                    create a custom ISO structure.<br />
+                    with 1 install.wim/install.esd for all x64/x86 images, and slighlty modified bootx64.wim/bootx86.wim to allow coexistence.
+                </li>
+                <br />
+                <li>
+                    <b>2 - Create ISO with 2 separate install.wim/install.esd</b><br />
+                    create the same ISO structure as Media Creation Tool.<br />
+                    with 2 separate x64/x86 folders and install.wim/install.esd for each architecture.
+                </li>
+            </ul>
+            <br />
+            <h3><a name="MultiNote"></a>Notes</h3>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>To preserve source single-architecture distributions folders, edit multi_arch_iso.cmd and SET Preserve=1</li>
+                <br />
+                <li>If the installation file is install.esd, be aware that option 1 will require high amount of CPU/RAM to unify install.esd files</li>
+                <br />
+                <li>multi_arch_iso.cmd can be also used to create multi-architecture ISO from any similar Windows x64/x86 ISO distributions, starting Windows 7 SP1</li>
+            </ul>
+            <br />
+
+            <h2><a name="Virtual"></a>Virtual Editions</h2>
+
+            <h3><a name="VirtualInfo"></a>Info</h3>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>Starting WIP build 17063, Windows 10 regular editions have been unified into two base editions:<br />
+                Home & Pro (with their variants Home N & Pro N)<br />
+                Home China edition still separate
+                </li>
+                <br />
+                <li>According to that, UUP will only deliver installation files for above editions only</li>
+                <br />
+                <li>The following editions are now exist as "virtual upgrade editions" with base editions:<br /><br />
+                with Home: Home Single Language<br /><br />
+                with Pro: Enterprise, Education, Pro Education, Pro for Workstations, Enterprise for Remote Sessions<br /><br />
+                with Pro N: Enterprise N, Education N, Pro Education N, Pro N for Workstations
+                </li>
+                <br />
+                <li>Therefore, the extra script is to help create these virtual editions for UUP source.</li>
+            </ul>
+            <br />
+            <h3><a name="VirtualHow"></a>How To</h3>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>Optional: if you do not intend to keep converted ISO, edit convert-UUP.cmd and SET SkipISO=1</li>
+                <br />
+                <li>Use convert-UUP.cmd to create the converted ISO distribution file/folder</li>
+                <br />
+                <li>Run create_virtual_editions.cmd and choose the desired option from menu</li>
+            </ul>
+            <br />
+            <h3><a name="VirtualOps"></a>Options</h3>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>
+                    <b>1 - Create all editions</b><br />
+                    create all possible target virtual editions.
+                </li>
+                <br />
+                <li>
+                    <b>2 - Create one edition</b><br />
+                    create one of the target virtual editions.
+                </li>
+                <br />
+                <li>
+                    <b>3 - Create randomly selected editions</b><br />
+                    create some of the target virtual editions.
+                </li>
+            </ul>
+            <br />
+            <h3><a name="VirtualNote"></a>Notes</h3>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>To preserve source distribution folder, edit create_virtual_editions.cmd and set Preserve=1</li>
+                <br />
+                <li>If you do not need to keep source editions (example: create Enterprise and delete Pro), edit create_virtual_editions.cmd and set DeleteSource=1</li>
+            </ul>
+            <br />
+
+            <h2><a name="Credits"></a>Credits</h2>
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li><a href="https://gitlab.com/users/mkuba50">mkuba50</a> - UUP dump</li>
+                <li><a href="https://wimlib.net">Eric Biggers</a> - wimlib</li>
+                <li><a href="https://www.7-zip.org">Igor Pavlov</a> - 7-zip</li>
+                <li><a href="http://reboot.pro/files/file/313-offlinereg">erwan.l</a> - offlinereg</li>
+                <li><a href="http://reboot.pro/topic/20471-windows-pe-5x-boot-problem">cdob</a> - create aio efisys.bin</li>
+                <li><a href="https://twitter.com/rgadguard">rgadguard</a> - initial script and co-enhancing</li>
+                <li>Thanks to: @Enthousiast, @Ratiborus58, @NecrosoftCore, @DiamondMonday, @WzorNET</li>
+                <li>cdimage and imagex are intellectual property of Microsoft Corporation.</li>
+            </ul>
+			<br />
+			Author: abbod1406
+        </div>
+    </main>
+
+    <nav id="nav">
+        <div class="innertube">
+            <h2>Index</h2>
+            <a href="#Overview">Overview</a><br />
+            <a href="#Remarks">Remarks</a><br />
+            <a href="#Using">How To Use</a><br />
+            <a href="#Options">Options</a><br />
+            <a href="#Manual">Manual Options</a><br />
+            <a href="#Multi">Multi-Architecture ISO</a><br />
+            &nbsp;&nbsp;&nbsp;<a href="#MultiHow">How To</a><br />
+            &nbsp;&nbsp;&nbsp;<a href="#MultiOps">Options</a><br />
+            &nbsp;&nbsp;&nbsp;<a href="#MultiNote">Notes</a><br />
+            <a href="#Virtual">Virtual Editions</a><br />
+            &nbsp;&nbsp;&nbsp;<a href="#VirtualInfo">Info</a><br />
+            &nbsp;&nbsp;&nbsp;<a href="#VirtualHow">How To</a><br />
+            &nbsp;&nbsp;&nbsp;<a href="#VirtualOps">Options</a><br />
+            &nbsp;&nbsp;&nbsp;<a href="#VirtualNote">Notes</a><br />
+            <a href="#Credits">Credits</a><br />
+        </div>
+    </nav>
+</body>
+</html>
