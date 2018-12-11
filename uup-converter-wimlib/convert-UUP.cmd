@@ -6,7 +6,7 @@ set AutoStart=0
 :: Change to 1 to integrate updates (if detected) into install.wim/boot.wim/winre.wim
 set AddUpdates=0
 
-:: Set to 1 to reset OS image base and remove superseded components (default is to compress them)
+:: Change to 1 to reset OS image base and remove superseded components (default is to compress them)
 set ResetBase=0
 
 :: Change to 1 to start create_virtual_editions.cmd directly after conversion
@@ -26,6 +26,10 @@ rem wimlib:	   synchronicity
 rem offlinereg: erwan.l
 rem Thanks to: @Ratiborus58, @NecrosoftCore, @DiamondMonday, @WzorNET
 
+if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative") else (set "SysPath=%Windir%\System32")
+set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set xOS=x64
+if /i %PROCESSOR_ARCHITECTURE%==x86 (if "%PROCESSOR_ARCHITEW6432%"=="" set xOS=x86)
 set "params=%*"
 if not "%~1"=="" (
 set "params=%params:"=%"
@@ -36,7 +40,7 @@ title UUP -^> ISO
 for %%a in (wimlib-imagex,7z,imagex,offlinereg) do (
 if not exist "%~dp0bin\%%a.exe" (echo Error: required %%a.exe is missing&pause&exit)
 )
-if /i "%PROCESSOR_ARCHITECTURE%" equ "AMD64" (set "wimlib=%~dp0bin\bin64\wimlib-imagex.exe") else (set "wimlib=%~dp0bin\wimlib-imagex.exe")
+if /i "%xOS%" equ "x64" (set "wimlib=%~dp0bin\bin64\wimlib-imagex.exe") else (set "wimlib=%~dp0bin\wimlib-imagex.exe")
 cd /d "%~dp0"
 setlocal EnableExtensions
 setlocal EnableDelayedExpansion
@@ -55,7 +59,7 @@ if exist temp\ rmdir /s /q temp\
 mkdir bin\temp
 mkdir temp
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
-set "dismroot=%windir%\system32\dism.exe"
+set "dismroot=dism.exe"
 set "mountdir=%SystemDrive%\MountUUP"
 set "line============================================================="
 
@@ -64,8 +68,8 @@ set regKeyPathFound=1
 set wowRegKeyPathFound=1
 reg query "HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 1>nul 2>nul || set wowRegKeyPathFound=0
 reg query "HKLM\Software\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 1>nul 2>nul || set regKeyPathFound=0
-if %wowRegKeyPathFound% EQU 0 (
-  if %regKeyPathFound% EQU 0 (
+if %wowRegKeyPathFound% equ 0 (
+  if %regKeyPathFound% equ 0 (
     set ADK=0&goto :precheck
   ) else (
     set regKeyPath=HKLM\Software\Microsoft\Windows Kits\Installed Roots
@@ -73,14 +77,14 @@ if %wowRegKeyPathFound% EQU 0 (
 ) else (
     set regKeyPath=HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots
 )
-for /f "skip=2 tokens=2*" %%i IN ('reg query "%regKeyPath%" /v KitsRoot10') do (set "KitsRoot=%%j")
+for /f "skip=2 tokens=2*" %%i in ('reg query "%regKeyPath%" /v KitsRoot10') do (set "KitsRoot=%%j")
 set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
 set "dismroot=%DandIRoot%\%PROCESSOR_ARCHITECTURE%\DISM\dism.exe"
 set ADK=1
-if not exist "%dismroot%" set ADK=0&set "dismroot=%windir%\system32\dism.exe"
+if not exist "%dismroot%" set ADK=0&set "dismroot=dism.exe"
 
 :precheck
-set _dism="%dismroot%" /English
+if /i "%dismroot%"=="dism.exe" (set _dism=dism.exe /English) else (set _dism="%dismroot%" /English)
 set W10UI=0
 if %winbuild% geq 10240 (
 set W10UI=1
@@ -305,13 +309,22 @@ if %AIO%==1 for /L %%i in (2, 1, %uups_esd_num%) do (
   )
 )
 if %AddUpdates%==1 if %WIMFILE%==install.wim if exist "%UUP%\*Windows10*KB*.cab" call :uups_update
-if %StartVirtual%==1 if %WIMFILE%==install.wim set SkipISO=1
+if %StartVirtual%==1 if %WIMFILE%==install.wim (
+  if %RefESD%==1 call :uups_backup
+  ren ISOFOLDER %DVDISO%
+  if %AutoStart%==1 (start /i "" create_virtual_editions.cmd auto) else (start /i "" create_virtual_editions.cmd manu)
+  echo.
+  echo %line%
+  echo Done. You chose to start create_virtual_editions.cmd directly.
+  echo %line%
+  echo.
+  echo Press any key to exit.
+  pause >nul
+  goto :QUIT
+)
 if %SkipISO%==1 (
   if %RefESD%==1 call :uups_backup
   ren ISOFOLDER %DVDISO%
-  if %StartVirtual%==1 if %WIMFILE%==install.wim (
-  if %AutoStart%==1 (start /i "" create_virtual_editions.cmd auto&goto :QUIT) else (start /i "" create_virtual_editions.cmd manu&goto :QUIT)
-  )
   echo.
   echo %line%
   echo Done. You chose not to create iso file.

@@ -23,17 +23,21 @@ rem script:     abbodi1406
 rem wimlib:     synchronicity
 rem offlinereg: erwan.l
 
+if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative") else (set "SysPath=%Windir%\System32")
+set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set xOS=x64
+if /i %PROCESSOR_ARCHITECTURE%==x86 (if "%PROCESSOR_ARCHITEW6432%"=="" set xOS=x86)
 set "params=%*"
 if not "%~1"=="" (
 set "params=%params:"=%"
 )
-cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  cmd /u /c echo set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/k cd ""%~dp0"" && ""%~dpnx0"" ""%params%""", "", "runas", 1 >> "%temp%\getadmin.vbs" && "%temp%\getadmin.vbs" && exit /B )
+cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  cmd /u /c echo set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/k cd ""%~dp0"" && ""%~dpnx0"" ""%params%""", "", "runas", 1 >> "%temp%\getadmin.vbs" && "%temp%\getadmin.vbs" 1>nul 2>nul && exit /B )
 
 title Virtual Editions
 for %%a in (wimlib-imagex,7z,imagex,offlinereg) do (
 if not exist "%~dp0bin\%%a.exe" (echo Error: required %%a.exe is missing&pause&exit)
 )
-if /i "%PROCESSOR_ARCHITECTURE%" equ "AMD64" (set "wimlib=%~dp0bin\bin64\wimlib-imagex.exe") else (set "wimlib=%~dp0bin\wimlib-imagex.exe")
+if /i "%xOS%" equ "x64" (set "wimlib=%~dp0bin\bin64\wimlib-imagex.exe") else (set "wimlib=%~dp0bin\wimlib-imagex.exe")
 cd /d "%~dp0"
 setlocal EnableExtensions
 setlocal EnableDelayedExpansion
@@ -42,7 +46,7 @@ set ERRORTEMP=
 set _dir=0
 set _iso=0
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
-set "dismroot=%windir%\system32\dism.exe"
+set "dismroot=dism.exe"
 set "mountdir=%SystemDrive%\MountUUP"
 set "line============================================================="
 
@@ -60,15 +64,15 @@ if %wowRegKeyPathFound% equ 0 (
 ) else (
     set regKeyPath=HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots
 )
-for /f "skip=2 tokens=2*" %%i IN ('reg query "%regKeyPath%" /v KitsRoot10') do (set "KitsRoot=%%j")
+for /f "skip=2 tokens=2*" %%i in ('reg query "%regKeyPath%" /v KitsRoot10') do (set "KitsRoot=%%j")
 set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
 set "dismroot=%DandIRoot%\%PROCESSOR_ARCHITECTURE%\DISM\dism.exe"
 set ADK=1
-if not exist "%dismroot%" set ADK=0&set "dismroot=%windir%\system32\dism.exe"
+if not exist "%dismroot%" set ADK=0&set "dismroot=dism.exe"
 
 :precheck
 if %winbuild% lss 10240 if %ADK% equ 0 (set "MESSAGE=Host OS is not compatible, and Windows 10 ADK is not detected"&goto :E_MSG)
-set _dism="%dismroot%" /English
+if /i "%dismroot%"=="dism.exe" (set _dism=dism.exe /English) else (set _dism="%dismroot%" /English)
 if /i "%params%"=="auto" (set AutoStart=1&set Preserve=0)
 
 :checkdir

@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-set uiv=v4.6
+set uiv=v4.8
 :: when changing below options, recommended to set the new values between = and " marks
 
 :: target image or wim file
@@ -74,12 +74,15 @@ echo ============================================================
 echo.
 rmdir /s /q "%cab_dir%" >nul
 )
+setlocal enableextensions
+setLocal EnableDelayedExpansion
 set dvd=0
 set wim=0
 set offline=0
 set online=0
 set _wim=0
 set copytarget=0
+set imgcount=0
 if exist "*.wim" (for /f "delims=" %%i in ('dir /b /a:-d *.wim') do (call set /a _wim+=1))
 if "%target%"=="" if %_wim%==1 (for %%i in ("*.wim") do set "target=%%~fi"&set "targetname=%%i")
 if "%target%"=="" set "target=%SystemDrive%"
@@ -108,6 +111,10 @@ dir /b /s /adr "%target%" 1>nul 2>nul && set copytarget=1
 dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" /index:1 | find /i "Version : 6.1.7601" >nul || (set "MESSAGE=Detected install.wim version is not Windows 10"&goto :E_Target)
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" /index:1 ^| find /i "Architecture"') do set arch=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" ^| findstr "Index"') do set imgcount=%%i
+for /L %%i in (1,1,!imgcount!) do (
+  for /f "tokens=1* delims=: " %%a in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" /index:%%i ^| findstr /b /c:"Name"') do set name%%i="%%b"
+  )
+set "indices=*"
 )
 if %wim%==1 (
 echo.
@@ -117,6 +124,10 @@ echo ============================================================
 dism /english /get-wiminfo /wimfile:"%target%" /index:1 | find /i "Version : 6.1.7601" >nul || (set "MESSAGE=Detected wim version is not Windows 7"&goto :E_Target)
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%" /index:1 ^| find /i "Architecture"') do set arch=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%" ^| findstr "Index"') do set imgcount=%%i
+for /L %%i in (1,1,!imgcount!) do (
+  for /f "tokens=1* delims=: " %%a in ('dism /english /get-wiminfo /wimfile:"%target%" /index:%%i ^| findstr /b /c:"Name"') do set name%%i="%%b"
+  )
+set "indices=*"
 )
 
 :check
@@ -135,8 +146,6 @@ if "%repo:~-1%"=="\" set "repo=%repo:~0,-1%"
 set "repo=%repo%\Windows7-%arch%"
 if /i "%target%"=="%SystemDrive%" (set dismtarget=/online&set "mountdir=%target%"&set online=1) else (set dismtarget=/image:"%mountdir%")
 cls
-setlocal enableextensions
-setLocal EnableDelayedExpansion
 echo ============================================================
 echo Running WHD-W7UI_WithoutKB3125574 %uiv%
 echo ============================================================
@@ -160,13 +169,16 @@ call :update
 call :cleanupmanual
 )
 if %wim%==1 (
+if "%indices%"=="*" set "indices="&for /L %%i in (1,1,%imgcount%) do set "indices=!indices! %%i"
 call :mount "%target%"
 if /i "%targetname%" neq "winre.wim" (if exist "%~dp0winre.wim" del /f /q "%~dp0winre.wim" >nul)
 )
 if %dvd%==1 (
+if "%indices%"=="*" set "indices="&for /L %%i in (1,1,%imgcount%) do set "indices=!indices! %%i"
 call :mount "%target%\sources\install.wim"
 if exist "%~dp0winre.wim" del /f /q "%~dp0winre.wim" >nul
-set imgcount=2&call :mount "%target%\sources\boot.wim"
+set "indices="&set imgcount=2&for /L %%i in (1,1,!imgcount!) do set "indices=!indices! %%i"
+call :mount "%target%\sources\boot.wim"
 xcopy /CRY "%target%\efi\microsoft\boot\fonts" "%target%\boot\fonts" >nul
 )
 goto :fin
@@ -837,6 +849,7 @@ call :win10u
 goto :eof
 
 :win10u
+if exist "%mountdir%\sources\recovery\RecEnv.exe" goto :eof
 if exist "%mountdir%\Users\Public\Desktop\RunOnce_W10_Telemetry_Tasks.cmd" goto :eof
 if %online%==1 (
 schtasks /query /tn "\Microsoft\Windows\Application Experience\ProgramDataUpdater" 1>nul 2>nul || goto :eof
@@ -999,18 +1012,10 @@ exit
 rem ##################################################################
 
 :mount
-if exist "%mountdir%" (
-"%dismroot%" /Unmount-Wim /MountDir:"%mountdir%" /Discard >nul 2>&1
-"%dismroot%" /Cleanup-Wim >nul 2>&1
-rmdir /s /q "%mountdir%" >nul
-)
-if exist "%winremount%" (
-"%dismroot%" /Unmount-Wim /MountDir:"%winremount%" /Discard >nul 2>&1
-"%dismroot%" /Cleanup-Wim >nul 2>&1
-rmdir /s /q "%winremount%" >nul
-)
+if exist "%mountdir%" rmdir /s /q "%mountdir%" >nul
+if exist "%winremount%" rmdir /s /q "%winremount%" >nul
 if not exist "%mountdir%" mkdir "%mountdir%"
-for /L %%b in (1, 1, %imgcount%) do (
+for %%b in (%indices%) do (
 echo.
 echo ============================================================
 echo Mounting %~nx1 - index %%b/%imgcount%
@@ -1230,6 +1235,10 @@ dir /b /s /adr "%target%" 1>nul 2>nul && set copytarget=1
 dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" /index:1 | find /i "Version : 6.1.7601" >nul || (set "MESSAGE=Detected install.wim version is not Windows 10"&goto :E_Target)
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" /index:1 ^| find /i "Architecture"') do set arch=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" ^| findstr "Index"') do set imgcount=%%i
+for /L %%i in (1,1,!imgcount!) do (
+  for /f "tokens=1* delims=: " %%a in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" /index:%%i ^| findstr /b /c:"Name"') do set name%%i="%%b"
+  )
+set "indices=*"
 )
 if %wim%==1 (
 echo.
@@ -1239,6 +1248,10 @@ echo ============================================================
 dism /english /get-wiminfo /wimfile:"%target%" /index:1 | find /i "Version : 6.1.7601" >nul || (set "MESSAGE=Detected wim file version is not Windows 7"&goto :E_Target)
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%" /index:1 ^| find /i "Architecture"') do set arch=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%" ^| findstr "Index"') do set imgcount=%%i
+for /L %%i in (1,1,!imgcount!) do (
+  for /f "tokens=1* delims=: " %%a in ('dism /english /get-wiminfo /wimfile:"%target%" /index:%%i ^| findstr /b /c:"Name"') do set name%%i="%%b"
+  )
+set "indices=*"
 )
 goto :mainmenu
 
@@ -1288,6 +1301,31 @@ set "dismroot=%windir%\system32\dism.exe"
 )
 goto :mainmenu
 
+:indexmenu
+cls
+echo ============================================================
+for /L %%i in (1,1,%imgcount%) do (
+echo. %%i. !name%%i!
+)
+echo.
+echo ============================================================
+echo Enter indexes numbers to update separated with space^(s^)
+echo Enter * to select all indexes
+echo examples: 1 3 4 or 5 1 or *
+echo.
+echo or just press 'Enter' to return to options menu
+echo ============================================================
+echo.
+set /p "_pp="
+if "%_pp%"=="" goto :mainmenu
+if "%_pp%"=="*" set "indices=%_pp%"&goto :mainmenu
+for %%i in (%_pp%) do (
+if %%i gtr %imgcount% echo.&echo %%i is higher than available indexes&pause&set _pp=&goto :indexmenu
+if %%i equ 0 echo.&echo 0 is not valid index&pause&set _pp=&goto :indexmenu
+)
+set "indices=%_pp%"
+goto :mainmenu
+
 :mainmenu
 if %autostart%==1 goto :mainboard
 set _pp=
@@ -1314,17 +1352,20 @@ if /i "%target%" neq "%SystemDrive%" (echo D. DISM : "%dismroot%")
 if /i "%target%" equ "%SystemDrive%" (echo 9. Online installation limit: %onlinelimit% updates)
 if %dvd%==1 (
 if %winre%==1 (echo E. Update WinRE.wim: ON) else (echo E. Update WinRE.wim: OFF)
+if %imgcount% gtr 1 (if "%indices%"=="*" (echo I. Install.wim selected indexes: All ^(%imgcount%^)) else (echo I. Install.wim selected indexes: %indices%))
 )
 if %wim%==1 (
 if %winre%==1 (echo E. Update WinRE.wim: ON) else (echo E. Update WinRE.wim: OFF)
+if %imgcount% gtr 1 (if "%indices%"=="*" (echo I. Install.wim selected indexes: All ^(%imgcount%^)) else (echo I. Install.wim selected indexes: %indices%))
 )
 echo.
 echo ==================================================================
 echo 0. Start the process
 echo ==================================================================
 echo.
-choice /c 1234567890DAWSRBEX /n /m "Change a menu option, press 0 to start, or X to exit: "
-if errorlevel 18 goto :eof
+choice /c 1234567890DAWSRBEIX /n /m "Change a menu option, press 0 to start, or X to exit: "
+if errorlevel 19 goto :eof
+if errorlevel 18 goto :indexmenu
 if errorlevel 17 (if /i %winre% equ 1 (set winre=0) else (set winre=1))&goto :mainmenu
 if errorlevel 16 (if /i %win10u% equ ON (set win10u=OFF) else (set win10u=ON))&goto :mainmenu
 if errorlevel 15 (if /i %RSAT% equ ON (set RSAT=OFF) else (set RSAT=ON))&goto :mainmenu

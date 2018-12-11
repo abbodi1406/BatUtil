@@ -1,5 +1,0 @@
-<Configuration>
-  <Remove All="TRUE" />
-  <Display Level="None" />
-  <RemoveMSI All="TRUE" />
-</Configuration>

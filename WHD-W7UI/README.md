@@ -28,128 +28,95 @@ Automated batch script to install/integrate Windows 7 Updates, depending on WHDo
 
 Press each option corresponding number/letter to change it
 
-1. Target
-
-target windows image, default is current online system
-
+1. Target  
+target windows image, default is current online system  
 if a wim file is available besides the script, it will be detected automatically
 
-2. WHD Repository
-
+2. WHD Repository  
 location of WHDownloader "Updates" folder
 
-3. LDR branch
-
+3. LDR branch  
 force installing of LDR branch for any updates that have it
 
-4. IE11
-
-install (Internet Explorer 11) packages found in "Additional\_IE11"
-
+4. IE11  
+install (Internet Explorer 11) packages found in "Additional\_IE11"  
 if you switch it OFF, "Extra\IE9" will be installed if exist, otherwise "Extra\IE8" if exist
 
-5. RDP
-
-install (Remote Desktop Protocol 8/8.1) packages found in "Additional\RDP"
-
+5. RDP  
+install (Remote Desktop Protocol 8/8.1) packages found in "Additional\RDP"  
 if you switch it OFF, "Extra\WithoutRDP" updates will be installed if exist
 
-6. Hotfixes
-
+6. Hotfixes  
 install updates found in "Hotfix"
 
-7. WMF
-
-install (Windows Management Framework) packages found in "Additional\WMF"
-
+7. WMF  
+install (Windows Management Framework) packages found in "Additional\WMF"  
 these packages require .NET Framework 4.5 or higher to be installed
 
-8. WAT (KB971033)
-
-install (Windows Activation Technologies) package found in "Additional\WAT"
-
+8. WAT (KB971033)  
+install (Windows Activation Technologies) package found in "Additional\WAT"  
 this package is required for online genuine validation
 
-W. Windows10
-
-install Windows10 related updates found in "Additional\Windows10"
-
+W. Windows10  
+install Windows10 related updates found in "Additional\Windows10"  
 if you switch it ON, another option will be available: B. Block Windows10/Telemetry
 
-S. ADLDS
-
+S. ADLDS  
 install (Active Directory LDS) package and updates found in "Extra\AD_LDS"
 
-R. RSAT
-
+R. RSAT  
 install (Remote Server Administration Tools) package and updates found in "Extra\RSAT"
 
-9. Online installation limit
-
-available only if the target is Current Online OS
-
-limit number of updates that will be installed before requiring to reboot
-
+9. Online installation limit  
+available only if the target is Current Online OS  
+limit number of updates that will be installed before requiring to reboot  
 installing a large number of updates on live OS makes the process slower and slower
 
-D. DISM
-
-available only if the target is an offline image
-
-the path for custom dism.exe
-
+D. DISM  
+available only if the target is an offline image  
+the path for custom dism.exe  
 required when the current Host OS is lower than Windows 7 without ADK installed
 
-E. Update WinRE.wim
-
-available only if the target is a distribution folder, or WIM file
-
+E. Update WinRE.wim  
+available only if the target is a distribution folder, or WIM file  
 enable or disable updating winre.wim inside install.wim
+
+I. Selected Install.wim indexes  
+available only if the target is a distribution folder, or WIM file  
+ability to select specific index(s) to update from install.wim, or all indexes by default
 
 ## Manual options (for advanced users):
 
 Edit the script with notepad (or text editor) to change
 
-* iso
-
-create new iso file if the target is a distribution folder
-
+* iso  
+create new iso file if the target is a distribution folder  
 require ADK installed, or placing oscdimg.exe or cdimage.exe next to the script
 
-* delete_source
-
+* delete_source  
 keep or delete DVD distribution folder after creating updated ISO
 
-* autostart
-
+* autostart  
 start the process automatically once you execute the script
 
-* cab_dir
-
+* cab_dir  
 directory for temporary extracted files, default is on the same drive as the script
 
-* mountdir / winremount
-
+* mountdir / winremount  
 mount directory for updating wim files, default is on system drive C:\
 
-* you can also change the default value of main Options
-
-examples:
-
-set LDR branch or Hotfixes as OFF
-
-set specific folder as default for WHD repository
-
+* you can also change the default value of main Options  
+examples:  
+set LDR branch or Hotfixes as OFF  
+set specific folder as default for WHD repository  
 set custom dism.exe path on Windows 7
 
 ## Remarks:
 
-* for offline integration, if "Block Windows10/Telemetry" option is active, a simple script will be created on desktop: RunOnce_W10_Telemetry_Tasks.cmd
-
+* for offline integration, if "Block Windows10/Telemetry" option is active, a simple script will be created on desktop: RunOnce_W10_Telemetry_Tasks.cmd  
 after installing the OS, you need to run it as administrator, it will be self-deleted afterwards
 
-* for offline integration, to process x64 update KB2603229 correctly, a simple script will be created on desktop: RunOnce_KB2603229_Fix.cmd
-
+* for offline integration, to process x64 update KB2603229 correctly, a simple script will be created on desktop: RunOnce_KB2603229_Fix.cmd  
 after installing the OS, you need to run it as administrator, it will be self-deleted afterwards
 
 * for offline integration, to rebuild wim files, you need either of:
@@ -161,68 +128,50 @@ after installing the OS, you need to run it as administrator, it will be self-de
 - servicing stack update
 - Monthly Quality Rollup
 
-* Extra registry settings will be added one time only if "Hotfixes" is ON
-
-if you do not want these settings, edit the script, search for this line and delete it:
-
+* Extra registry settings will be added one time only if "Hotfixes" is ON  
+if you do not want these settings, edit the script, search for this line and delete it:  
 `if /i %Hotfix% equ ON call :regfix`
 
 ## Credits:
 
-[Creator](https://forums.mydigitallife.net/members/abbodi1406.204274/)
-
-[Concept](https://forums.mydigitallife.net/members/burfadel.84828/)
-
+[Creator](https://forums.mydigitallife.net/members/abbodi1406.204274/)  
+[Concept](https://forums.mydigitallife.net/members/burfadel.84828/)  
 [WHDownloader](https://forums.mydigitallife.net/threads/44645)
 
 ## Changelog:
 
-* 4.6:
+*4.7/4.8:  
+added support and menu option to select specific index(s) to update from install.wim
 
-new servicing stack update KB3177467-v2
-
+* 4.6:  
+new servicing stack update KB3177467-v2  
 process telemetry appraiser block for monthly rollup
 
-* 4.5:
-
-fixed KB2952664 installation
-
+* 4.5:  
+fixed KB2952664 installation  
 added support to use DVD drive as target (mounted iso, inserted dvd)
 
-* 4.4:
-
-fixed issue with KB4099950 online installation
-
+* 4.4:  
+fixed issue with KB4099950 online installation  
 added architecture to updated iso name
 
-* 4.3:
-
+* 4.3:  
 fixed minor issues with WHD-W7UI_WithoutKB3125574
 
-* 4.2:
-
-moved "online update" before monthly rollup, to better handle KB4099950
-
+* 4.2:  
+moved "online update" before monthly rollup, to better handle KB4099950  
 added option to keep or delete DVD distribution folder after creating updated ISO
 
-* 4.1:
-
-remove winre.wim left behind when updating install.wim directly
-
+* 4.1:  
+remove winre.wim left behind when updating install.wim directly  
 added/updated WHD-W7UI_WithoutKB3125574.cmd with new features
 
-* 4.0:
-
-improvements and optimizations
-
-continous messeges in cmd window
-
-support for different targets
-
-workaround to offline integrate SSU KB3177467
-
-process online updates for offline targets (if possible)
-
+* 4.0:  
+improvements and optimizations  
+continous messeges in cmd window  
+support for different targets  
+workaround to offline integrate SSU KB3177467  
+process online updates for offline targets (if possible)  
 add block tweaks related to diagtrack (telemetry service) when installing Monthly Rollup
 
 * 2.7: enhanced Windows10 telemetry block tweaks, new hyper-v integration services version

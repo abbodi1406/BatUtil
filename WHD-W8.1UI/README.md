@@ -32,108 +32,82 @@ checked locations: mounted iso, inserted dvd/usb, sxs folder for distribution ta
 
 Press each option corresponding number/letter to change it
 
-1. Target
-
-target windows image, default is current online system
-
+1. Target  
+target windows image, default is current online system  
 if a wim file is available besides the script, it will be detected automatically
 
-2. WHD Repository
-
+2. WHD Repository  
 location of WHDownloader "Updates" folder
 
-3. LDR branch
-
+3. LDR branch  
 force installing of LDR branch for .NET updates that have it
 
-4. Hotfixes
-
+4. Hotfixes  
 install updates found in "Hotfix"
 
-5. WU Satisfy
-
+5. WU Satisfy  
 install updates found in "Additional\WU.Satisfy"
 
-6. Windows10
-
-install Windows10 related updates found in "Additional\Windows10"
-
+6. Windows10  
+install Windows10 related updates found in "Additional\Windows10"  
 if you switch it ON, another option will be available: B. Block Windows10/Telemetry
 
-7. WMF
-
+7. WMF  
 install (Windows Management Framework 5.1) package found in "Additional\WMF"
 
-8. RSAT updates
-
+8. RSAT updates  
 install (Remote Server Administration Tools) package and updates found in "Extra\RSAT"
 
-9. Online installation limit
-
-available only if the target is Current Online OS
-
-limit number of updates that will be installed before requiring to reboot
-
+9. Online installation limit  
+available only if the target is Current Online OS  
+limit number of updates that will be installed before requiring to reboot  
 installing a large number of updates on live OS makes the process slower and slower
 
-D. DISM
-
-available only if the target is an offline image
-
-the path for custom dism.exe
-
+D. DISM  
+available only if the target is an offline image  
+the path for custom dism.exe  
 required when the current Host OS is lower than Windows 8.1 without ADK installed
 
-E. Update WinRE.wim
-
-available only if the target is a distribution folder, or WIM file
-
+E. Update WinRE.wim  
+available only if the target is a distribution folder, or WIM file  
 enable or disable updating winre.wim inside install.wim
+
+I. Selected Install.wim indexes  
+available only if the target is a distribution folder, or WIM file  
+ability to select specific index(s) to update from install.wim, or all indexes by default
 
 ## Manual options (for advanced users):
 
 Edit the script with notepad (or text editor) to change
 
-* net35
-
+* net35  
 process or skip enabling .NET 3.5 feature
 
-* iso
-
-create new iso file if the target is a distribution folder
-
+* iso  
+create new iso file if the target is a distribution folder  
 require ADK installed, or placing oscdimg.exe or cdimage.exe next to the script
 
-* delete_source
-
+* delete_source  
 keep or delete DVD distribution folder after creating updated ISO
 
-* autostart
-
+* autostart  
 start the process automatically once you execute the script
 
-* cab_dir
-
+* cab_dir  
 directory for temporary extracted files, default is on the same drive as the script
 
-* mountdir / winremount
-
+* mountdir / winremount  
 mount directory for updating wim files, default is on system drive C:\
 
-* you can also change the default value of main Options
-
-examples:
-
-set LDR branch or Hotfixes as OFF
-
-set specific folder as default for WHD repository
-
+* you can also change the default value of main Options  
+examples:  
+set LDR branch or Hotfixes as OFF  
+set specific folder as default for WHD repository  
 set custom dism.exe path on Windows 7
 
 ## Remarks:
 
-* for offline integration, if "Block Windows10/Telemetry" option is active, a simple script will be created on desktop: RunOnce_W10_Telemetry_Tasks.cmd
-
+* for offline integration, if "Block Windows10/Telemetry" option is active, a simple script will be created on desktop: RunOnce_W10_Telemetry_Tasks.cmd  
 after installing the OS, you need to run it as administrator, it will be self-deleted afterwards
 
 * WinPE images (boot.wim/winre.wim) will be updated only with:
@@ -144,46 +118,36 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Credits:
 
-[Creator](https://forums.mydigitallife.net/members/abbodi1406.204274/)
-
-[Concept](https://forums.mydigitallife.net/members/burfadel.84828/)
-
+[Creator](https://forums.mydigitallife.net/members/abbodi1406.204274/)  
+[Concept](https://forums.mydigitallife.net/members/burfadel.84828/)  
 [WHDownloader](https://forums.mydigitallife.net/threads/44645)
 
 ## Changelog:
 
-* 4.5:
+* 4.6/4.7:  
+added support and menu option to select specific index(s) to update from install.wim
 
+* 4.5:  
 process telemetry appraiser block for monthly rollup
 
-* 4.4:
-
-fixed KB2976978 installation
-
+* 4.4:  
+fixed KB2976978 installation  
 added support to use DVD drive as target (mounted iso, inserted dvd)
 
-* 4.3:
-
+* 4.3:  
 added architecture to updated iso name
 
-* 4.2:
-
+* 4.2:  
 added option to keep or delete DVD distribution folder after creating updated ISO
 
-* 4.1:
-
+* 4.1:  
 remove winre.wim left behind when updating install.wim directly
 
-* 4.0:
-
-improvements and optimizations
-
-continous messeges in cmd window
-
-support for different targets
-
-process online updates for offline targets (if possible)
-
+* 4.0:  
+improvements and optimizations  
+continous messeges in cmd window  
+support for different targets  
+process online updates for offline targets (if possible)  
 add block tweaks related to diagtrack (telemetry service) when installing Monthly Rollup
 
 * 2.7: fixed issue detecting wim file with spaces in path

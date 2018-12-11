@@ -17,20 +17,19 @@
 
 * Supports the following languages:
 
-Arabic, Bulgarian, Chinese (Simplified), Chinese (Hong Kong S.A.R.), Chinese (Taiwan), Croatian, 
-Czech, Danish, Dutch, English, English (United Kingdom), Estonian, Finnish, French, French (Canada), 
-German, Greek, Hungarian, Italian, Japanese, Korean, Latvian, Lithuanian, Norwegian, Polish, 
-Portuguese (Brazil), Portuguese (Portugal), Romanian, Russian, Serbian (Latin), Slovak, Slovenian, 
+Arabic, Bulgarian, Chinese (Simplified), Chinese (Hong Kong S.A.R.), Chinese (Taiwan), Croatian,  
+Czech, Danish, Dutch, English, English (United Kingdom), Estonian, Finnish, French, French (Canada),  
+German, Greek, Hungarian, Italian, Japanese, Korean, Latvian, Lithuanian, Norwegian, Polish,  
+Portuguese (Brazil), Portuguese (Portugal), Romanian, Russian, Serbian (Latin), Slovak, Slovenian,  
 Spanish, Spanish (Mexico), Swedish, Thai, Turkish, Ukrainian
 
 ## How To Use:
 
-* Get desired Language Pack matching operating system version and architecture (32bit or 64 bit), and put the file in "LangPack" folder
+* Get desired Language Pack matching operating system version and architecture (32bit or 64 bit), and put the file in "LangPack" folder  
+for Windows 7, you can use the original EXE file, or manually converted CAB file  
+for Windows 10, you can use LangPacks in .cab or .esd format
 
-for Windows 7, you can use the original EXE file, or manually converted CAB file
-
-* Optional: Get Language Features On Demand Packs for Windows 10 if available, and put the files in "FOD" folder
-
+* Optional: Get Language Features On Demand Packs for Windows 10 if available, and put the files in "FOD" folder  
 you can let Windows Update to install them later after changing the language
 
 * Right-click on DisplayLanguageSwitcher.cmd and select "Run as administrator"
@@ -43,12 +42,10 @@ you can let Windows Update to install them later after changing the language
 
 * If you later want to go back to original language or already installed multiple languages, run the script and you will be prompted to select one of detected languages to set as primary
 
-* The script will not set or change the local language preferences:
-
+* The script will not set or change the local language preferences:  
 Formats, Location, Keyboards, language for non-unicode programs (system locale)
 
 you can set them manually, before or after changing the display language:
-
 - Windows 7     : "Region and Language" Control Panel
 - Windows 8/8.1 : "Region", "Language" Control Panels
 - Windows 10    : "Region", "Language" Control Panels, or Settings app

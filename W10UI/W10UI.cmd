@@ -3,7 +3,7 @@
 set _Debug=0
 
 cd /d "%~dp0"
-set uiv=v5.4
+set uiv=v5.6
 :: when changing below options, be sure to set the new values between = and " marks
 
 :: target image or wim file
@@ -91,6 +91,8 @@ echo ============================================================
 echo.
 rmdir /s /q "%cab_dir%" %_Nul_1%
 )
+setlocal enableextensions
+setLocal EnableDelayedExpansion
 set directcab=0
 set dvd=0
 set wim=0
@@ -98,6 +100,7 @@ set offline=0
 set online=0
 set _wim=0
 set copytarget=0
+set imgcount=0
 if exist "*.wim" (for /f "delims=" %%i in ('dir /b /a:-d *.wim') do (call set /a _wim+=1))
 if "%target%"=="" if %_wim%==1 (for %%i in ("*.wim") do set "target=%%~fi"&set "targetname=%%i")
 if "%target%"=="" set "target=%SystemDrive%"
@@ -129,6 +132,10 @@ for /f "tokens=4 delims=:. " %%i in ('dism /english /get-wiminfo /wimfile:"%targ
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" /index:1 ^| find /i "Architecture"') do set arch=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" ^| findstr "Index"') do set imgcount=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%\sources\boot.wim" ^| findstr "Index"') do set bootimg=%%i
+for /L %%i in (1,1,!imgcount!) do (
+  for /f "tokens=1* delims=: " %%a in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" /index:%%i ^| findstr /b /c:"Name"') do set name%%i="%%b"
+  )
+set "indices=*"
 )
 if %wim%==1 (
 echo.
@@ -139,6 +146,10 @@ dism /english /get-wiminfo /wimfile:"%target%" /index:1 | find /i "Version : 10.
 for /f "tokens=4 delims=:. " %%i in ('dism /english /get-wiminfo /wimfile:"%target%" /index:1 ^| find /i "Version :"') do set build=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%" /index:1 ^| find /i "Architecture"') do set arch=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%" ^| findstr "Index"') do set imgcount=%%i
+for /L %%i in (1,1,!imgcount!) do (
+  for /f "tokens=1* delims=: " %%a in ('dism /english /get-wiminfo /wimfile:"%target%" /index:%%i ^| findstr /b /c:"Name"') do set name%%i="%%b"
+  )
+set "indices=*"
 )
 
 :check
@@ -164,8 +175,6 @@ if "%mountdir%"=="" (goto :mainmenu)
 if "%mountdir:~-1%"=="\" set "mountdir=%mountdir:~0,-1%"
 if /i "%target%"=="%SystemDrive%" (set dismtarget=/online&set "mountdir=%target%"&set online=1&set build=%winbuild%) else (set dismtarget=/image:"%mountdir%")
 cls
-setlocal enableextensions
-setLocal EnableDelayedExpansion
 echo ============================================================
 echo Running W10UI %uiv%
 echo ============================================================
@@ -194,13 +203,16 @@ call :update
 if %net35%==1 call :enablenet35
 )
 if %wim%==1 (
+if "%indices%"=="*" set "indices="&for /L %%i in (1,1,%imgcount%) do set "indices=!indices! %%i"
 call :mount "%target%"
 if /i "%targetname%" neq "winre.wim" (if exist "%~dp0winre.wim" del /f /q "%~dp0winre.wim" %_Nul_1%)
 )
 if %dvd%==1 (
+if "%indices%"=="*" set "indices="&for /L %%i in (1,1,%imgcount%) do set "indices=!indices! %%i"
 call :mount "%target%\sources\install.wim"
 if exist "%~dp0winre.wim" del /f /q "%~dp0winre.wim" %_Nul_1%
-set imgcount=%bootimg%&call :mount "%target%\sources\boot.wim"
+set "indices="&set imgcount=%bootimg%&for /L %%i in (1,1,!imgcount!) do set "indices=!indices! %%i"
+call :mount "%target%\sources\boot.wim"
 if defined isoupdate (
   for %%a in (%isoupdate%) do (expand.exe -f:* "%repo%\%%a" "%target%\sources" %_Nul_1%)
 )
@@ -237,8 +249,15 @@ goto :eof
 
 :cab1
 for /f "tokens=2 delims=-" %%V in ('dir /b %package%') do set kb=%%V
-if %online%==1 if exist "%target%\Windows\servicing\packages\package_*_for_%kb%~*.mum" (set /a _sum-=1&if %msu% equ 1 (set /a _msu-=1&goto :eof) else (set /a _cab-=1&goto :eof))
-if %offline%==1 if exist "%target%\Windows\servicing\packages\package_*_for_%kb%~*.mum" (set /a _sum-=1&if %msu% equ 1 (set /a _msu-=1&goto :eof) else (set /a _cab-=1&goto :eof))
+set "mumcheck=package_*_for_%kb%~*.mum"
+if %online%==1 if exist "%target%\Windows\servicing\packages\%mumcheck%" (
+call :mumversion "%target%"
+if !skip!==1 set /a _sum-=1&if %msu% equ 1 (set /a _msu-=1&goto :eof) else (set /a _cab-=1&goto :eof)
+)
+if %offline%==1 if exist "%target%\Windows\servicing\packages\%mumcheck%" (
+call :mumversion "%target%"
+if !skip!==1 set /a _sum-=1&if %msu% equ 1 (set /a _msu-=1&goto :eof) else (set /a _cab-=1&goto :eof)
+)
 if %msu% equ 0 goto :eof
 set "msucab=!msucab! %kb%"
 set /a count+=1
@@ -251,7 +270,7 @@ set "package=%1"
 set "dest=%cab_dir%\%~n1"
 set /a count+=1
 echo %count%/%_sum%: %package%
-rmdir /s /q "%dest%" %_Nul_1_2%
+if exist "%dest%" rmdir /s /q "%dest%" %_Nul_1_2%
 mkdir "%dest%"
 expand.exe -f:* "%package%" "%dest%" 1>nul 2>nul || (set "directcab=!directcab! %package%")
 if not exist "%dest%\update.mum" (set "isoupdate=!isoupdate! %package%"&goto :eof)
@@ -278,6 +297,7 @@ echo ============================================================
 )
 set servicingstack=
 set cumulative=
+set netfx=
 set discard=0
 set discardre=0
 set ldr=&set listc=0&set list=1&set AC=100
@@ -323,8 +343,15 @@ set /a listc+=1
 set "package=%1"
 set "dest=%cab_dir%\%~n1"
 if not exist "%dest%\update.mum" (set /a _sum-=1&goto :eof)
+if "%build%" geq "17763" if not exist "%mumtarget%\sources\recovery\RecEnv.exe" (
+findstr /i /m "WinPE-NetFx-Package" "%dest%\update.mum" %_Nul_1_2% && (if exist "%dest%\*_*10.0.*.manifest" if not exist "%dest%\*_netfx4clientcorecomp*.manifest" (set "netfx=!netfx! /packagepath:%dest%\update.mum"))
+)
 for /f "tokens=2 delims=-" %%V in ('dir /b %package%') do set kb=%%V
-if exist "%mumtarget%\Windows\servicing\packages\package_*_for_%kb%~*.mum" (set /a _sum-=1&goto :eof)
+set "mumcheck=package_*_for_%kb%~*.mum"
+if exist "%mumtarget%\Windows\servicing\packages\%mumcheck%" (
+call :mumversion "%mumtarget%"
+if !skip!==1 set /a _sum-=1&goto :eof
+)
 if exist "%mumtarget%\sources\recovery\RecEnv.exe" (
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul_1_2% || (findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul_1_2% || (set /a _sum-=1&goto :eof))
 findstr /i /m "WinPE-NetFx-Package" "%dest%\update.mum" %_Nul_1_2% && (findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul_1_2% || (set /a _sum-=1&goto :eof))
@@ -345,13 +372,27 @@ findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul_1_2% && (set "cu
 set ldr=!ldr! /packagepath:%dest%\update.mum
 goto :eof
 
+:mumversion
+set skip=0
+set inver=0
+set kbver=0
+for /f "tokens=4-7 delims=~." %%i in ('dir /b /od "%~1\Windows\servicing\packages\%mumcheck%"') do set inver=%%i%%j%%k%%l
+mkdir "%cab_dir%\check"
+if %msu% equ 1 (expand.exe -f:*Windows*.cab %package% "%cab_dir%\check" >nul) else (copy %package% "%cab_dir%\check" >nul)
+expand.exe -f:package_1_for_*.mum "%cab_dir%\check\*.cab" "%cab_dir%\check" 1>nul 2>nul
+if not exist "%cab_dir%\check\*.mum" (set skip=1&rmdir /s /q "%cab_dir%\check"&goto :eof)
+for /f "tokens=4-7 delims=~." %%i in ('dir /b "%cab_dir%\check\%mumcheck%"') do set kbver=%%i%%j%%k%%l
+if %inver% geq %kbver% set skip=1
+rmdir /s /q "%cab_dir%\check"
+goto :eof
+
 :enablenet35
 if exist "%mumtarget%\sources\recovery\RecEnv.exe" goto :eof
 if exist "%mumtarget%\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" goto :eof
 if not defined net35source (
 for %%b in (D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do if exist "%%b:\sources\sxs\*netfx3*.cab" set "net35source=%%b:\sources\sxs"
 if %dvd%==1 if exist "%target%\sources\sxs\*netfx3*.cab" (set "net35source=%target%\sources\sxs")
-if %wim%==1 for /f "delims=" %%i in ('dir /b "%target%"') do if exist "%%~dpisxs\*netfx3*.cab" set "net35source=%%~dpisxs"
+if %wim%==1 for %%i in ("%target%") do if exist "%%~dpisxs\*netfx3*.cab" set "net35source=%%~dpisxs"
 )
 if not defined net35source goto :eof
 if not exist "%net35source%" goto :eof
@@ -360,12 +401,19 @@ echo ============================================================
 echo Adding .NET Framework 3.5 feature
 echo ============================================================
 "%dismroot%" %dismtarget% /NoRestart /Enable-Feature /FeatureName:NetFx3 /All /LimitAccess /Source:"%net35source%"
-if defined cumulative (
+if "%build%" lss "17763" if defined cumulative (
 echo.
 echo ============================================================
 echo Reinstalling cumulative update...
 echo ============================================================
 "%dismroot%" %dismtarget% /NoRestart /Add-Package %cumulative%
+)
+if "%build%" geq "17763" if defined netfx (
+echo.
+echo ============================================================
+echo Reinstalling .NET cumulative update...
+echo ============================================================
+"%dismroot%" %dismtarget% /NoRestart /Add-Package %netfx%
 )
 call :cleanup
 goto :eof
@@ -397,18 +445,10 @@ if defined msucab (
 goto :eof
 
 :mount
-if exist "%mountdir%" (
-"%dismroot%" /Unmount-Wim /MountDir:"%mountdir%" /Discard %_Nul_1_2%
-"%dismroot%" /Cleanup-Wim %_Nul_1_2%
-rmdir /s /q "%mountdir%" %_Nul_1%
-)
-if exist "%winremount%" (
-"%dismroot%" /Unmount-Wim /MountDir:"%winremount%" /Discard %_Nul_1_2%
-"%dismroot%" /Cleanup-Wim %_Nul_1_2%
-rmdir /s /q "%winremount%" %_Nul_1%
-)
+if exist "%mountdir%" rmdir /s /q "%mountdir%" >nul
+if exist "%winremount%" rmdir /s /q "%winremount%" >nul
 if not exist "%mountdir%" mkdir "%mountdir%"
-for /L %%i in (1, 1, %imgcount%) do (
+for %%i in (%indices%) do (
 echo.
 echo ============================================================
 echo Mounting %~nx1 - index %%i/%imgcount%
@@ -650,6 +690,7 @@ set wim=0
 set offline=0
 set online=0
 set copytarget=0
+set img=0
 set "target=%_pp%"
 if /i "%target%"=="%SystemDrive%" set online=1&goto :mainmenu
 echo %target%| findstr /E /I "\.wim" %_Nul_1%
@@ -678,16 +719,24 @@ for /f "tokens=4 delims=:. " %%i in ('dism /english /get-wiminfo /wimfile:"%targ
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" /index:1 ^| find /i "Architecture"') do set arch=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" ^| findstr "Index"') do set imgcount=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%\sources\boot.wim" ^| findstr "Index"') do set bootimg=%%i
+for /L %%i in (1,1,!imgcount!) do (
+  for /f "tokens=1* delims=: " %%a in ('dism /english /get-wiminfo /wimfile:"%target%\sources\install.wim" /index:%%i ^| findstr /b /c:"Name"') do set name%%i="%%b"
+  )
+set "indices=*"
 )
 if %wim%==1 (
 echo.
 echo ============================================================
 echo Please wait...
 echo ============================================================
-dism /english /get-wiminfo /wimfile:"%target%" /index:1 | find /i "Version : 10.0" %_Nul_1% || (set "MESSAGE=Detected wim file version is not Windows 10"&goto :E_Target)
+dism /english /get-wiminfo /wimfile:"%target%" /index:1 | find /i "Version : 10.0" %_Nul_1% || (set "MESSAGE=Detected wim version is not Windows 10"&goto :E_Target)
 for /f "tokens=4 delims=:. " %%i in ('dism /english /get-wiminfo /wimfile:"%target%" /index:1 ^| find /i "Version :"') do set build=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%" /index:1 ^| find /i "Architecture"') do set arch=%%i
 for /f "tokens=2 delims=: " %%i in ('dism /english /get-wiminfo /wimfile:"%target%" ^| findstr "Index"') do set imgcount=%%i
+for /L %%i in (1,1,!imgcount!) do (
+  for /f "tokens=1* delims=: " %%a in ('dism /english /get-wiminfo /wimfile:"%target%" /index:%%i ^| findstr /b /c:"Name"') do set name%%i="%%b"
+  )
+set "indices=*"
 )
 set "repo=%cd%"
 call :counter
@@ -759,7 +808,7 @@ goto :mainmenu
 :mountmenu
 cls
 echo ============================================================
-echo Enter the direcory path for mounting install.wim
+echo Enter the directory path for mounting install.wim
 echo make sure the drive has enough free space ^(at least 10 GB^)
 echo it must be on NTFS formatted partition
 echo.
@@ -772,16 +821,40 @@ if "%_pp:~-1%"=="\" set "_pp=%_pp:~0,-1%"
 set "mountdir=%_pp%"
 goto :mainmenu
 
+:indexmenu
+cls
+echo ============================================================
+for /L %%i in (1,1,%imgcount%) do (
+echo. %%i. !name%%i!
+)
+echo.
+echo ============================================================
+echo Enter indexes numbers to update separated with space^(s^)
+echo Enter * to select all indexes
+echo examples: 1 3 4 or 5 1 or *
+echo.
+echo or just press 'Enter' to return to options menu
+echo ============================================================
+echo.
+set /p "_pp="
+if "%_pp%"=="" goto :mainmenu
+if "%_pp%"=="*" set "indices=%_pp%"&goto :mainmenu
+for %%i in (%_pp%) do (
+if %%i gtr %imgcount% echo.&echo %%i is higher than available indexes&pause&set _pp=&goto :indexmenu
+if %%i equ 0 echo.&echo 0 is not valid index&pause&set _pp=&goto :indexmenu
+)
+set "indices=%_pp%"
+goto :mainmenu
+
 :mainmenu
 if %autostart%==1 goto :mainboard
 set _pp=
 cls
 echo ============================================================
-echo.
 if /i "%target%"=="%SystemDrive%" (
 if %winbuild% lss 10240 (echo 1. Select offline target) else (echo 1. Target ^(%arch%^): Current OS)
 ) else (
-if /i "%target%"=="" (echo 1. Select offline target) else (echo 1. Target   ^(%arch%^) : "%target%")
+if /i "%target%"=="" (echo 1. Select offline target) else (echo 1. Target ^(%arch%^): "%target%")
 )
 echo.
 if "%repo%"=="" (echo 2. Select updates location) else (echo 2. Updates: "%repo%")
@@ -803,26 +876,30 @@ echo.
 if %dvd%==1 (
 if %winre%==1 (echo 7. Update WinRE.wim: YES) else (echo 7. Update WinRE.wim: NO)
 echo.
+if %imgcount% gtr 1 (if "%indices%"=="*" (echo 8. Install.wim selected indexes: All ^(%imgcount%^)) else (echo 8. Install.wim selected indexes: %indices%))
+echo.
 echo M. Mount Directory: "%mountdir%"
 echo.
 )
 if %wim%==1 (
 if %winre%==1 (echo 7. Update WinRE.wim: YES) else (echo 7. Update WinRE.wim: NO)
 echo.
+if %imgcount% gtr 1 (if "%indices%"=="*" (echo 8. Selected Install.wim indexes: All ^(%imgcount%^)) else (echo 8. Selected Install.wim indexes: %indices%))
+echo.
 echo M. Mount Directory: "%mountdir%"
 echo.
 )
 echo E. Extraction Directory: "%cab_dir%"
-echo.
 echo ============================================================
 echo 0. Start the process
 echo ============================================================
 echo.
-choice /c 123456709EM /n /m "Change a menu option, press 0 to start, or 9 to exit: "
-if errorlevel 11 goto :mountmenu
-if errorlevel 10 goto :extractmenu
+choice /c 1234567890EM /n /m "Change a menu option, press 0 to start, or 9 to exit: "
+if errorlevel 12 goto :mountmenu
+if errorlevel 11 goto :extractmenu
+if errorlevel 10 goto :mainboard
 if errorlevel 9 goto :eof
-if errorlevel 8 goto :mainboard
+if errorlevel 8 goto :indexmenu
 if errorlevel 7 (if %winre%==1 (set winre=0) else (set winre=1))&goto :mainmenu
 if errorlevel 6 (if %resetbase%==1 (set resetbase=0) else (set resetbase=1))&goto :mainmenu
 if errorlevel 5 (if %cleanup%==1 (set cleanup=0) else (set cleanup=1))&goto :mainmenu

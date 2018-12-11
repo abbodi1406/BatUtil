@@ -1,5 +1,7 @@
 @echo off
-%windir%\system32\reg.exe query "HKU\S-1-5-19" 1>nul 2>nul || (set MESSAGE=ERROR: Run %~nx0 as administrator&goto :END)
+if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative") else (set "SysPath=%Windir%\System32")
+set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+reg query "HKU\S-1-5-19" 1>nul 2>nul || (set MESSAGE=ERROR: Run %~nx0 as administrator&goto :END)
 if exist "%windir%\winsxs\pending.xml" (set MESSAGE=pending update operation detected, restart the system first to clear it&goto :END)
 for /f "tokens=4,5,6,7 delims=~." %%i in ('dir /b %windir%\servicing\Packages\Microsoft-Windows-Foundation-Package*~~*.mum') do set version=%%i.%%j.%%k.%%l&set build=%%k
 if %build% lss 7601 (set MESSAGE=ERROR: Only Windows 7 SP1 or later is supported&goto :END)
@@ -8,24 +10,24 @@ echo Loading System Information
 echo ============================================================
 echo.
 setlocal EnableDelayedExpansion
-IF /I "%PROCESSOR_ARCHITECTURE%" EQU "AMD64" (set "arch=64-bit") ELSE (set "arch=32-bit")
+set "arch=64-bit"&set "cbsarch=amd64"
+if /i %PROCESSOR_ARCHITECTURE%==x86 (
+if "%PROCESSOR_ARCHITEW6432%"=="" set "arch=32-bit"&set "cbsarch=x86"
+)
 for /f "skip=2 tokens=2*" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName') do set "product=%%j"
 for /f "tokens=3 delims=: " %%i in ('dism /English /Online /Get-CurrentEdition ^| find /i "Current Edition :"') do set "edition=%%i"
-for /f "tokens=5 delims=: " %%i in ('dism /English /Online /Get-Intl ^| findstr /C:"UI language :"') do set "uilang=%%i"
+for /f "tokens=5 delims=: " %%i in ('dism /English /Online /Get-Intl ^| findstr /I /C:"UI language :"') do set "uilang=%%i"
 for /f %%i in ('dir /b %windir%\servicing\Packages\Microsoft-Windows-Client-LanguagePack-Package~*.mum') do (call set /a _l+=1)
 if %_l% gtr 1 for /f "tokens=4 delims=~" %%i in ('dir /b %windir%\servicing\Packages\Microsoft-Windows-Client-LanguagePack-Package~*.mum') do (
 if defined uilangs (call set "uilangs=!uilangs! %%i") else (call set "uilangs=%%i")
 call :setcount %%i
 )
-if /i %edition%==Starter goto :Supported
-if /i %edition%==HomeBasic goto :Supported
-if /i %edition%==HomePremium goto :Supported
-if /i %edition%==Professional if %build%==7601 goto :Supported
-if /i %edition%==StarterN goto :Supported
-if /i %edition%==HomeBasicN goto :Supported
-if /i %edition%==HomePremiumN goto :Supported
-if /i %edition%==ProfessionalN if %build%==7601 goto :Supported
-if /i %edition%==CoreSingleLanguage goto :Supported
+for %%i in (Starter,HomeBasic,HomePremium,StarterN,HomeBasicN,HomePremiumN,CoreSingleLanguage) do (
+if /i %edition%==%%i goto :Supported
+)
+if %build%==7601 for %%i in (Professional,ProfessionalN) do (
+if /i %edition%==%%i goto :Supported
+)
 
 :NotSupported
 cls
@@ -66,11 +68,13 @@ goto :eof
 :Supported
 cd /d "%~dp0"
 set _c=0
-if %build% equ 7601 if exist "LangPack\*kb2483139*.exe" (for /f "delims=" %%i in ('dir /b LangPack\*kb2483139*.exe') do (call set /a _c+=1))
-if exist "LangPack\*.cab" (for /f "delims=" %%i in ('dir /b LangPack\*.cab') do (call set /a _c+=1))
+if %build% equ 7601 if exist "LangPack\*kb2483139*.exe" for /f "delims=" %%i in ('dir /b LangPack\*kb2483139*.exe') do (call set /a _c+=1)
+if exist "LangPack\*.cab" for /f "delims=" %%i in ('dir /b LangPack\*.cab') do (call set /a _c+=1)
+if %build% gtr 14393 if exist "LangPack\*.esd" for /f "delims=" %%i in ('dir /b LangPack\*.esd') do (call set /a _c+=1)
 if %_c% neq 1 goto :Info
-if %build% equ 7601 if exist "LangPack\*kb2483139*.exe" (for /f "delims=" %%i in ('dir /b LangPack\*kb2483139*.exe') do (set "LangFile=LangPack\%%i"&goto :Check))
-for /f "delims=" %%i in ('dir /b LangPack\*.cab') do (set "LangFile=LangPack\%%i")
+if %build% equ 7601 if exist "LangPack\*kb2483139*.exe" for /f "delims=" %%i in ('dir /b LangPack\*kb2483139*.exe') do (set "LangFile=LangPack\%%i"&goto :Check)
+if exist "LangPack\*.cab" for /f "delims=" %%i in ('dir /b LangPack\*.cab') do (set "LangFile=LangPack\%%i")
+if %build% gtr 14393 if exist "LangPack\*.esd" for /f "delims=" %%i in ('dir /b LangPack\*.esd') do (set "LangFile=LangPack\%%i")
 
 :Check
 echo.
@@ -78,21 +82,16 @@ echo ============================================================
 echo Loading Language Pack Information
 echo ============================================================
 echo.
-if %build% equ 7601 if /i "%LangFile:~-3%"=="exe" (
-   LangPack\exe2cab.exe -q "%LangFile%" "LangPack\%build%_%PROCESSOR_ARCHITECTURE%.cab"
-   set "LangFile=LangPack\%build%_%PROCESSOR_ARCHITECTURE%.cab"
+if %build% equ 7601 if /i "%LangFile:~-3%" equ "exe" (
+   LangPack\exe2cab.exe -q "%LangFile%" "LangPack\%build%_%cbsarch%.cab"
+   set "LangFile=LangPack\%build%_%cbsarch%.cab"
 )
-expand.exe -f:langcfg.ini "%LangFile%" "%cd%" >nul
-for /f "tokens=2 delims==" %%i in ('findstr /i "Language" "%cd%\langcfg.ini"') do (set "LangCode=%%i")
-for /f "tokens=3 delims==x" %%i in ('findstr /i "Type" "%cd%\langcfg.ini"') do set LangType=%%i
-del /f /q "%cd%\langcfg.ini"
-if %build% equ 7601 expand.exe -f:Microsoft-Windows-Client-LanguagePack-Package*%PROCESSOR_ARCHITECTURE%*%version%.mum "%LangFile%" "%cd%" 1>nul 2>nul
-if %build% equ 9600 expand.exe -f:Microsoft-Windows-Client-LanguagePack-Package*%PROCESSOR_ARCHITECTURE%*%version%.mum "%LangFile%" "%cd%" 1>nul 2>nul
-if %build% equ 9200 expand.exe -f:Microsoft-Windows-Common-Foundation-Package*%PROCESSOR_ARCHITECTURE%*%version%.mum "%LangFile%" "%cd%" 1>nul 2>nul
-if %build% gtr 9600 expand.exe -f:Microsoft-Windows-Common-Foundation-Package*%PROCESSOR_ARCHITECTURE%*%version%.mum "%LangFile%" "%cd%" 1>nul 2>nul
-if not exist "%cd%\*.mum" (set MESSAGE=ERROR: Lang Pack is not compatible with current OS version and architecture&goto :END)
-del /f /q "%cd%\*.mum" 1>nul 2>nul
-call :%LangCode%
+for /f "tokens=9 delims=:~. " %%i in ('dism /English /Online /Get-PackageInfo /PackagePath:%LangFile% ^| findstr /I /C:"Package Identity"') do set "LangBuild=%%i"
+if %build% neq %LangBuild% (set MESSAGE=ERROR: Lang Pack is not compatible with current OS version&goto :END)
+for /f "tokens=5 delims=:~ " %%i in ('dism /English /Online /Get-PackageInfo /PackagePath:%LangFile% ^| findstr /I /C:"Package Identity"') do set "LangArch=%%i"
+if /i %cbsarch% neq %LangArch% (set MESSAGE=ERROR: Lang Pack is not compatible with current OS architecture&goto :END)
+for /f "tokens=6 delims=:~ " %%i in ('dism /English /Online /Get-PackageInfo /PackagePath:%LangFile% ^| findstr /I /C:"Package Identity"') do set "LangCode=%%i"
+set "LangType=92"&set "Fallback="&set "Fallbac2="&call :%LangCode%
 
 :Info
 cls
@@ -117,8 +116,8 @@ echo Language Pack     : %LangCode% / %LangName%
 echo ============================================================
 echo.
 choice /C 10 /N /M "Press 1 to install (%LangCode%) as primary language, or 0 to exit: "
-IF ERRORLEVEL 2 (if exist "LangPack\%build%_%PROCESSOR_ARCHITECTURE%.cab" del /f /q LangPack\%build%_%PROCESSOR_ARCHITECTURE%.cab >nul&GOTO :EOF)
-IF ERRORLEVEL 1 GOTO :Install
+if errorlevel 2 set MESSAGE=End&goto :END
+if errorlevel 1 goto :Install
 )
 if %_l% gtr 1 (
 echo.
@@ -129,10 +128,10 @@ echo %%i. !UIL%%i!
 )
 echo.
 set /p userinp= ^Enter a language number to set as primary, or 0 to exit: 
-if [!userinp!]==[] goto :Info
-if [!userinp!]==[0] goto :eof
+if "!userinp!"=="" goto :Info
+if "!userinp!"=="0" set MESSAGE=End&goto :END
 for /L %%i in (1, 1, %_l%) do (
-if [!userinp!]==[%%i] set "LangCode=!UIL%%i!"&set "LangType=92"&set "Fallback="&set "Fallbac2="&call :!UIL%%i!&goto :Change
+if "!userinp!"=="%%i" set "LangCode=!UIL%%i!"&set "LangType=92"&set "Fallback="&set "Fallbac2="&call :!UIL%%i!&goto :Change
 )
 goto :Info
 )
@@ -148,7 +147,7 @@ cls
 echo ============================================================
 echo Installing %LangName% Language Pack
 echo ============================================================
-Dism /Online /Norestart /Add-Package /PackagePath:"%LangFile%"
+Dism /Online /NoRestart /Add-Package /PackagePath:"%LangFile%"
 if %errorlevel% neq 0 if %errorlevel% neq 3010 (set MESSAGE=ERROR: Installation failed&goto :END)
 
 if %build% gtr 9600 if exist "%cd%\FOD\*.cab" (
@@ -156,7 +155,7 @@ echo.
 echo ============================================================
 echo Installing %LangCode% Language Features On Demand Packs
 echo ============================================================
-Dism /Online /Norestart /Add-Package /PackagePath:"%cd%\FOD"
+Dism /Online /NoRestart /Add-Package /PackagePath:"%cd%\FOD"
 if %errorlevel% neq 0 if %errorlevel% neq 3010 (set MESSAGE=ERROR: Installation failed&goto :END)
 )
 
@@ -216,19 +215,26 @@ bcdedit /set {current} locale %LangCode% >nul
 %windir%\system32\mcbuilder.exe /s >nul
 rem SCHTASKS /Change /TN "Microsoft\Windows\MUI\LPRemove" /ENABLE 1>nul 2>nul
 
-if exist "LangPack\%build%_%PROCESSOR_ARCHITECTURE%.cab" del /f /q LangPack\%build%_%PROCESSOR_ARCHITECTURE%.cab >nul
+if exist "LangPack\%build%_%cbsarch%.cab" del /f /q LangPack\%build%_%cbsarch%.cab >nul
 
 echo.
 echo ============================================================
 echo Finished
 echo ============================================================
 echo.
+if exist "%windir%\servicing\Packages\Package_for*.mum" (
+echo.
+echo Detected installed updates in the system
+echo this may cause booting failure due missing resources
+echo you should reinstall the updates before restarting
+echo either manually, or check Windows Update now.
+)
 echo.
 echo You must restart the system to complete the display language change
-echo save and close your work, then press any key to restart now...
-pause >nul
-SHUTDOWN /R /T 00
-goto :eof
+echo.
+choice /C 10 /N /M "Press 1 to restart now, or 0 to exit: "
+if errorlevel 2 goto :eof
+if errorlevel 1 SHUTDOWN /R /T 00
 
 :ar-SA
 set "LangName=Arabic"
@@ -517,15 +523,16 @@ set "Fallbac2=en-US"
 goto :eof
 
 :zh-TW
-set "LangName=Chinese ^(Taiwan^)"
+set "LangName=Chinese ^(Traditional^)"
 set "LangLCID=1028"
 set "LangHex=0404"
-set "LangType=112"
+if %build% lss 14393 set "LangType=112"
 set "Fallback=en-US"
 goto :eof
 
 :END
-if exist "LangPack\%build%_%PROCESSOR_ARCHITECTURE%.cab" del /f /q LangPack\%build%_%PROCESSOR_ARCHITECTURE%.cab >nul
+if exist "LangPack\%build%_%cbsarch%.cab" del /f /q LangPack\%build%_%cbsarch%.cab >nul
+if %MESSAGE%==End goto :eof
 echo.
 echo ============================================================
 echo %MESSAGE%

@@ -3,7 +3,7 @@
 set "msg=ERROR: right click on the script and 'Run as administrator'"
 goto :end
 )
-for %%a in (OffScrub_O16msi.vbs,OffScrubC2R.vbs,Remove.xml,setup.exe) do (
+for %%a in (OffScrub_O16msi.vbs,OffScrubC2R.vbs) do (
 if not exist "%~dp0bin\%%a" (set "msg=ERROR: required file %%a is missing"&goto :end)
 )
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
@@ -12,12 +12,20 @@ set "msg=ERROR: Windows 7 SP1 is the minimum supported OS"
 goto :end
 )
 title Office Scrubber
+set xOS=x64
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" (if "%PROCESSOR_ARCHITEW6432%"=="" set xOS=x86)
 set OfficeC2R=0
 sc query ClickToRunSvc 1>nul 2>nul && set OfficeC2R=1
 sc query OfficeSvc 1>nul 2>nul && set OfficeC2R=1
-reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds 1>nul 2>nul && set OfficeC2R=1
+reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds 1>nul 2>nul && (
+set OfficeC2R=1
+for /f "tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration /v Platform" 2^>nul') do set "plat=%%b"
+)
 reg query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds 1>nul 2>nul && set OfficeC2R=1
 if exist "%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" set OfficeC2R=1
+if %OfficeC2R% equ 1 if not defined plat (
+if exist "%ProgramFiles(x86)%\Microsoft Office\Office16\OSPP.VBS" (set "plat=x86") else (set "plat=%xOS%")
+)
 set OfficeMSI=0
 for /f "tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\16.0\Common\InstallRoot /v Path" 2^>nul') do if exist "%%b\OSPP.VBS" set OfficeMSI=1
 for /f "tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Wow6432Node\Microsoft\Office\16.0\Common\InstallRoot /v Path" 2^>nul') do if exist "%%b\OSPP.VBS" set OfficeMSI=1
@@ -56,9 +64,9 @@ cd /d "%~dp0bin"
 if exist "%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" (
 echo.
 echo ============================================================
-echo Executing ODT setup.exe
+echo Executing OfficeClickToRun.exe
 echo ============================================================
-1>nul 2>nul setup.exe /configure Remove.xml
+1>nul 2>nul start "" /WAIT "%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" platform=%plat% productstoremove=AllProducts displaylevel=False
 )
 echo.
 echo ============================================================
@@ -73,6 +81,7 @@ echo ============================================================
 
 reg delete HKCU\Software\Microsoft\Office /f 1>nul 2>nul
 reg delete HKLM\SOFTWARE\Microsoft\Office /f 1>nul 2>nul
+reg delete HKLM\SOFTWARE\Wow6432Node\Microsoft\Office /f 1>nul 2>nul
 for /f %%a in ('"dir /b %windir%\temp\ose*.exe" 2^>nul') do taskkill /t /f /IM %%a 1>nul 2>nul
 del /f /q "%windir%\temp\*" 1>nul 2>nul
 del /f /q "%windir%\temp\*.log" 1>nul 2>nul
