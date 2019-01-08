@@ -15,11 +15,7 @@ ___
 
 * Administrator privileges are required to run the script
 
-* Creating normal boot.wim from UUP require Windows 10 host OS, or installed Windows 10 ADK (Deployment Tools).
-
-otherwise, you will get winre.wim acting as setup boot.wim, without recovery options
-
-- If the upgrade is done via Express UUP (multiple expanded folders in the download directory), you need to perform the UUP > ISO operation before starting the upgrade process (before first restart).
+* If the upgrade is done via Express UUP (multiple expanded folders in the download directory), you need to perform the UUP > ISO operation before starting the upgrade process (before first restart).
 
 to do so, when WU prompt you to restart, start convert-UUP.cmd and paste the path to download directory, example:
 
@@ -99,6 +95,12 @@ If you are not interested to have recovery environment or want to reduce ISO siz
 to do so, change `set SkipWinRE=0` to `set SkipWinRE=1`
 
 p.s. adding winre.wim to install.esd will consume high amount of CPU/RAM
+
+**ForceDism**
+
+If you want to use the official method with dism.exe for creating boot.wim
+
+to do so, change `set ForceDism=0` to `set ForceDism=1`
 
 **RefESD**
 

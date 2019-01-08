@@ -18,6 +18,9 @@ set SkipISO=0
 :: Change to 1 for not adding winre.wim to install.wim/install.esd
 set SkipWinRE=0
 
+:: Change to 1 to use dism.exe for creating boot.wim
+set ForceDism=0
+
 :: Change to 1 to keep converted Reference ESDs
 set RefESD=0
 
@@ -179,12 +182,6 @@ if exist "%UUP%\*Windows10*KB*.cab" if %W10UI%==1 (
 echo ____________________________________________________________
 if %AddUpdates%==1 (echo.       9 - Add Updates: Yes) else (echo.       9 - Add Updates: No)
 )
-if %W10UI%==0 (
-echo ____________________________________________________________
-echo Warning:
-echo neither Windows 10 Host OS or ADK is detected
-echo boot.wim will be limited winre.wim
-)
 echo.
 echo %line%
 set /p userinp= ^> Enter your option and press "Enter": 
@@ -214,12 +211,6 @@ echo.       5 - Create AIO install.esd
 if exist "%UUP%\*Windows10*KB*.cab" if %W10UI%==1 (
 echo ____________________________________________________________
 if %AddUpdates%==1 (echo.       9 - Add Updates: Yes) else (echo.       9 - Add Updates: No)
-)
-if %W10UI%==0 (
-echo ____________________________________________________________
-echo Warning:
-echo neither Windows 10 Host OS or ADK is detected
-echo boot.wim will be limited winre.wim
 )
 echo.
 echo %line%
@@ -261,11 +252,12 @@ echo.
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 (echo.&echo Errors were reported during export.&echo.&echo Press any key to exit.&pause >nul&goto :QUIT)
 if %SkipWinRE%==0 copy /y ISOFOLDER\sources\boot.wim temp\winre.wim >nul
-"%wimlib%" info ISOFOLDER\sources\boot.wim 1 --image-property FLAGS=9 1>nul 2>nul
-if %W10UI%==1 (
-  call :BootWIM
-  ) else (
-  copy /y .\bin\reagent.xml .\ISOFOLDER\sources >nul 2>&1
+"%wimlib%" info ISOFOLDER\sources\boot.wim 1 "Microsoft Windows PE (%arch%)" "Microsoft Windows PE (%arch%)" --image-property FLAGS=9 1>nul 2>nul
+"%wimlib%" update ISOFOLDER\sources\boot.wim 1 --command="delete '\Windows\system32\winpeshl.ini'" 1>nul 2>nul
+if %ForceDism%==0 (
+call :BootPE
+) else (
+call :BootADK
 )
 echo.
 echo %line%
@@ -527,28 +519,38 @@ if /i %editionid%==Cloud set DVDLABEL=CWCA_%archl%FRE_%langid%_DV5&set DVDISO=%_
 if /i %editionid%==CloudN set DVDLABEL=CWCNNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUDN_OEMRET_%archl%FRE_%langid%
 exit /b
 
-:BootWIM
-"%wimlib%" info ISOFOLDER\sources\boot.wim 1 "Microsoft Windows PE (%arch%)" "Microsoft Windows PE (%arch%)" 1>nul 2>nul
-"%wimlib%" update ISOFOLDER\sources\boot.wim 1 --command="delete '\Windows\system32\winpeshl.ini'" 1>nul 2>nul
-if exist "%mountdir%" (
-%_dism% /Unmount-Wim /MountDir:"%mountdir%" /Discard 1>nul 2>nul
-%_dism% /Cleanup-Wim 1>nul 2>nul
-rmdir /s /q "%mountdir%" 1>nul 2>nul
+:BootADK
+if %W10UI%==0 (
+call :BootPE
+exit /b
 )
+if exist "%mountdir%" rmdir /s /q "%mountdir%" 1>nul 2>nul
 if not exist "%mountdir%" mkdir "%mountdir%"
 %_dism% /Quiet /Mount-Wim /Wimfile:ISOFOLDER\sources\boot.wim /Index:1 /MountDir:"%mountdir%" 1>nul 2>nul
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 (
 %_dism% /Unmount-Wim /MountDir:"%mountdir%" /Discard 1>nul 2>nul
 %_dism% /Cleanup-Wim 1>nul 2>nul
-copy /y temp\winre.wim ISOFOLDER\sources\boot.wim >nul
-"%wimlib%" info ISOFOLDER\sources\boot.wim 1 --image-property FLAGS=9 1>nul 2>nul
-copy /y .\bin\reagent.xml .\ISOFOLDER\sources >nul
+rmdir /s /q "%mountdir%" 1>nul 2>nul
+call :BootPE
 exit /b
 )
 %_dism% /Quiet /Image:"%mountdir%" /Set-TargetPath:X:\$windows.~bt\
 %_dism% /Quiet /Unmount-Wim /MountDir:"%mountdir%" /Commit
 rmdir /s /q "%mountdir%" 1>nul 2>nul
+call :BootWIM
+exit /b
+
+:BootPE
+"%wimlib%" extract ISOFOLDER\sources\boot.wim 1 \Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes >nul
+bin\offlinereg .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion\WinPE" setvalue InstRoot X:\$windows.~bt\ >nul 2>&1
+bin\offlinereg .\bin\temp\SOFTWARE.new "Microsoft\Windows NT\CurrentVersion" setvalue SystemRoot X:\$windows.~bt\Windows >nul 2>&1
+del /f /q .\bin\temp\SOFTWARE >nul 2>&1
+ren .\bin\temp\SOFTWARE.new SOFTWARE
+"%wimlib%" update ISOFOLDER\sources\boot.wim 1 --command="add 'bin\temp\SOFTWARE' '\Windows\System32\config\SOFTWARE'" 1>nul 2>nul
+rmdir /s /q .\bin\temp >nul 2>&1
+
+:BootWIM
 "%wimlib%" extract "%MetadataESD%" 3 Windows\system32\xmllite.dll --dest-dir=ISOFOLDER\sources --no-acls --no-attributes >nul 2>&1
 echo delete '^\Windows^\system32^\winpeshl.ini'>bin\boot-wim.txt
 echo add 'ISOFOLDER^\setup.exe' '^\setup.exe'>>bin\boot-wim.txt

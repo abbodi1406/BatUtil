@@ -5,7 +5,7 @@ SET MultiChoice=1
 rem Check and unify different winre.wim in multiple editions ESDs
 SET CheckWinre=1
 
-rem Skip creating ISO file
+rem Skip creating ISO file, distribution folder will be kept
 SET SkipISO=0
 
 rem script:     abbodi1406
@@ -17,14 +17,21 @@ rem offlinereg: erwan.l
 rem aio efisys: cdob
 rem cryptokey:  MrMagic, Chris123NT, mohitbajaj143, Superwzt, timster
 
+if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative") else (set "SysPath=%Windir%\System32")
+set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set xOS=x64
+if /i %PROCESSOR_ARCHITECTURE%==x86 (if "%PROCESSOR_ARCHITEW6432%"=="" set xOS=x86)
 set "params=%*"
-cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  cmd /u /c echo Set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/k cd ""%~dp0"" && ""%~dpnx0"" ""%params%""", "", "runas", 1 >> "%temp%\getadmin.vbs" && "%temp%\getadmin.vbs" && exit /B )
+if not "%~1"=="" (
+set "params=%params:"=%"
+)
+cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) && fsutil dirty query %systemdrive% 1>nul 2>nul || (  cmd /u /c echo Set UAC = CreateObject^("Shell.Application"^) : UAC.ShellExecute "cmd.exe", "/k cd ""%~dp0"" && ""%~dpnx0"" ""%params%""", "", "runas", 1 >> "%temp%\getadmin.vbs" && "%temp%\getadmin.vbs" 1>nul 2>nul && exit /B )
 
 title ESD ^> ISO
 for %%a in (wimlib-imagex,7z,bcdedit,bfi,busybox,esddecrypt,imagex,offlinereg) do (
 if not exist "%~dp0bin\%%a.exe" (echo Error: required %%a.exe is missing&pause&exit)
 )
-IF /I "%PROCESSOR_ARCHITECTURE%" EQU "AMD64" (SET "wimlib=%~dp0bin\bin64\wimlib-imagex.exe") ELSE (SET "wimlib=%~dp0bin\wimlib-imagex.exe")
+if /i "%xOS%" equ "x64" (set "wimlib=%~dp0bin\bin64\wimlib-imagex.exe") else (set "wimlib=%~dp0bin\wimlib-imagex.exe")
 cd /d "%~dp0"
 setlocal EnableDelayedExpansion
 color 1f
@@ -40,7 +47,7 @@ SET SINGLE=0
 SET newkeys=0
 SET "ramdiskoptions={7619dcc8-fafe-11d9-b411-000476eba25f}"
 
-if not "%1"=="" (set "ENCRYPTEDESD=%~1"&set "ENCRYPTEDESDN=%~nx1"&goto :check)
+if not "%~1"=="" (set "ENCRYPTEDESD=%~1"&set "ENCRYPTEDESDN=%~nx1"&goto :check)
 set _esd=0
 if exist "*.esd" (for /f "delims=" %%i in ('dir /b /a:-d "*.esd"') do (call set /a _esd+=1))
 if !_esd! equ 2 goto :dCheck
@@ -489,7 +496,7 @@ if %revision%==15063.483 (set _label=15063.0.170710-1358.rs2_release_svc_refresh
 if %revision%==16299.64  (set _label=16299.15.171109-1522.rs3_release_svc_refresh_CLIENT&set branch=rs3_release_svc_refresh)
 if %revision%==16299.125 (set _label=16299.125.171213-1220.rs3_release_svc_refresh_CLIENT&set branch=rs3_release_svc_refresh)
 if %revision%==17134.112 (set _label=17134.112.180619-1212.rs4_release_svc_refresh_CLIENT&set branch=rs4_release_svc_refresh)
-if %revision%==17763.107 (set _label=17763.107.101029-1455.rs5_release_svc_refresh_CLIENT&set branch=rs5_release_svc_refresh)
+if %revision%==17763.107 (set _label=17763.107.181029-1455.rs5_release_svc_refresh_CLIENT&set branch=rs5_release_svc_refresh)
 rmdir /s /q .\bin\temp >nul 2>&1
 
 for %%b in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (

@@ -38,9 +38,9 @@ install retail products for Office 365 / 2016 / 2019 Suites, in addition to Offi
 
 either the directory that contain "Office" folder (not Office folder path itself)
 
-or the drive letter if use .img file mounted as virtual DVD
+Configurator.cmd will auto detect the source for the drive letter of mounted .img file / DVD / USB
 
-you can also place Configurator.cmd script inside "Office" folder, and the path will be detected automatically
+you can also place Configurator.cmd script inside "Office" folder, and the path will be auto detected
 
 - If multiple versions are detected in the source, you will be prompted to choose one
 

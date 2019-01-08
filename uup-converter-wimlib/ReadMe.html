@@ -55,9 +55,6 @@
             <ul style="margin-top:0in;margin-bottom:0in">
                 <li>Administrator privileges are required to run the script.</li>
                 <br />
-                <li>Creating normal boot.wim from UUP require Windows 10 host OS, or installed Windows 10 ADK (Deployment Tools).<br />
-                Otherwise, you will get winre.wim acting as setup boot.wim, without recovery options.</li>
-                <br />
                 <li>If the upgrade is done via Express UUP (multiple expanded folders in the download directory), you need to perform the UUP &gt; ISO operation before starting the upgrade process (before first restart).<br />
                     to do so, when WU prompt you to restart, start convert-UUP.cmd and paste the path to download directory, example:
                 <ul style="margin-top:0in;margin-bottom:0in">
@@ -139,6 +136,11 @@
                     note: adding winre.wim to install<b>.esd</b> will consume high amount of CPU/RAM
                 </li>
                 <br />
+                <li>
+                    <b>ForceDism</b><br />
+                    If you want to use the official method with dism.exe for creating boot.wim<br /><br />
+                    to do so, change <b>set ForceDism=0</b> to <b>set ForceDism=1</b><br /><br />
+                </li>
                 <li>
                     <b>RefESD</b><br />
                     If you plan to use your local UUP source repeatedly, you can choose to keep converted reference ESD files for future operations instead converting them each time.<br /><br />
@@ -244,6 +246,7 @@
             <ul style="margin-top:0in;margin-bottom:0in">
                 <li>- AutoStart<br /><br />
                 If you want to start the creation process directly without prompts.
+                This require the source distribution folder to be placed next to the script.
                 It will only create editions specified in <b>AutoEditions</b> option if possible.<br /><br />
                 to do so, change <b>set AutoStart=0</b> to <b>set AutoStart=1</b><br /><br />
                 Note: if convert-UUP.cmd is set with AutoStart=1 &amp; StartVirtual=1, create_virtual_editions.cmd will also start with AutoStart=1

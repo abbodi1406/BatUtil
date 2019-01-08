@@ -47,6 +47,10 @@ for /f %%A in ('dir /b /ad Data\ 2^>nul') do if exist "Data\%%A\stream*.dat" (
   )
 )
 if defined CTRsource goto :check
+for %%A in (D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
+if exist "%%A:\Office\Data\*.cab" set "CTRsource=%%A:\"
+)
+if defined CTRsource goto :check
 goto :prompt
 
 :get_path

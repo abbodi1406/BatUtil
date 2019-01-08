@@ -140,7 +140,7 @@ if you do not want these settings, edit the script, search for this line and del
 
 ## Changelog:
 
-*4.7/4.8:  
+* 4.7/4.8:  
 added support and menu option to select specific index(s) to update from install.wim
 
 * 4.6:  

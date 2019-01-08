@@ -3,7 +3,7 @@
 set _Debug=0
 
 cd /d "%~dp0"
-set uiv=v5.6
+set uiv=v5.8
 :: when changing below options, be sure to set the new values between = and " marks
 
 :: target image or wim file
@@ -352,6 +352,7 @@ if exist "%mumtarget%\Windows\servicing\packages\%mumcheck%" (
 call :mumversion "%mumtarget%"
 if !skip!==1 set /a _sum-=1&goto :eof
 )
+if exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" (set "servicingstack=!servicingstack! /packagepath:%dest%\update.mum"&goto :eof)
 if exist "%mumtarget%\sources\recovery\RecEnv.exe" (
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul_1_2% || (findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul_1_2% || (set /a _sum-=1&goto :eof))
 findstr /i /m "WinPE-NetFx-Package" "%dest%\update.mum" %_Nul_1_2% && (findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul_1_2% || (set /a _sum-=1&goto :eof))
@@ -364,7 +365,6 @@ if "%build%" geq "16299" (
   if "!flash!"=="0" (set /a _sum-=1&goto :eof)
   )
 )
-if exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" (set "servicingstack=!servicingstack! /packagepath:%dest%\update.mum"&goto :eof)
 for %%a in (%directcab%) do (
 if /i !package!==%%a (set "ldr=!ldr! /packagepath:!package!"&goto :eof)
 )
@@ -395,26 +395,18 @@ if %dvd%==1 if exist "%target%\sources\sxs\*netfx3*.cab" (set "net35source=%targ
 if %wim%==1 for %%i in ("%target%") do if exist "%%~dpisxs\*netfx3*.cab" set "net35source=%%~dpisxs"
 )
 if not defined net35source goto :eof
-if not exist "%net35source%" goto :eof
+if not exist "%net35source%\*.cab" goto :eof
 echo.
 echo ============================================================
 echo Adding .NET Framework 3.5 feature
 echo ============================================================
 "%dismroot%" %dismtarget% /NoRestart /Enable-Feature /FeatureName:NetFx3 /All /LimitAccess /Source:"%net35source%"
-if "%build%" lss "17763" if defined cumulative (
+if not defined netfx if not defined cumulative call :cleanup&goto :eof
 echo.
 echo ============================================================
 echo Reinstalling cumulative update...
 echo ============================================================
-"%dismroot%" %dismtarget% /NoRestart /Add-Package %cumulative%
-)
-if "%build%" geq "17763" if defined netfx (
-echo.
-echo ============================================================
-echo Reinstalling .NET cumulative update...
-echo ============================================================
-"%dismroot%" %dismtarget% /NoRestart /Add-Package %netfx%
-)
+"%dismroot%" %dismtarget% /NoRestart /Add-Package %netfx% %cumulative%
 call :cleanup
 goto :eof
 
