@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-set uiv=v4.7
+set uiv=v4.8
 :: when changing below options, recommended to set the new values between = and " marks
 
 :: target image or wim file
@@ -1021,7 +1021,7 @@ REG QUERY "HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v 
 REG QUERY "HKLM\Software\Microsoft\Windows Kits\Installed Roots" /v KitsRoot81 1>NUL 2>NUL || SET regKeyPathFound=0
 if %wowRegKeyPathFound% EQU 0 (
   if %regKeyPathFound% EQU 0 (
-    goto :mainmenu
+    goto :checkadk10
   ) else (
     SET regKeyPath=HKLM\Software\Microsoft\Windows Kits\Installed Roots
   )
@@ -1029,6 +1029,27 @@ if %wowRegKeyPathFound% EQU 0 (
     SET regKeyPath=HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots
 )
 FOR /F "skip=2 tokens=2*" %%i IN ('REG QUERY "%regKeyPath%" /v KitsRoot81') DO (SET "KitsRoot=%%j")
+SET "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
+SET "oscdimgroot=%DandIRoot%\%PROCESSOR_ARCHITECTURE%\Oscdimg\oscdimg.exe"
+SET "dismroot=%DandIRoot%\%PROCESSOR_ARCHITECTURE%\DISM\dism.exe"
+if not exist "%dismroot%" set "dismroot=%windir%\system32\dism.exe"
+goto :mainmenu
+
+:checkadk10
+SET regKeyPathFound=1
+SET wowRegKeyPathFound=1
+REG QUERY "HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 1>NUL 2>NUL || SET wowRegKeyPathFound=0
+REG QUERY "HKLM\Software\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 1>NUL 2>NUL || SET regKeyPathFound=0
+if %wowRegKeyPathFound% EQU 0 (
+  if %regKeyPathFound% EQU 0 (
+    goto :mainmenu
+  ) else (
+    SET regKeyPath=HKLM\Software\Microsoft\Windows Kits\Installed Roots
+  )
+) else (
+    SET regKeyPath=HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots
+)
+FOR /F "skip=2 tokens=2*" %%i IN ('REG QUERY "%regKeyPath%" /v KitsRoot10') DO (SET "KitsRoot=%%j")
 SET "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
 SET "oscdimgroot=%DandIRoot%\%PROCESSOR_ARCHITECTURE%\Oscdimg\oscdimg.exe"
 SET "dismroot=%DandIRoot%\%PROCESSOR_ARCHITECTURE%\DISM\dism.exe"

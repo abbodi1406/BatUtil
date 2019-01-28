@@ -16,6 +16,8 @@ checked locations: mounted iso, inserted dvd/usb, sxs folder for distribution ta
 
 * Detect Windows 8.1 ADK [Deployment Tools](http://www.microsoft.com/en-us/download/details.aspx?id=39982) for offline integration
 
+* Detect Windows 10 ADK [Deployment Tools](https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install) for offline integration
+
 ## How to:
 
 * Recommended Host OS: Windows 7 or later
@@ -123,6 +125,9 @@ after installing the OS, you need to run it as administrator, it will be self-de
 [WHDownloader](https://forums.mydigitallife.net/threads/44645)
 
 ## Changelog:
+
+*4.8:  
+added support for Windows 10 ADK
 
 * 4.6/4.7:  
 added support and menu option to select specific index(s) to update from install.wim

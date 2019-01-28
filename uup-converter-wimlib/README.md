@@ -11,9 +11,25 @@
 - [UUP Generation Project](https://uup.rg-adguard.net/)
 ___
 
-## Remarks
+## How To Use
 
-* Administrator privileges are required to run the script
+- Administrator privileges are required to run the script
+
+- Optional: temporary disable AV or protection program so it doesn't interfere with the process.
+
+- Make sure the files are not read-only or blocked.
+
+- Extract this pack to a folder with simple spaceless path to avoid troubles (example: C:\UUP).
+
+- Place the files in "UUPs" folder to be detected automatically.  
+Alternatively, you will be prompted to enter other UUP folder path.
+
+- If multiple Editions detected, you will be prompted first to select one of them, or create AIO.
+
+- To exit of the prompt or options menu just press "Enter".
+___
+
+## Remarks
 
 * If the upgrade is done via Express UUP (multiple expanded folders in the download directory), you need to perform the UUP > ISO operation before starting the upgrade process (before first restart).
 
@@ -26,87 +42,63 @@ Alternatively, if you are testing in VM machine or have multi boot systems, you 
 on Desktop, press Alt+F4 and choose an option without Update.
 
 ![example](https://i.imgbox.com/vxZLhGPM.png)
-___
 
-## How To Use
+#### Output Options:
 
-- Optional: temporary disable AV or protection program so it doesn't interfere with the process.
-
-- Make sure the files are not read-only or blocked.
-
-- Extract this pack to a folder with simple spaceless path to avoid troubles (example: C:\UUP).
-
-- Place the files in "UUPs" folder to be detected automatically.
-
-Alternatively, you will be prompted to enter other UUP folder path.
-
-- If multiple Editions detected, you will be prompted first to select one of them, or create AIO.
-
-- To exit of the prompt or options menu just press "Enter".
-
-#### Options:
-
-1 - Create ISO with install.wim
-
-4 - Create ISO with install.esd
-
+1 - Create ISO with install.wim  
+4 - Create ISO with install.esd  
 convert UUP files to a regular ISO distribution that contains install.wim or install.esd file.
 
-2 - Create install.wim
-
-5 - Create install.esd
-
+2 - Create install.wim  
+5 - Create install.esd  
 create install.wim/install.esd file only, which can be used with other ISO with the same version, or for manual apply using dism/wimlib.
 
-3 - UUP Edition info
-
+3 - UUP Edition info  
 Display info about detected editions (architecture, language, build version, build branch, editions name).
 
-#### Manual Options
+#### Configuration Options
 
-for advanced users, edit convert-UUP.cmd to change the default value
+Control conversion behavior, output and automation.
 
-**AutoStart**
+Edit *ConvertConfig.ini* under `[convert-UUP]` section to change the default value, where **0** means option **OFF**, and **1** means option **ON**.
 
-If you want to start the conversion process directly without prompts.
+- **AutoStart**
 
-This require placing UUP files in *UUPs* folder, or starting convert-UUP.cmd from command prompt with path to UUP source folder
+Start the conversion process directly without prompts.
 
-By default this will create ISO with install.wim. For multiple UUP editions it will create AIO ISO with install.wim.
+This require placing UUP files in *UUPs* folder, starting convert-UUP.cmd from command prompt with path to UUP source folder, or drag and drop UUP source folder on convert-UUP.cmd.
 
-to do so, change `set AutoStart=0` to `set AutoStart=1`
+By defaultæ this will create ISO with install.wim. For multiple UUP editions it will create AIO ISO with install.wim.
 
-**StartVirtual**
+- **AddUpdates**
 
-If you want to start create_virtual_editions.cmd directly after conversion is finished
+Integrate detected updates after creating wim files. Use **ResetBase** option to control supersedence behavior.
 
-to do so, change `set StartVirtual=0` to `set StartVirtual=1`
+See *Add Updates Option* below for more details.
 
-**SkipISO**
+- **StartVirtual**
 
-If you are not interested to create ISO file currently, or intend to create Multi-Architecture ISO (x86/x64) later with multi_arch_iso.cmd, or intend to manually use create_virtual_editions.cmd
+Start create_virtual_editions.cmd directly after conversion is completed.
 
-to do so, change `set SkipISO=0` to `set SkipISO=1`
+See *Virtual Editions* below for more details.
 
-**SkipWinRE**
+- **SkipISO**
 
-If you are not interested to have recovery environment or want to reduce ISO size/conversion period.. etc, it is possible to skip adding winre.wim to install.wim/install.esd
+If you are not interested to create ISO file currently, intend to create Multi-Architecture ISO (x86/x64) later with multi_arch_iso.cmd, or intend to manually use create_virtual_editions.cmd
 
-to do so, change `set SkipWinRE=0` to `set SkipWinRE=1`
+- **SkipWinRE**
 
-p.s. adding winre.wim to install.esd will consume high amount of CPU/RAM
+Do not add winre.wim to install.wim/install.esd, if you are not interested to have recovery environment or want to reduce ISO size/conversion period.. etc.
 
-**ForceDism**
+P.S. adding winre.wim to install<b>.esd</b> will consume high amount of CPU/RAM.
 
-If you want to use the official method with dism.exe for creating boot.wim
+- **ForceDism**
 
-to do so, change `set ForceDism=0` to `set ForceDism=1`
+Use the official method with dism.exe for creating boot.wim (require Windows 10 Host OS or installed Windows 10 ADK).
 
-**RefESD**
+- **RefESD**
 
-If you plan to use your local UUP source repeatedly, you can choose to keep converted reference ESD files for future operations instead converting them each time.
-
-to do so, change `set RefESD=0` to `set RefESD=1`
+Keep converted reference ESD files for future operations instead converting them each time.
 
 if UUP source is Express, Reference ESDs and Edition ESDs will be copied to new folder *CanonicalUUP*. Practically, this convert/backup Express UUP source to Canonical
 
@@ -131,7 +123,7 @@ ___
 
 - Make sure UUP source contain updates (Windows10.0-KB*.cab files)
 
-- Optional: edit convert-UUP.cmd and change `set AddUpdates=0` to `set AddUpdates=1`
+- Optional: set convert-UUP option `AddUpdates` to 1
 
 - You must have Windows 10 Host OS, or install Windows 10 ADK
 
@@ -172,7 +164,7 @@ with Pro N: Enterprise N, Education N, Pro Education N, Pro N for Workstations
 
 **How to:**
 
-- Optional: if you do not intend to keep converted ISO, edit convert-UUP.cmd and `set SkipISO=1`
+- Optional: if you do not intend to keep converted ISO, set convert-UUP option `SkipISO` to 1.
 
 - Use convert-UUP.cmd to create the converted ISO file/distribution
 
@@ -180,59 +172,50 @@ with Pro N: Enterprise N, Education N, Pro Education N, Pro N for Workstations
 
 **Options:**
 
-1 - Create all editions
-
+1 - Create all editions  
 create all possible target virtual editions
 
-2 - Create one edition
-
+2 - Create one edition  
 create one of the target virtual editions
 
-3 - Create randomly selected editions
-
+3 - Create randomly selected editions  
 create some of the target virtual editions
 
-**Manual Options**
+**Configuration Options**
+
+Control process behavior, output and automation.
+
+Edit *ConvertConfig.ini* under `[create_virtual_editions]` section to change the default value, where **0** means option **OFF**, and **1** means option **ON**.
 
 - AutoStart
 
-If you want to start the creation process directly without prompts.  
+Start the creation process directly without prompts.  
 It will only create editions specified in *AutoEditions* option if possible.
 
-to do so, change `set AutoStart=0` to `set AutoStart=1`
-
-Note: if convert-UUP.cmd is set with AutoStart=1 & StartVirtual=1, create_virtual_editions.cmd will also start with AutoStart=1
+Note: if convert-UUP options `AutoStart` & `StartVirtual` are set to 1, create_virtual_editions.cmd will also start with AutoStart=1
 
 - AutoEditions
 
-Specify editions to auto create with *AutoStart* option, separate the editions with a comma ,
+Specify editions to auto create with `AutoStart` option, separate the editions with a comma ,
 
 Allowed values:  
-Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN,CoreSingleLanguage,ServerRdsh
+Enterprise, Education, ProfessionalEducation, ProfessionalWorkstation, EnterpriseN, EducationN, ProfessionalEducationN, ProfessionalWorkstationN, CoreSingleLanguage, ServerRdsh
 
 Example:  
-`set AutoEditions=Enterprise,ProfessionalWorkstation,Education`
+`vAutoEditions=Enterprise,ProfessionalWorkstation,Education`
 
 - DeleteSource
 
-If you do not need to keep the source base editions (example: create Enterprise and delete Pro)
-
-to do so, change `set DeleteSource=0` to `set DeleteSource=1`
+Do not keep the source base editions (example: create Enterprise and delete Pro).
 
 - Preserve
 
-To preserve and keep source distribution folder intact, the operation will be done on copied folder instead
-
-to do so, change `set Preserve=0` to `set Preserve=1`
-
-(If source distribution is .ISO file, this option has no affect)
+Preserve and keep source distribution folder intact, the operation will be done on copied folder instead.  
+If source distribution is .ISO file, this option has no affect.
 
 - SkipISO
 
-Do not create final ISO file at the end
-
-to do so, change `set SkipISO=0` to `set SkipISO=1`
-
+Do not create final ISO file at the end.
 ___
 
 ## Multi-Architecture ISO (x86/x64)
@@ -275,4 +258,4 @@ ___
 * [cdob](http://reboot.pro/topic/20471-windows-pe-5x-boot-problem) - create aio efisys.bin
 * [@rgadguard](https://twitter.com/rgadguard) - initial script and co-enhancing
 * Special thanks to: @Enthousiast, @s1ave77, @Ratiborus58, @NecrosoftCore, @DiamondMonday, @WzorNET
-* cdimage and imagex are intellectual property of Microsoft Corporation.
+* cdimage, imagex and bcdedit are intellectual property of Microsoft Corporation.

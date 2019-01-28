@@ -39,6 +39,23 @@ if not exist "%~dp0bin\%%a.exe" (echo Error: required %%a.exe is missing&pause&e
 )
 if /i "%xOS%" equ "x64" (set "wimlib=%~dp0bin\bin64\wimlib-imagex.exe") else (set "wimlib=%~dp0bin\wimlib-imagex.exe")
 cd /d "%~dp0"
+if exist "ConvertConfig.ini" findstr /i \[create_virtual_editions\] ConvertConfig.ini 1>nul || goto :proceed
+for %%i in (
+AutoStart
+AutoEditions
+DeleteSource
+Preserve
+SkipISO
+) do (
+call :ReadINI %%i
+)
+goto :proceed
+
+:ReadINI
+findstr /b /i v%1 ConvertConfig.ini 1>nul && for /f "tokens=2 delims==" %%a in ('findstr /b /i v%1 ConvertConfig.ini') do set "%1=%%a"
+goto :eof
+
+:proceed
 setlocal EnableExtensions
 setlocal EnableDelayedExpansion
 if exist bin\temp\ rmdir /s /q bin\temp\
@@ -49,6 +66,7 @@ for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 set "dismroot=dism.exe"
 set "mountdir=%SystemDrive%\MountUUP"
 set "line============================================================="
+set ExitB=0
 
 :checkadk
 set regKeyPathFound=1
@@ -73,7 +91,7 @@ if not exist "%dismroot%" set ADK=0&set "dismroot=dism.exe"
 :precheck
 if %winbuild% lss 10240 if %ADK% equ 0 (set "MESSAGE=Host OS is not compatible, and Windows 10 ADK is not detected"&goto :E_MSG)
 if /i "%dismroot%"=="dism.exe" (set _dism=dism.exe /English) else (set _dism="%dismroot%" /English)
-if /i "%params%"=="auto" (set AutoStart=1&set Preserve=0)
+if /i "%params%"=="auto" (set AutoStart=1&set Preserve=0&set ExitB=1)
 
 :checkdir
 dir /b /ad . 1>nul 2>nul || goto :checkiso
@@ -309,7 +327,7 @@ if %%i==10 if %EditionPro%==1 if %ServerRdsh%==0 (set ServerRdsh=1)
 goto :MAINMENU
 
 :MAINMENU
-cls
+if %ExitB%==1 (echo.) else (cls)
 for %%i in (Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN,CoreSingleLanguage,ServerRdsh) do (
 find /i "<EDITIONID>%%i</EDITIONID>" bin\infoall.txt 1>nul && set %%i=0
 )
@@ -324,6 +342,7 @@ if %modified%==1 (goto :ISOCREATE) else (
   echo No operation performed.
   echo %line%
   echo.
+  if %ExitB%==1 goto :QUIT
   echo Press any key to exit.
   pause >nul
   goto :QUIT
@@ -450,7 +469,6 @@ exit /b
 
 :ISOCREATE
 if %DeleteSource%==1 (
-echo.
 echo %line%
 echo Deleting Source Edition^(s^) . . .
 echo %line%
@@ -463,6 +481,7 @@ echo Rebuilding install.wim . . .
 echo %line%
 %_dism% /Export-Image /SourceImageFile:ISOFOLDER\sources\install.wim /All /DestinationImageFile:"%~dp0temp.wim"
 move /y "%~dp0temp.wim" ISOFOLDER\sources\install.wim >nul
+call :dPREPARE
 )
 if exist "ISOFOLDER\sources\ei.cfg" del /f /q  "ISOFOLDER\sources\ei.cfg" >nul
 if %SkipISO%==1 (
@@ -472,6 +491,7 @@ if %SkipISO%==1 (
   echo Done. You chose not to create iso file.
   echo %line%
   echo.
+  if %ExitB%==1 goto :QUIT
   echo Press any key to exit.
   pause >nul
   goto :QUIT
@@ -480,7 +500,6 @@ echo.
 echo %line%
 echo Creating ISO . . .
 echo %line%
-if %DeleteSource%==1 call :dPREPARE
 bin\cdimage.exe -bootdata:2#p0,e,b"ISOFOLDER\boot\etfsboot.com"#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -t%isotime% -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
 set ERRORTEMP=%ERRORLEVEL%
 IF %ERRORTEMP% neq 0 (
@@ -488,11 +507,13 @@ IF %ERRORTEMP% neq 0 (
   echo.
   echo Errors were reported during ISO creation.
   echo.
+  if %ExitB%==1 goto :QUIT
   echo Press any key to exit.
   pause >nul
   goto :QUIT
 )
 rmdir /s /q ISOFOLDER\
+if %ExitB%==1 goto :QUIT
 echo.
 echo Press any key to exit.
 pause >nul
@@ -594,4 +615,5 @@ pause >nul
 if exist ISOFOLDER\ rmdir /s /q ISOFOLDER\
 if exist bin\temp\ rmdir /s /q bin\temp\
 if exist bin\infoall.txt del /f /q bin\infoall.txt
+if %ExitB%==1 exit /b
 exit

@@ -72,7 +72,6 @@ goto :eof
 
 :check2
 for %%a in (
-CTRsource
 CTRtype
 CTRver
 CTRarc
@@ -97,7 +96,30 @@ echo Press any key to exit...
 pause >nul
 goto :eof
 )
+if defined CTRsource goto :check3
+if exist "Data\*.cab" (
+for /f %%A in ('dir /b /ad Data\ 2^>nul') do if exist "Data\%%A\stream*.dat" (
+  call :get_path "%~dp0..\"
+  )
+)
+if defined CTRsource goto :check3
+for %%A in (C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
+if exist "%%A:\Office\Data\*.cab" set "CTRsource=%%A:\"
+)
+if defined CTRsource goto :check3
 
+echo ==== ERROR ====
+echo Could not detect C2R source in the specified config file
+echo.
+echo Press any key to exit...
+pause >nul
+goto :eof
+
+:get_path
+set "CTRsource=%~dp1"
+exit /b
+
+:check3
 if "%CTRsource:~-1%"=="\" set "CTRsource=%CTRsource:~0,-1%"
 
 if /i %CTRarc%==x86 (set CTRbit=32) else (set CTRbit=64)

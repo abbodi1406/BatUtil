@@ -3,7 +3,7 @@
 set _Debug=0
 
 cd /d "%~dp0"
-set uiv=v5.8
+set uiv=v5.9
 :: when changing below options, be sure to set the new values between = and " marks
 
 :: target image or wim file
@@ -59,6 +59,7 @@ set "winremount=%SystemDrive%\W10UImountre"
 title Installer for Windows 10 Updates
 set oscdimgroot=%windir%\system32\oscdimg.exe
 set _reg=%windir%\system32\reg.exe
+set rSxS=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\SideBySide\Configuration
 %_reg% query "HKU\S-1-5-19" 1>nul 2>nul || goto :E_Admin
 
 if %_Debug% EQU 1 set autostart=1
@@ -153,12 +154,15 @@ set "indices=*"
 )
 
 :check
-if /i "%target%"=="%SystemDrive%" (if exist "%target%\Windows\SysWOW64\*" (set arch=x64) else (set arch=x86))
+if /i "%target%"=="%SystemDrive%" (
+if exist "%target%\Windows\SysWOW64\*" (set arch=x64) else (set arch=x86)
+%_reg% query %rSxS% /v W10UIclean %_Nul_1_2% && (set onlineclean=1&set online=1&set cleanup=1)
+%_reg% query %rSxS% /v W10UIrebase %_Nul_1_2% && (set onlineclean=1&set online=1&set cleanup=1&set resetbase=1)
+)
+for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
+if defined onlineclean goto :mainboard2
 call :counter
 if %_sum%==0 set "repo="
-
-for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
-rem if %winbuild% geq 10240 goto :mainmenu
 if /i "%dismroot%" neq "%windir%\system32\dism.exe" goto :mainmenu
 goto :checkadk
 
@@ -174,6 +178,8 @@ if "%repo:~-1%"=="\" set "repo=%repo:~0,-1%"
 if "%mountdir%"=="" (goto :mainmenu)
 if "%mountdir:~-1%"=="\" set "mountdir=%mountdir:~0,-1%"
 if /i "%target%"=="%SystemDrive%" (set dismtarget=/online&set "mountdir=%target%"&set online=1&set build=%winbuild%) else (set dismtarget=/image:"%mountdir%")
+
+:mainboard2
 cls
 echo ============================================================
 echo Running W10UI %uiv%
@@ -184,6 +190,26 @@ net stop wuauserv %_Nul_1_2%
 DEL /F /Q %systemroot%\Logs\CBS\* %_Nul_1_2%
 )
 DEL /F /Q %systemroot%\Logs\DISM\* %_Nul_1_2%
+if defined onlineclean (
+if exist "%windir%\WinSxS\pending.xml" (
+  echo.
+  echo ============================================================
+  echo ERROR: you must restart the system first before cleaning up
+  echo ============================================================
+  echo.
+  echo.
+  echo Press any key to exit.
+  if %_Debug% EQU 0 pause >nul
+  goto :eof
+  )
+set verb=0
+set dismtarget=/online
+set build=%winbuild%
+call :cleanup
+%_reg% delete %rSxS% /v W10UIclean /f %_Nul_1_2%
+%_reg% delete %rSxS% /v W10UIrebase /f %_Nul_1_2%
+goto :fin
+)
 if %dvd%==1 if %copytarget%==1 (
 echo.
 echo ============================================================
@@ -538,7 +564,14 @@ call :cleanupmanual
 goto :eof
 )
 if %cleanup%==0 call :cleanupmanual&goto :eof
-if exist "%mumtarget%\Windows\WinSxS\pending.xml" call :cleanupmanual&goto :eof
+if exist "%mumtarget%\Windows\WinSxS\pending.xml" (
+if %online%==1 (
+  if %resetbase%==0 (set rValue=W10UIclean) else (set rValue=W10UIrebase)
+  %_reg% add %rSxS% /v !rValue! /t REG_DWORD /d 1 /f %_Nul_1%
+  goto :eof
+  )
+call :cleanupmanual&goto :eof
+)
 if %online%==0 (
 set ksub=SOFTWIM
 %_reg% load HKLM\!ksub! "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul_1%

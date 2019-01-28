@@ -45,6 +45,26 @@ if not exist "%~dp0bin\%%a.exe" (echo Error: required %%a.exe is missing&pause&e
 )
 if /i "%xOS%" equ "x64" (set "wimlib=%~dp0bin\bin64\wimlib-imagex.exe") else (set "wimlib=%~dp0bin\wimlib-imagex.exe")
 cd /d "%~dp0"
+if exist "ConvertConfig.ini" findstr /i \[convert-UUP\] ConvertConfig.ini 1>nul || goto :proceed
+for %%i in (
+AutoStart
+AddUpdates
+ResetBase
+StartVirtual
+SkipISO
+SkipWinRE
+ForceDism
+RefESD
+) do (
+call :ReadINI %%i
+)
+goto :proceed
+
+:ReadINI
+findstr /b /i %1 ConvertConfig.ini 1>nul && for /f "tokens=2 delims==" %%a in ('findstr /b /i %1 ConvertConfig.ini') do set "%1=%%a"
+goto :eof
+
+:proceed
 setlocal EnableExtensions
 setlocal EnableDelayedExpansion
 color 1f
@@ -304,11 +324,16 @@ if %AddUpdates%==1 if %WIMFILE%==install.wim if exist "%UUP%\*Windows10*KB*.cab"
 if %StartVirtual%==1 if %WIMFILE%==install.wim (
   if %RefESD%==1 call :uups_backup
   ren ISOFOLDER %DVDISO%
-  if %AutoStart%==1 (start /i "" create_virtual_editions.cmd auto) else (start /i "" create_virtual_editions.cmd manu)
+  if %AutoStart%==1 (
+  call create_virtual_editions.cmd auto
+  title UUP -^> ISO
+  ) else (
+  start /i "" create_virtual_editions.cmd manu
   echo.
   echo %line%
   echo Done. You chose to start create_virtual_editions.cmd directly.
   echo %line%
+  )
   echo.
   echo Press any key to exit.
   pause >nul

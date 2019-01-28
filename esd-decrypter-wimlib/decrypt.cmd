@@ -497,6 +497,7 @@ if %revision%==16299.64  (set _label=16299.15.171109-1522.rs3_release_svc_refres
 if %revision%==16299.125 (set _label=16299.125.171213-1220.rs3_release_svc_refresh_CLIENT&set branch=rs3_release_svc_refresh)
 if %revision%==17134.112 (set _label=17134.112.180619-1212.rs4_release_svc_refresh_CLIENT&set branch=rs4_release_svc_refresh)
 if %revision%==17763.107 (set _label=17763.107.181029-1455.rs5_release_svc_refresh_CLIENT&set branch=rs5_release_svc_refresh)
+if %revision%==17763.253 (set _label=17763.253.190108-0006.rs5_release_svc_refresh_CLIENT&set branch=rs5_release_svc_refresh)
 rmdir /s /q .\bin\temp >nul 2>&1
 
 for %%b in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
