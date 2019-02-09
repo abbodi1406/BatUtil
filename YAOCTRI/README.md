@@ -36,11 +36,13 @@ install retail products for Office 365 / 2016 / 2019 Suites, in addition to Offi
 
 - At first, enter the path for Office offline source
 
-either the directory that contain "Office" folder (not Office folder path itself)
+either the drive, directory or network share that contain "Office" folder (not Office folder path itself)
 
-Configurator.cmd will auto detect the source for the drive letter of mounted .img file / DVD / USB
+Configurator.cmd will auto detect the path for the drive letter of Office .img file (virtual mounted / dvd / usb)
 
-you can also place Configurator.cmd script inside "Office" folder, and the path will be auto detected
+if Configurator.cmd is placed inside "Office" folder, the path will be auto detected
+
+if Configurator.cmd is placed next to "Office" folder, the path will be auto detected
 
 - If multiple versions are detected in the source, you will be prompted to choose one
 
@@ -57,7 +59,7 @@ you can also place Configurator.cmd script inside "Office" folder, and the path 
 
 - Select the desired Update Channel
 
-- Change the Miscellaneous Options to your need
+- Change the Miscellaneous Options to your needs
 
 - At the end, you will have three options:
 
@@ -65,16 +67,20 @@ you can also place Configurator.cmd script inside "Office" folder, and the path 
 start normal installation now with the selected options (C2R_Config ini will be created too)
 
 2. Create setup configuration (Normal Install)  
-create C2R_Config ini file, to be used later with YAOCTRI_Installer.cmd
+create C2R_Config ini file, to be used later with Installer.cmd
 
 3. Create setup configuration (Auto Install)  
-create C2R_Config ini file with unattended option, which allow YAOCTRI_Installer.cmd to start the installation immediately
+create C2R_Config ini file with unattended option, which allow Installer.cmd to start the installation immediately
 
 ## Remarks:
 
+* If Configurator.cmd is ran from read-only path (e.g. DVD or network share), C2R_Config ini file will be created on the Desktop
+
+* When using Installer.cmd, if Office SourcePath does not exist, the script will try to auto detect alternative path, similar to Configurator.cmd
+
 * YAOCTRIR - Retail flavor is recommended only if you have actual retail/subscription key
 
-but you still can use it to install Retail SKUs, then use C2R-R2V to convert licensing to volume
+but you can still use it to install Retail SKUs, then use C2R-R2V to convert licensing to volume
 
 * For Windows 7 and 8.1, the workaround to install Office 2019 require installing corresponding Office 2016 products, and corresponding Office 2019 volume licences
 
@@ -92,12 +98,10 @@ a better choice would be to select Mondo directly, which include Project/Visio
 
 * Auto Activate option will work in YAOCTRI - Volume flavor only in these scenarios:
 
-- on Windows 10 or 8.1:
-
+- on Windows 10 or 8.1:  
 system is KMS activated with external online KMS server, or installed SppExtComObjPatcher (or similar KMS service solutions)
 
-- on Windows 7:
-
+- on Windows 7:  
 SppExtComObjPatcher is installed, or external online KMS server is added manually to OSPP registry  
 `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform`
 
@@ -109,7 +113,7 @@ SppExtComObjPatcher is installed, or external online KMS server is added manuall
 
 * The script will not check or detect already installed Office products (C2R or MSI) before installation
 
-while it is possible to install Office C2R on top of already installed C2R, it is advisable to start clean
+while it is possible to install Office C2R on the top of already installed C2R, it is advisable to start clean
 
 * If you want to update Office manually, you may disable Updates option
 
@@ -118,5 +122,7 @@ and after installation, you can execute this in command prompt as administrator 
 
 ## Special Thanks
 
-@ratzlefatz / OfficeRTool
-@Krakatoa   / WOTOK
+@ratzlefatz     / OfficeRTool  
+@Krakatoa       / WOTOK  
+@presto1234     / code improvements suggestion  
+@Windows_Addict / features suggestion and testing

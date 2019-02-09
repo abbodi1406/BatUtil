@@ -5,11 +5,22 @@
 set _O365asO2019=0
 
 
+cls
 set _Debug=0
-%windir%\system32\reg.exe query "HKU\S-1-5-19" >nul 2>&1 || (
+set "SysPath=%Windir%\System32"
+if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
+set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+fsutil dirty query %systemdrive% >nul 2>&1 || (
 set "msg=ERROR: right click on the script and 'Run as administrator'"
 goto :end
 )
+
+set "_tempdir=%SystemRoot%\Temp"
+set "_workdir=%~dp0"
+set "_logpath=%~dpn0"
+dir /b /adr "%_workdir%" 1>nul 2>nul && set "_logpath=%_tempdir%\%~n0"
+if "%_workdir:~0,2%"=="\\" set "_logpath=%_tempdir%\%~n0"
+setlocal EnableExtensions EnableDelayedExpansion
 
 if %_Debug% EQU 0 (
   set "_Nul_1=1>nul"
@@ -17,7 +28,6 @@ if %_Debug% EQU 0 (
   set "_Nul_2e=2^>nul"
   set "_Nul_1_2=1>nul 2>nul"
   call :Begin
-  exit /b
 ) else (
   set "_Nul_1="
   set "_Nul_2="
@@ -28,7 +38,7 @@ if %_Debug% EQU 0 (
   echo The window will be closed when finished
   @echo on
   @prompt $G
-  @call :Begin >"%~dpn0.tmp" 2>&1 &cmd /u /c type "%~dpn0.tmp">"%~dpn0_Debug.log"&del "%~dpn0.tmp"
+  @call :Begin >"!_logpath!.tmp" 2>&1 &cmd /u /c type "!_logpath!.tmp">"!_logpath!_Debug.log"&del "!_logpath!.tmp"
 )
 exit /b
 
@@ -87,15 +97,15 @@ if "%ProductIds%" equ "" (
 set "msg=Could not detect Office ProductIDs..."
 goto :end
 )
-if not exist "%_LicensesPath%\*.xrm-ms" (
+if not exist "!_LicensesPath!\*.xrm-ms" (
 set "msg=Could not detect Office Licenses files..."
 goto :end
 )
-if not exist "%_Integrator%" (
+if not exist "!_Integrator!" (
 set "msg=Could not detect Office Licenses Integrator..."
 goto :end
 )
-if %winbuild% lss 9200 if not exist "%_OSPP%" (
+if %winbuild% lss 9200 if not exist "!_OSPP!" (
 set "msg=Could not detect Licensing tool OSPP.vbs..."
 goto :end
 )
@@ -126,8 +136,7 @@ echo.
 echo ============================================================
 echo Cleaning Current Office Licenses...
 echo ============================================================
-cd /d "%~dp0"
-%arch%\cleanospp.exe -Licenses %_Nul_1_2%
+"!_workdir!\!arch!\cleanospp.exe" -Licenses %_Nul_1_2%
 echo.
 echo ============================================================
 echo Installing Office Volume Licenses...
@@ -138,27 +147,26 @@ set O16Ids=ProjectPro,VisioPro,Standard,ProjectStd,VisioStd
 set A19Ids=Excel2019,Outlook2019,PowerPoint2019,Publisher2019,Word2019
 set A16Ids=Excel,OneNote,Outlook,PowerPoint,Publisher,Word
 
-echo %ProductIds%> "%temp%\ProductIds.txt"
+echo %ProductIds%> "!_tempdir!\ProductIds.txt"
 for %%a in (Mondo,%O19Ids%,%A19Ids%,Access2019,SkypeforBusiness2019,Professional2019,HomeBusiness2019,HomeStudent2019,O365ProPlus,O365Business,O365SmallBusPrem,O365HomePrem,O365EduCloud,Professional,HomeBusiness,HomeStudent,%O16Ids%,%A16Ids%,Access,SkypeforBusiness,ProPlus) do (
 set _%%a=0
 )
 for %%a in (Mondo,%O19Ids%,%A19Ids%,Access2019,SkypeforBusiness2019,Professional2019,HomeBusiness2019,HomeStudent2019,O365ProPlus,O365Business,O365SmallBusPrem,O365HomePrem,O365EduCloud,Professional,HomeBusiness,HomeStudent,%O16Ids%,%A16Ids%,Access,SkypeforBusiness) do (
-findstr /I /C:"%%aRetail" "%temp%\ProductIds.txt" %_Nul_1% && set _%%a=1
+findstr /I /C:"%%aRetail" "!_tempdir!\ProductIds.txt" %_Nul_1% && set _%%a=1
 )
-wmic path %spp% get LicenseFamily > "%temp%\sppchk.txt" 2>&1
+wmic path %spp% get LicenseFamily > "!_tempdir!\sppchk.txt" 2>&1
 for %%a in (Mondo,%O19Ids%,%A19Ids%,Access2019,SkypeforBusiness2019,%O16Ids%,%A16Ids%,Access,SkypeforBusiness) do (
-findstr /I /C:"%%aVolume" "%temp%\ProductIds.txt" %_Nul_1% && (
-  find /i "%%aVL_KMS_Client" "%temp%\sppchk.txt" %_Nul_1% && (set _%%a=0) || (set _%%a=1)
+findstr /I /C:"%%aVolume" "!_tempdir!\ProductIds.txt" %_Nul_1% && (
+  find /i "%%aVL_KMS_Client" "!_tempdir!\sppchk.txt" %_Nul_1% && (set _%%a=0) || (set _%%a=1)
   )
 )
 reg query %_PRIDs%\ProPlusRetail.16 %_Nul_1_2% && set _ProPlus=1
 reg query %_PRIDs%\ProPlusVolume.16 %_Nul_1_2% && (
-find /i "Office16ProPlusVL_KMS_Client" "%temp%\sppchk.txt" %_Nul_1% && (set _ProPlus=0) || (set _ProPlus=1)
+find /i "Office16ProPlusVL_KMS_Client" "!_tempdir!\sppchk.txt" %_Nul_1% && (set _ProPlus=0) || (set _ProPlus=1)
 )
-del /f /q "%temp%\sppchk.txt" >nul 2>&1
-del /f /q "%temp%\ProductIds.txt" >nul 2>&1
+del /f /q "!_tempdir!\sppchk.txt" >nul 2>&1
+del /f /q "!_tempdir!\ProductIds.txt" >nul 2>&1
 
-setlocal EnableDelayedExpansion
 if !_Mondo! equ 1 (
 echo Mondo Suite
 echo.
@@ -305,7 +313,7 @@ goto :GVLK
 :InsLic
 set "_ID=%1Volume"
 reg delete %_Config% /f /v %_ID%.OSPPReady %_Nul_1_2%
-"%_Integrator%" /I /License PRIDName=%_ID%.16 PackageGUID="%_GUID%" PackageRoot="%_InstallRoot%" %_Nul_1%
+"!_Integrator!" /I /License PRIDName=%_ID%.16 PackageGUID="%_GUID%" PackageRoot="!_InstallRoot!" %_Nul_1%
 reg add %_Config% /f /v %_ID%.OSPPReady /t REG_SZ /d 1 %_Nul_1%
 reg query %_Config% /v ProductReleaseIds | findstr /I "%_ID%" %_Nul_1%
 if %errorlevel% neq 0 (
@@ -337,9 +345,14 @@ if /i '%app%' equ 'fc7c4d0c-2e85-4bb9-afd4-01ed1476b5e9' exit /b
 if /i '%app%' equ '500f6619-ef93-4b75-bcb4-82819998a3ca' exit /b
 set "key="
 for /f "tokens=2 delims==" %%A in ('"wmic path %spp% where ID='%app%' get LicenseFamily /value"') do echo %%A
-for /f %%A in ('cscript //Nologo x86\key.vbs %app%') do set "key=%%A"
+call "!_workdir!\x86\keyOff.cmd" %app%
 if "%key%" equ "" (echo Could not find matching gVLK&echo.&exit /b)
 wmic path %sps% where version='%ver%' call InstallProductKey ProductKey="%key%" %_Nul_1_2%
+set ERRORCODE=%ERRORLEVEL%
+if %ERRORCODE% neq 0 (
+cmd /c exit /b %ERRORCODE%
+echo Failed: 0x!=ExitCode!
+)
 echo.
 exit /b
 
