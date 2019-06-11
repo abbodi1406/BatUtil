@@ -1,4 +1,3 @@
-@cls
 @echo off
 set "SysPath=%Windir%\System32"
 if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
@@ -34,7 +33,7 @@ set _actv=False
 set _tele=True
 set _unattend=False
 set "line=============================================================="
-if exist "!_workdir!\C2R*.ini" for /f %%# in ('dir /b "!_workdir!\C2R*.ini"') do (set "C2Rconfig=%%#"&goto :check)
+if exist "!_workdir!\C2R*.ini" for /f %%# in ('dir /b /s "!_workdir!\C2R*.ini"') do (set "C2Rconfig=%%#"&goto :check)
 
 :prompt
 cls
@@ -188,7 +187,7 @@ if defined _suit2 (
 set "_licenses=%_suit2%"
 if /i "%_suit2%"=="ProPlus2019Volume" set _pkey0=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP
 if /i "%_suit2%"=="Standard2019Volume" set _pkey0=6NWWJ-YQWMR-QKGCB-6TMB3-9D9HK
-if /i "%_suit2%"=="MondoVolume" set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
+if /i "%_suit2%"=="MondoVolume" set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2,DRNV7-VGMM2-B3G9T-4BF84-VMFTK
 )
 set _OneDrive=ON
 if defined _excluded (

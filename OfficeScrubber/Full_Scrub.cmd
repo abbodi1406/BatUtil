@@ -1,6 +1,13 @@
 @echo off
-%windir%\system32\reg.exe query "HKU\S-1-5-19" 1>nul 2>nul || (
+set "SysPath=%Windir%\System32"
+if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
+set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+fsutil dirty query %systemdrive% >nul 2>&1 || (
 set "msg=ERROR: right click on the script and 'Run as administrator'"
+goto :end
+)
+if not exist "%~dp0bin\x86\cleanospp.exe" (
+set "msg=ERROR: required file cleanospp.exe is missing"
 goto :end
 )
 for %%a in (OffScrub_O16msi.vbs,OffScrubC2R.vbs) do (
@@ -11,9 +18,12 @@ if %winbuild% LSS 7601 (
 set "msg=ERROR: Windows 7 SP1 is the minimum supported OS"
 goto :end
 )
-title Office Scrubber
 set xOS=x64
-if /i "%PROCESSOR_ARCHITECTURE%"=="x86" (if "%PROCESSOR_ARCHITEW6432%"=="" set xOS=x86)
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" (if not defined PROCESSOR_ARCHITEW6432 set xOS=x86)
+set "_work=%~dp0"
+if "%_work:~-1%"=="\" set "_work=%_work:~0,-1%"
+setlocal EnableExtensions EnableDelayedExpansion
+title Office Scrubber
 set OfficeC2R=0
 sc query ClickToRunSvc 1>nul 2>nul && set OfficeC2R=1
 sc query OfficeSvc 1>nul 2>nul && set OfficeC2R=1
@@ -60,7 +70,6 @@ echo ============================================================
 call :cKMS
 
 :proceed
-cd /d "%~dp0bin"
 if exist "%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" (
 echo.
 echo ============================================================
@@ -72,12 +81,12 @@ echo.
 echo ============================================================
 echo Executing OffScrubC2R.vbs
 echo ============================================================
-1>nul 2>nul cscript //Nologo //B OffScrubC2R.vbs ALL /OSE /QUIET /NOCANCEL
+1>nul 2>nul cscript //Nologo //B "!_work!\bin\OffScrubC2R.vbs" ALL /OSE /QUIET /NOCANCEL
 echo.
 echo ============================================================
 echo Executing OffScrub_O16msi.vbs
 echo ============================================================
-1>nul 2>nul cscript //Nologo //B OffScrub_O16msi.vbs ALL /OSE /QUIET /NOCANCEL /NOREBOOT /FORCE /DELETEUSERSETTINGS /ECI
+1>nul 2>nul cscript //Nologo //B "!_work!\bin\OffScrub_O16msi.vbs" ALL /OSE /QUIET /NOCANCEL /NOREBOOT /FORCE /DELETEUSERSETTINGS /ECI
 
 reg delete HKCU\Software\Microsoft\Office /f 1>nul 2>nul
 reg delete HKLM\SOFTWARE\Microsoft\Office /f 1>nul 2>nul

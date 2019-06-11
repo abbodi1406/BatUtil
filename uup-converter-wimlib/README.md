@@ -115,9 +115,11 @@ ___
 
 - However, those updates are only applied by Windows Update, they not actual part of the UUP source itself and will not be included in the converted ISO/WIM by default
 
-- The recommended choice to get those updates incorporated, is to convert UUP to ISO normally, afterwards you can use W10UI.cmd script or similar projects to integrate the updates
+- The recommended choice to get those updates incorporated, is to convert UUP to ISO normally, afterwards you can use W10UI.cmd script or similar projects to integrate all available updates
 
 - Nevertheless, **AddUpdates** option provide built-in ability to directly integrate these updates, resulting a refreshed ISO/WIM
+
+- Note: This only works with install.wim (option 1 or 2 in the choices menu), because install.esd file is not servicable
 
 **How to:**
 
@@ -126,8 +128,6 @@ ___
 - Optional: set convert-UUP option `AddUpdates` to 1
 
 - You must have Windows 10 Host OS, or install Windows 10 ADK
-
-- You must choose an option with install.wim file (option 1 or 2)
 
 - If updates are detected, you will have extra option `9 - Add Updates`. Enter 9 to change the status (Yes or No) before choosing option 1 or 2
 

@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-set uiv=v4.8
+set uiv=v4.9
 :: when changing below options, recommended to set the new values between = and " marks
 
 :: target image or wim file
@@ -53,7 +53,7 @@ set "winremount=%SystemDrive%\W7UImountre"
 :: ##################################################################
 
 :: Technical options for updates
-set ssu=KB3177467
+set ssu=KB4490628
 set rollup=KB3125574
 set gdrlist=(KB2574819,KB2685811,KB2685813)
 set rdp8=(KB2984976,KB3020387,KB3075222)
@@ -223,26 +223,33 @@ call :security
 goto :eof
 
 :ssu
-if not exist "%repo%\Additional\_NotAllowedOffline\*%ssu%*-%arch%.msu" goto :eof
-if exist "%mountdir%\Windows\servicing\packages\package_for_%ssu%*6.1.2.5.mum" goto :eof
+if not exist "%repo%\General\*%ssu%*-%arch%.msu" goto :eof
+if exist "%mountdir%\Windows\servicing\packages\package_for_%ssu%*6.1.1.2.mum" goto :eof
 if %online%==1 if exist "%windir%\winsxs\pending.xml" (goto :stacklimit)
 call :cleaner
-cd Additional\_NotAllowedOffline\
+cd General\
 if %verb%==1 (
 echo.
 echo ============================================================
 echo *** Servicing Stack Update ***
 echo ============================================================
 )
-if %online%==1 (
-echo.
-echo ============================================================
-echo Installing %ssu%
-echo ============================================================
-for /f "delims=" %%i in ('dir /b "*%ssu%*%arch%.msu"') do %%i /quiet /norestart
-goto :eof
-)
 set "dest=%cab_dir%\SSU"
+if not exist "%dest%\*%ssu%*.mum" (
+expand.exe -f:*Windows*.cab "*%ssu%*%arch%.msu" "%cab_dir%" >nul
+md "%dest%"
+expand.exe -f:* "%cab_dir%\*%ssu%*.cab" "%dest%" 1>nul 2>nul || (echo Error: cannot extract cab file&rd /s /q "%dest%"&timeout /t 5 /nobreak >nul&goto :eof)
+)
+cd /d "%dest%"
+"%dismroot%" %dismtarget% /NoRestart /Add-Package /packagepath:update.mum
+goto :eof
+
+:KB3177467
+if not exist "%repo%\Additional\_NotAllowedOffline\*%ssu%*-%arch%.msu" goto :eof
+if exist "%mountdir%\Windows\servicing\packages\package_for_%ssu%*6.1.2.5.mum" goto :eof
+call :cleaner
+cd Additional\_NotAllowedOffline\
+set "dest=%cab_dir%\SSU2"
 if not exist "%dest%\*%ssu%*.mum" (
 expand.exe -f:*Windows*.cab "*%ssu%*%arch%.msu" "%cab_dir%" >nul
 md "%dest%"
@@ -587,6 +594,10 @@ goto :eof
 )
 if /i %kb%==KB2646060 (
 call :KB2646060
+goto :eof
+)
+if /i %kb%==KB3177467 if %online%==0 (
+call :KB3177467
 goto :eof
 )
 if /i %kb%==KB4099950 if %online%==0 (

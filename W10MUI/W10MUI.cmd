@@ -550,11 +550,21 @@ if %WINPE%==1 (
   reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d 1 /f 1>nul 2>nul
   reg unload HKLM\TEMPWIM 1>nul 2>nul
   if "!_PEM64!" NEQ "" if /i !BOOTARCH!==amd64 (
-    "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEM64! !_PES64! !_PEF64!
+    if exist "!BOOTMOUNTDIR!\Windows\servicing\Packages\WinPE-Setup-Package~31bf3856ad364e35~*.mum" (
+      "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEM64! !_PES64! !_PEF64!
+      ) else (
+      "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEM64! !_PEF64!
+      call :WIMman 2
+    )
     if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEX64!
   )
   if "!_PEM86!" NEQ "" if /i !BOOTARCH!==x86 (
-    "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEM86! !_PES86! !_PEF86!
+    if exist "!BOOTMOUNTDIR!\Windows\servicing\Packages\WinPE-Setup-Package~31bf3856ad364e35~*.mum" (
+      "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEM86! !_PES86! !_PEF86!
+      ) else (
+      "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEM86! !_PEF86!
+      call :WIMman 2
+    )
     if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEX86!
   )
   if /i !wimbit! NEQ dual for /L %%j in (1, 1, %LANGUAGES%) do (
@@ -568,29 +578,14 @@ if %WINPE%==1 (
   echo.
   "%DISMRoot%" /Quiet /ScratchDir:"%DISMTEMPDIR%" /Image:"%BOOTMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE%
   "%DISMRoot%" /Quiet /ScratchDir:"%DISMTEMPDIR%" /Image:"%BOOTMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE%
+  if exist "!BOOTMOUNTDIR!\Windows\servicing\Packages\WinPE-Setup-Package~31bf3856ad364e35~*.mum" (
   "%DISMRoot%" /Quiet /ScratchDir:"%DISMTEMPDIR%" /Image:"%BOOTMOUNTDIR%" /Gen-LangINI /Distribution:"%BOOTMOUNTDIR%"
   "%DISMRoot%" /Quiet /ScratchDir:"%DISMTEMPDIR%" /Image:"%BOOTMOUNTDIR%" /Set-SetupUILang:%DEFAULTLANGUAGE% /Distribution:"%BOOTMOUNTDIR%"
+  )
   "%DISMRoot%" /Quiet /ScratchDir:"%DISMTEMPDIR%" /Image:"%BOOTMOUNTDIR%" /Cleanup-Image /StartComponentCleanup
   "%DISMRoot%" /Quiet /ScratchDir:"%DISMTEMPDIR%" /Image:"%BOOTMOUNTDIR%" /Cleanup-Image /StartComponentCleanup /ResetBase
 ) else (
-  copy /y "!DVDDIR!\sources\lang.ini" "!BOOTMOUNTDIR!\sources" >nul
-  echo.
-  echo ============================================================
-  echo Add language files to boot.wim - index 2
-  echo ============================================================
-  echo.
-  for /L %%j in (1, 1, %LANGUAGES%) do (
-   if /i !LPARCH%%j!==!BOOTARCH! (
-    echo !LANGUAGE%%j!
-    if not exist "!BOOTMOUNTDIR!\sources\!LANGUAGE%%j!" mkdir "!BOOTMOUNTDIR!\sources\!LANGUAGE%%j!"
-    copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\vofflps.rtf" "!BOOTMOUNTDIR!\sources\!LANGUAGE%%j!" >nul 2>&1
-    for %%G in %_mui% do (
-    copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\%%G" "!BOOTMOUNTDIR!\sources\!LANGUAGE%%j!" >nul 2>&1
-    )
-    attrib -A -S -H -I "!BOOTMOUNTDIR!\sources\!LANGUAGE%%j!" /S /D >nul
-    call :EAfonts %%j
-   )
-  )
+  call :WIMman 1
 )
 call :cleanup "%BOOTMOUNTDIR%"
 echo.
@@ -832,6 +827,29 @@ copy /y "%EXTRACTDIR%\!LPARCH%1!\!LANGUAGE%1!\oobe_help_opt_in_details.rtf" "%DV
 copy /y "%EXTRACTDIR%\!LPARCH%1!\!LANGUAGE%1!\vofflps.rtf" "%DVDDIR%\sources\!LANGUAGE%1!" >nul 2>&1
 copy /y "%EXTRACTDIR%\!LPARCH%1!\!LANGUAGE%1!\vofflps.rtf" "%DVDDIR%\sources\!LANGUAGE%1!\privacy.rtf" >nul 2>&1
 attrib -A -S -H -I "%DVDDIR%\sources\!LANGUAGE%1!" /S /D >nul 2>&1
+goto :eof
+
+:WIMman
+if "%1"=="1" (
+  echo.
+  echo ============================================================
+  echo Add language files to boot.wim - index 2
+  echo ============================================================
+  echo.
+)
+copy /y "!DVDDIR!\sources\lang.ini" "!BOOTMOUNTDIR!\sources" >nul
+for /L %%j in (1, 1, %LANGUAGES%) do (
+  if /i !LPARCH%%j!==!BOOTARCH! (
+    if "%1"=="1" echo !LANGUAGE%%j!
+    if not exist "!BOOTMOUNTDIR!\sources\!LANGUAGE%%j!" mkdir "!BOOTMOUNTDIR!\sources\!LANGUAGE%%j!"
+    copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\vofflps.rtf" "!BOOTMOUNTDIR!\sources\!LANGUAGE%%j!" >nul 2>&1
+    for %%G in %_mui% do (
+    copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\%%G" "!BOOTMOUNTDIR!\sources\!LANGUAGE%%j!" >nul 2>&1
+    )
+    attrib -A -S -H -I "!BOOTMOUNTDIR!\sources\!LANGUAGE%%j!" /S /D >nul
+    if "%1"=="1" call :EAfonts %%j
+  )
+)
 goto :eof
 
 :EAfonts

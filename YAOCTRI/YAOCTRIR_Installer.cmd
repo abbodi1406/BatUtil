@@ -1,4 +1,3 @@
-@cls
 @echo off
 set "SysPath=%Windir%\System32"
 if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
@@ -34,7 +33,7 @@ set _actv=False
 set _tele=True
 set _unattend=False
 set "line=============================================================="
-if exist "!_workdir!\C2RR*.ini" for /f %%# in ('dir /b "!_workdir!\C2RR*.ini"') do (set "C2Rconfig=%%#"&goto :check)
+if exist "!_workdir!\C2RR*.ini" for /f %%# in ('dir /b /s "!_workdir!\C2RR*.ini"') do (set "C2Rconfig=%%#"&goto :check)
 
 :prompt
 cls

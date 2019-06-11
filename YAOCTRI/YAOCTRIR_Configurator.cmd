@@ -1,4 +1,3 @@
-@cls
 @echo off
 set "SysPath=%Windir%\System32"
 if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
@@ -1052,7 +1051,7 @@ echo. 2. Create setup configuration ^(Normal Install^)
 echo. 3. Create setup configuration ^(Auto Install^)
 echo.
 echo %line%
-choice /c 1239X /n /m "Choose a menu option to proceed, press B to go back, or X to exit: "
+choice /c 123BX /n /m "Choose a menu option to proceed, press B to go back, or X to exit: "
 if errorlevel 5 goto :eof
 if errorlevel 4 goto :MenuMisc
 if errorlevel 3 (set _unattend=True&goto :MenuFinal2)

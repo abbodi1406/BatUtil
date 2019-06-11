@@ -1,4 +1,3 @@
-@cls
 @echo off
 set "SysPath=%Windir%\System32"
 if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
@@ -759,6 +758,7 @@ set "_tmp="
 if defined _suite (
 set "_products=%_suite%.16_%CTRlng%_x-none"
 set "_keys=%_pkey0%"
+if %_O365%==ON set "_keys=!_keys!,DRNV7-VGMM2-B3G9T-4BF84-VMFTK"
 )
 if defined _suit2 set "_licenses=%_suit2%"
 if not defined _sku1 goto :MenuMisc
@@ -971,6 +971,10 @@ echo.
 echo Press any key to exit.
 pause >nul
 goto :eof
+)
+if %_Mondo%==ON (
+set "_licenses=O365ProPlusRetail"
+set "_keys=DRNV7-VGMM2-B3G9T-4BF84-VMFTK"
 )
 if defined _licenses (
 echo.

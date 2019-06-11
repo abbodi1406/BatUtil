@@ -1,0 +1,108 @@
+@echo off
+set "SysPath=%Windir%\System32"
+if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
+set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+fsutil dirty query %systemdrive% >nul 2>&1 || (
+set "msg=ERROR: right click on the script and 'Run as administrator'"
+goto :end
+)
+if not exist "%~dp0bin\x86\cleanospp.exe" (
+set "msg=ERROR: required file cleanospp.exe is missing"
+goto :end
+)
+for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
+if %winbuild% LSS 7601 (
+set "msg=ERROR: Windows 7 SP1 is the minimum supported OS"
+goto :end
+)
+set xOS=x64
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" (if not defined PROCESSOR_ARCHITEW6432 set xOS=x86)
+set "_work=%~dp0"
+if "%_work:~-1%"=="\" set "_work=%_work:~0,-1%"
+setlocal EnableExtensions EnableDelayedExpansion
+title Uninstall Office Keys
+set OfficeC2R=0
+sc query ClickToRunSvc 1>nul 2>nul && set OfficeC2R=1
+sc query OfficeSvc 1>nul 2>nul && set OfficeC2R=1
+reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds 1>nul 2>nul && (
+set OfficeC2R=1
+)
+reg query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds 1>nul 2>nul && set OfficeC2R=1
+if exist "%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" set OfficeC2R=1
+set OfficeMSI=0
+for /f "tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\16.0\Common\InstallRoot /v Path" 2^>nul') do if exist "%%b\OSPP.VBS" set OfficeMSI=1
+for /f "tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Wow6432Node\Microsoft\Office\16.0\Common\InstallRoot /v Path" 2^>nul') do if exist "%%b\OSPP.VBS" set OfficeMSI=1
+
+if %OfficeC2R% equ 0 if %OfficeMSI% equ 0 (
+echo.
+echo ============================================================
+echo No installed Office ClickToRun or Office 2016 MSI detected
+echo.
+echo.
+choice /C YN /N /M "Continue with uninstalling Office keys anyway? [y/n]: "
+if errorlevel 2 goto :eof
+if errorlevel 1 goto :main
+)
+echo.
+echo ============================================================
+if %OfficeC2R% equ 1 echo Detected Office C2R
+if %OfficeMSI% equ 1 echo Detected Office 2016 MSI
+echo.
+echo.
+choice /C YN /N /M "Continue with uninstalling detected Office keys? [y/n]: "
+if errorlevel 2 goto :eof
+if errorlevel 1 goto :main
+
+:main
+cls
+echo.
+echo ============================================================
+echo Uninstalling Product Key^(s)
+echo ============================================================
+echo.
+"!_work!\bin\!xOS!\cleanospp.exe" -PKey >nul 2>&1
+call :cKMS 1>nul 2>nul
+if exist "%SystemRoot%\System32\spp\store_test\2.0\tokens.dat" (
+echo.
+echo ============================================================
+echo Refreshing Windows Insider Preview Licenses...
+echo ============================================================
+echo.
+cscript //Nologo //B %SystemRoot%\System32\slmgr.vbs /rilc
+)
+set "msg=Finished.."
+goto :end
+
+:cKMS
+set "OSPP=SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform"
+set "SPPk=SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform"
+if %winbuild% geq 9200 (
+set spp=SoftwareLicensingProduct
+) else (
+set spp=OfficeSoftwareProtectionProduct
+)
+for /f "tokens=2 delims==" %%G in ('"wmic path %spp% where (Name LIKE 'Office%%' AND PartialProductKey is not NULL) get ID /VALUE" 2^>nul') do (set app=%%G&call :cAPP 1>nul 2>nul)
+call :cREG 1>nul 2>nul
+goto :eof
+
+:cAPP
+wmic path %spp% where ID='%app%' call ClearKeyManagementServiceMachine
+wmic path %spp% where ID='%app%' call ClearKeyManagementServicePort
+wmic path %spp% where ID='%app%' call UninstallProductKey
+goto :eof
+
+:cREG
+reg delete "HKLM\%OSPP%\0ff1ce15-a989-479d-af46-f275c6370663" /f
+reg delete "HKLM\%SPPk%\0ff1ce15-a989-479d-af46-f275c6370663" /f
+reg delete "HKU\S-1-5-20\%SPPk%\0ff1ce15-a989-479d-af46-f275c6370663" /f
+goto :eof
+
+:end
+echo.
+echo ============================================================
+echo %msg%
+echo ============================================================
+echo.
+echo Press any key to exit...
+pause >nul
+goto :eof

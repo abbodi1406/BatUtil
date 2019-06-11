@@ -1,19 +1,7 @@
 if "%~1"=="" exit /b
-goto :%1 || exit /b
+goto :%1 2>nul || exit /b
 
 :: Office 2019
-:0bc88885-718c-491d-921f-6f214349e79c
-set "key=VQ9DP-NVHPH-T9HJC-J9PDT-KTQRG" &:: Professional Plus C2R-P
-exit /b
-
-:fc7c4d0c-2e85-4bb9-afd4-01ed1476b5e9
-set "key=XM2V9-DN9HH-QB449-XDGKC-W2RMW" &:: Project Professional C2R-P
-exit /b
-
-:500f6619-ef93-4b75-bcb4-82819998a3ca
-set "key=N2CG9-YD3YK-936X4-3WR82-Q3X4H" &:: Visio Professional C2R-P
-exit /b
-
 :85dd8b5f-eaa4-4af3-a628-cce9e77c9a03
 set "key=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP" &:: Professional Plus
 exit /b
@@ -214,81 +202,4 @@ exit /b
 
 :d9f5b1c6-5386-495a-88f9-9ad6b41ac9b3
 set "key=6Q7VD-NX8JD-WJ2VH-88V73-4GBJ7" &:: Word
-exit /b
-
-:: Office 2010
-:09ed9640-f020-400a-acd8-d7d867dfd9c2
-set "key=YBJTT-JG6MD-V9Q7P-DBKXJ-38W9R" &:: Mondo
-exit /b
-
-:ef3d4e49-a53d-4d81-a2b1-2ca6c2556b2c
-set "key=7TC2V-WXF6P-TD7RT-BQRXR-B8K32" &:: Mondo2
-exit /b
-
-:6f327760-8c5c-417c-9b61-836a98287e0c
-set "key=VYBBJ-TRJPB-QFQRF-QFT4D-H3GVB" &:: Professional Plus
-exit /b
-
-:9da2a678-fb6b-4e67-ab84-60dd6a9c819a
-set "key=V7QKV-4XVVR-XYV4D-F7DFM-8R6BM" &:: Standard
-exit /b
-
-:df133ff7-bf14-4f95-afe3-7b48e7e331ef
-set "key=YGX6F-PGV49-PGW3J-9BTGG-VHKC6" &:: Project Professional
-exit /b
-
-:5dc7bf61-5ec9-4996-9ccb-df806a2d0efe
-set "key=4HP3K-88W3F-W2K3D-6677X-F9PGB" &:: Project Standard
-exit /b
-
-:92236105-bb67-494f-94c7-7f7a607929bd
-set "key=D9DWC-HPYVV-JGF4P-BTWQB-WX8BJ" &:: Visio Premium
-exit /b
-
-:e558389c-83c3-4b29-adfe-5e4d7f46c358
-set "key=7MCW8-VRQVK-G677T-PDJCM-Q8TCP" &:: Visio Professional
-exit /b
-
-:9ed833ff-4f92-4f36-b370-8683a4f13275
-set "key=767HD-QGMWX-8QTDB-9G3R2-KHFGJ" &:: Visio Standard
-exit /b
-
-:8ce7e872-188c-4b98-9d90-f8f90b7aad02
-set "key=V7Y44-9T38C-R2VJK-666HK-T7DDX" &:: Access
-exit /b
-
-:cee5d470-6e3b-4fcc-8c2b-d17428568a9f
-set "key=H62QG-HXVKF-PP4HP-66KMR-CW9BM" &:: Excel
-exit /b
-
-:8947d0b8-c33b-43e1-8c56-9b674c052832
-set "key=QYYW6-QP4CB-MBV6G-HYMCJ-4T3J4" &:: Groove (SharePoint Workspace)
-exit /b
-
-:ca6b6639-4ad6-40ae-a575-14dee07f6430
-set "key=K96W8-67RPQ-62T9Y-J8FQJ-BT37T" &:: InfoPath
-exit /b
-
-:ab586f5c-5256-4632-962f-fefd8b49e6f4
-set "key=Q4Y4M-RHWJM-PY37F-MTKWH-D3XHX" &:: OneNote
-exit /b
-
-:ecb7c192-73ab-4ded-acf4-2399b095d0cc
-set "key=7YDC2-CWM8M-RRTJC-8MDVC-X3DWQ" &:: Outlook
-exit /b
-
-:45593b1d-dfb1-4e91-bbfb-2d5d0ce2227a
-set "key=RC8FX-88JRY-3PF7C-X8P67-P4VTT" &:: Powerpoint
-exit /b
-
-:b50c4f75-599b-43e8-8dcd-1081a7967241
-set "key=BFK7F-9MYHM-V68C7-DRQ66-83YTP" &:: Publisher
-exit /b
-
-:2d0882e7-a4e7-423b-8ccc-70d91e0158b1
-set "key=HVHB3-C6FV7-KQX9W-YQG79-CRY7T" &:: Word
-exit /b
-
-:ea509e87-07a1-4a45-9edc-eba5a39f36af
-set "key=D6QFG-VBYP2-XQHM7-J97RH-VVRCK" &:: Home and Business
 exit /b
