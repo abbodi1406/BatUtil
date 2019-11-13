@@ -21,7 +21,7 @@ set "_workdir=%~dp0"
 if "%_workdir:~-1%"=="\" set "_workdir=%_workdir:~0,-1%"
 set "_inipath=%_workdir%"
 setlocal EnableDelayedExpansion
-fsutil dirty query %systemdrive% >nul 2>&1 || goto :E_Admin
+reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 if %winbuild% lss 7601 goto :E_Win
 title Office Click-to-Run Configurator - Volume
@@ -177,8 +177,8 @@ echo Source  : "!CTRsource!"
 echo Version : %CTRver%
 echo %line%
 echo.
-set verchk=%CTRver:~5%
-if %verchk:.=% lss 90292167 goto :E_VER
+for /f "tokens=3 delims=." %%# in ('echo %CTRver%') do set verchk=%%#
+if %verchk% lss 9029 goto :E_VER
 if %vvv% gtr 1 set "CTRver=!CTRver%inpt%!"
 for %%# in %bits% do (
 if exist "!CTRsource!\Office\Data\v%%#*.cab" set vcab%%#=1
@@ -386,7 +386,7 @@ set CTRvcab=v64_%CTRver%.cab&set CTRicab=i640.cab&set CTRicabr=i64%CTRprm%.cab
 :MenuInitial
 set _O2019=1
 expand.exe -f:*.xml "!CTRsource!\Office\Data\%CTRvcab%" "!_tempdir!" >nul
-findstr /i Word2019Volume "!_tempdir!\VersionDescriptor.xml" >nul || set _O2019=0
+findstr /i Word2019Volume "!_tempdir!\VersionDescriptor.xml" 1>nul 2>nul || set _O2019=0
 del /f /q "!_tempdir!\*.xml" 1>nul 2>nul
 set _Access=ON
 set _Excel=ON
@@ -415,6 +415,9 @@ set _shut=True
 set _disp=True
 set _actv=False
 set _tele=True
+set _Teams=OFF
+if %verchk:~0,2% equ 11 if %verchk% lss 11328 set _Teams=0
+if %verchk:~0,2% equ 10 if %verchk% lss 10336 set _Teams=0
 if %_O2019%==0 goto :MenuSuite
 cls
 echo %line%
@@ -491,9 +494,11 @@ echo. 7. Visio Pro 2019        : %_VisPro%
 echo. 8. Visio Standard 2019   : %_VisStd%
 echo.
 echo. D. OneDrive Desktop      : %_OneDrive%
+if not %_Teams%==0 echo. T. Microsoft Teams       : %_Teams%
 echo %line%
-choice /c AENOPRSWD567890X /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
-if errorlevel 16 goto :eof
+choice /c AENOPRSWD567890TX /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
+if errorlevel 17 goto :eof
+if errorlevel 16 (if not %_Teams%==0 (if %_Teams%==ON (set _Teams=OFF) else (set _Teams=ON)))&goto :MenuApps
 if errorlevel 15 goto :MenuApps2
 if errorlevel 14 goto :MenuInitial
 if errorlevel 13 (if %_VisStd%==ON (set _VisStd=OFF) else (set _VisPro=OFF&set _VisStd=ON))&goto :MenuApps
@@ -673,9 +678,11 @@ echo. J. Project          : %_Project%
 echo. V. Visio            : %_Visio%
 )
 echo. D. OneDrive Desktop : %_OneDrive%
+if not %_Teams%==0 echo. T. Microsoft Teams  : %_Teams%
 echo %line%
-choice /c AENOPRSWJVD90X /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
-if errorlevel 14 goto :eof
+choice /c AENOPRSWJVD90TX /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
+if errorlevel 15 goto :eof
+if errorlevel 14 (if not %_Teams%==0 (if %_Teams%==ON (set _Teams=OFF) else (set _Teams=ON)))&goto :MenuExclude
 if errorlevel 13 goto :MenuExclude2
 if errorlevel 12 goto :MenuSuite
 if errorlevel 11 (if %_OneDrive%==ON (set _OneDrive=OFF) else (set _OneDrive=ON))&goto :MenuExclude
@@ -693,7 +700,7 @@ goto :MenuExclude
 
 :MenuExclude2
 set "_excluded=Groove"
-for %%J in (Access,Excel,OneDrive,OneNote,Outlook,PowerPoint,Project,Publisher,Lync,Visio,Word) do (
+for %%J in (Access,Excel,Lync,OneDrive,OneNote,Outlook,PowerPoint,Project,Publisher,Teams,Visio,Word) do (
 if !_%%J!==OFF set "_excluded=!_excluded!,%%J"
 )
 goto :MenuChannel

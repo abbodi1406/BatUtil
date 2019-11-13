@@ -1,15 +1,17 @@
 <!-- : Begin batch script
+@setlocal DisableDelayedExpansion
+@set uivr=v41
 @echo off
-
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
 set AutoStart=0
 
-:: Specify target editions to auto create separated with comma ,
+:: Specify target editions to auto create separated with space or comma ,
 :: leave it empty to create *all* possible editions
 :: allowed: Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN,CoreSingleLanguage,ServerRdsh,IoTEnterprise
-:: example: set AutoEditions=Enterprise,ProfessionalWorkstation,Education
-set AutoEditions=
+:: example: set "AutoEditions=Enterprise,ProfessionalWorkstation,Education"
+:: example: set "AutoEditions=Enterprise ServerRdsh"
+set "AutoEditions="
 
 :: Change to 1 to delete source edition index (example: create Enterprise and delete Pro)
 set DeleteSource=0
@@ -30,11 +32,58 @@ set SkipISO=0
 :: wimlib:     synchronicity
 :: offlinereg: erwan.l
 
-:: #################################################################
+:: ###################################################################
 
-:: Internal Debug Mode, do not use
-set "_Debug=0"
 set "_Const=1>nul 2>nul"
+
+set _Debug=0
+set _elev=
+set _args=%*
+if not defined _args goto :NoProgArgs
+if "%~1"=="" set "_args="&goto :NoProgArgs
+if "%~1"=="-elevated" set _elev=1&set "_args="&goto :NoProgArgs
+if "%~5"=="-elevated" set _elev=1
+
+:NoProgArgs
+set "SysPath=%SystemRoot%\System32"
+if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
+set "xDS=bin\bin64;bin"
+if /i %PROCESSOR_ARCHITECTURE%==x86 (if not defined PROCESSOR_ARCHITEW6432 (
+  set "xDS=bin"
+  )
+)
+set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set "_err===== ERROR ===="
+
+%_Const% reg query HKU\S-1-5-19 && (
+  goto :Passed
+  ) || (
+  if defined _elev goto :E_Admin
+)
+
+set _PSarg="""%~f0""" -elevated
+if defined _args set _PSarg="""%~f0""" %_args:"="""% -elevated
+set _PSarg=%_PSarg:'=''%
+
+(%_Const% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %* -elevated) && (
+  exit /b
+  ) || (
+  call setlocal EnableDelayedExpansion
+  %_Const% powershell -noprofile -exec bypass -c "start cmd.exe -ArgumentList '/c \"!_PSarg!\"' -verb runas" && (
+    exit /b
+    ) || (
+    goto :E_Admin
+  )
+)
+
+:Passed
+set "_work=%~dp0"
+set "_work=%_work:~0,-1%"
+setlocal EnableDelayedExpansion
+pushd "!_work!"
+if exist "convert-UUP.cmd" for /f "tokens=2 delims==" %%# in ('findstr /i /b /c:"set _Debug" "convert-UUP.cmd"') do if not defined _udbg set _udbg=%%#
+if defined _udbg set _Debug=%_udbg%
+
 if %_Debug% equ 0 (
   set "_Nul1=1>nul"
   set "_Nul2=2>nul"
@@ -44,7 +93,8 @@ if %_Debug% equ 0 (
   set "_Contn=echo Press any key to continue..."
   set "_Exit=echo Press any key to exit."
   set "_Supp="
-) else (
+  goto :Begin
+)
   set "_Nul1="
   set "_Nul2="
   set "_Nul6="
@@ -53,52 +103,30 @@ if %_Debug% equ 0 (
   set "_Contn=rem."
   set "_Exit=rem."
   set "_Supp=1>nul"
-  @echo on
-  @prompt $G
-)
-
-setlocal DisableDelayedExpansion
-set _args=%1
-if defined _args (
-if "%~1"=="" set _args=
-)
-set _PSarg="""%~f0"""
-if defined _args (
-set _PSarg="""%~f0""" %_args:"="""%
-)
-set _PSarg=%_PSarg:'=''%
-set "_workdir=%~dp0"
-set "_workdir=%_workdir:~0,-1%"
-set "SysPath=%Windir%\System32"
-if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
-set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-set "xOS=amd64"
-set "_ComSpec=%Windir%\System32\cmd.exe"
-set "_wimlib=%~dp0bin\bin64\wimlib-imagex.exe"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (
-if defined PROCESSOR_ARCHITEW6432 (
-  set "_ComSpec=%Windir%\Sysnative\cmd.exe"
-  ) else (
-  set "xOS=x86"
-  set "_wimlib=%~dp0bin\wimlib-imagex.exe"
-  )
-)
-fsutil dirty query %systemdrive% %_Const% && goto :Begin
-(%_Const% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %1 ) && (
-  exit /b
-  ) || (
-  call setlocal EnableDelayedExpansion
-  %_Const% powershell -NoLogo -NoProfile -ExecutionPolicy Bypass Start-Process -FilePath '!_ComSpec!' -ArgumentList '/c \"!_PSarg! \"' -Verb RunAs && (
-    exit /b
-    ) || (
-    goto :E_Admin
-  )
-)
+@echo on
+@prompt $G
 
 :Begin
-title Virtual Editions
-for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
-pushd "%~dp0"
+title Virtual Editions %uivr%
+set "vEditions=Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN,CoreSingleLanguage,ServerRdsh,IoTEnterprise,IoTEnterpriseS"
+set ERRORTEMP=
+set _all=0
+set _dir=0
+set _dvd=0
+set _iso=0
+set "line============================================================="
+if defined _args (
+if /i "%~1"=="autowim" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0
+if /i "%~1"=="autoesd" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=1
+if /i "%~1"=="manuwim" set wim2esd=0
+if /i "%~1"=="manuesd" set wim2esd=1
+if /i not "%~2"=="" set "eLabel=%~2"
+if /i not "%~3"=="" set "eTime=%~3,%~4"
+)
+set _file=(7z.dll,7z.exe,cdimage.exe,imagex.exe,libwim-15.dll,offlinereg.exe,offreg.dll,wimlib-imagex.exe)
+for %%# in %_file% do (
+if not exist ".\bin\%%#" (set _bin=%%#&goto :E_Bin)
+)
 if not exist "ConvertConfig.ini" goto :proceed
 findstr /i \[create_virtual_editions\] ConvertConfig.ini %_Nul1% || goto :proceed
 for %%# in (
@@ -118,62 +146,32 @@ findstr /b /i v%1 ConvertConfig.ini %_Nul1% && for /f "tokens=2 delims==" %%# in
 goto :eof
 
 :proceed
-set "vEditions=Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN,CoreSingleLanguage,ServerRdsh,IoTEnterprise,IoTEnterpriseS"
-set ERRORTEMP=
-set _all=0
-set _dir=0
-set _dvd=0
-set _iso=0
-set "line============================================================="
-set "_err===== ERROR ===="
-set _file=(7z.dll,7z.exe,cdimage.exe,imagex.exe,libwim-15.dll,offlinereg.exe,offreg.dll,wimlib-imagex.exe)
-for %%# in %_file% do (
-if not exist ".\bin\%%#" (set _bin=%%#&goto :E_Bin)
-)
-if defined _args (
-if /i "%~1"=="autowim" (set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0)
-if /i "%~1"=="autoesd" (set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=1)
-if /i "%~1"=="manuwim" (set wim2esd=0)
-if /i "%~1"=="manuesd" (set wim2esd=1)
-)
-if exist bin\temp\ rmdir /s /q bin\temp\
-
-:checkdir
 dir /b /ad . %_Nul3% || goto :checkdvd
-for /f "delims=" %%# in ('dir /b /ad .') do (
-if exist "%%#\sources\install.wim" (
-  set _dir=1
-  set "ISOdir=%%~#"
-  ) else if exist "%%#\sources\install.esd" (
-  set _dir=1
-  set "ISOdir=%%~#"
-  )
+for /f "tokens=* delims=" %%# in ('dir /b /ad .') do (
+if exist "%%~#\sources\install.wim" set _dir=1&set "ISOdir=%%~#"
+if exist "%%~#\sources\install.esd" set _dir=1&set "ISOdir=%%~#"
 )
 if %_dir% neq 1 goto :checkdvd
 goto :dCheck
 
 :checkdvd
 for %%# in (D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
-if exist "%%#:\sources\install.wim" (
-  set _dvd=1
-  set "ISOdir=%%#:"
-  ) else if exist "%%#:\sources\install.esd" (
-  set _dvd=1
-  set "ISOdir=%%#:"
-  )
+if exist "%%#:\sources\install.wim" set _dvd=1&set "ISOdir=%%#:"
+if exist "%%#:\sources\install.esd" set _dvd=1&set "ISOdir=%%#:"
 )
 if %_dvd% neq 1 goto :checkiso
 goto :dCheck
 
 :checkiso
-if not exist "*.iso" goto :prompt
-for /f "delims=" %%# in ('dir /b /a:-d *.iso') do (
-set _iso=1
+if exist "*.iso" for /f "tokens=* delims=" %%# in ('dir /b /a:-d *.iso') do (
+set _iso+=1
 set "ISOfile=%%~#"
 )
-if %_iso% neq 1 goto :prompt
+if %_iso% equ 1 (
 set Preserve=0
 goto :dISO
+)
+if %_Debug% neq 0 goto :dCheck
 
 :prompt
 cls
@@ -193,7 +191,7 @@ echo.
 %_Contn%&%_Pause%
 goto :prompt
 )
-echo %ISOfile%| findstr /E /I "\.iso" %_Nul1% || (
+if /i not "%ISOfile:~-4%"==".iso" (
 echo.
 echo %_err%
 echo Specified path is not a valid ISO file
@@ -206,21 +204,26 @@ set Preserve=0
 
 :dISO
 color 1F
-setlocal EnableDelayedExpansion
 cls
 echo.
 echo %line%
 echo Extracting ISO file . . .
 echo %line%
 echo.
-echo "%ISOfile%"
+echo "!ISOfile!"
 set "ISOdir=ISOUUP"
 if exist %ISOdir%\ rmdir /s /q %ISOdir%\
-bin\7z.exe x "%ISOfile%" -o%ISOdir% * -r %_Const%
+7z.exe x "!ISOfile!" -o%ISOdir% * -r %_Const%
 
 :dCheck
+if %_Debug% neq 0 (
+if defined _args echo "!_args!"
+echo "!_work!"
+if %AutoStart% equ 0 set AutoStart=1
+)
+if not defined ISOdir exit /b
+if exist bin\temp\ rmdir /s /q bin\temp\
 color 1F
-setlocal EnableDelayedExpansion
 set _configured=0
 for %%# in (
 AutoStart
@@ -252,8 +255,8 @@ if /i %%#==ProfessionalEducationN if %EditionProN% equ 1 (set ProfessionalEducat
 if /i %%#==ProfessionalWorkstationN if %EditionProN% equ 1 (set ProfessionalWorkstationN=1)
 if /i %%#==CoreSingleLanguage if %EditionHome% equ 1 (set CoreSingleLanguage=1)
 if /i %%#==ServerRdsh if %EditionPro% equ 1 (set ServerRdsh=1)
-if /i %%#==IoTEnterprise if %EditionPro% equ 1 if %build% geq 18277 (set IoTEnterprise=1)
-if /i %%#==IoTEnterpriseS if %EditionLTSC% equ 1 if %build% geq 18298 (set IoTEnterpriseS=1)
+if /i %%#==IoTEnterprise if %EditionPro% equ 1 if %_build% geq 18277 (set IoTEnterprise=1)
+if /i %%#==IoTEnterpriseS if %EditionLTSC% equ 1 if %_build% geq 18298 (set IoTEnterpriseS=1)
 )
 goto :CREATEMENU
 
@@ -281,10 +284,10 @@ if %CoreSingleLanguage% equ 0 echo. 9. Home Single Language
 )
 if %EditionPro% equ 1 (
 if %ServerRdsh% equ 0 echo 10. Enterprise for Virtual Desktops
-if %IoTEnterprise% equ 0 if %build% geq 18277 echo 11. IoT Enterprise {OEM}
+if %IoTEnterprise% equ 0 if %_build% geq 18277 echo 11. IoT Enterprise {OEM}
 )
 if %EditionLTSC% equ 1 (
-if %IoTEnterpriseS% equ 0 if %build% geq 18298 echo 12. IoT Enterprise LTSC {OEM}
+if %IoTEnterpriseS% equ 0 if %_build% geq 18298 echo 12. IoT Enterprise LTSC {OEM}
 )
 exit /b
 
@@ -298,7 +301,7 @@ echo %line%
 echo Options:
 echo. 1 - Create all editions
 echo. 2 - Create one edition
-if %_sum% gtr 2 (echo. 3 - Create randomly selected editions)
+if %_sum% gtr 2 echo. 3 - Create randomly selected editions
 echo %line%
 echo.
 choice /c 1230 /n /m "Choose a menu option, or press 0 to quit: "
@@ -316,8 +319,8 @@ for %%# in (EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstatio
 if %EditionProN% equ 1 set %%#=1
 )
 if %EditionHome% equ 1 set CoreSingleLanguage=1
-if %EditionPro% equ 1 if %build% geq 18277 set IoTEnterprise=1
-if %EditionLTSC% equ 1 if %build% geq 18298 set IoTEnterpriseS=1
+if %EditionPro% equ 1 if %_build% geq 18277 set IoTEnterprise=1
+if %EditionLTSC% equ 1 if %_build% geq 18298 set IoTEnterpriseS=1
 goto :CREATEMENU
 
 :SINGLEMENU
@@ -343,10 +346,10 @@ if %_single% equ 7 if %EditionProN% equ 1 if %ProfessionalEducationN% equ 0 (set
 if %_single% equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (set ProfessionalWorkstationN=1&set verify=1)
 if %_single% equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
 if %_single% equ 10 if %EditionPro% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
-if %_single% equ 11 if %EditionPro% equ 1 if %IoTEnterprise% equ 0 if %build% geq 18277 (set IoTEnterprise=1&set verify=1)
-if %_single% equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
+if %_single% equ 11 if %EditionPro% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
+if %_single% equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
 if %verify% equ 1 goto :CREATEMENU
-set "_single="
+set _single=
 goto :SINGLEMENU
 
 :RANDOMMENU
@@ -376,11 +379,11 @@ if %%# equ 7 if %EditionProN% equ 1 if %ProfessionalEducationN% equ 0 (set Profe
 if %%# equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (set ProfessionalWorkstationN=1&set verify=1)
 if %%# equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
 if %%# equ 10 if %EditionPro% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
-if %%# equ 11 if %EditionPro% equ 1 if %IoTEnterprise% equ 0 if %build% geq 18277 (set IoTEnterprise=1&set verify=1)
-if %%# equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
+if %%# equ 11 if %EditionPro% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
+if %%# equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
 )
 if %verify% equ 1 goto :CREATEMENU
-set "_index="
+set _index=
 goto :RANDOMMENU
 
 :CREATEMENU
@@ -445,21 +448,21 @@ if %DeleteSource% equ 1 (
   if %_all% equ 1 (
     if %images% equ 1 (
     ren ISOFOLDER\sources\%WimFile% temp.wim
-    "!_wimlib!" info ISOFOLDER\sources\temp.wim 1 "Windows 10 %desc%" "Windows 10 %desc%" %_Const%
+    wimlib-imagex.exe info ISOFOLDER\sources\temp.wim 1 "Windows 10 %desc%" "Windows 10 %desc%" %_Const%
     )
     if %images% neq 1 (
-    "!_wimlib!" export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
+    wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
     )
   )
   if %_all% neq 1 (
-  "!_wimlib!" export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
+  wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
   )
 )
 if %DeleteSource% neq 1 (
-"!_wimlib!" export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
+wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
 )
 set /a index+=1
-"!_wimlib!" extract ISOFOLDER\sources\temp.wim %index% \Windows\System32\config\SOFTWARE \Windows\System32\config\SYSTEM \Windows\servicing\Editions\%EditionID%Edition.xml --dest-dir=.\bin\temp --no-acls --no-attributes %_Const%
+wimlib-imagex.exe extract ISOFOLDER\sources\temp.wim %index% \Windows\System32\config\SOFTWARE \Windows\System32\config\SYSTEM \Windows\servicing\Editions\%EditionID%Edition.xml --dest-dir=.\bin\temp --no-acls --no-attributes %_Const%
 %_Nul3% reg load HKLM\SOF .\bin\temp\SOFTWARE
 %_Nul3% reg load HKLM\SYS .\bin\temp\SYSTEM
 for %%# in (EditionID,ProductId) do (
@@ -477,16 +480,19 @@ for %%# in (OSProductContentId,OSProductPfn) do (
 %_Nul3% reg add "HKLM\SYS\ControlSet001\Services\LanmanWorkstation\Parameters" /f /v AllowInsecureGuestAuth /t REG_DWORD /d !Insecure!
 %_Nul3% reg add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\Print" /f /v DoNotInstallCompatibleDriverFromWindowsUpdate /t REG_DWORD /d !Print!
 %_Nul3% reg add "HKLM\SOF\Microsoft\Windows\CurrentVersion\Setup\OOBE" /f /v SetupDisplayedProductKey /t REG_DWORD /d 1
+if /i %EditionID%==ServerRdsh (
+%_Nul3% reg add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c WMIC /NAMESPACE:\\ROOT\CIMV2 PATH Win32_UserAccount WHERE \"SID like 'S-1-5-21-%%-500'\" SET Disabled=FALSE &exit /b 0 "
+)
 %_Nul3% reg unload HKLM\SOF
 %_Nul3% reg unload HKLM\SYS
 type nul>bin\temp\virtual.txt
 >>bin\temp\virtual.txt echo add 'bin^\temp^\SOFTWARE' '^\Windows^\System32^\config^\SOFTWARE'
 >>bin\temp\virtual.txt echo add 'bin^\temp^\SYSTEM' '^\Windows^\System32^\config^\SYSTEM'
 >>bin\temp\virtual.txt echo add 'bin^\temp^\%EditionID%Edition.xml' '^\Windows^\%EditionID%.xml'
-"!_wimlib!" update ISOFOLDER\sources\temp.wim %index% < bin\temp\virtual.txt %_Const%
-rmdir /s /q .\bin\temp
+wimlib-imagex.exe update ISOFOLDER\sources\temp.wim %index% < bin\temp\virtual.txt %_Const%
+rmdir /s /q bin\temp\
 echo.
-"!_wimlib!" info ISOFOLDER\sources\temp.wim %index% --image-property WINDOWS/EDITIONID=%EditionID% --image-property FLAGS=%EditionID% --image-property DISPLAYNAME="Windows 10 %desc%" --image-property DISPLAYDESCRIPTION="Windows 10 %desc%"
+wimlib-imagex.exe info ISOFOLDER\sources\temp.wim %index% --image-property WINDOWS/EDITIONID=%EditionID% --image-property FLAGS=%EditionID% --image-property DISPLAYNAME="Windows 10 %desc%" --image-property DISPLAYDESCRIPTION="Windows 10 %desc%"
 echo.
 set modified=1
 exit /b
@@ -499,7 +505,7 @@ echo %line%
 echo Rebuilding %WimFile% . . .
 echo %line%
 echo.
-"!_wimlib!" optimize ISOFOLDER\sources\%WimFile% %_Supp%
+wimlib-imagex.exe optimize ISOFOLDER\sources\%WimFile% %_Supp%
 if %DeleteSource% equ 1 (
 call :dPREPARE
 )
@@ -509,7 +515,7 @@ echo %line%
 echo Converting install.wim to install.esd . . .
 echo %line%
 echo.
-"!_wimlib!" export ISOFOLDER\sources\install.wim all ISOFOLDER\sources\install.esd --compress=LZMS --solid %_Supp%
+wimlib-imagex.exe export ISOFOLDER\sources\install.wim all ISOFOLDER\sources\install.esd --compress=LZMS --solid %_Supp%
 call set ERRORTEMP=!ERRORLEVEL!
 if !ERRORTEMP! neq 0 goto :E_Export
 if exist ISOFOLDER\sources\install.esd del /f /q ISOFOLDER\sources\install.wim
@@ -527,7 +533,12 @@ echo.
 echo %line%
 echo Creating ISO . . .
 echo %line%
-bin\cdimage.exe -bootdata:2#p0,e,b"ISOFOLDER\boot\etfsboot.com"#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -t%isotime% -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
+if defined eTime set isotime=%eTime%
+if /i not %arch%==arm64 (
+cdimage.exe -bootdata:2#p0,e,b"ISOFOLDER\boot\etfsboot.com"#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -t%isotime% -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
+) else (
+cdimage.exe -bootdata:1#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -t%isotime% -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
+)
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_ISO
 echo.
@@ -535,89 +546,112 @@ goto :QUIT
 
 :dInfo
 if exist "%ISOdir%\sources\install.wim" (set WimFile=install.wim) else (set WimFile=install.esd&set wim2esd=0)
-bin\imagex.exe /info "%ISOdir%\sources\%WimFile%" | findstr /i /c:"LZMS" %_Nul1% && (set wim2esd=0)
-bin\imagex.exe /info "%ISOdir%\sources\%WimFile%">bin\infoall.txt 2>&1
+imagex /info "%ISOdir%\sources\%WimFile%" | findstr /i /c:"LZMS" %_Nul1% && (set wim2esd=0)
+imagex /info "%ISOdir%\sources\%WimFile%">bin\infoall.txt 2>&1
 find /i "Core</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionHome=1) || (set EditionHome=0)
 find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionPro=1) || (set EditionPro=0)
 find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionProN=1) || (set EditionProN=0)
-bin\wimlib-imagex.exe info "%ISOdir%\sources\%WimFile%" 1 >bin\info.txt 2>&1
-for /f "tokens=2 delims=: " %%# in ('findstr /i /b "Build" bin\info.txt') do set build=%%#
+wimlib-imagex.exe info "%ISOdir%\sources\%WimFile%" 1 >bin\info.txt 2>&1
+set ERRORTEMP=%ERRORLEVEL%
+if %ERRORTEMP% neq 0 (
+echo %_err%
+echo Could not execute wimlib-imagex.exe
+echo Use simple work path without special characters
+echo.
+del /f /q bin\info.txt %_Nul3%
+goto :QUIT
+)
+for /f "tokens=2 delims=: " %%# in ('findstr /i /b "Build" bin\info.txt') do set _build=%%#
 for /f "tokens=3 delims=: " %%# in ('findstr /i "Default" bin\info.txt') do set langid=%%#
 for /f "tokens=2 delims=: " %%# in ('findstr /i "Architecture" bin\info.txt') do (if /i %%# equ x86 (set arch=x86) else if /i %%# equ x86_64 (set arch=x64) else (set arch=arm64))
 for /f "tokens=3 delims=: " %%# in ('findstr /i /b /c:"Image Count" bin\infoall.txt') do set images=%%#
 del /f /q bin\info.txt %_Nul3%
-if %build% lss 17063 (
-set "MESSAGE=ISO build %build% do not support virtual editions"
-if %_iso% equ 1 rmdir /s /q "%ISOdir%"
+if %_build% lss 17063 (
+set "MESSAGE=ISO build %_build% do not support virtual editions"
+if %_iso% equ 1 rmdir /s /q "%ISOdir%\"
 goto :E_MSG
 )
 set EditionLTSC=0
-if %build% geq 18298 find /i "EnterpriseS</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionLTSC=1)
+if %_build% geq 18298 find /i "EnterpriseS</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionLTSC=1)
 if %EditionHome% equ 0 if %EditionPro% equ 0 if %EditionProN% equ 0 if %EditionLTSC% equ 0 (
 set "MESSAGE=No supported source edition detected"
-if %_iso% equ 1 rmdir /s /q "%ISOdir%"
+if %_iso% equ 1 rmdir /s /q "%ISOdir%\"
 goto :E_MSG
 )
 for /l %%# in (1,1,%images%) do (
-if %EditionHome% equ 1 (bin\imagex.exe /info "%ISOdir%\sources\%WimFile%" %%# | find /i "Core</EDITIONID>" %_Nul1% && set IndexHome=%%#)
-if %EditionPro% equ 1 (bin\imagex.exe /info "%ISOdir%\sources\%WimFile%" %%# | find /i "Professional</EDITIONID>" %_Nul1% && set IndexPro=%%#)
-if %EditionProN% equ 1 (bin\imagex.exe /info "%ISOdir%\sources\%WimFile%" %%# | find /i "ProfessionalN</EDITIONID>" %_Nul1% && set IndexProN=%%#)
-if %EditionLTSC% equ 1 (bin\imagex.exe /info "%ISOdir%\sources\%WimFile%" %%# | find /i "EnterpriseS</EDITIONID>" %_Nul1% && set IndexLTSC=%%#)
+if %EditionHome% equ 1 (imagex /info "%ISOdir%\sources\%WimFile%" %%# | find /i "Core</EDITIONID>" %_Nul1% && set IndexHome=%%#)
+if %EditionPro% equ 1 (imagex /info "%ISOdir%\sources\%WimFile%" %%# | find /i "Professional</EDITIONID>" %_Nul1% && set IndexPro=%%#)
+if %EditionProN% equ 1 (imagex /info "%ISOdir%\sources\%WimFile%" %%# | find /i "ProfessionalN</EDITIONID>" %_Nul1% && set IndexProN=%%#)
+if %EditionLTSC% equ 1 (imagex /info "%ISOdir%\sources\%WimFile%" %%# | find /i "EnterpriseS</EDITIONID>" %_Nul1% && set IndexLTSC=%%#)
 )
-if %EditionPro% equ 1 if %build% geq 18277 set /a _sum+=1
+if %EditionPro% equ 1 if %_build% geq 18277 set /a _sum+=1
 if %EditionPro% equ 1 set /a _sum+=5
 if %EditionProN% equ 1 set /a _sum+=4
 if %EditionHome% equ 1 set /a _sum+=1
 if %EditionLTSC% equ 1 set /a _sum+=1
-"!_wimlib!" extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-bin\7z.exe l .\bin\temp\setuphost.exe >.\bin\temp\version.txt 2>&1
-for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set version=%%i.%%j&set branch=%%k&set labeldate=%%l)
+wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+7z.exe l .\bin\temp\setuphost.exe >.\bin\temp\version.txt 2>&1
+for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set version=%%i.%%j&set vermajor=%%i&set verminor=%%j&set branch=%%k&set labeldate=%%l)
+set revision=%version%&set revmajor=%vermajor%&set revminor=%verminor%
+set "tok=6,7"&set "toe=5,6,7"
 set "isotime=!labeldate:~2,2!/!labeldate:~4,2!/20!labeldate:~0,2!,!labeldate:~7,2!:!labeldate:~9,2!:10"
 if /i %arch%==x86 (set _ss=x86) else if /i %arch%==x64 (set _ss=amd64) else (set _ss=arm64)
-"!_wimlib!" extract "%ISOdir%\sources\%WimFile%" 1 Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision* --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-for /f "tokens=6,7 delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*.manifest') do set revision=%%A.%%B
-if %version:.=% lss %revision:.=% (
-set version=%revision%
-"!_wimlib!" extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%windir%\temp --no-acls --no-attributes %_Nul3%
-for /f %%# in ('dir /b /a:-d /od %windir%\temp\Package_for_RollupFix*.mum') do set "mumfile=%windir%\temp\%%#"
-for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
-del /f /q %windir%\temp\*.mum
-set "labeldate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
-set "isotime=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
-"!_wimlib!" extract "%ISOdir%\sources\%WimFile%" 1 \Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Const%
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision*.manifest --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+if exist "bin\temp\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens=%tok% delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*_microsoft-windows-coreos-revision*.manifest') do set revision=%%A.%%B&set revmajor=%%A&set revminor=%%B
+if %_build% geq 15063 (
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Const%
 set "isokey=Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
-for /f %%i in ('""!_workdir!\bin\offlinereg.exe" "bin\temp\SOFTWARE" "!isokey!" enumkeys %_Nul6% ^| find /i "Client.OS""') do if not errorlevel 1 (
-  for /f "tokens=3 delims==:" %%A in ('""!_workdir!\bin\offlinereg.exe" "bin\temp\SOFTWARE" "!isokey!\%%i" getvalue Branch %_Nul6%"') do set "branch=%%~A"
+for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% ^| find /i "Client.OS""') do if not errorlevel 1 (
+  for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Branch %_Nul6%"') do set "isobranch=%%~A"
+  for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Version %_Nul6%"') do if %%A gtr !revmajor! (
+    set "revision=%%~A.%%B
+    set revmajor=%%~A
+    set "revminor=%%B
+    )
   )
 )
-if %version:.=% gtr %revision:.=% (
-"!_wimlib!" extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%windir%\temp --no-acls --no-attributes %_Nul3%
-if not exist "%windir%\temp\Package_for_RollupFix*.mum" set branch=WinBuild
+if defined isobranch set branch=%isobranch%
+if %revmajor%==18363 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
+if %verminor% lss %revminor% (
+set version=%revision%
+set verminor=%revminor%
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
+for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
+for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
+del /f /q %SystemRoot%\temp\*.mum
+set "labeldate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
+set "isotime=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
+)
+if %verminor% gtr %revminor% (
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
+if not exist "%SystemRoot%\temp\Package_for_RollupFix*.mum" set branch=WinBuild
 )
 set _label2=
 if /i "%branch%"=="WinBuild" (
-"!_wimlib!" extract "%ISOdir%\sources\%WimFile%" 1 \Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Const%
-for /f "tokens=3 delims==:" %%# in ('"bin\offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l_CLIENT&set branch=%%l)
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 \Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Const%
+for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l_CLIENT&set branch=%%l)
 )
 if defined _label2 (set _label=%_label2%) else (set _label=%version%.%labeldate%.%branch%_CLIENT)
-rmdir /s /q .\bin\temp
-set archl=%arch%
+rmdir /s /q bin\temp\
+if /i %arch%==x86 set archl=X86
+if /i %arch%==x64 set archl=X64
+if /i %arch%==arm64 set archl=A64
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set _label=!_label:%%#=%%#!
 set branch=!branch:%%#=%%#!
 set langid=!langid:%%#=%%#!
-set archl=!archl:%%#=%%#!
 )
 set "DVDLABEL=CCSA_%archl%FRE_%langid%_DV5"
+if defined eLabel set _label=%eLabel%
 set "DVDISO=%_label%MULTI_%archl%FRE_%langid%"
 if exist "%DVDISO%.ISO" set "DVDISO=%DVDISO%_r"
 goto :AUTOMENU
 
 :dPREPARE
-for /f "tokens=3 delims=: " %%# in ('bin\imagex.exe /info ISOFOLDER\sources\%WimFile% ^|findstr /i /b /c:"Image Count"') do set finalimages=%%#
+for /f "tokens=3 delims=: " %%# in ('imagex /info ISOFOLDER\sources\%WimFile% ^|findstr /i /b /c:"Image Count"') do set finalimages=%%#
 if %finalimages% gtr 1 exit /b
 set _VL=0
-for /f "tokens=3 delims=<>" %%# in ('bin\imagex.exe /info ISOFOLDER\sources\%WimFile% 1 ^| find /i "<EDITIONID>"') do set editionid=%%#
+for /f "tokens=3 delims=<>" %%# in ('imagex /info ISOFOLDER\sources\%WimFile% 1 ^| find /i "<EDITIONID>"') do set editionid=%%#
 if /i %editionid%==Professional set DVDLABEL=CPRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRO_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==ProfessionalN set DVDLABEL=CPRNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRON_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==Core set DVDLABEL=CCRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CORE_OEMRET_%archl%FRE_%langid%
@@ -630,7 +664,7 @@ if /i %editionid%==ProfessionalWorkstation set DVDLABEL=CPRWA_%archl%FRE_%langid
 if /i %editionid%==ProfessionalWorkstationN set DVDLABEL=CPRWNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==ProfessionalEducation set DVDLABEL=CPREA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATION_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==ProfessionalEducationN set DVDLABEL=CPRENA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATIONN_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==ServerRdsh set DVDLABEL=CEV_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTREMOTESESSIONS_VOL_%archl%FRE_%langid%&set _VL=1
+if /i %editionid%==ServerRdsh set DVDLABEL=CEV_%archl%FREV_%langid%_DV5&set DVDISO=%_label%MULTISESSION_VOL_%archl%FRE_%langid%&set _VL=1
 if /i %editionid%==IoTEnterprise set DVDLABEL=IOTE_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISE_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==IoTEnterpriseS set DVDLABEL=IOTS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISES_OEMRET_%archl%FRE_%langid%
 if %_VL% equ 0 exit /b
@@ -649,7 +683,7 @@ exit /b
 :IoTEnterpriseS
 rem placebo for now
 exit /b
-if %build% lss 18298 exit /b
+if %_build% lss 18298 exit /b
 set "EditionID=%1"
 set "desc=IoT Enterprise LTSC"
 set "source=%IndexLTSC%"
@@ -657,7 +691,7 @@ call :WIM
 exit /b
 
 :IoTEnterprise
-if %build% lss 18277 exit /b
+if %_build% lss 18277 exit /b
 set "EditionID=%1"
 set "ProductId=00436-20000-00000-AAOEM"
 set "OSProductContentId=4b1412af-12ad-0bbd-177e-6f7579c8600f"
@@ -855,7 +889,7 @@ if exist ISOFOLDER\ rmdir /s /q ISOFOLDER\
 if exist bin\temp\ rmdir /s /q bin\temp\
 if exist bin\infoall.txt del /f /q bin\infoall.txt
 popd
-if %_Debug% equ 0 (echo Press 0 to exit.) else (exit /b)
+if %_Debug% neq 0 (exit /b) else (echo Press 0 to exit.)
 choice /c 0 /n
 if errorlevel 1 (exit /b) else (rem.)
 
@@ -877,7 +911,7 @@ if errorlevel 1 (exit /b) else (rem.)
                End With
                .Terminate
            End With
-          CreateObject("Shell.Application").ShellExecute "cmd", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & " " & strLine & chr(34), "", "runas", 1
+          CreateObject("Shell.Application").ShellExecute "cmd.exe", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & strLine & chr(34), "", "runas", 1
        </script>
    </job>
 </package>

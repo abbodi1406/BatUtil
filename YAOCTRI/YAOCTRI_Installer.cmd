@@ -20,7 +20,7 @@ set "_tempdir=%temp%"
 set "_workdir=%~dp0"
 if "%_workdir:~-1%"=="\" set "_workdir=%_workdir:~0,-1%"
 setlocal EnableDelayedExpansion
-fsutil dirty query %systemdrive% >nul 2>&1 || goto :E_Admin
+reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 if %winbuild% lss 7601 goto :E_Win
 title Office Click-to-Run Installer - Volume
@@ -161,7 +161,7 @@ set CTRicab=i%CTRbit%0.cab
 set CTRscab=s%CTRbit%0.cab
 set CTRicabr=i%CTRbit%%CTRcul%.cab
 set CTRscabr=s%CTRbit%%CTRcul%.cab
-if %wow64%==1 (
+if /i %CTRarc%==x64 if %wow64%==1 (
 set CTRicab=i640.cab
 set CTRicabr=i64%CTRcul%.cab
 )
@@ -383,7 +383,7 @@ reg add %_Config% /f /v %%J.OSPPReady /t REG_SZ /d 1
 exit /b
 
 :Telemetry
-if %wow64%==1 (set "_inter=Software\Wow6432Node") else (set "_inter=Software")
+if /i %CTRarc%==x64 if %wow64%==1 (set "_inter=Software\Wow6432Node") else (set "_inter=Software")
 set "_rkey=%_CTR%\REGISTRY\MACHINE\%_inter%\Microsoft\Office\16.0\User Settings\CustomSettings"
 set "_skey=%_CTR%\REGISTRY\MACHINE\%_inter%\Microsoft\Office\16.0\User Settings\CustomSettings\Create\Software\Microsoft\Office\16.0"
 set "_tkey=%_CTR%\REGISTRY\MACHINE\%_inter%\Microsoft\Office\16.0\User Settings\CustomSettings\Create\Software\Microsoft\Office\Common\ClientTelemetry"

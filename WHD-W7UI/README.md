@@ -140,6 +140,18 @@ if you do not want these settings, edit the script, search for this line and del
 
 ## Changelog:
 
+* 5.1:  
+new servicing stack update KB4523206
+
+* 5.1:  
+readded SSU KB4490628 support, fixed SSU KB4516655 integration
+
+* 5.0:  
+new servicing stack update KB4516655
+
+* 4.9:  
+new servicing stack update KB4490628
+
 * 4.7/4.8:  
 added support and menu option to select specific index(s) to update from install.wim
 

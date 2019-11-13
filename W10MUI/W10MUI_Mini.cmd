@@ -14,7 +14,10 @@ rem # NORMALY THERE IS NO NEED TO CHANGE ANYTHING BELOW THIS COMMENT #
 rem ##################################################################
 
 title Windows 10 LangPacks Integrator
-%windir%\system32\reg.exe query "HKU\S-1-5-19" 1>nul 2>nul || goto :E_ADMIN
+set "SysPath=%Windir%\System32"
+if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
+set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+reg query HKU\S-1-5-19 1>nul 2>nul || goto :E_ADMIN
 cd /d "%~dp0"
 set "WORKDIR=%cd%"
 set "TEMPDIR=%WORKDIR%\TEMP"

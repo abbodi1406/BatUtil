@@ -21,7 +21,7 @@ set "_workdir=%~dp0"
 if "%_workdir:~-1%"=="\" set "_workdir=%_workdir:~0,-1%"
 set "_inipath=%_workdir%"
 setlocal EnableDelayedExpansion
-fsutil dirty query %systemdrive% >nul 2>&1 || goto :E_Admin
+reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 if %winbuild% lss 7601 goto :E_Win
 title Office Click-to-Run Configurator - Retail
@@ -175,8 +175,8 @@ echo Source  : "!CTRsource!"
 echo Version : %CTRver%
 echo %line%
 echo.
-set verchk=%CTRver:~5%
-if %verchk:.=% lss 90292167 goto :E_VER
+for /f "tokens=3 delims=." %%# in ('echo %CTRver%') do set verchk=%%#
+if %verchk% lss 9029 goto :E_VER
 if %vvv% gtr 1 set "CTRver=!CTRver%inpt%!"
 for %%# in %bits% do (
 if exist "!CTRsource!\Office\Data\v%%#*.cab" set vcab%%#=1
@@ -429,6 +429,9 @@ set _shut=True
 set _disp=True
 set _actv=False
 set _tele=True
+set _Teams=OFF
+if %verchk:~0,2% equ 11 if %verchk% lss 11328 set _Teams=0
+if %verchk:~0,2% equ 10 if %verchk% lss 10336 set _Teams=0
 cls
 echo %line%
 echo Source  : "!CTRsource!"
@@ -580,9 +583,11 @@ echo. 8. Visio Pro 2019        : %_O19VisPro%
 echo. 9. Visio Standard 2019   : %_O19VisStd%
 echo.
 echo. D. OneDrive Desktop      : %_OneDrive%
+if not %_Teams%==0 echo. T. Microsoft Teams       : %_Teams%
 echo %line%
-choice /c AENOPRSWD67890BX /n /m "Change a menu option, press 0 to proceed, B to go back, or X to exit: "
-if errorlevel 16 goto :eof
+choice /c AENOPRSWD67890BTX /n /m "Change a menu option, press 0 to proceed, B to go back, or X to exit: "
+if errorlevel 17 goto :eof
+if errorlevel 16 (if not %_Teams%==0 (if %_Teams%==ON (set _Teams=OFF) else (set _Teams=ON)))&goto :MenuApps
 if errorlevel 15 goto :MenuInitial
 if errorlevel 14 goto :MenuApps2
 if errorlevel 13 (if %_O19VisStd%==ON (set _O19VisStd=OFF) else (set _O19VisPro=OFF&set _O19VisStd=ON))&goto :MenuApps
@@ -792,9 +797,11 @@ echo. S. SkypeForBusiness : %_Lync%
 )
 echo. W. Word             : %_Word%
 echo. D. OneDrive Desktop : %_OneDrive%
+if not %_Teams%==0 echo. T. Microsoft Teams  : %_Teams%
 echo %line%
-choice /c AENOPRSWD0BX /n /m "Change a menu option, press 0 to proceed, B to go back, or X to exit: "
-if errorlevel 12 goto :eof
+choice /c AENOPRSWD0BTX /n /m "Change a menu option, press 0 to proceed, B to go back, or X to exit: "
+if errorlevel 13 goto :eof
+if errorlevel 12 (if not %_Teams%==0 (if %_Teams%==ON (set _Teams=OFF) else (set _Teams=ON)))&goto :MenuExclude365
 if errorlevel 11 goto :MenuSuite365
 if errorlevel 10 goto :MenuExclude2
 if errorlevel 9 (if %_OneDrive%==ON (set _OneDrive=OFF) else (set _OneDrive=ON))&goto :MenuExclude365
@@ -838,9 +845,11 @@ echo. S. SkypeForBusiness : %_Lync%
 )
 echo. W. Word             : %_Word%
 echo. D. OneDrive Desktop : %_OneDrive%
+if not %_Teams%==0 echo. T. Microsoft Teams  : %_Teams%
 echo %line%
-choice /c AENOPRSWD0BX /n /m "Change a menu option, press 0 to proceed, B to go back, or X to exit: "
-if errorlevel 12 goto :eof
+choice /c AENOPRSWD0BTX /n /m "Change a menu option, press 0 to proceed, B to go back, or X to exit: "
+if errorlevel 13 goto :eof
+if errorlevel 12 (if not %_Teams%==0 (if %_Teams%==ON (set _Teams=OFF) else (set _Teams=ON)))&goto :MenuExclude2016
 if errorlevel 11 goto :MenuSuite2016
 if errorlevel 10 goto :MenuExclude2
 if errorlevel 9 (if %_OneDrive%==ON (set _OneDrive=OFF) else (set _OneDrive=ON))&goto :MenuExclude2016
@@ -884,9 +893,11 @@ echo. S. SkypeForBusiness : %_Lync%
 )
 echo. W. Word             : %_Word%
 echo. D. OneDrive Desktop : %_OneDrive%
+if not %_Teams%==0 echo. T. Microsoft Teams  : %_Teams%
 echo %line%
-choice /c AENOPRSWD0BX /n /m "Change a menu option, press 0 to proceed, B to go back, or X to exit: "
-if errorlevel 12 goto :eof
+choice /c AENOPRSWD0BTX /n /m "Change a menu option, press 0 to proceed, B to go back, or X to exit: "
+if errorlevel 13 goto :eof
+if errorlevel 12 (if not %_Teams%==0 (if %_Teams%==ON (set _Teams=OFF) else (set _Teams=ON)))&goto :MenuExclude2019
 if errorlevel 11 goto :MenuSuite2019
 if errorlevel 10 goto :MenuExclude2
 if errorlevel 9 (if %_OneDrive%==ON (set _OneDrive=OFF) else (set _OneDrive=ON))&goto :MenuExclude2019
@@ -902,7 +913,7 @@ goto :MenuExclude2019
 
 :MenuExclude2
 set "_excluded=Groove"
-for %%J in (Access,Excel,OneDrive,OneNote,Outlook,PowerPoint,Publisher,Lync,Word) do (
+for %%J in (Access,Excel,Lync,OneDrive,OneNote,Outlook,PowerPoint,Publisher,Teams,Word) do (
 if !_%%J!==OFF set "_excluded=!_excluded!,%%J"
 )
 goto :MenuChannel

@@ -126,7 +126,19 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
-*4.8:  
+* 5.2:  
+new servicing stack update KB4524445
+
+* 5.1:  
+new servicing stack update KB4521864
+
+* 5.0:  
+new servicing stack update KB4512938
+
+* 4.9:  
+new servicing stack update KB4504418
+
+* 4.8:  
 added support for Windows 10 ADK
 
 * 4.6/4.7:  

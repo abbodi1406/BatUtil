@@ -41,7 +41,7 @@
             <ul style="margin-top:0in;margin-bottom:0in">
                 <li>Automated windows command script to process Microsoft Windows 10 Unified Update Platform files, allowing to build/convert them into a usable state (ISO / WIM).</li>
                 <br />
-                <li>You can get UUP files by performing upgrade from Windows 10 build to later build (starting 15063).</li>
+                <li>You can get UUP files by performing upgrade from Windows 10 build to later build (starting 15063, aka version 1703).</li>
                 <br />
                 <li>You can also obtain UUP canonical source using one of these projects:<br />
                 <a href="https://uupdump.ml/">UUP dump website</a><br />
@@ -64,7 +64,7 @@
                 <br />
                 <li>Place the files in "UUPs" folder to be detected automatically, or drag and drop uup files directory on convert-UUP.cmd. Alternatively, you will be prompted to enter other UUP folder path.</li>
                 <br />
-                <li>If multiple Editions detected, you will be prompted first to select one of them, or create AIO.</li>
+                <li>If multiple Editions detected, you will be prompted first to select one edition, some editions, or create AIO.</li>
                 <br />
                 <li>To exit of the prompt or options menu just press "Enter".</li>
                 </li>
@@ -116,10 +116,10 @@
                 <br />
                 <li>
                     <b>AddUpdates</b><br /><br />
-                    Integrate detected updates after creating wim files.<br /><br />
-                    Use <b>ResetBase</b> option to control OS image cleanup.<br />
-                    Use <b>NetFx3</b> option to enable .NET 3.5 feature.<br /><br />
-                    These options only work with <b>install.wim</b> choices, and require Windows 10 Host OS or ADK. See <a href="#Update">Add Updates Option</a> for more details.
+                    Update the ISO distribution or install.wim with detected updates after conversion.<br /><br />
+                    Set this option to <strong>1</strong> to <b>integrate updates </b>into wim files<br />
+                    Set this option to <strong>2</strong> to <b>add updates externally</b> to ISO distribution<br /><br />
+                    See <a href="#Update">Add Updates Option</a> for more details.
                 </li>
                 <br />
                 <li>
@@ -165,26 +165,43 @@
             <h2><a name="Update"></a>Add Updates Option</h2>
             <h3><a name="UpdateInfo"></a>Info</h3>
             <ul style="margin-top:0in;margin-bottom:0in">
-                <li>Starting Windows 10 version 1709, Servicing Stack Update and Latest Cumulative Update are handled and distributed with UUP source.<br />
-                In addition to some small dynamic updates used in upgrades.
+                <li>Starting Windows 10 version 1709, Servicing Stack Update and Latest Cumulative Update are handled and distributed with UUP source. In addition to some small dynamic updates used in upgrades.
                 </li>
                 <br />
-                <li>According to that, UUP Dump will offer multiple builds for the same Windows 10 version.<br />
-                Each one will represent refreshed Feature Update or new Cumulative Update.
+                <li>According to that, UUP Dump will offer multiple builds for the same Windows 10 version. Each one will represent refreshed Feature Update or new Cumulative Update.
                 </li>
                 <br />
-                <li>However, those updates are only used and applied by Windows Update,<br />
-                they not actual part of the UUP source itself and will not be included in the converted ISO/WIM by default.
+                <li>However, those updates are only used and applied by Windows Update, they not actual part of the UUP source itself and will not be included in the converted ISO/WIM by default.
                 </li>
                 <br />
-                <li>The recommended choice to get those updates incorporated, is to convert UUP to ISO normally,<br />
-                afterwards you can use W10UI.cmd script or similar projects to integrate all available updates.
+                <li><b>AddUpdates</b> option provide built-in ability to directly integrate these updates, resulting a refreshed ISO/WIM, or to add them externally.
                 </li>
                 <br />
-                <li>Nevertheless, <b>AddUpdates</b> option provide built-in ability to directly integrate these updates, resulting a refreshed ISO/WIM.
+                <li><u>Integrate</u> updates mode only works with install.wim (ISO or Single), and require <u>Windows 10 Host OS or Windows 10 ADK</u>.
                 </li>
                 <br />
-                <li>Note: This only works with install.wim (option 1 or 2 in the choices menu), because install.esd file is not servicable.
+                <li><u>External</u> updates mode only works with <u>builds 17763 and later</u>, and the updates will be installed during setup (clean install or upgrade).
+                </li>
+                <br />
+                <li><b>Cleanup</b> option control image cleanup for integration mode, and will delta-compress superseded components.
+                </li>
+                <br />
+                <li><b>ResetBase</b> option works only with Cleanup option, and will further remove superseded components.
+                </li>
+                <br />
+                <li><b>NetFx3</b> option is to enable .NET 3.5 feature for both modes.
+                </li>
+                <br />
+                <li><u>External</u> updates mode is ment as backup procedure in case Windows 10 ADK is not installed, or the user want to have converted ISO faster. It is recommended to use the normal integration mode if possible.
+                </li>
+                <br />
+                <li>If UUP source is build 17063 or later and multiple editions are selected, in order to reduce integration mode time, Pro/ProN editions will be created as upgrades from the already updated Home/HomeN editions, if possible.
+                </li>
+                <br />
+                <li><u>Integrate</u> updates mode may not work correctly on <u>Windows 7 Host OS</u>, specially with recent Windows 10 builds. <u>External</u> updates mode is recommended to use in that case.
+                </li>
+                <br />
+                <li><u>Integrate</u> updates mode for ARM64 UUP images only works on <u>Windows 10 Host OS exclusively</u>.
                 </li>
             </ul>
             <br />
@@ -192,20 +209,18 @@
             <ul style="margin-top:0in;margin-bottom:0in">
                 <li>Make sure UUP source contain updates (Windows10.0-KB*.cab files)</li>
                 <br />
-                <li>Optional: set convert-UUP option <b>AddUpdates</b> to 1</b></li>
+                <li>Set configuraation option <b>AddUpdates</b> to 1 or 2</b></li>
                 <br />
-                <li>You <b>must</b> have Windows 10 Host OS, or install Windows 10 ADK</li>
-                <br />
-                <li>If updates are detected, you will have extra option <b>9 - Add Updates</b>. Enter 9 to change the status (Yes or No) before choosing option 1 or 2</li>
+                <li>If you set to 1 and Windows 10 ADK is not installed, it will be reverted to 2 (if build is supported), or turned OFF</li>
             </ul>
             <br />
             <h3><a name="UpdateNote"></a>Note</h3>
             <ul style="margin-top:0in;margin-bottom:0in">
-                by default, superseded components due updates in OS image will be delta-compressed<br />
+				<u>Warning:</u> on build 18362 and later, <b>Cleanup</b> option will also removes the base RTM Edition packages, due Cumulative Update design change by Microsoft.<br />
+				This may lead to failed installation of future cumulative updates.<br /><br />
+				Nevertheless, system itself can initiate the cleanup process after installation, either with schedule tasks <b>StartComponentCleanup</b> or <b>SilentCleanup</b>, or via Disk Cleanup.<br />
                 <br />
-                to reset OS image base and remove superseded components, set convert-UUP option <b>ResetBase</b> to 1 prior conversion<br />
-                <br />
-                warning: resetbase break "Reset This PC" feature
+                <u>Warning:</u> <b>ResetBase</b> option break "Reset This PC" feature. Full ResetBase is automatically disabled for build 18362 and later.
             </ul>
             <hr />
             <br />
@@ -346,6 +361,25 @@
             <hr />
             <br />
 
+            <h2><a name="Debug"></a>Debug Mode</h2>
+                Intended to help into detecting errors in the script or the conversion process and create a full log of the operation.<br /><br />
+                To enable debug mode, follow these steps:<br /><br />
+            <ul style="margin-top:0in;margin-bottom:0in">
+                <li>set the desired configuration options in ConvertConfig.ini (specially AutoStart).</li>
+                <br />
+                <li>edit convert-UUP.cmd and change <b>set _Debug=0</b> to <b>set _Debug=1</b> and save the changes.</li>
+                <br />
+                <li>to start the process: put the UUP files in <b>UUPs</b> folder, then run the script as administrator.</li>
+                <br />
+                <li>another way to start the process: drag and drop the UUP files source directory on convert-UUP.cmd</li>
+                <br />
+                <li>wait until the process finish and cmd window is closed.</li>
+            </ul>
+            <br />
+                Note: create_virtual_editions.cmd will inherit debug mode if StartVirtual option is active.<br />
+            <hr />
+            <br />
+
             <h2><a name="Remarks"></a>Remark</h2>
             <ul style="margin-top:0in;margin-bottom:0in">
                 <li>If the upgrade is done via Express UUP (multiple expanded folders in the download directory), you need to perform the UUP &gt; ISO operation before starting the upgrade process (before first restart).<br />
@@ -397,6 +431,7 @@
             &nbsp;&nbsp;&nbsp;<a href="#MultiHow">How To</a><br />
             &nbsp;&nbsp;&nbsp;<a href="#MultiOps">Options</a><br />
             &nbsp;&nbsp;&nbsp;<a href="#MultiNote">Notes</a><br /><br />
+            <a href="#Debug">Debug Mode</a><br />
             <a href="#Remarks">Remark</a><br />
             <a href="#Credits">Credits</a>
         </div>

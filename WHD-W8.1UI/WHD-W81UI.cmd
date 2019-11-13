@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-set uiv=v4.8
+set uiv=v5.2
 :: when changing below options, recommended to set the new values between = and " marks
 
 :: target image or wim file
@@ -11,7 +11,7 @@ set "target="
 set "repo=%~dp0Updates"
 
 :: dism.exe tool path (default is system)
-set "dismroot=%windir%\system32\dism.exe"
+set "dismroot=dism.exe"
 
 :: updates to process by default
 set LDRbranch=ON
@@ -55,7 +55,7 @@ set "winremount=%SystemDrive%\W81UImountre"
 
 :: Technical options for updates
 set ssu1=KB3021910
-set ssu2=KB3173424
+set ssu2=KB4524445
 set baselinelist=(KB2919355,KB3000850,KB2932046,KB2934018,KB2937592,KB2938439,KB2938772,KB3003057,KB3014442)
 set gdrlist=(KB3023219,KB3037576,KB3074545,KB3097992,KB3127222)
 set hv_integ_kb=hypervintegrationservices
@@ -67,6 +67,9 @@ set _reg=%windir%\system32\reg.exe
 %_reg% query "HKU\S-1-5-19" 1>nul 2>nul || goto :E_Admin
 
 :detect
+set /a rnd=%random%
+set "mountdir=%mountdir%\%rnd%"
+set "winremount=%winremount%\%rnd%"
 if exist "%cab_dir%" (
 echo.
 echo ============================================================
@@ -135,12 +138,15 @@ set "indices=*"
 if /i "%target%"=="%SystemDrive%" (if exist "%target%\Windows\SysWOW64\*" (set arch=x64) else (set arch=x86))
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 rem if %winbuild% geq 9600 goto :mainmenu
-if /i "%dismroot%" neq "%windir%\system32\dism.exe" goto :mainmenu
+if /i not "%dismroot%"=="dism.exe" goto :mainmenu
 goto :checkadk
 
 :mainboard
 if %winbuild% neq 9600 (
 if /i "%target%"=="%SystemDrive%" (goto :mainmenu)
+)
+if %winbuild% lss 9600 (
+if /i "%dismroot%"=="dism.exe" (goto :mainmenu)
 )
 if "%repo%"=="" (goto :mainmenu)
 if "%repo:~-1%"=="\" set "repo=%repo:~0,-1%"
@@ -1032,7 +1038,7 @@ FOR /F "skip=2 tokens=2*" %%i IN ('REG QUERY "%regKeyPath%" /v KitsRoot81') DO (
 SET "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
 SET "oscdimgroot=%DandIRoot%\%PROCESSOR_ARCHITECTURE%\Oscdimg\oscdimg.exe"
 SET "dismroot=%DandIRoot%\%PROCESSOR_ARCHITECTURE%\DISM\dism.exe"
-if not exist "%dismroot%" set "dismroot=%windir%\system32\dism.exe"
+if not exist "%dismroot%" set "dismroot=dism.exe"
 goto :mainmenu
 
 :checkadk10
@@ -1053,7 +1059,7 @@ FOR /F "skip=2 tokens=2*" %%i IN ('REG QUERY "%regKeyPath%" /v KitsRoot10') DO (
 SET "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
 SET "oscdimgroot=%DandIRoot%\%PROCESSOR_ARCHITECTURE%\Oscdimg\oscdimg.exe"
 SET "dismroot=%DandIRoot%\%PROCESSOR_ARCHITECTURE%\DISM\dism.exe"
-if not exist "%dismroot%" set "dismroot=%windir%\system32\dism.exe"
+if not exist "%dismroot%" set "dismroot=dism.exe"
 goto :mainmenu
 
 :targetmenu
@@ -1163,7 +1169,7 @@ set "dismroot=%_pp%"
 if not exist "%dismroot%" (
 echo not found: "%dismroot%"
 pause
-set "dismroot=%windir%\system32\dism.exe"
+set "dismroot=dism.exe"
 )
 goto :mainmenu
 

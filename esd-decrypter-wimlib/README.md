@@ -10,10 +10,6 @@
 
 if you want to maintain the original file state, turn the backup ON by pressing 9 before proceeding to other operations.
 
-* If ESD decryption fails, run esd_cryptokey_data_update.cmd to get the latest key database, specially if a new build is released with new ESD Decryption Key
-
-although, Microsoft had stopped encrypting ESD files since build 15063
-
 ## How To Use
 
 * Optional: temporary disable AV or protection program so it doesn't interfere with the process.
@@ -22,8 +18,10 @@ although, Microsoft had stopped encrypting ESD files since build 15063
 
 * Extract this pack to a folder with simple path to avoid troubles (example: C:\ESD).
 
-* You may start the process with any of these ways:
+* Optional: to get accurate ISO file name for refreshed ESDs, edit **decrypt.cmd** and `set ISOnameESD=1`  
+warning, for this to work, ESD name must be the original, with or without sha1 hash suffix
 
+* You may start the process with any of these ways:  
 - Copy/Move ESD file to the same folder besides the script, then run decrypt.cmd
 
 - Drag & drop ESD file on decrypt.cmd
@@ -32,13 +30,14 @@ although, Microsoft had stopped encrypting ESD files since build 15063
 
 - Open Admin Command Prompt in the current directory, and Execute: decrypt ESDFileNameAndPath
 
-examples:
+examples:  
+```
+decrypt 15063.0.170317-1834.rs2_release_cliententerprise_vol_x86fre_en-us_dc818e39982d8bd922dca73fd51e330aa99bc3f1.esd`
 
-`decrypt 15063.0.170317-1834.rs2_release_cliententerprise_vol_x86fre_en-us_dc818e39982d8bd922dca73fd51e330aa99bc3f1.esd`
+decrypt C:\RecoveryImage\install.esd
 
-`decrypt C:\RecoveryImage\install.esd`
-
-`decrypt H:\ESD\ir4_cpra_x64frer_en-us.esd`
+decrypt H:\ESD\ir4_cpra_x64frer_en-us.esd
+```
 
 #### Multi Editions ESD Options
 

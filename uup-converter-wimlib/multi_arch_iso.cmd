@@ -1,4 +1,5 @@
 <!-- : Begin batch script
+@setlocal DisableDelayedExpansion
 @echo off
 :: 0 - source distributions folders will be directly modified
 :: 1 - source distributions folders will be copied then modified
@@ -10,65 +11,80 @@ set Preserve=0
 :: offlinereg: erwan.l
 :: aio efisys: cdob
 
-setlocal DisableDelayedExpansion
-set _PSarg="""%~f0"""
-set _PSarg=%_PSarg:'=''%
-set "_workdir=%~dp0"
-set "_workdir=%_workdir:~0,-1%"
-set "_cabdir=%~d0\W10UItemp"
-if "%_workdir:~0,2%"=="\\" set "_cabdir=%~dp0temp\W10UItemp"
-set "SysPath=%Windir%\System32"
-if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
-set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-set "xOS=amd64"
-set "_ComSpec=%SysPath%\cmd.exe"
-set "_wimlib=%~dp0bin\bin64\wimlib-imagex.exe"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (
-if not defined PROCESSOR_ARCHITEW6432 (
-  set "xOS=x86"
-  set "_wimlib=%~dp0bin\wimlib-imagex.exe"
+:: ###################################################################
+
+set "_Nul3=1>nul 2>nul"
+
+set _elev=
+set _args=%1
+if defined _args if "%~1"=="-elevated" set _elev=1
+
+set "SysPath=%SystemRoot%\System32"
+if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
+set "xDS=bin\bin64;bin"
+if /i %PROCESSOR_ARCHITECTURE%==x86 (if not defined PROCESSOR_ARCHITEW6432 (
+  set "xDS=bin"
   )
 )
-fsutil dirty query %systemdrive% 1>nul 2>nul && goto :Begin
-(1>nul 2>nul cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0") && (
+set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set "_err===== ERROR ===="
+
+%_Nul3% reg query HKU\S-1-5-19 && (
+  goto :Passed
+  ) || (
+  if defined _elev goto :E_Admin
+)
+
+set _PSarg="""%~f0""" -elevated
+set _PSarg=%_PSarg:'=''%
+
+(%_Nul3% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" -elevated) && (
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  1>nul 2>nul powershell -NoLogo -NoProfile -ExecutionPolicy Bypass Start-Process -FilePath '!_ComSpec!' -ArgumentList '/c \"!_PSarg! \"' -Verb RunAs && (
+  %_Nul3% powershell -noprofile -exec bypass -c "start cmd.exe -ArgumentList '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
   )
 )
 
+:Passed
+set "_work=%~dp0"
+setlocal EnableDelayedExpansion
+pushd "!_work!"
+set _file=(7z.dll,7z.exe,bcdedit.exe,bfi.exe,cdimage.exe,libwim-15.dll,offlinereg.exe,offreg.dll,wimlib-imagex.exe)
+for %%# in %_file% do (
+if not exist ".\bin\%%#" (set _bin=%%#&goto :E_Bin)
+)
+
 :Begin
 title Multi-Architecture ISO
-pushd "%~dp0"
 set ERRORTEMP=
 set "ramdiskoptions={7619dcc8-fafe-11d9-b411-000476eba25f}"
 set combine=0
 set custom=0
 set winx=1
 set "line============================================================="
-for %%# in (wimlib-imagex,7z,bcdedit,bfi,offlinereg) do (
-if not exist ".\bin\%%#.exe" (echo Error: required %%#.exe is missing&popd&pause&exit)
-)
 
 set _dir64=0
 set _dir86=0
 set _iso64=0
 set _iso86=0
 
-dir /b /ad *x64* 1>nul 2>nul && (for /f "delims=" %%# in ('dir /b /ad *x64*') do if exist "%%#\sources\*.wim" (set _dir64=1&set "ISOdir1=%%#"))
-dir /b /ad *x86* 1>nul 2>nul && (for /f "delims=" %%# in ('dir /b /ad *x86*') do if exist "%%#\sources\*.wim" (set _dir86=1&set "ISOdir2=%%#"))
+dir /b /ad *amd64* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *amd64*') do if exist "%%~#\sources\*.wim" (set _dir64=1&set "ISOdir1=%%#"))
+dir /b /ad *x64* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x64*') do if exist "%%~#\sources\*.wim" (set _dir64=1&set "ISOdir1=%%#"))
+dir /b /ad *x32* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x32*') do if exist "%%~#\sources\*.wim" (set _dir86=1&set "ISOdir2=%%#"))
+dir /b /ad *x86* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x86*') do if exist "%%~#\sources\*.wim" (set _dir86=1&set "ISOdir2=%%#"))
 if %_dir64% equ 1 if %_dir86% equ 1 goto :DUALMENU
 
-dir /b /a:-d *_x64*.iso 1>nul 2>nul && (set _iso64=1&for /f "delims=" %%# in ('dir /b /a:-d *_x64*.iso') do set "ISOfile1=%%#")
-dir /b /a:-d *_x86*.iso 1>nul 2>nul && (set _iso86=1&for /f "delims=" %%# in ('dir /b /a:-d *_x86*.iso') do set "ISOfile2=%%#")
-dir /b /a:-d *_x32*.iso 1>nul 2>nul && (set _iso86=1&for /f "delims=" %%# in ('dir /b /a:-d *_x32*.iso') do set "ISOfile2=%%#")
+dir /b /a:-d *_amd64*.iso %_Nul3% && (set _iso64=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_amd64*.iso') do set "ISOfile1=%%#")
+dir /b /a:-d *_x64*.iso %_Nul3% && (set _iso64=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_x64*.iso') do set "ISOfile1=%%#")
+dir /b /a:-d *_x32*.iso %_Nul3% && (set _iso86=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_x32*.iso') do set "ISOfile2=%%#")
+dir /b /a:-d *_x86*.iso %_Nul3% && (set _iso86=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_x86*.iso') do set "ISOfile2=%%#")
 if %_iso64% equ 1 if %_iso86% equ 1 goto :DUALMENU
 
-:prompt
+:prompt1
 cls
 set _iso1=
 echo %line%
@@ -77,18 +93,29 @@ echo %line%
 echo.
 set /p _iso1=
 if not defined _iso1 goto :QUIT
-echo %_iso1%| findstr /E /I "\.iso" >nul || (
+set "_iso1=%_iso1:"=%"
+if not exist "%_iso1%" (
 echo.
-echo ==== ERROR ====
+echo %_err%
 echo Specified path is not a valid ISO file
 echo.
 echo Press any key to continue...
 pause >nul
-goto :prompt
+goto :prompt1
 )
-echo %_iso1%| findstr /I /C:"x64" 1>nul && (set _iso64=1&for /f "delims=" %%# in ('echo %_iso1%') do set "ISOfile1=%%#")
-echo %_iso1%| findstr /I /C:"x86" 1>nul && (set _iso86=1&for /f "delims=" %%# in ('echo %_iso1%') do set "ISOfile2=%%#")
-echo %_iso1%| findstr /I /C:"x32" 1>nul && (set _iso86=1&for /f "delims=" %%# in ('echo %_iso1%') do set "ISOfile2=%%#")
+if /i not "%_iso1:~-4%"==".iso" (
+echo.
+echo %_err%
+echo Specified path is not a valid ISO file
+echo.
+echo Press any key to continue...
+pause >nul
+goto :prompt1
+)
+echo "%_iso1%"| findstr /I /C:"amd64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso1%")
+echo "%_iso1%"| findstr /I /C:"x64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso1%")
+echo "%_iso1%"| findstr /I /C:"x32" 1>nul && (set _iso86=1&set "ISOfile2=%_iso1%")
+echo "%_iso1%"| findstr /I /C:"x86" 1>nul && (set _iso86=1&set "ISOfile2=%_iso1%")
 
 :prompt2
 set _iso2=
@@ -99,9 +126,19 @@ echo %line%
 echo.
 set /p _iso2=
 if not defined _iso2 goto :QUIT
-echo %_iso2%| findstr /E /I "\.iso" >nul || (
+set "_iso2=%_iso2:"=%"
+if not exist "%_iso2%" (
 echo.
-echo ==== ERROR ====
+echo %_err%
+echo Specified path is not a valid ISO file
+echo.
+echo Press any key to continue...
+pause >nul
+goto :prompt2
+)
+if /i not "%_iso2:~-4%"==".iso" (
+echo.
+echo %_err%
 echo Specified path is not a valid ISO file
 echo.
 echo Press any key to continue...
@@ -109,9 +146,11 @@ pause >nul
 cls
 goto :prompt2
 )
-echo %_iso2%| findstr /I /C:"x64" 1>nul && (set _iso64=1&for /f "delims=" %%# in ('echo %_iso2%') do set "ISOfile1=%%#")
-echo %_iso2%| findstr /I /C:"x86" 1>nul && (set _iso86=1&for /f "delims=" %%# in ('echo %_iso2%') do set "ISOfile2=%%#")
-echo %_iso2%| findstr /I /C:"x32" 1>nul && (set _iso86=1&for /f "delims=" %%# in ('echo %_iso2%') do set "ISOfile2=%%#")
+echo "%_iso2%"| findstr /I /C:"amd64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso2%")
+echo "%_iso2%"| findstr /I /C:"x64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso2%")
+echo "%_iso2%"| findstr /I /C:"x32" 1>nul && (set _iso86=1&set "ISOfile2=%_iso2%")
+echo "%_iso2%"| findstr /I /C:"x86" 1>nul && (set _iso86=1&set "ISOfile2=%_iso2%")
+
 if %_iso64% equ 1 if %_iso86% equ 1 goto :DUALMENU
 if %_iso64% equ 0 if %_iso86% equ 0 (set "MESSAGE=could not detect architecture tags"&goto :E_MSG)
 if %_iso64% equ 1 if %_iso86% equ 0 (set "MESSAGE=both ISO files are x64"&goto :E_MSG)
@@ -119,7 +158,6 @@ if %_iso64% equ 0 if %_iso86% equ 1 (set "MESSAGE=both ISO files are x86"&goto :
 
 :DUALMENU
 color 1F
-setlocal EnableDelayedExpansion
 cls
 echo %line%
 echo. Sources:
@@ -151,13 +189,14 @@ set "ISOdir1=ISOx64"
 set "ISOdir2=ISOx86"
 echo "!ISOfile1!"
 if exist %ISOdir1%\ rmdir /s /q %ISOdir1%\
-bin\7z.exe x "!ISOfile1!" -o%ISOdir1% * -r >nul
+7z.exe x "!ISOfile1!" -o%ISOdir1% * -r >nul
 echo.
 echo "!ISOfile2!"
 if exist %ISOdir2%\ rmdir /s /q %ISOdir2%\
-bin\7z.exe x "!ISOfile2!" -o%ISOdir2% * -r >nul
+7z.exe x "!ISOfile2!" -o%ISOdir2% * -r >nul
 
 :dCheck
+if %_iso64% equ 0 cls
 echo.
 echo %line%
 echo Checking distributions Info . . .
@@ -173,15 +212,12 @@ set WIMFILE%%#=0
 )
 call :dInfo 1
 call :dInfo 2
-if /i %ISOarch1% equ %ISOarch2% (set "MESSAGE=ISO distributions have the same architecture."&goto :E_MSG)
-if /i %ISOver1% neq %ISOver2%   (set "MESSAGE=ISO distributions have different Windows versions."&goto :E_MSG)
-if /i %ISOlang1% neq %ISOlang2% (set "MESSAGE=ISO distributions have different languages."&goto :E_MSG)
-if /i %WIMFILE1% neq %WIMFILE2% (set "MESSAGE=ISO distributions have different install file format."&goto :E_MSG)
-if %combine%==0 if %winx%==0 (set "MESSAGE=ISO with 2 separate install files require Windows 10 setup files"&goto :E_MSG)
+if /i "%ISOarch1%" equ "%ISOarch2%" (set "MESSAGE=ISO distributions have the same architecture."&goto :E_MSG)
+if /i "%ISOver1%" neq "%ISOver2%"   (set "MESSAGE=ISO distributions have different Windows versions."&goto :E_MSG)
+if /i "%ISOlang1%" neq "%ISOlang2%" (set "MESSAGE=ISO distributions have different languages."&goto :E_MSG)
+if /i "%WIMFILE1%" neq "%WIMFILE2%" (set "MESSAGE=ISO distributions have different install file format."&goto :E_MSG)
+if %combine% equ 0 if %winx% equ 0  (set "MESSAGE=ISO with 2 separate install files require Windows 10 setup files"&goto :E_MSG)
 set WIMFILE=%WIMFILE1%
-
-:Dual
-cls
 echo.
 echo %line%
 echo Preparing ISO Info . . .
@@ -195,45 +231,45 @@ echo.
 echo %line%
 echo Copying distributions folders . . .
 echo %line%
-xcopy "!ISOdir1!\*" ISOFOLDER\x64\ /cheriky >nul 2>&1
-xcopy "!ISOdir2!\*" ISOFOLDER\x86\ /cheriky >nul 2>&1
+robocopy "!ISOdir1!" "ISOFOLDER\x64" /E /A-:R %_Nul3%
+robocopy "!ISOdir2!" "ISOFOLDER\x86" /E /A-:R %_Nul3%
 ) else (
-move "!ISOdir1!" .\ISOFOLDER\x64 >nul
-move "!ISOdir2!" .\ISOFOLDER\x86 >nul
+move "!ISOdir1!" .\ISOFOLDER\x64 %_Nul3%
+move "!ISOdir2!" .\ISOFOLDER\x86 %_Nul3%
 )
 set archl=X86-X64
-if /i %DVDLABEL1% equ %DVDLABEL2% (
+if /i "%DVDLABEL1%" equ "%DVDLABEL2%" (
 set DVDLABEL=%DVDLABEL1%_%archl%FRE_%langid%_DV9
 set DVDISO=%_label%%DVDISO1%_%archl%FRE_%langid%
 ) else (
 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV9
 set DVDISO=%_label%%DVDISO1%_%ISOarch1%FRE-%DVDISO2%_%ISOarch2%FRE_%langid%
 )
-if %combine%==0 goto :BCD
+if %combine% equ 0 goto :BCD
 echo.
 echo %line%
 echo Unifying %WIMFILE% . . .
 echo %line%
 echo.
-for /f "tokens=3 delims=: " %%# in ('bin\wimlib-imagex info ISOFOLDER\x86\sources\%WIMFILE% ^| findstr /c:"Image Count"') do set imagesi=%%#
-for /f "tokens=3 delims=: " %%# in ('bin\wimlib-imagex info ISOFOLDER\x64\sources\%WIMFILE% ^| findstr /c:"Image Count"') do set imagesx=%%#
-for /f "tokens=1* delims=: " %%i in ('bin\wimlib-imagex info ISOFOLDER\x86\sources\%WIMFILE% 1 ^| findstr /b "Name"') do set "_osi=%%j x86"
-for /f "tokens=1* delims=: " %%i in ('bin\wimlib-imagex info ISOFOLDER\x64\sources\%WIMFILE% 1 ^| findstr /b "Name"') do set "_osx=%%j x64"
+for /f "tokens=3 delims=: " %%# in ('wimlib-imagex.exe info ISOFOLDER\x86\sources\%WIMFILE% ^| findstr /c:"Image Count"') do set imagesi=%%#
+for /f "tokens=3 delims=: " %%# in ('wimlib-imagex.exe info ISOFOLDER\x64\sources\%WIMFILE% ^| findstr /c:"Image Count"') do set imagesx=%%#
+for /f "tokens=1* delims=: " %%i in ('wimlib-imagex.exe info ISOFOLDER\x86\sources\%WIMFILE% 1 ^| findstr /b "Name"') do set "_osi=%%j x86"
+for /f "tokens=1* delims=: " %%i in ('wimlib-imagex.exe info ISOFOLDER\x64\sources\%WIMFILE% 1 ^| findstr /b "Name"') do set "_osx=%%j x64"
 if not %imagesi%==1 for /L %%# in (2,1,%imagesi%) do (
-for /f "tokens=1* delims=: " %%i in ('bin\wimlib-imagex info ISOFOLDER\x86\sources\%WIMFILE% %%# ^| findstr /b "Name"') do set "_osi%%#=%%j x86"
+for /f "tokens=1* delims=: " %%i in ('wimlib-imagex.exe info ISOFOLDER\x86\sources\%WIMFILE% %%# ^| findstr /b "Name"') do set "_osi%%#=%%j x86"
 )
 if not %imagesx%==1 for /L %%# in (2,1,%imagesx%) do (
-for /f "tokens=1* delims=: " %%i in ('bin\wimlib-imagex info ISOFOLDER\x64\sources\%WIMFILE% %%# ^| findstr /b "Name"') do set "_osx%%#=%%j x64"
+for /f "tokens=1* delims=: " %%i in ('wimlib-imagex.exe info ISOFOLDER\x64\sources\%WIMFILE% %%# ^| findstr /b "Name"') do set "_osx%%#=%%j x64"
 )
-"!_wimlib!" info ISOFOLDER\x86\sources\%WIMFILE% 1 "%_osi%" "%_osi%" --image-property DISPLAYNAME="%_osi%" --image-property DISPLAYDESCRIPTION="%_osi%" 1>nul 2>nul
+wimlib-imagex.exe info ISOFOLDER\x86\sources\%WIMFILE% 1 "%_osi%" "%_osi%" --image-property DISPLAYNAME="%_osi%" --image-property DISPLAYDESCRIPTION="%_osi%" %_Nul3%
 if not %imagesi%==1 for /L %%# in (2,1,%imagesi%) do (
-"!_wimlib!" info ISOFOLDER\x86\sources\%WIMFILE% %%# "!_osi%%#!" "!_osi%%#!" --image-property DISPLAYNAME="!_osi%%#!" --image-property DISPLAYDESCRIPTION="!_osi%%#!" 1>nul 2>nul
+wimlib-imagex.exe info ISOFOLDER\x86\sources\%WIMFILE% %%# "!_osi%%#!" "!_osi%%#!" --image-property DISPLAYNAME="!_osi%%#!" --image-property DISPLAYDESCRIPTION="!_osi%%#!" %_Nul3%
 )
-"!_wimlib!" info ISOFOLDER\x64\sources\%WIMFILE% 1 "%_osx%" "%_osx%" --image-property DISPLAYNAME="%_osx%" --image-property DISPLAYDESCRIPTION="%_osx%" 1>nul 2>nul
-"!_wimlib!" export ISOFOLDER\x64\sources\%WIMFILE% 1 ISOFOLDER\x86\sources\%WIMFILE%
+wimlib-imagex.exe info ISOFOLDER\x64\sources\%WIMFILE% 1 "%_osx%" "%_osx%" --image-property DISPLAYNAME="%_osx%" --image-property DISPLAYDESCRIPTION="%_osx%" %_Nul3%
+wimlib-imagex.exe export ISOFOLDER\x64\sources\%WIMFILE% 1 ISOFOLDER\x86\sources\%WIMFILE%
 if not %imagesx%==1 for /L %%# in (2,1,%imagesx%) do (
-"!_wimlib!" info ISOFOLDER\x64\sources\%WIMFILE% %%# "!_osx%%#!" "!_osx%%#!" --image-property DISPLAYNAME="!_osx%%#!" --image-property DISPLAYDESCRIPTION="!_osx%%#!" 1>nul 2>nul
-"!_wimlib!" export ISOFOLDER\x64\sources\%WIMFILE% %%# ISOFOLDER\x86\sources\%WIMFILE%
+wimlib-imagex.exe info ISOFOLDER\x64\sources\%WIMFILE% %%# "!_osx%%#!" "!_osx%%#!" --image-property DISPLAYNAME="!_osx%%#!" --image-property DISPLAYDESCRIPTION="!_osx%%#!" %_Nul3%
+wimlib-imagex.exe export ISOFOLDER\x64\sources\%WIMFILE% %%# ISOFOLDER\x86\sources\%WIMFILE%
 )
 
 :BCD
@@ -242,15 +278,14 @@ echo %line%
 echo Preparing boot configuration settings . . .
 echo %line%
 echo.
-xcopy ISOFOLDER\x64\boot\* ISOFOLDER\boot\ /cheriky >nul 2>&1
-xcopy ISOFOLDER\x64\efi\* ISOFOLDER\efi\ /cheriky >nul 2>&1
-copy /y ISOFOLDER\x64\bootmgr* ISOFOLDER\ >nul 2>&1
-copy /y ISOFOLDER\x86\boot\bootsect.exe ISOFOLDER\boot\ >nul 2>&1
-set "bcde=bin\bcdedit.exe"
+%_Nul3% xcopy ISOFOLDER\x64\boot\* ISOFOLDER\boot\ /cheriy
+%_Nul3% xcopy ISOFOLDER\x64\efi\* ISOFOLDER\efi\ /cheriy
+%_Nul3% copy /y ISOFOLDER\x64\bootmgr* ISOFOLDER\
+%_Nul3% copy /y ISOFOLDER\x86\boot\bootsect.exe ISOFOLDER\boot\
 set "BCDBIOS=ISOFOLDER\boot\bcd"
 set "BCDUEFI=ISOFOLDER\efi\microsoft\boot\bcd"
 if %custom%==0 (
-copy /y ISOFOLDER\x86\setup.exe ISOFOLDER\ >nul 2>&1
+%_Nul3% copy /y ISOFOLDER\x86\setup.exe ISOFOLDER\
 set "entry64=[boot]\x64\sources\boot.wim,%ramdiskoptions%"
 set "entry86=[boot]\x86\sources\boot.wim,%ramdiskoptions%"
 (echo [AutoRun.Amd64]
@@ -264,53 +299,47 @@ echo.)>ISOFOLDER\autorun.inf
 ) else (
 set "entry64=[boot]\sources\bootx64.wim,%ramdiskoptions%"
 set "entry86=[boot]\sources\bootx86.wim,%ramdiskoptions%"
-(echo [AutoRun.Amd64]
-echo icon=sources\setupx64.exe,0
-echo.
-echo [AutoRun]
-echo icon=sources\setupx86.exe,0
-echo.)>ISOFOLDER\autorun.inf
 )
-for /f "tokens=5-10 delims=: " %%G in ('bin\wimlib-imagex info ISOFOLDER\x64\sources\boot.wim 2 ^| find /i "Last Modification Time"') do (set mmm=%%G&set "isotime=%%H/%%L,%%I:%%J:%%K")
+for /f "tokens=5-10 delims=: " %%G in ('wimlib-imagex.exe info ISOFOLDER\x64\sources\boot.wim 2 ^| find /i "Last Modification Time"') do (set mmm=%%G&set "isotime=%%H/%%L,%%I:%%J:%%K")
 call :setdate %mmm%
-%bcde% /store %BCDBIOS% /set {bootmgr} nointegritychecks Yes >nul 2>&1
-%bcde% /store %BCDBIOS% /set {default} description "Windows Setup (64-bit) - BIOS" >nul 2>&1
-%bcde% /store %BCDBIOS% /set {default} device ramdisk=%entry64% >nul 2>&1
-%bcde% /store %BCDBIOS% /set {default} osdevice ramdisk=%entry64% >nul 2>&1
-%bcde% /store %BCDBIOS% /set {default} nointegritychecks Yes >nul 2>&1
-%bcde% /store %BCDBIOS% /set {default} nx OptIn >nul 2>&1
-%bcde% /store %BCDBIOS% /set {default} pae Default >nul 2>&1
-%bcde% /store %BCDBIOS% /set {default} ems No >nul 2>&1
-%bcde% /store %BCDBIOS% /deletevalue {default} bootmenupolicy >nul 2>&1
-for /f "tokens=2 delims={}" %%# in ('%bcde% /store %BCDBIOS% /copy {default} /d "Windows Setup (32-bit) - BIOS"') do set "guid={%%#}"
-%bcde% /store %BCDBIOS% /set %guid% device ramdisk=%entry86% >nul 2>&1
-%bcde% /store %BCDBIOS% /set %guid% osdevice ramdisk=%entry86% >nul 2>&1
-%bcde% /store %BCDBIOS% /timeout 30 >nul 2>&1
-attrib -s -h -a "%BCDBIOS%.LOG*" >nul 2>&1
-del /f /q "%BCDBIOS%.LOG*" >nul 2>&1
-%bcde% /store %BCDUEFI% /set {default} description "Windows Setup (64-bit) - UEFI" >nul 2>&1
-%bcde% /store %BCDUEFI% /set {default} device ramdisk=%entry64% >nul 2>&1
-%bcde% /store %BCDUEFI% /set {default} osdevice ramdisk=%entry64% >nul 2>&1
-%bcde% /store %BCDUEFI% /set {default} isolatedcontext Yes >nul 2>&1
-%bcde% /store %BCDUEFI% /set {default} nx OptIn >nul 2>&1
-%bcde% /store %BCDUEFI% /set {default} ems No >nul 2>&1
-attrib -s -h -a "%BCDUEFI%.LOG*" >nul 2>&1
-del /f /q "%BCDUEFI%.LOG*" >nul 2>&1
+%_Nul3% bcdedit /store %BCDBIOS% /set {bootmgr} nointegritychecks Yes
+%_Nul3% bcdedit /store %BCDBIOS% /set {default} description "Windows Setup (64-bit) - BIOS"
+%_Nul3% bcdedit /store %BCDBIOS% /set {default} device ramdisk=%entry64%
+%_Nul3% bcdedit /store %BCDBIOS% /set {default} osdevice ramdisk=%entry64%
+%_Nul3% bcdedit /store %BCDBIOS% /set {default} nointegritychecks Yes
+%_Nul3% bcdedit /store %BCDBIOS% /set {default} nx OptIn
+%_Nul3% bcdedit /store %BCDBIOS% /set {default} pae Default
+%_Nul3% bcdedit /store %BCDBIOS% /set {default} ems No
+%_Nul3% bcdedit /store %BCDBIOS% /deletevalue {default} bootmenupolicy
+for /f "tokens=2 delims={}" %%# in ('bcdedit /store %BCDBIOS% /copy {default} /d "Windows Setup (32-bit) - BIOS"') do set "guid={%%#}"
+%_Nul3% bcdedit /store %BCDBIOS% /set %guid% device ramdisk=%entry86%
+%_Nul3% bcdedit /store %BCDBIOS% /set %guid% osdevice ramdisk=%entry86%
+%_Nul3% bcdedit /store %BCDBIOS% /timeout 30
+%_Nul3% attrib -s -h -a "%BCDBIOS%.LOG*"
+%_Nul3% del /f /q "%BCDBIOS%.LOG*"
+%_Nul3% bcdedit /store %BCDUEFI% /set {default} description "Windows Setup (64-bit) - UEFI"
+%_Nul3% bcdedit /store %BCDUEFI% /set {default} device ramdisk=%entry64%
+%_Nul3% bcdedit /store %BCDUEFI% /set {default} osdevice ramdisk=%entry64%
+%_Nul3% bcdedit /store %BCDUEFI% /set {default} isolatedcontext Yes
+%_Nul3% bcdedit /store %BCDUEFI% /set {default} nx OptIn
+%_Nul3% bcdedit /store %BCDUEFI% /set {default} ems No
+%_Nul3% attrib -s -h -a "%BCDUEFI%.LOG*"
+%_Nul3% del /f /q "%BCDUEFI%.LOG*"
 if not exist ISOFOLDER\efi\boot\bootx64.efi (
-"!_wimlib!" extract ISOFOLDER\x64\sources\boot.wim 1 Windows\Boot\EFI\bootmgfw.efi --dest-dir=.\ISOFOLDER\efi\boot --no-acls --no-attributes >nul 2>&1
+wimlib-imagex.exe extract ISOFOLDER\x64\sources\boot.wim 1 Windows\Boot\EFI\bootmgfw.efi --dest-dir=.\ISOFOLDER\efi\boot --no-acls --no-attribute %_Nul3%
 rename ISOFOLDER\efi\boot\bootmgfw.efi bootx64.efi
 )
 if not exist ISOFOLDER\efi\microsoft\boot\memtest.efi (
-"!_wimlib!" extract ISOFOLDER\x64\sources\boot.wim 1 Windows\Boot\EFI\memtest.efi --dest-dir=.\ISOFOLDER\efi\microsoft\boot --no-acls --no-attributes >nul 2>&1
-del /f /q ISOFOLDER\boot\memtest.efi >nul 2>&1
-%bcde% /store %BCDUEFI% /enum all | findstr /i {memdiag} 1>nul || (
-  %bcde% /store %BCDUEFI% /create {memdiag} >nul 2>&1
-  %bcde% /store %BCDUEFI% /set {memdiag} description "Windows Memory Diagnostic" >nul 2>&1
-  %bcde% /store %BCDUEFI% /set {memdiag} device boot >nul 2>&1
-  %bcde% /store %BCDUEFI% /set {memdiag} path \efi\microsoft\boot\memtest.efi >nul 2>&1
-  %bcde% /store %BCDUEFI% /set {memdiag} locale en-US >nul 2>&1
-  %bcde% /store %BCDUEFI% /set {memdiag} inherit {globalsettings} >nul 2>&1
-  %bcde% /store %BCDUEFI% /toolsdisplayorder {memdiag} /addlast >nul 2>&1
+wimlib-imagex.exe extract ISOFOLDER\x64\sources\boot.wim 1 Windows\Boot\EFI\memtest.efi --dest-dir=.\ISOFOLDER\efi\microsoft\boot --no-acls --no-attributes %_Nul3%
+del /f /q ISOFOLDER\boot\memtest.efi %_Nul3%
+bcdedit /store %BCDUEFI% /enum all | findstr /i {memdiag} 1>nul || (
+  %_Nul3% bcdedit /store %BCDUEFI% /create {memdiag}
+  %_Nul3% bcdedit /store %BCDUEFI% /set {memdiag} description "Windows Memory Diagnostic"
+  %_Nul3% bcdedit /store %BCDUEFI% /set {memdiag} device boot
+  %_Nul3% bcdedit /store %BCDUEFI% /set {memdiag} path \efi\microsoft\boot\memtest.efi
+  %_Nul3% bcdedit /store %BCDUEFI% /set {memdiag} locale en-US
+  %_Nul3% bcdedit /store %BCDUEFI% /set {memdiag} inherit {globalsettings}
+  %_Nul3% bcdedit /store %BCDUEFI% /toolsdisplayorder {memdiag} /addlast
   )
 )
 if %custom%==0 goto :ISOCREATE
@@ -320,40 +349,40 @@ echo Preparing Custom AIO settings . . .
 echo %line%
 echo.
 mkdir ISOFOLDER\sources
-move /y ISOFOLDER\x64\sources\boot.wim ISOFOLDER\sources\bootx64.wim >nul 2>&1
-move /y ISOFOLDER\x86\sources\boot.wim ISOFOLDER\sources\bootx86.wim >nul 2>&1
-move /y ISOFOLDER\x86\sources\%WIMFILE% ISOFOLDER\sources\ >nul 2>&1
-move /y ISOFOLDER\x86\sources\lang.ini ISOFOLDER\sources\ >nul 2>&1
+%_Nul3% move /y ISOFOLDER\x64\sources\boot.wim ISOFOLDER\sources\bootx64.wim
+%_Nul3% move /y ISOFOLDER\x86\sources\boot.wim ISOFOLDER\sources\bootx86.wim
+%_Nul3% move /y ISOFOLDER\x86\sources\%WIMFILE% ISOFOLDER\sources\
+%_Nul3% move /y ISOFOLDER\x86\sources\lang.ini ISOFOLDER\sources\
 call :dSETUP x64
 call :dSETUP x86
 if not exist "ISOFOLDER\x86\efi\boot\bootia32.efi" (
-rmdir /s /q ISOFOLDER\x64 >nul 2>&1
-rmdir /s /q ISOFOLDER\x86 >nul 2>&1
+%_Nul3% rmdir /s /q ISOFOLDER\x64\
+%_Nul3% rmdir /s /q ISOFOLDER\x86\
 goto :ISOCREATE
 )
-copy /y ISOFOLDER\x86\efi\boot\bootia32.efi ISOFOLDER\efi\boot\ >nul 2>&1
-copy /y ISOFOLDER\x86\efi\microsoft\boot\memtest.efi ISOFOLDER\efi\microsoft\boot\memtestx86.efi >nul 2>&1
-rename ISOFOLDER\efi\microsoft\boot\memtest.efi memtestx64.efi
-%bcde% /store %BCDUEFI% /deletevalue {default} bootmenupolicy >nul 2>&1
-for /f "tokens=2 delims={}" %%# in ('%bcde% /store %BCDUEFI% /copy {default} /d "Windows Setup (32-bit) - UEFI"') do set "guid={%%#}"
-%bcde% /store %BCDUEFI% /set %guid% device ramdisk=%entry86% >nul 2>&1
-%bcde% /store %BCDUEFI% /set %guid% osdevice ramdisk=%entry86% >nul 2>&1
-%bcde% /store %BCDUEFI% /timeout 30 >nul 2>&1
-%bcde% /store %BCDUEFI% /set {memdiag} description "Windows Memory Diagnostic (64-bit)" >nul 2>&1
-%bcde% /store %BCDUEFI% /set {memdiag} path \efi\microsoft\boot\memtestx64.efi >nul 2>&1
-for /f "tokens=2 delims={}" %%# in ('%bcde% /store %BCDUEFI% /copy {memdiag} /d "Windows Memory Diagnostic (32-bit)"') do set "guid={%%#}"
-%bcde% /store %BCDUEFI% /set %guid% path \efi\microsoft\boot\memtestx86.efi >nul 2>&1
-%bcde% /store %BCDUEFI% /toolsdisplayorder %guid% /addlast >nul 2>&1
-attrib -s -h -a "%BCDUEFI%.LOG*" >nul 2>&1
-del /f /q "%BCDUEFI%.LOG*" >nul 2>&1
-bin\7z.exe x ISOFOLDER\efi\microsoft\boot\efisys.bin -o.\bin\temp\ >nul 2>&1
-copy /y ISOFOLDER\efi\boot\bootia32.efi bin\temp\EFI\Boot\BOOTIA32.EFI >nul 2>&1
-bin\bfi.exe -t=288 -l=EFISECTOR -f=bin\efisys.ima bin\temp >nul 2>&1
-move /y bin\efisys.ima ISOFOLDER\efi\microsoft\boot\efisys.bin >nul 2>&1
-del /f /q ISOFOLDER\efi\microsoft\boot\*noprompt.* >nul 2>&1
-rmdir /s /q .\bin\temp >nul 2>&1
-rmdir /s /q ISOFOLDER\x64 >nul 2>&1
-rmdir /s /q ISOFOLDER\x86 >nul 2>&1
+%_Nul3% copy /y ISOFOLDER\x86\efi\boot\bootia32.efi ISOFOLDER\efi\boot\
+%_Nul3% copy /y ISOFOLDER\x86\efi\microsoft\boot\memtest.efi ISOFOLDER\efi\microsoft\boot\memtestx86.efi
+%_Nul3% rename ISOFOLDER\efi\microsoft\boot\memtest.efi memtestx64.efi
+%_Nul3% bcdedit /store %BCDUEFI% /deletevalue {default} bootmenupolicy
+for /f "tokens=2 delims={}" %%# in ('bcdedit /store %BCDUEFI% /copy {default} /d "Windows Setup (32-bit) - UEFI"') do set "guid={%%#}"
+%_Nul3% bcdedit /store %BCDUEFI% /set %guid% device ramdisk=%entry86%
+%_Nul3% bcdedit /store %BCDUEFI% /set %guid% osdevice ramdisk=%entry86%
+%_Nul3% bcdedit /store %BCDUEFI% /timeout 30
+%_Nul3% bcdedit /store %BCDUEFI% /set {memdiag} description "Windows Memory Diagnostic (64-bit)"
+%_Nul3% bcdedit /store %BCDUEFI% /set {memdiag} path \efi\microsoft\boot\memtestx64.efi
+for /f "tokens=2 delims={}" %%# in ('bcdedit /store %BCDUEFI% /copy {memdiag} /d "Windows Memory Diagnostic (32-bit)"') do set "guid={%%#}"
+%_Nul3% bcdedit /store %BCDUEFI% /set %guid% path \efi\microsoft\boot\memtestx86.efi
+%_Nul3% bcdedit /store %BCDUEFI% /toolsdisplayorder %guid% /addlast
+%_Nul3% attrib -s -h -a "%BCDUEFI%.LOG*"
+%_Nul3% del /f /q "%BCDUEFI%.LOG*"
+%_Nul3% 7z.exe x ISOFOLDER\efi\microsoft\boot\efisys.bin -o.\bin\temp\
+%_Nul3% copy /y ISOFOLDER\efi\boot\bootia32.efi bin\temp\EFI\Boot\BOOTIA32.EFI
+%_Nul3% bfi.exe -t=288 -l=EFISECTOR -f=bin\efisys.ima bin\temp
+%_Nul3% move /y bin\efisys.ima ISOFOLDER\efi\microsoft\boot\efisys.bin
+%_Nul3% del /f /q ISOFOLDER\efi\microsoft\boot\*noprompt.*
+%_Nul3% rmdir /s /q bin\temp\
+%_Nul3% rmdir /s /q ISOFOLDER\x64\
+%_Nul3% rmdir /s /q ISOFOLDER\x86\
 
 :ISOCREATE
 echo.
@@ -361,9 +390,9 @@ echo %line%
 echo Creating ISO . . .
 echo %line%
 if exist "ISOFOLDER\efi\microsoft\boot\efisys.bin" (
-bin\cdimage.exe -bootdata:2#p0,e,b"ISOFOLDER\boot\etfsboot.com"#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -t%isotime% -g -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
+cdimage.exe -bootdata:2#p0,e,b"ISOFOLDER\boot\etfsboot.com"#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -t%isotime% -g -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
 ) else (
-bin\cdimage.exe -b"ISOFOLDER\boot\etfsboot.com" -o -m -u2 -udfver102 -t%isotime% -g -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
+cdimage.exe -b"ISOFOLDER\boot\etfsboot.com" -o -m -u2 -udfver102 -t%isotime% -g -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
 )
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 (
@@ -382,31 +411,33 @@ pause >nul
 goto :QUIT
 
 :dSETUP
-(echo [LaunchApps]
+(
+echo [LaunchApps]
 echo ^%%SystemRoot^%%\system32\wpeinit.exe
 echo ^%%SystemDrive^%%\sources\setup%1.exe
-echo.)>bin\winpeshl.ini
-for /f %%# in ('bin\wimlib-imagex.exe dir ISOFOLDER\sources\boot%1.wim 2 --path=\sources ^| find /i "setup.exe.mui"') do "!_wimlib!" update ISOFOLDER\sources\boot%1.wim 2 --command="rename '%%#' '%%~p#setup%1.exe.mui'" 1>nul 2>nul
-"!_wimlib!" update ISOFOLDER\sources\boot%1.wim 2 --command="rename 'sources\setup.exe' 'sources\setup%1.exe'" >nul 2>&1
-"!_wimlib!" update ISOFOLDER\sources\boot%1.wim 2 --command="add 'bin\winpeshl.ini' '\Windows\system32\winpeshl.ini'" >nul 2>&1
-"!_wimlib!" extract ISOFOLDER\sources\boot%1.wim 2 sources\setup%1.exe --dest-dir=.\ISOFOLDER\sources --no-acls --no-attributes >nul 2>&1
-del /f /q bin\winpeshl.ini >nul 2>&1
+echo.
+)>bin\winpeshl.ini
+for /f %%# in ('wimlib-imagex.exe.exe dir ISOFOLDER\sources\boot%1.wim 2 --path=\sources ^| find /i "setup.exe.mui"') do wimlib-imagex.exe update ISOFOLDER\sources\boot%1.wim 2 --command="rename '%%#' '%%~p#setup%1.exe.mui'" %_Nul3%
+%_Nul3% wimlib-imagex.exe update ISOFOLDER\sources\boot%1.wim 2 --command="rename 'sources\setup.exe' 'sources\setup%1.exe'"
+%_Nul3% wimlib-imagex.exe update ISOFOLDER\sources\boot%1.wim 2 --command="add 'bin\winpeshl.ini' '\Windows\system32\winpeshl.ini'"
+%_Nul3% wimlib-imagex.exe extract ISOFOLDER\sources\boot%1.wim 2 sources\setup%1.exe --dest-dir=.\ISOFOLDER\sources --no-acls --no-attributes
+%_Nul3% del /f /q bin\winpeshl.ini
 exit /b
 
 :dInfo
 if not exist "!ISOdir%1!\sources\boot.wim" (set "MESSAGE=ISO %1 is missing boot.wim"&goto :E_MSG)
-dir /b "!ISOdir%1!\sources\install.wim" 1>nul 2>nul && (set WIMFILE%1=install.wim)
-dir /b "!ISOdir%1!\sources\install.esd" 1>nul 2>nul && (set WIMFILE%1=install.esd)
+dir /b "!ISOdir%1!\sources\install.wim" %_Nul3% && (set WIMFILE%1=install.wim)
+dir /b "!ISOdir%1!\sources\install.esd" %_Nul3% && (set WIMFILE%1=install.esd)
 if /i !WIMFILE%1! equ 0 (set "MESSAGE=ISO %1 is missing install.wim/install.esd"&goto :E_MSG)
-bin\wimlib-imagex info "!ISOdir%1!\sources\!WIMFILE%1!">bin\infoall.txt 2>&1
+wimlib-imagex.exe info "!ISOdir%1!\sources\!WIMFILE%1!">bin\infoall.txt 2>&1
 find /i "CoreCountrySpecific" bin\infoall.txt 1>nul && (set ISOeditionc%1=1) || (set ISOeditionc%1=0)
-bin\wimlib-imagex info "!ISOdir%1!\sources\!WIMFILE%1!" 1 >bin\info.txt 2>&1
+wimlib-imagex.exe info "!ISOdir%1!\sources\!WIMFILE%1!" 1 >bin\info.txt 2>&1
 for /f "tokens=2 delims=: " %%# in ('findstr /i /b "Build" bin\info.txt') do set ISOver%1=%%#
 for /f "tokens=3 delims=: " %%# in ('findstr /i /b "Edition" bin\info.txt') do set ISOedition%1=%%#
 for /f "tokens=3 delims=: " %%# in ('findstr /i "Default" bin\info.txt') do set ISOlang%1=%%#
 for /f "tokens=2 delims=: " %%# in ('findstr /i "Architecture" bin\info.txt') do (if /i %%# equ x86 (set ISOarch%1=x86) else if /i %%# equ x86_64 (set ISOarch%1=x64))
 for /f "tokens=3 delims=: " %%# in ('findstr /i /b /c:"Image Count" bin\infoall.txt') do (if %%# geq 2 set ISOmulti%1=%%#)
-for /f "tokens=2 delims=: " %%# in ('bin\wimlib-imagex info "!ISOdir%1!\sources\boot.wim" 1 ^| findstr /i /b "Build"') do set BOOTver%1=%%#
+for /f "tokens=2 delims=: " %%# in ('wimlib-imagex.exe info "!ISOdir%1!\sources\boot.wim" 1 ^| findstr /i /b "Build"') do set BOOTver%1=%%#
 if /i !BOOTver%1! lss 10240 (set winx=0)
 if /i !ISOarch%1! equ 0 (set "MESSAGE=ISO %1 architecture is not supported."&goto :E_MSG)
 if exist "!ISOdir%1!\sources\ei.cfg" type "!ISOdir%1!\sources\ei.cfg" 2>nul | find /i "Volume" 1>nul && set ISOvol%1=1
@@ -432,53 +463,40 @@ if /i !ISOedition%1!==EnterpriseG set DVDLABEL%1=CEGA&set DVDISO%1=ENTERPRISEG_V
 if /i !ISOedition%1!==EnterpriseGN set DVDLABEL%1=CEGNA&set DVDISO%1=ENTERPRISEGN_VOL
 if /i !ISOedition%1!==EnterpriseS set DVDLABEL%1=CES&set DVDISO%1=ENTERPRISES_VOL
 if /i !ISOedition%1!==EnterpriseSN set DVDLABEL%1=CESNN&set DVDISO%1=ENTERPRISESN_VOL
-if /i !ISOedition%1!==ProfessionalEducation (IF !ISOvol%1!==1 (set DVDLABEL%1=CPREA&set DVDISO%1=PROEDUCATION_VOL) else (set DVDLABEL%1=CPREA&set DVDISO%1=PROEDUCATION_OEMRET))
-if /i !ISOedition%1!==ProfessionalEducationN (IF !ISOvol%1!==1 (set DVDLABEL%1=CPRENA&set DVDISO%1=PROEDUCATIONN_VOL) else (set DVDLABEL%1=CPRENA&set DVDISO%1=PROEDUCATIONN_OEMRET))
-if /i !ISOedition%1!==ProfessionalWorkstation (IF !ISOvol%1!==1 (set DVDLABEL%1=CPRWA&set DVDISO%1=PROWORKSTATION_VOL) else (set DVDLABEL%1=CPRWA&set DVDISO%1=PROWORKSTATION_OEMRET))
-if /i !ISOedition%1!==ProfessionalWorkstationN (IF !ISOvol%1!==1 (set DVDLABEL%1=CPRWNA&set DVDISO%1=PROWORKSTATIONN_VOL) else (set DVDLABEL%1=CPRWNA&set DVDISO%1=PROWORKSTATIONN_OEMRET))
+if /i !ISOedition%1!==ProfessionalEducation (if !ISOvol%1!==1 (set DVDLABEL%1=CPREA&set DVDISO%1=PROEDUCATION_VOL) else (set DVDLABEL%1=CPREA&set DVDISO%1=PROEDUCATION_OEMRET))
+if /i !ISOedition%1!==ProfessionalEducationN (if !ISOvol%1!==1 (set DVDLABEL%1=CPRENA&set DVDISO%1=PROEDUCATIONN_VOL) else (set DVDLABEL%1=CPRENA&set DVDISO%1=PROEDUCATIONN_OEMRET))
+if /i !ISOedition%1!==ProfessionalWorkstation (if !ISOvol%1!==1 (set DVDLABEL%1=CPRWA&set DVDISO%1=PROWORKSTATION_VOL) else (set DVDLABEL%1=CPRWA&set DVDISO%1=PROWORKSTATION_OEMRET))
+if /i !ISOedition%1!==ProfessionalWorkstationN (if !ISOvol%1!==1 (set DVDLABEL%1=CPRWNA&set DVDISO%1=PROWORKSTATIONN_VOL) else (set DVDLABEL%1=CPRWNA&set DVDISO%1=PROWORKSTATIONN_OEMRET))
 if /i !ISOedition%1!==ProfessionalSingleLanguage set DVDLABEL%1=CPRSLA&set DVDISO%1=PROSINGLELANGUAGE_OEM
 if /i !ISOedition%1!==ProfessionalCountrySpecific set DVDLABEL%1=CPRCHA&set DVDISO%1=PROCHINA_OEM
-IF !ISOmulti%1! GEQ 2 (
+IF !ISOmulti%1! geq 2 (
 set DVDLABEL%1=CCSA&set DVDISO%1=MULTI_OEMRET
 if !ISOeditionc%1!==1 set DVDLABEL%1=CCCHA&set DVDISO%1=MULTICHINA_OEMRET
 )
 if /i !ISOarch%1!==x86 (set ISOarch%1=X86) else (set ISOarch%1=X64)
 if %1==2 exit /b
 
-"!_wimlib!" extract "!ISOdir%1!\sources\%WIMFILE%" 1 \Windows\System32\ntoskrnl.exe --dest-dir=.\bin\temp --no-acls --no-attributes >nul 2>&1
-bin\7z.exe l .\bin\temp\ntoskrnl.exe >.\bin\temp\version.txt 2>&1
-for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" 2^>nul') do set version=%%i.%%j&set branch=%%k&set datetime=%%l
+wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 \Windows\System32\ntoskrnl.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+7z.exe l .\bin\temp\ntoskrnl.exe >.\bin\temp\version.txt 2>&1
+for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" 2^>nul') do (set version=%%i.%%j&set vermajor=%%i&set verminor=%%j&set branch=%%k&set datetime=%%l)
+set revision=%version%&set revmajor=%vermajor%&set revminor=%verminor%
+if /i !ISOarch%1!==x86 (set _ss=x86) else if /i !ISOarch%1!==x64 (set _ss=amd64)
 if !ISOver%1! geq 10240 (
-"!_wimlib!" extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\WinSxS\Manifests\amd64_microsoft-windows-coreos-revision* --dest-dir=.\bin\temp --no-acls --no-attributes >nul 2>&1 || "!_wimlib!" extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\WinSxS\Manifests\x86_microsoft-windows-coreos-revision* --dest-dir=.\bin\temp --no-acls --no-attributes >nul 2>&1
-for /f "tokens=6,7 delims=_." %%i in ('dir /b /od .\bin\temp\*.manifest') do set revision=%%i.%%j
-if not "!version!"=="!revision!" (
+wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision* --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+for /f "tokens=6,7 delims=_." %%i in ('dir /b /od .\bin\temp\*.manifest') do set revision=%%i.%%j&set revmajor=%%i&set revminor=%%j
+if !verminor! lss !revminor! (
   set version=!revision!
-  for /f "tokens=5,6,7,8,9,10 delims=: " %%G in ('bin\wimlib-imagex info "!ISOdir%1!\sources\%WIMFILE%" 1 ^| find /i "Last Modification Time"') do (set mmm=%%G&set yyy=%%L&set ddd=%%H-%%I%%J)
+  for /f "tokens=5-10 delims=: " %%G in ('wimlib-imagex.exe info "!ISOdir%1!\sources\%WIMFILE%" 1 ^| find /i "Last Modification Time"') do (set mmm=%%G&set yyy=%%L&set ddd=%%H-%%I%%J)
   call :setmmm !mmm!
   )
 )
 set _label2=
 if /i "%branch%"=="WinBuild" (
-"!_wimlib!" extract "!ISOdir%1!\sources\%WIMFILE%" 1 \Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes >nul
-for /f "tokens=3 delims==:" %%# in ('"bin\offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" 2^>nul') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l_CLIENT&set branch=%%l)
+wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes >nul
+for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" 2^>nul') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l_CLIENT&set branch=%%l)
 )
 if defined _label2 (set _label=%_label2%) else (set _label=%version%.%datetime%.%branch%_CLIENT)
-if %version%==9600.17031 (set _label=9600.17031.140317-1640.winblue_ir3_CLIENT)
-if %version%==9600.17238 (set _label=9600.17238.140923-1144.winblue_ir4_CLIENT)
-if %version%==9600.17415 (set _label=9600.17415.141120-0031.winblue_ir5_CLIENT)
-if %version%==10240.16487 (set _label=10240.16393.150909-1450.th1_refresh_CLIENT)
-if %version%==10586.104 (set _label=10586.0.160212-2000.th2_refresh_CLIENT)
-if %version%==10586.164 (set _label=10586.0.160426-1409.th2_refresh_CLIENT)
-if %version%==14393.447 (set _label=14393.0.161119-1705.rs1_refresh_CLIENT)
-if %version%==15063.413 (set _label=15063.0.170607-1447.rs2_release_svc_refresh_CLIENT)
-if %version%==15063.483 (set _label=15063.0.170710-1358.rs2_release_svc_refresh_CLIENT)
-if %version%==16299.64 (set _label=16299.15.171109-1522.rs3_release_svc_refresh_CLIENT)
-if %version%==16299.125 (set _label=16299.125.171213-1220.rs3_release_svc_refresh_CLIENT)
-if %version%==17134.112 (set _label=17134.112.180619-1212.rs4_release_svc_refresh_CLIENT)
-if %version%==17763.107 (set _label=17763.107.181029-1455.rs5_release_svc_refresh_CLIENT)
-if %version%==17763.253 (set _label=17763.253.190108-0006.rs5_release_svc_refresh_CLIENT)
-if %version%==17763.379 (set _label=17763.379.190312-0539.rs5_release_svc_refresh_CLIENT)
-rmdir /s /q .\bin\temp >nul 2>&1
+rmdir /s /q bin\temp\
 
 set langid=!ISOlang%1!
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
@@ -517,11 +535,28 @@ if /i %1==Nov set "datetime=%yyy:~2%11%ddd%"
 if /i %1==Dec set "datetime=%yyy:~2%12%ddd%"
 exit /b
 
+:E_Admin
+echo %_err%
+echo This script require administrator privileges.
+echo To do so, right click on this script and select 'Run as administrator'
+echo.
+echo Press any key to exit.
+pause >nul
+exit /b
+
+:E_Bin
+echo %_err%
+echo Required file %_bin% is missing.
+echo.
+echo Press any key to exit.
+pause >nul
+exit /b
+
 :E_MSG
 echo.
 echo %line%
-echo Error:
-echo !MESSAGE!
+echo %_err%
+echo %MESSAGE%
 echo.
 echo.
 echo Press any key to exit.
@@ -533,7 +568,10 @@ if exist ISOFOLDER\ rmdir /s /q ISOFOLDER\
 if exist ISOx64\ rmdir /s /q ISOx64\
 if exist ISOx86\ rmdir /s /q ISOx86\
 popd
-exit
+echo Press 0 to exit.
+choice /c 0 /n
+if errorlevel 1 (exit) else (rem.)
+
 ----- Begin wsf script --->
 <package>
    <job id="ELAV">
@@ -552,7 +590,7 @@ exit
                End With
                .Terminate
            End With
-          CreateObject("Shell.Application").ShellExecute "cmd", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & " " & strLine & chr(34), "", "runas", 1
+          CreateObject("Shell.Application").ShellExecute "cmd.exe", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & strLine & chr(34), "", "runas", 1
        </script>
    </job>
 </package>

@@ -1,6 +1,6 @@
 # Windows 10 Multilingual Distribution Creator
 
-* A mostly automated script to add language packs to Windows 10 distribution, resulting a multilingual ISO, including:
+* A mostly automated script to add language packs to Windows 10 distribution, resulting a multilingual ISO, including:  
 - Choice of language at setup
 - Languages packs preinstalled so that you can switch between them in the system
 - Multilingual Windows Recovery Environment with a choice of language at boot (if standard WinPE localization is on)
@@ -28,57 +28,52 @@ however, if it's created using option:
 
 * Windows 10 OnDemand Packs if available (Optional, but recommended).
 
-* If you want the Standard WinPE localization, Windows 10 ADK (Deployment Tools & Preinstallation Environment).
+* If you want the Standard WinPE localization: Windows 10 ADK (Deployment Tools & Preinstallation Environment).
 
-- Build 17763 - Windows 10 version 1809:
+- Build 18362 - Windows 10 version 1903 (and 1909):  
+http://download.microsoft.com/download/B/E/6/BE63E3A5-5D1C-43E7-9875-DFA2B301EC70/adk/adksetup.exe  
+http://download.microsoft.com/download/E/F/A/EFA17CF0-7140-4E92-AC0A-D89366EBD79E/adkwinpeaddons/adkwinpesetup.exe
 
-http://download.microsoft.com/download/0/1/C/01CC78AA-B53B-4884-B7EA-74F2878AA79F/adk/adksetup.exe
+full ISO  
+http://software-download.microsoft.com/download/pr/18362.1.190318-1202.19h1_release_amd64fre_ADK.iso  
+http://software-download.microsoft.com/download/pr/18362.1.190318-1202.19h1_release_amd64fre_adkwinpeaddons.iso
 
+- Build 17763 - Windows 10 version 1809:  
+http://download.microsoft.com/download/0/1/C/01CC78AA-B53B-4884-B7EA-74F2878AA79F/adk/adksetup.exe  
 http://download.microsoft.com/download/D/7/E/D7E22261-D0B3-4ED6-8151-5E002C7F823D/adkwinpeaddons/adkwinpesetup.exe
 
-full ISO
-
-http://software-download.microsoft.com/download/pr/17763.1.180914-1434.rs5_release_amd64fre_ADK.iso
-
+full ISO  
+http://software-download.microsoft.com/download/pr/17763.1.180914-1434.rs5_release_amd64fre_ADK.iso  
 http://software-download.microsoft.com/download/pr/17763.1.180914-1434.rs5_release_amd64fre_ADKwinpeaddons.iso
 
-- Build 17134 - Windows 10 version 1803:
-
+- Build 17134 - Windows 10 version 1803:  
 http://download.microsoft.com/download/6/8/9/689E62E5-C50F-407B-9C3C-B7F00F8C93C0/adk/adksetup.exe
 
-full ISO
-
+full ISO  
 https://software-download.microsoft.com/download/pr/17134.1.180410-1804.rs4_release_amd64fre_ADK.iso
 
-- Build 16299 - Windows 10 version 1709:
-
+- Build 16299 - Windows 10 version 1709:  
 http://download.microsoft.com/download/3/1/E/31EC1AAF-3501-4BB4-B61C-8BD8A07B4E8A/adk/adksetup.exe
 
-full ISO
-
+full ISO  
 http://download.microsoft.com/download/3/1/E/31EC1AAF-3501-4BB4-B61C-8BD8A07B4E8A/16299.15.170928-1534.rs3_release_amd64fre_ADK.iso
 
-- Build 15063 - Windows 10 version 1703:
-
-
+- Build 15063 - Windows 10 version 1703:  
 http://download.microsoft.com/download/5/D/9/5D915042-FCAA-4859-A1C3-29E198690493/adk/adksetup.exe
 
-full ISO
-
+full ISO  
 http://download.microsoft.com/download/5/D/9/5D915042-FCAA-4859-A1C3-29E198690493/15063.0.170317-1834.rs2_release_amd64fre_ADK.iso
 
-- Build 14393 - Windows 10 version 1607:
-
+- Build 14393 - Windows 10 version 1607:  
 http://download.microsoft.com/download/9/A/E/9AE69DD5-BA93-44E0-864E-180F5E700AB4/adk/adksetup.exe
 
-- Build 10586 - Windows 10 version 1511:
-
+- Build 10586 - Windows 10 version 1511:  
 http://download.microsoft.com/download/3/8/B/38BBCA6A-ADC9-4245-BCD8-DAA136F63C8B/adk/adksetup.exe
 
-- Build 10240 - Windows 10 version 1507:
-
+- Build 10240 - Windows 10 version 1507:  
 http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe
 
+___
 ## How To:
 
 * Step 1

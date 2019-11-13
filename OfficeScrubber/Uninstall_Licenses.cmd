@@ -2,7 +2,7 @@
 set "SysPath=%Windir%\System32"
 if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
 set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-fsutil dirty query %systemdrive% >nul 2>&1 || (
+reg query HKU\S-1-5-19 >nul 2>&1 || (
 set "msg=ERROR: right click on the script and 'Run as administrator'"
 goto :end
 )

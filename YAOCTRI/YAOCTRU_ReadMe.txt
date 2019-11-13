@@ -22,14 +22,21 @@ to get option to choose between the two mode always, edit the script and change 
 
 * Finally, choose the output type: 
 
-1. Aria2 script  
-require aria2c.exe from https://aria2.github.io/
+1. Aria2 script (aria2c.exe)  
+https://aria2.github.io/
 
-2. Wget script  
-require wget.exe from https://eternallybored.org/misc/wget/
+2. Wget script (wget.exe)  
+https://eternallybored.org/misc/wget/
 
-3. Text file  
+3. cURL script (curl.exe)  
+https://skanthak.homepage.t-online.de/curl.html
+https://curl.haxx.se/windows/
+
+Windows 10 version 1803 or later already contain curl.exe by default
+
+4. Text file  
 plain text file with links, to be used with any Download Manager program, or though browser
+additionally, an "arrange" batch file will be created to help organizing files in proper hierarchy
 
 ## Output Files
 
@@ -39,20 +46,21 @@ examples:
 16.0.11231.20174_x86x64_en-US_Monthly_plain.txt  
 16.0.11414.20014_x86_ar-SA_Proofing_Insiders_aria2.bat  
 16.0.11421.20006_x64_fr-FR_DogfoodDevMain_wget.bat
+16.0.11807.20000_x86_en-US_Insiders_curl.bat
 
-* aria2c.exe or wget.exe must be placed next to the download scripts,  
+* aria2c.exe, wget.exe or curl.exe must be placed next to the download scripts,  
 or in the system path directories (C:\Windows or C:\Windows\System32)
 
-* Aria2 and Wget scripts will properly download and arrange the files under "C2R_xxx" folder in the same directory they are executed in  
+* Aria2, Wget and cURL scripts will properly download and arrange the files under "C2R_xxx" folder in the same directory they are executed in  
 where xxx represent the channel name, example: C2R_Insiders
 
-* Aria2 and Wget scripts allow to limit the download speed (bandwidth)  
-to do so, edit the scripts prior downloading and change set "speedLimit=0"
+* Aria2, Wget and cURL scripts allow to limit the download speed (bandwidth)  
+to do so, edit the scripts prior downloading and change speedLimit
 
 * Aria2 script allow to change the parallel (concurrent) downloads  
 to do so, edit the script prior downloading and change set "parallel=1"
 
-* Downloading from plain text links will require to manually move and arrange the files in this similar directory hierarchy:
+* Downloading from plain text links will require to move and arrange the files in this similar directory hierarchy:
 
 C2R_Insiders
 |
