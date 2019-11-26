@@ -90,7 +90,7 @@ set _PSarg=%_PSarg:'=''%
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Const% powershell -noprofile -exec bypass -c "start cmd.exe -ArgumentList '/c \"!_PSarg!\"' -verb runas" && (
+  %_Const% powershell -noprofile -exec bypass -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin

@@ -67,9 +67,6 @@ set _reg=%windir%\system32\reg.exe
 %_reg% query "HKU\S-1-5-19" 1>nul 2>nul || goto :E_Admin
 
 :detect
-set /a rnd=%random%
-set "mountdir=%mountdir%\%rnd%"
-set "winremount=%winremount%\%rnd%"
 if exist "%cab_dir%" (
 echo.
 echo ============================================================

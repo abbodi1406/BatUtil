@@ -6,10 +6,10 @@
 
 * Support installing multiple languages separately or together
 
-* Support configuration options like the ones available with ODT, including:
-- Source Path
-- Excluding Apps
-- Update Channel
+* Support configuration options like the ones available with ODT, including:  
+- Source Path  
+- Excluding Apps  
+- Update Channel  
 - Miscellaneous Options (Display Level, Updates Enabled, Eula, Pin Icons, App Shutdown, Auto Activate)
 
 * Includes a proper workaround to install Office 2019 on Windows 7 and 8.1, with working updates
@@ -22,9 +22,14 @@ install volume products for Office 2019 only, in addition to the special SKUs O3
 - YAOCTRIR - Retail  
 install retail products for Office 365 / 2016 / 2019 Suites, in addition to Office 2019 Single Apps
 
-* Each flavor consist of two command scripts:  
-- Configurator.cmd : create C2R_Config ini files, with the ability to start the installation at the end  
-- Installer.cmd    : read C2R_Config ini files and execute the installation
+* Each flavor consist of two command scripts:
+
+- Configurator.cmd  
+the main script which is used to select products and installation options  
+it also create configuration ini files, with the ability to start the installation at the end  
+
+- Installer.cmd  
+the secondary script which is only used to execute the installation, depending on the already created the configuration ini file
 
 ## How To:
 
@@ -50,8 +55,8 @@ if Configurator.cmd is placed next to "Office" folder, the path will be auto det
 
 - If multiple languages are detected in the specified version, you will be prompted to choose one, or all
 
-- If you chose all languages, you will be prompted to choose primary language  
-(determines the setup and Office Shell UI culture, including shortcuts, right-click context menus, and tooltips)
+- If you chose all languages, you will be prompted to choose the primary language  
+(which determines the setup and Office Shell UI culture, including shortcuts, right-click context menus, and tooltips)
 
 - Select the installation type: complete product suites, or single apps separately
 
@@ -88,7 +93,7 @@ therefore, the underlying Product IDs and entries in "Program and Features" will
 
 * For YAOCTRI - Volume flavor, if you choose "Office 365 ProPlus" along with Project 2019 and/or Visio 2019,
 
-Mondo licenses used for volume conversion will take precedence over Project/Visio licenses (that is Office limitation not the script)
+Mondo licenses used for volume conversion will take precedence over Project/Visio licenses (this is a limitation in Office itself, not the script)
 
 a better choice would be to select Mondo directly, which include Project/Visio
 
@@ -99,30 +104,25 @@ a better choice would be to select Mondo directly, which include Project/Visio
 * Auto Activate option will work in YAOCTRI - Volume flavor only in these scenarios:
 
 - on Windows 10 or 8.1:  
-system is KMS activated with external online KMS server, or installed SppExtComObjPatcher (or similar KMS service solutions)
+system is KMS activated with external online KMS server, or SppExtComObjHook is installed (or similar KMS service solutions)
 
 - on Windows 7:  
-SppExtComObjPatcher is installed, or external online KMS server is added manually to OSPP registry  
-`HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform`
-
-* C2R_Config ini files are system-specific (architecture and Windows version level):
-
-- you cannot create config file on x86 system and use it on x64 system, or vice versa
-
-- you cannot create config file on Windows 10 and use it on Windows 7/8.1, or vice versa
+SppExtComObjHook is installed, or external online KMS server is added manually to OSPP registry  
+'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform'
 
 * The script will not check or detect already installed Office products (C2R or MSI) before installation
 
 while it is possible to install Office C2R on the top of already installed C2R, it is advisable to start clean
 
-* If you want to update Office manually, you may disable Updates option
+* If you want to update Office manually, set Updates option to False,  
+then, you can execute this in command prompt as administrator to update Office:
 
-and after installation, you can execute this in command prompt as administrator to update Office:  
-`"%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeC2RClient.exe" /update user updatepromptuser=True displaylevel=True`
+'"%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeC2RClient.exe" /update user updatepromptuser=True displaylevel=True'
 
 ## Special Thanks
 
 @ratzlefatz     / OfficeRTool  
 @Krakatoa       / WOTOK  
 @presto1234     / code improvements suggestion  
-@Windows_Addict / features suggestion and testing
+@Windows_Addict / features suggestion and testing  
+@Enthousiast    / reporting and testing

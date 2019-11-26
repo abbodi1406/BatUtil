@@ -29,6 +29,7 @@ if exist "*%%#_*.esd" dir /b /a:-d "*%%#_*.esd">>uups_esd.txt 2>nul
 )
 for /f "tokens=3 delims=: " %%i in ('find /v /n /c "" uups_esd.txt') do set uups_esd_num=%%i
 if %uups_esd_num% equ 0 (
+del /f /q uups_esd.txt >nul 2>&1
 echo.
 echo ============================================================
 echo ERROR: UUP Edition file is not detected
@@ -42,6 +43,7 @@ for /L %%i in (1,1,%uups_esd_num%) do call :uups_esd %%i
 if exist "*.cab" for /f "delims=" %%i in ('dir /b /a:-d "*.cab"') do call :uups_ref "%%i"
 if exist "*.esd" for /f "delims=" %%i in ('dir /b /a:-d "*.esd"') do call :uups_ref "%%i"
 for /L %%i in (1,1,%uups_esd_num%) do call :uups_xml "!uups_esd_%%i!"
+del /f /q uups_esd.txt >nul 2>&1
 echo.
 echo ============================================================
 echo Finished
@@ -98,16 +100,25 @@ echo         ^<InstallFeature Id="ServicingStackUpdate" Group="Microsoft"/^>
 echo         ^<InstallFeature Id="CumulativeUpdate" Group="Microsoft"/^>
 echo     ^</Plan^>
 echo     ^<Actions^>)>>"%ActionList%"
+for /f %%a in ('dir /b /os Windows10.0-KB*.cab') do call :SSU %%a
 for /f %%a in ('dir /b /os Windows10.0-KB*.cab') do call :Package %%a
 (echo     ^</Actions^>
 echo ^</ActionList^>)>>"%ActionList%"
+exit /b
+
+:SSU
+set "pack=%~1"
+expand.exe -f:*_microsoft-windows-servicingstack_*.manifest %pack% .\ >nul 2>&1
+if exist "*servicingstack_*.manifest" (
+(echo         ^<InstallPackage Keyform^="" InstalledSize^="0" StagedSize^="0" FilePath^="%pack%" Reason^="ServicingStackUpdate" FeatureId="ServicingStackUpdate" Partition^="MainOS" BinaryPartition^="false"/^>)>>"%ActionList%"
+)
+del /f /q *.manifest >nul 2>&1
 exit /b
 
 :Package
 set "pack=%~1"
 expand.exe -f:*_microsoft-windows-servicingstack_*.manifest %pack% .\ >nul 2>&1
 if exist "*servicingstack_*.manifest" (
-(echo         ^<InstallPackage Keyform^="" InstalledSize^="0" StagedSize^="0" FilePath^="%pack%" Reason^="ServicingStackUpdate" FeatureId="ServicingStackUpdate" Partition^="MainOS" BinaryPartition^="false"/^>)>>"%ActionList%"
 del /f /q *.manifest >nul 2>&1
 exit /b
 )
@@ -125,7 +136,6 @@ findstr /i /m "Package_for_RollupFix" update.mum 1>nul 2>nul && (
 (echo         ^<InstallPackage Keyform^="" InstalledSize^="0" StagedSize^="0" FilePath^="%pack%" Reason^="CumulativeUpdate" FeatureId="CumulativeUpdate" Partition^="MainOS" BinaryPartition^="false"/^>)>>"%ActionList%"
 )
 del /f /q *.mum >nul 2>&1
-del /f /q *.manifest >nul 2>&1
 exit /b
 
 :QUIT

@@ -45,9 +45,13 @@ goto :eof
 set "_Const=1>nul 2>nul"
 
 set ENCRYPTEDESD=
-set "_args=%1"
+set _elev=
+set "_args="
+set "_args=%~1"
 if not defined _args goto :NoProgArgs
 if "%~1"=="" set "_args="&goto :NoProgArgs
+if "%~1"=="-elevated" set _elev=1&set "_args="&goto :NoProgArgs
+if "%~2"=="-elevated" set _elev=1
 if /i "%~x1"==".esd" set "ENCRYPTEDESD=%~1"&set "ENCRYPTEDESDN=%~nx1"
 
 :NoProgArgs
@@ -63,18 +67,21 @@ if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
   )
 )
 
-%_Const% reg query HKU\S-1-5-19 && goto :Passed
-
-set "_PSarg="""%~f0""" "
-if defined _args (
-set "_PSarg="""%~f0""" %_args:"="""%"
+%_Const% reg query HKU\S-1-5-19 && (
+  goto :Passed
+  ) || (
+  if defined _elev goto :E_Admin
 )
 
-(%_Const% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %1) && (
+set _PSarg="""%~f0""" -elevated
+if defined _args set _PSarg="""%~f0""" %_args:"="""% -elevated
+set _PSarg=%_PSarg:'=''%
+
+(%_Const% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %1 -elevated) && (
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Const% powershell -noprofile -exec bypass -c "start cmd -ArgumentList '/c \"!_PSarg!\"' -verb runas" && (
+  %_Const% powershell -noprofile -exec bypass -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin

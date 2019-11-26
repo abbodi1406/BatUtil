@@ -1,26 +1,28 @@
+@setlocal DisableDelayedExpansion
 @echo off
-set "SysPath=%Windir%\System32"
-if exist "%Windir%\Sysnative\reg.exe" (set "SysPath=%Windir%\Sysnative")
-set "Path=%SysPath%;%Windir%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set "SysPath=%SystemRoot%\System32"
+if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
+set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set "_err===== ERROR ===="
 set "xOS=x64"
-set "_ComSpec=%Windir%\System32\cmd.exe"
+set "_ComSpec=%SystemRoot%\System32\cmd.exe"
 set "_Common=%CommonProgramFiles%"
 set "_Program=%ProgramFiles%"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (
-if not defined PROCESSOR_ARCHITEW6432 set "xOS=x86"
-if defined PROCESSOR_ARCHITEW6432 (
-  set "_ComSpec=%Windir%\Sysnative\cmd.exe"
+if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
+  set "_ComSpec=%SystemRoot%\Sysnative\cmd.exe"
   set "_Common=%CommonProgramW6432%"
   set "_Program=%ProgramW6432%"
+  ) else (
+  set "xOS=x86"
   )
 )
 set "_target=%_Common%\Microsoft Shared\ClickToRun"
 set "_file=%_target%\OfficeClickToRun.exe"
-set "_tempdir=%temp%"
-set "_workdir=%~dp0"
-if "%_workdir:~-1%"=="\" set "_workdir=%_workdir:~0,-1%"
-setlocal EnableDelayedExpansion
+set "_temp=%temp%"
+set "_work=%~dp0"
+set "_work=%_work:~0,-1%"
 reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
+setlocal EnableDelayedExpansion
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 if %winbuild% lss 7601 goto :E_Win
 title Office Click-to-Run Installer - Volume
@@ -33,18 +35,20 @@ set _actv=False
 set _tele=True
 set _unattend=False
 set "line=============================================================="
-if exist "!_workdir!\C2R*.ini" for /f %%# in ('dir /b /s "!_workdir!\C2R*.ini"') do (set "C2Rconfig=%%#"&goto :check)
+if exist "!_work!\C2R_*.ini" for /f "tokens=* delims=" %%# in ('dir /b "!_work!\C2R_*.ini"') do set "C2Rconfig=!_work!\%%#"
+if defined C2Rconfig goto :check
 
 :prompt
 cls
-set "C2Rconfig="
+set C2Rconfig=
 echo %line%
 echo Enter C2R_Config ini file path
 echo %line%
 echo.
-set /p "C2Rconfig="
-if "%C2Rconfig%"=="" goto :eof
-goto :check
+set /p C2Rconfig=
+if not defined C2Rconfig goto :eof
+set "C2Rconfig=%C2Rconfig:"=%"
+if not exist "!C2Rconfig!" goto :eof
 
 :check
 findstr /i \[configuration\] "!C2Rconfig!" 1>nul 2>nul || goto :prompt
@@ -94,36 +98,30 @@ CTRcul
 CTRffn
 ) do if not defined %%# (
 echo.
-echo ==== ERROR ====
+echo %_err%
 echo Could not detect %%# in the specified config file
-echo.
-echo Press any key to exit...
-pause >nul
-goto :eof
+goto :TheEnd
 )
 if not defined _suite if not defined _skus (
 echo.
-echo ==== ERROR ====
+echo %_err%
 echo Could not detect products in the specified config file
-echo.
-echo Press any key to exit...
-pause >nul
-goto :eof
+goto :TheEnd
 )
 if defined CTRsource if exist "!CTRsource!\Office\Data\*.cab" (
 goto :check3
 ) else (
 set "CTRsource="
 )
-if exist "!_workdir!\Office\Data\*.cab" (
-for /f %%# in ('dir /b /ad "!_workdir!\Office\Data\" 2^>nul') do if exist "!_workdir!\Office\Data\%%#\stream*.dat" (
-  set "CTRsource=%_workdir%"
+if exist "!_work!\Office\Data\*.cab" (
+for /f %%# in ('dir /b /ad "!_work!\Office\Data\" 2^>nul') do if exist "!_work!\Office\Data\%%#\stream*.dat" (
+  set "CTRsource=%~dp0"
   )
 )
 if defined CTRsource goto :check3
-if exist "!_workdir!\Data\*.cab" (
-for /f %%# in ('dir /b /ad "!_workdir!\Data\" 2^>nul') do if exist "!_workdir!\Data\%%#\stream*.dat" (
-  call :get_path "!_workdir!\..\"
+if exist "!_work!\Data\*.cab" (
+for /f %%# in ('dir /b /ad "!_work!\Data\" 2^>nul') do if exist "!_work!\Data\%%#\stream*.dat" (
+  for /D %%G in ("!_work!\..\") do set "CTRsource=%%~dpG"
   )
 )
 if defined CTRsource goto :check3
@@ -132,20 +130,11 @@ if exist "%%#:\Office\Data\*.cab" set "CTRsource=%%#:\"
 )
 if defined CTRsource goto :check3
 
-echo ==== ERROR ====
+echo %_err%
 echo Could not detect C2R source in the specified config file
-echo.
-echo Press any key to exit...
-pause >nul
-goto :eof
-
-:get_path
-endlocal
-set "CTRsource=%~dp1"
-exit /b
+goto :TheEnd
 
 :check3
-setlocal EnableDelayedExpansion
 if "!CTRsource:~-1!"=="\" set "CTRsource=!CTRsource:~0,-1!"
 copy /y nul "!CTRsource!\Office\#.rw" 1>nul 2>nul && (
 set CTRtype=Local
@@ -155,13 +144,14 @@ set CTRtype=DVD
 )
 if "!CTRsource:~0,2!"=="\\" set CTRtype=UNC
 
+if /i %xOS%==x86 (set CTRarc=x86) else (if /i %CTRarc%==x86 set wow64=1)
 if /i %CTRarc%==x86 (set CTRbit=32) else (set CTRbit=64)
 set CTRvcab=v%CTRbit%_%CTRver%.cab
 set CTRicab=i%CTRbit%0.cab
 set CTRscab=s%CTRbit%0.cab
 set CTRicabr=i%CTRbit%%CTRcul%.cab
 set CTRscabr=s%CTRbit%%CTRcul%.cab
-if /i %CTRarc%==x64 if %wow64%==1 (
+if /i %xOS%==x64 (
 set CTRicab=i640.cab
 set CTRicabr=i64%CTRcul%.cab
 )
@@ -177,42 +167,56 @@ stream.%CTRarc%.%CTRstp%.dat
 if not exist "!CTRsource!\Office\Data\%CTRver%\%%#" set "ERRFILE=%%#"&goto :E_FILE
 )
 
-if defined _suite (
+set _O365=0
+set _OneDrive=ON
+if defined _excluded (
+echo %_excluded%| findstr /i "OneDrive" 1>nul && set _OneDrive=OFF
+)
+
+if not defined _suite goto :sku
+
+if %winbuild% lss 10240 (
+if /i "%_suite%"=="O365ProPlusRetail" set _suit2=MondoVolume
+if /i "%_suite%"=="ProPlus2019Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2019Volume)
+if /i "%_suite%"=="Standard2019Volume" (set _suite=StandardRetail&set _suit2=Standard2019Volume)
+)
+if %winbuild% geq 10240 (
+if /i "%_suite%"=="O365ProPlusRetail" set _suit2=MondoVolume
+)
+
 set "_products=%_suite%.16_%CTRlng%_x-none"
 if /i "%_suite%"=="ProPlus2019Volume" set _pkey0=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP
 if /i "%_suite%"=="Standard2019Volume" set _pkey0=6NWWJ-YQWMR-QKGCB-6TMB3-9D9HK
 if /i "%_suite%"=="MondoVolume" set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
-)
+
 if defined _suit2 (
 set "_licenses=%_suit2%"
 if /i "%_suit2%"=="ProPlus2019Volume" set _pkey0=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP
 if /i "%_suit2%"=="Standard2019Volume" set _pkey0=6NWWJ-YQWMR-QKGCB-6TMB3-9D9HK
-if /i "%_suit2%"=="MondoVolume" set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2,DRNV7-VGMM2-B3G9T-4BF84-VMFTK
-)
-set _OneDrive=ON
-if defined _excluded (
-echo %_excluded%| findstr /i "OneDrive" 1>nul && set _OneDrive=OFF
+if /i "%_suit2%"=="MondoVolume" set "_pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2,DRNV7-VGMM2-B3G9T-4BF84-VMFTK"&set _O365=1
 )
 if defined _pkey0 set "_keys=%_pkey0%"
 
 if not defined _skus goto :MenuFinal
 
+:sku
+set _base=0
 set /a kk=0
 for %%J in (%_skus%) do (
 set _tmp=%%J
-if /i "!_tmp:~-6!"=="Volume" (
+if /i "!_tmp:~-6!"=="Volume" if %winbuild% geq 10240 (
   if defined _show (set "_show=!_show!,%%J") else (set "_show=%%J")
+  if defined _products (set "_products=!_products!^|%%J.16_%CTRlng%_x-none") else (set "_products=%%J.16_%CTRlng%_x-none")
+  if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! %%J.excludedapps.16=onedrive") else (set "_exclude1d=%%J.excludedapps.16=onedrive"))
   )
 if /i "!_tmp:~-6!"=="Volume" if %winbuild% lss 10240 (
+  if defined _show (set "_show=!_show!,%%J") else (set "_show=%%J")
   if defined _licenses (set "_licenses=!_licenses!,%%J") else (set "_licenses=%%J")
   )
-if /i "!_tmp:~-6!"=="Volume" if %winbuild% geq 10240 (
+if /i "!_tmp:~-6!"=="Retail" if %winbuild% lss 10240 (
   if defined _products (set "_products=!_products!^|%%J.16_%CTRlng%_x-none") else (set "_products=%%J.16_%CTRlng%_x-none")
   if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! %%J.excludedapps.16=onedrive") else (set "_exclude1d=%%J.excludedapps.16=onedrive"))
-  )
-if /i "!_tmp:~-6!"=="Retail" (
-  if defined _products (set "_products=!_products!^|%%J.16_%CTRlng%_x-none") else (set "_products=%%J.16_%CTRlng%_x-none")
-  if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! %%J.excludedapps.16=onedrive") else (set "_exclude1d=%%J.excludedapps.16=onedrive"))
+  set _base=1
   )
 if /i "%%J"=="Access2019Volume" (set /a kk+=1&set _pkey!kk!=9N9PT-27V4Y-VJ2PD-YXFMF-YTFQT)
 if /i "%%J"=="Excel2019Volume" (set /a kk+=1&set _pkey!kk!=TMJWT-YYNMB-3BKTF-644FC-RVXBD)
@@ -226,6 +230,13 @@ if /i "%%J"=="ProjectPro2019Volume" (set /a kk+=1&set _pkey!kk!=B4NPR-3FKK7-T2MB
 if /i "%%J"=="ProjectStd2019Volume" (set /a kk+=1&set _pkey!kk!=C4F7P-NCP8C-6CQPT-MQHV9-JXD2M)
 if /i "%%J"=="VisioPro2019Volume" (set /a kk+=1&set _pkey!kk!=9BGNQ-K37YR-RQHF2-38RQ3-7VCBB)
 if /i "%%J"=="VisioStd2019Volume" (set /a kk+=1&set _pkey!kk!=7TQNQ-K3YQQ-3PFH7-CCPPM-X4VQ2)
+)
+
+if %winbuild% lss 10240 if %_base% equ 0 for %%J in (%_skus%) do (
+set _tmp=%%J
+if /i "!_tmp:~-10!"=="2019Volume" (call set _tmp=!_tmp:~0,-10!Retail) else (call set _tmp=!_tmp:~0,-6!Retail)
+  if defined _products (set "_products=!_products!^|!_tmp!.16_%CTRlng%_x-none") else (set "_products=!_tmp!.16_%CTRlng%_x-none")
+  if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! !_tmp!.excludedapps.16=onedrive") else (set "_exclude1d=!_tmp!.excludedapps.16=onedrive"))
 )
 
 for /l %%J in (1,1,%kk%) do (
@@ -293,17 +304,19 @@ echo mediatype.16=%CTRtype% sourcetype.16=%CTRtype% version.16=%CTRver% ^^
 echo baseurl.16="!CTRsource!" ^^^^
 echo productstoadd="%_products%" ^^
 if %winbuild% geq 10240 echo pidkeys=%_keys% %_autoact% ^^
+if %winbuild% lss 10240 if /i "%_suite%"=="MondoVolume" echo pidkeys=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2 %_autoact% ^^
 if defined _suite echo %_suite%.excludedapps.16=%_excluded% ^^
 if defined _exclude1d echo %_exclude1d% ^^
 echo flt.useexptransportinplacepl=disabled flt.useofficehelperaddon=disabled flt.useoutlookshareaddon=disabled 1^>nul 2^>nul
 echo reg.exe add %_Config% /f /v UpdateChannel /t REG_SZ /d "%_url%/%CTRffn%" 1^>nul 2^>nul
 echo reg.exe add %_Config% /f /v UpdateChannelChanged /t REG_SZ /d True 1^>nul 2^>nul
 echo exit /b
-)>"!_tempdir!\C2R_Setup.bat"
+)>"!_temp!\C2R_Setup.bat"
 
+for /f "tokens=3 delims=." %%# in ('echo %CTRver%') do set verchk=%%#
 set "CTRexe=1"
-if exist "!_file!" for /f "tokens=2-5 delims==." %%i in ('wmic datafile where "name='!_file:\=\\!'" get Version /value') do (
-  if %%i%%j%%k%%l geq %CTRver:.=% (set CTRexe=0)
+if exist "!_file!" for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!_file:\=\\!'" get Version /value') do (
+  if %%i geq %verchk% (set CTRexe=0)
 )
 call :StopService 1>nul 2>nul
 if %CTRexe%==1 (
@@ -317,19 +330,16 @@ echo %line%
 echo Running installation... 
 echo %line%
 echo.
-del /f /q "%windir%\temp\*.log" 1>nul 2>nul
-del /f /q "!_tempdir!\*.log" 1>nul 2>nul
-!_ComSpec! /c ""!_tempdir!\C2R_Setup.bat" "
-del /f /q "!_tempdir!\C2R_Setup.bat" 1>nul 2>nul
+del /f /q "%SystemRoot%\temp\*.log" 1>nul 2>nul
+del /f /q "!_temp!\*.log" 1>nul 2>nul
+!_ComSpec! /c ""!_temp!\C2R_Setup.bat" "
+del /f /q "!_temp!\C2R_Setup.bat" 1>nul 2>nul
 if not exist "!_Program!\Microsoft Office\root\Office16\*.dll" if not exist "%ProgramFiles(x86)%\Microsoft Office\root\Office16\*.dll" (
 echo.
 echo %line%
 echo Installation failed.
 echo %line%
-echo.
-echo Press any key to exit.
-pause >nul
-goto :eof
+goto :TheEnd
 )
 if defined _licenses (
 echo.
@@ -339,12 +349,8 @@ echo %line%
 echo.
 call :Licenses 1>nul 2>nul
 )
-if %_tele%==True (
-if defined _suit2 (
-  if /i not "%_suit2%"=="MondoVolume" call :Telemetry 1>nul 2>nul
-  ) else (
-  call :Telemetry 1>nul 2>nul
-  )
+if %_tele%==True if %_O365%==0 (
+call :Telemetry 1>nul 2>nul
 )
 if %_unattend%==True goto :eof
 echo.
@@ -360,12 +366,11 @@ goto :eof
 :StopService
 sc query WSearch | find /i "STOPPED" || net stop WSearch /y
 sc query WSearch | find /i "STOPPED" || sc stop WSearch
-if exist "!_file!" (
+if not exist "!_file!" exit /b
 sc query ClickToRunSvc | find /i "STOPPED" || net stop ClickToRunSvc /y
 sc query ClickToRunSvc | find /i "STOPPED" || sc stop ClickToRunSvc
 taskkill /t /f /IM OfficeC2RClient.exe
 taskkill /t /f /IM OfficeClickToRun.exe
-)
 exit /b
 
 :Licenses
@@ -383,12 +388,15 @@ reg add %_Config% /f /v %%J.OSPPReady /t REG_SZ /d 1
 exit /b
 
 :Telemetry
-if /i %CTRarc%==x64 if %wow64%==1 (set "_inter=Software\Wow6432Node") else (set "_inter=Software")
+set "_inter=Software"
+if /i %xOS%==x64 if %wow64%==1 (set "_inter=Software\Wow6432Node")
 set "_rkey=%_CTR%\REGISTRY\MACHINE\%_inter%\Microsoft\Office\16.0\User Settings\CustomSettings"
 set "_skey=%_CTR%\REGISTRY\MACHINE\%_inter%\Microsoft\Office\16.0\User Settings\CustomSettings\Create\Software\Microsoft\Office\16.0"
 set "_tkey=%_CTR%\REGISTRY\MACHINE\%_inter%\Microsoft\Office\16.0\User Settings\CustomSettings\Create\Software\Microsoft\Office\Common\ClientTelemetry"
 for %%# in (Count,Order) do reg add "%_rkey%" /f /v %%# /t REG_DWORD /d 1
-for %%# in (DisableTelemetry,SendTelemetry) do reg add "%_tkey%" /f /v %%# /t REG_DWORD /d 1
+reg add "%_tkey%" /f /v SendTelemetry /t REG_DWORD /d 3
+reg add "%_tkey%" /f /v DisableTelemetry /t REG_DWORD /d 1
+for %%# in (disconnectedstate,usercontentdisabled,downloadcontentdisabled,controllerconnectedservicesenabled) do reg add "%_skey%\Common\Privacy" /f /v %%# /t REG_DWORD /d 2
 for %%# in (qmenable,sendcustomerdata,updatereliabilitydata) do reg add "%_skey%\Common" /f /v %%# /t REG_DWORD /d 0
 for %%# in (disableboottoofficestart,optindisable,shownfirstrunoptin,ShownFileFmtPrompt) do reg add "%_skey%\Common\General" /f /v %%# /t REG_DWORD /d 1
 for %%# in (BootedRTM,disablemovie) do reg add "%_skey%\Firstrun" /f /v %%# /t REG_DWORD /d 1
@@ -411,25 +419,21 @@ set "_schedule=Microsoft\Office"
 exit /b
 
 :E_FILE
-echo ==== ERROR ====
+echo %_err%
 echo %ERRFILE% is missing in the specified source
-echo.
-echo Press any key to exit...
-pause >nul
-goto :eof
+goto :TheEnd
 
 :E_Admin
-echo ==== ERROR ====
+echo %_err%
 echo Right click on this script and select 'Run as administrator'
-echo.
-echo Press any key to exit...
-pause >nul
-goto :eof
+goto :TheEnd
 
 :E_Win
-echo ==== ERROR ====
+echo %_err%
 echo Windows 7 SP1 is the minimum supported OS.
+
+:TheEnd
 echo.
-echo Press any key to exit...
+echo Press any key to exit.
 pause >nul
 goto :eof
