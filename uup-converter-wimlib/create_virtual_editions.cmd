@@ -672,8 +672,8 @@ if /i %editionid%==ProfessionalWorkstation set DVDLABEL=CPRWA_%archl%FRE_%langid
 if /i %editionid%==ProfessionalWorkstationN set DVDLABEL=CPRWNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==ProfessionalEducation set DVDLABEL=CPREA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATION_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==ProfessionalEducationN set DVDLABEL=CPRENA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATIONN_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==ProfessionalCountrySpecific set DVDLABEL=CPRCSA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%*PHCS*_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==ProfessionalSingleLanguage set DVDLABEL=CPRSLA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%*PHSL*_OEMRET_%archl%FRE_%langid%
+if /i %editionid%==ProfessionalCountrySpecific set DVDLABEL=CPRCSA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROCHINA_OEM_%archl%FRE_%langid%
+if /i %editionid%==ProfessionalSingleLanguage set DVDLABEL=CPRSLA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROSINGLELANGUAGE_OEM_%archl%FRE_%langid%
 if /i %editionid%==ServerRdsh set DVDLABEL=CEV_%archl%FREV_%langid%_DV5&set DVDISO=%_label%MULTISESSION_VOL_%archl%FRE_%langid%&set _VL=1
 if /i %editionid%==IoTEnterprise set DVDLABEL=IOTE_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISE_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==IoTEnterpriseS set DVDLABEL=IOTS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISES_OEMRET_%archl%FRE_%langid%
