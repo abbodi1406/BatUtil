@@ -2,17 +2,19 @@
 
 ## Intro 
 
-* Batch script to generate download links for Office Click To Run installation files
+* A batch script to generate download links for Office Click To Run installation files
 
 * It can generate links for latest available version online by default, or compile links for specific version offline  
  
-to get option to choose between the two mode always, edit the script and change to zero set latest=0
+to have the option to choose between the two mode always, edit the script and change to zero set latest=0
 
 ## How To
 
 * Run the script normally with double-click
 
 * Choose Office source from the listed 9 CDNs (channels)
+
+* If the selected channel offer different versions per Windows OS, you will be prompt to choose one
 
 * Choose desired Office Bitness (architecture)
 

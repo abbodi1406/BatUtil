@@ -1,13 +1,9 @@
 @setlocal DisableDelayedExpansion
 @echo off
-:: 1 = check and return the highest available build for the choosen channel (some builds are conditional)
-:: 0 = check and return the default available build for the choosen channel
-set AllBuilds=0
-
-:: set version choice to always latest available online
+:: set version choice to always check latest available online
 set latest=1
 
-:: set specific valid version
+:: set specific valid version offline
 set version=
 
 set "_temp=%temp%"
@@ -139,7 +135,7 @@ goto :SPECIFIC
 
 :MRO
 cls
-title ^>Office Click-to-Run Generator^<
+title ^>Office Click-to-Run URL Generator^<
 echo %line%
 echo Channel : %chn%
 echo %line%
@@ -150,13 +146,10 @@ echo %line%
 echo.
 set "dms=https://mrodevicemgr.officeapps.live.com/mrodevicemgrsvc/api/v2/C2RReleaseData"
 pushd "!_temp!"
-if exist "C2R.json" del /f /q "C2R.json"
-if %AllBuilds%==1 (
-1>nul 2>nul powershell -nop -ep bypass -c "(New-Object Net.WebClient).DownloadFile('%dms%','C2R.json')"
-) else (
-1>nul 2>nul powershell -nop -ep bypass -c "(New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%','C2R.json')"
-)
-if not exist "C2R.json" (
+if exist "C2R*.json" del /f /q "C2R*.json"
+powershell -nop -ep bypass -c "(New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%','C2R0.json')" 1>nul 2>nul
+powershell -nop -ep bypass -c "(New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1.0','C2R7.json')" 1>nul 2>nul
+if not exist "C2R*.json" (
 echo.
 echo %line%
 echo ERROR:
@@ -168,16 +161,11 @@ echo Press any key to exit.
 pause >nul
 goto :eof
 )
-if %AllBuilds%==1 (
-for /f "tokens=* delims=" %%i in ('powershell -nop -ep bypass -c "(([IO.File]::ReadAllText('C2R.json') | ConvertFrom-Json) | ? FFN -eq '%ffn%').AvailableBuild | sort" 2^>nul') do set "vvv=%%i"
-for /f "tokens=1-3 delims=T:" %%i in ('powershell -nop -ep bypass -c "(([IO.File]::ReadAllText('C2R.json') | ConvertFrom-Json) | ? FFN -eq '%ffn%').UpdatedTimeUtc | sort" 2^>nul') do set "utc=%%i %%j:%%k"
-) else (
-for /f "usebackq tokens=2 delims=:, " %%G in (`findstr /i AvailableBuild C2R.json`) do set "vvv=%%~G"
-for /f "usebackq tokens=2-6 delims=:/ " %%G in (`findstr /i TimestampUtc C2R.json`) do set "utc=%%I-%%~G-%%H %%J:%%K
-)
-del /f /q "C2R.json"
-popd
-if not defined vvv (
+for /f "tokens=2 delims=:, " %%G in ('findstr /i AvailableBuild C2R0.json') do set "vvv0=%%~G"
+for /f "tokens=2-6 delims=:/ " %%G in ('findstr /i TimestampUtc C2R0.json') do set "utc0=%%I-%%~G-%%H %%J:%%K
+for /f "tokens=2 delims=:, " %%G in ('findstr /i AvailableBuild C2R7.json') do set "vvv7=%%~G"
+for /f "tokens=2-6 delims=:/ " %%G in ('findstr /i TimestampUtc C2R7.json') do set "utc7=%%I-%%~G-%%H %%J:%%K
+if not defined vvv0 (
 echo.
 echo %line%
 echo ERROR: could not detect available version
@@ -187,6 +175,32 @@ echo Press any key to exit.
 pause >nul
 goto :eof
 )
+if exist "C2R*.json" del /f /q "C2R*.json"
+popd
+if not defined vvv7 set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
+if %vvv7:~5,5% gtr %vvv0:~5,5% set "vvv0=%vvv7%"&set "utc0=%utc7%"
+if "%vvv0%" equ "%vvv7%" set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
+
+:WIN
+cls
+title ^>Choose Version per Windows^<
+set inpt=
+set verified=0
+echo %line%
+echo Channel : %chn%
+echo %line%
+echo.
+echo Selected channel offer different versions per OS:
+echo.
+echo. 1. Version: %vvv0% [Windows 8.1 and 10]
+echo. 2. Version: %vvv7% [Windows 7]
+echo %line%
+echo.
+set /p inpt= ^> Enter Version option number, and press "Enter": 
+if "%inpt%"=="" goto :eof
+for /l %%i in (1,1,2) do (if %inpt%==%%i set verified=1)
+if %verified%==0 goto :WIN
+if %inpt%==1 (set "vvv=%vvv0%"&set "utc=%utc0%") else (set "vvv=%vvv7%"&set "utc=%utc7%")
 
 :BITNESS
 cls
@@ -199,8 +213,8 @@ echo Version : %vvv%
 if defined utc echo Updated : %utc%
 echo %line%
 echo.
-echo. 1. x86 ^(32-bit^)
-echo. 2. x64 ^(64-bit^)
+echo. 1. x86 [32-bit]
+echo. 2. x64 [64-bit]
 echo. 3. Both
 echo %line%
 echo.
@@ -293,7 +307,6 @@ set /p inpt= ^> Enter Output option number, and press "Enter":
 if "%inpt%"=="" goto :eof
 for /l %%i in (1,1,4) do (if %inpt%==%%i set verified=1)
 if %verified%==0 goto :OUTPUT
-rem setlocal DisableDelayedExpansion
 set "url=http://officecdn.microsoft.com/pr/%ffn%/Office/Data"
 set "stp=http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/Office/Data"
 set oar=%arc%
@@ -304,28 +317,160 @@ set dual=0
 if /i %arc%==x86x64 (set "arc=x86"&set "bit=32"&set dual=1)
 goto :OUTPUT%inpt%
 
+:uProof
+for %%a in (
+  sp%bit%%lcid%.cab
+  i%bit%0.cab
+  i%bit%0.cab.cat
+  s%bit%0.cab
+  stream.%arc%.%lang%.proof.dat
+  stream.%arc%.%lang%.proof.dat.cat
+  ) do (
+  call :EC1HO%inpt% %%a
+  )
+if %dual%==0 if %arc%==x86 for %%a in (
+  i640.cab
+  i640.cab.cat
+  ) do (
+  call :EC1HO%inpt%
+  )
+if %dual%==1 (
+  call :EC2HO%inpt% v64_%vvv%.cab
+  )
+if %dual%==1 for %%a in (
+  sp64%lcid%.cab
+  i640.cab
+  i640.cab.cat
+  s640.cab
+  stream.x64.%lang%.proof.dat
+  stream.x64.%lang%.proof.dat.cat
+  ) do (
+  call :EC1HO%inpt% %%a
+  )
+  if not %inpt%==4 (
+  echo :TXTEnd
+  echo exit /b
+  )>>"%output%"
+exit /b
+
+:uAll
+for %%a in (
+i%bit%%lcid%.cab
+s%bit%%lcid%.cab
+i%bit%0.cab
+i%bit%0.cab.cat
+s%bit%0.cab
+stream.%arc%.%lang%.dat
+stream.%arc%.%lang%.dat.cat
+) do (
+call :EC1HO%inpt% %%a
+)
+if %dual%==0 if %arc%==x86 for %%a in (
+i64%lcid%.cab
+i640.cab
+i640.cab.cat
+) do (
+call :EC1HO%inpt% %%a
+)
+if %full%==1 for %%a in (
+stream.%arc%.x-none.dat
+stream.%arc%.x-none.dat.cat
+) do (
+call :EC1HO%inpt% %%a
+)
+if %full%==0 (
+call :EC3HO%inpt% SetupLanguagePack.%arc%.%lang%.exe
+)
+if %dual%==1 (
+call :EC2HO%inpt% v64_%vvv%.cab
+)
+if %dual%==1 for %%a in (
+i64%lcid%.cab
+s64%lcid%.cab
+i640.cab
+i640.cab.cat
+s640.cab
+stream.x64.%lang%.dat
+stream.x64.%lang%.dat.cat
+) do (
+call :EC1HO%inpt% %%a
+)
+if %dual%==1 if %full%==1 for %%a in (
+stream.x64.x-none.dat
+stream.x64.x-none.dat.cat
+) do (
+call :EC1HO%inpt% %%a
+)
+if %dual%==1 if %full%==0 (
+call :EC3HO%inpt% SetupLanguagePack.x64.%lang%.exe
+)
+if not %inpt%==4 (
+echo :TXTEnd
+echo exit /b
+)>>"%output%"
+exit /b
+
+:EC1HO1
+(echo %url%/%vvv%/%1&echo.  out=Office\Data\%vvv%\%1&echo.)>>"%output%"
+exit /b
+
+:EC2HO1
+(echo %url%/%1&echo.  out=Office\Data\%1&echo.&echo %url%/%1&echo.  out=Office\Data\v64.cab&echo.)>>"%output%"
+exit /b
+
+:EC3HO1
+(echo %stp%/%1&echo.  out=%1&echo.)>>"%output%"
+exit /b
+
+:EC1HO2
+:EC1HO4
+echo %url%/%vvv%/%1>>"%output%"
+exit /b
+
+:EC2HO2
+:EC2HO4
+echo %url%/%1>>"%output%"
+exit /b
+
+:EC3HO2
+:EC3HO4
+echo %stp%/%1>>"%output%"
+exit /b
+
+:EC1HO3
+(echo url %url%/%vvv%/%1&echo -o %destDir%\Office\Data\%vvv%\%1)>>"%output%"
+exit /b
+
+:EC2HO3
+(echo url %url%/%1&echo -o %destDir%\Office\Data\%1&echo url %url%/%1&echo -o %destDir%\Office\Data\v64.cab)>>"%output%"
+exit /b
+
+:EC3HO3
+(echo url %stp%/%1&echo -o %destDir%\%1)>>"%output%"
+exit /b
+
 :OUTPUT1
 cls
 set "output=%tag%_aria2.bat"
 (
 echo @echo off
-echo rem Limit the download speed, example: 1M, 500K "0 = unlimited"
+echo :: Limit the download speed, example: 1M, 500K "0 = unlimited"
 echo set "speedLimit=0"
 echo.
-echo rem Set the number of parallel downloads
+echo :: Set the number of parallel downloads
 echo set "parallel=1"
 echo.
+echo set "_work=%%~dp0"
+echo setlocal EnableDelayedExpansion
+echo pushd "^!_work^!"
 echo set exist=0
-echo if exist "%%~dp0aria2c.exe" set exist=1
-echo for %%%%i in ^(aria2c.exe^) do @if NOT "%%%%~$PATH:i"=="" set exist=1
-echo if %%exist%%==0 echo.^&echo Error: aria2c.exe is not detected^&echo.^&pause^&exit /b
+echo if exist "aria2c.exe" set exist=1
+echo for %%%%i in ^(aria2c.exe^) do @if not "%%%%~$PATH:i"=="" set exist=1
+echo if %%exist%%==0 echo.^&echo Error: aria2c.exe is not detected^&echo.^&popd^&pause^&exit /b
 echo set "destDir=C2R_%chn%"
 echo set "uri=temp_aria2.txt"
 echo echo Downloading...
 echo echo.
-echo set "_work=%%~dp0"
-echo setlocal EnableDelayedExpansion
-echo pushd "^!_work^!"
 echo if exist "%%uri%%" del /f /q "%%uri%%"
 echo call :GenTXT
 echo aria2c.exe -x16 -s16 -j%%parallel%% -c -R --max-overall-download-limit=%%speedLimit%% -d"%%destDir%%" -i"%%uri%%"
@@ -341,10 +486,10 @@ echo :GenTXT
 echo set "LN="
 echo set "NC="
 echo set "SN="
-echo for /f "skip=1 delims=:" %%%%a in ^('findstr /N ^^:TXT "%%~f0"'^) do ^(
+echo for /f "skip=1 delims=:" %%%%a in ^('findstr /N ^^:TXT "%%~nx0"'^) do ^(
 echo if not defined SN ^(set "SN=%%%%a"^) else ^(set /a NC=%%%%a-SN-1^)
 echo ^)
-echo ^<"%%~f0" ^(
+echo ^<"%%~nx0" ^(
 echo for /L %%%%a in ^(1,1,%%SN%%^) do set /p =
 echo for /L %%%%a in ^(1,1,%%NC%%^) do ^(
 echo set LN=
@@ -360,91 +505,10 @@ echo :TXTBegin
 (echo %url%/v%bit%_%vvv%.cab&echo.  out=Office\Data\v%bit%_%vvv%.cab&echo.)>>"%output%"
 
 if %proof%==1 (
-for %%a in (
-  sp%bit%%lcid%.cab
-  i%bit%0.cab
-  s%bit%0.cab
-  stream.%arc%.%lang%.proof.dat
-  ) do (
-  (echo %url%/%vvv%/%%a&echo.  out=Office\Data\%vvv%\%%a&echo.)>>"%output%"
-  )
-if %dual%==0 if %arc%==x86 for %%a in (
-  i640.cab
-  ) do (
-  (echo %url%/%vvv%/%%a&echo.  out=Office\Data\%vvv%\%%a&echo.)>>"%output%"
-  )
-if %dual%==1 (
-  (echo %url%/v64_%vvv%.cab&echo.  out=Office\Data\v64.cab&echo.)>>"%output%"
-  (echo %url%/v64_%vvv%.cab&echo.  out=Office\Data\v64_%vvv%.cab&echo.)>>"%output%"
-  )
-if %dual%==1 for %%a in (
-  sp64%lcid%.cab
-  i640.cab
-  s640.cab
-  stream.x64.%lang%.proof.dat
-  ) do (
-  (echo %url%/%vvv%/%%a&echo.  out=Office\Data\%vvv%\%%a&echo.)>>"%output%"
-  )
-  (
-  echo :TXTEnd
-  echo exit /b
-  )>>"%output%"
+call :uProof
 goto :FIN
 )
-
-for %%a in (
-i%bit%%lcid%.cab
-s%bit%%lcid%.cab
-i%bit%0.cab
-s%bit%0.cab
-stream.%arc%.%lang%.dat
-) do (
-(echo %url%/%vvv%/%%a&echo.  out=Office\Data\%vvv%\%%a&echo.)>>"%output%"
-)
-if %dual%==0 if %arc%==x86 for %%a in (
-i64%lcid%.cab
-i640.cab
-) do (
-(echo %url%/%vvv%/%%a&echo.  out=Office\Data\%vvv%\%%a&echo.)>>"%output%"
-)
-if %full%==1 for %%a in (
-stream.%arc%.x-none.dat
-) do (
-(echo %url%/%vvv%/%%a&echo.  out=Office\Data\%vvv%\%%a&echo.)>>"%output%"
-)
-if %full%==0 for %%a in (
-SetupLanguagePack.%arc%.%lang%.exe
-) do (
-(echo %stp%/%%a&echo.  out=%%a&echo.)>>"%output%"
-)
-if %dual%==1 (
-(echo %url%/v64_%vvv%.cab&echo.  out=Office\Data\v64.cab&echo.)>>"%output%"
-(echo %url%/v64_%vvv%.cab&echo.  out=Office\Data\v64_%vvv%.cab&echo.)>>"%output%"
-)
-if %dual%==1 for %%a in (
-i64%lcid%.cab
-s64%lcid%.cab
-i640.cab
-s640.cab
-stream.x64.%lang%.dat
-) do (
-(echo %url%/%vvv%/%%a&echo.  out=Office\Data\%vvv%\%%a&echo.)>>"%output%"
-)
-if %dual%==1 if %full%==1 for %%a in (
-stream.x64.x-none.dat
-) do (
-(echo %url%/%vvv%/%%a&echo.  out=Office\Data\%vvv%\%%a&echo.)>>"%output%"
-)
-if %dual%==1 if %full%==0 for %%a in (
-SetupLanguagePack.x64.%lang%.exe
-) do (
-(echo %stp%/%%a&echo.  out=%%a&echo.)>>"%output%"
-)
-
-(
-echo :TXTEnd
-echo exit /b
-)>>"%output%"
+call :uAll
 goto :FIN
 
 :OUTPUT2
@@ -452,20 +516,20 @@ cls
 set "output=%tag%_wget.bat"
 (
 echo @echo off
-echo rem Limit the download speed, example: 1M, 500K "0 = unlimited"
+echo :: Limit the download speed, example: 1M, 500K "0 = unlimited"
 echo set "speedLimit=0"
 echo.
+echo set "_work=%%~dp0"
+echo setlocal EnableDelayedExpansion
+echo pushd "^!_work^!"
 echo set exist=0
-echo if exist "%%~dp0wget.exe" set exist=1
-echo for %%%%i in ^(wget.exe^) do @if NOT "%%%%~$PATH:i"=="" set exist=1
-echo if %%exist%%==0 echo.^&echo Error: wget.exe is not detected^&echo.^&pause^&exit /b
+echo if exist "wget.exe" set exist=1
+echo for %%%%i in ^(wget.exe^) do @if not "%%%%~$PATH:i"=="" set exist=1
+echo if %%exist%%==0 echo.^&echo Error: wget.exe is not detected^&echo.^&popd^&pause^&exit /b
 echo set "destDir=C2R_%chn%"
 echo set "uri=temp_wget.txt"
 echo echo Downloading...
 echo echo.
-echo set "_work=%%~dp0"
-echo setlocal EnableDelayedExpansion
-echo pushd "^!_work^!"
 echo if exist "%%uri%%" del /f /q "%%uri%%"
 echo call :GenTXT
 echo wget.exe --limit-rate=%%speedLimit%% --directory-prefix="%%destDir%%" --input-file="%%uri%%" --no-verbose --show-progress --progress=bar:force:noscroll --continue --retry-connrefused --tries=5 --ignore-case --force-directories --no-host-directories --cut-dirs=2
@@ -484,10 +548,10 @@ echo :GenTXT
 echo set "LN="
 echo set "NC="
 echo set "SN="
-echo for /f "skip=1 delims=:" %%%%a in ^('findstr /N ^^:TXT "%%~f0"'^) do ^(
+echo for /f "skip=1 delims=:" %%%%a in ^('findstr /N ^^:TXT "%%~nx0"'^) do ^(
 echo if not defined SN ^(set "SN=%%%%a"^) else ^(set /a NC=%%%%a-SN-1^)
 echo ^)
-echo ^<"%%~f0" ^(
+echo ^<"%%~nx0" ^(
 echo for /L %%%%a in ^(1,1,%%SN%%^) do set /p =
 echo for /L %%%%a in ^(1,1,%%NC%%^) do ^(
 echo set LN=
@@ -502,89 +566,10 @@ echo :TXTBegin
 echo %url%/v%bit%_%vvv%.cab>>"%output%"
 
 if %proof%==1 (
-for %%a in (
-  sp%bit%%lcid%.cab
-  i%bit%0.cab
-  s%bit%0.cab
-  stream.%arc%.%lang%.proof.dat
-  ) do (
-  echo %url%/%vvv%/%%a>>"%output%"
-  )
-if %dual%==0 if %arc%==x86 for %%a in (
-  i640.cab
-  ) do (
-  echo %url%/%vvv%/%%a>>"%output%"
-  )
-if %dual%==1 (
-  echo %url%/v64_%vvv%.cab>>"%output%"
-  )
-if %dual%==1 for %%a in (
-  sp64%lcid%.cab
-  i640.cab
-  s640.cab
-  stream.x64.%lang%.proof.dat
-  ) do (
-  echo %url%/%vvv%/%%a>>"%output%"
-  )
-  (
-  echo :TXTEnd
-  echo exit /b
-  )>>"%output%"
+call :uProof
 goto :FIN
 )
-
-for %%a in (
-i%bit%%lcid%.cab
-s%bit%%lcid%.cab
-i%bit%0.cab
-s%bit%0.cab
-stream.%arc%.%lang%.dat
-) do (
-echo %url%/%vvv%/%%a>>"%output%"
-)
-if %dual%==0 if %arc%==x86 for %%a in (
-i64%lcid%.cab
-i640.cab
-) do (
-echo %url%/%vvv%/%%a>>"%output%"
-)
-if %full%==1 for %%a in (
-stream.%arc%.x-none.dat
-) do (
-echo %url%/%vvv%/%%a>>"%output%"
-)
-if %full%==0 for %%a in (
-SetupLanguagePack.%arc%.%lang%.exe
-) do (
-echo %stp%/%%a>>"%output%"
-)
-if %dual%==1 (
-echo %url%/v64_%vvv%.cab>>"%output%"
-)
-if %dual%==1 for %%a in (
-i64%lcid%.cab
-s64%lcid%.cab
-i640.cab
-s640.cab
-stream.x64.%lang%.dat
-) do (
-echo %url%/%vvv%/%%a>>"%output%"
-)
-if %dual%==1 if %full%==1 for %%a in (
-stream.x64.x-none.dat
-) do (
-echo %url%/%vvv%/%%a>>"%output%"
-)
-if %dual%==1 if %full%==0 for %%a in (
-SetupLanguagePack.x64.%lang%.exe
-) do (
-echo %stp%/%%a>>"%output%"
-)
-
-(
-echo :TXTEnd
-echo exit /b
-)>>"%output%"
+call :uAll
 goto :FIN
 
 :OUTPUT3
@@ -593,20 +578,20 @@ set "output=%tag%_curl.bat"
 set "destDir=C2R_%chn%"
 (
 echo @echo off
-echo rem Limit the download speed, example: 1M, 500K "empty means unlimited"
+echo :: Limit the download speed, example: 1M, 500K "empty means unlimited"
 echo set speedLimit=
 echo.
+echo set "_work=%%~dp0"
+echo setlocal EnableDelayedExpansion
+echo pushd "^!_work^!"
 echo set exist=0
-echo if exist "%%~dp0curl.exe" set exist=1
-echo for %%%%i in ^(curl.exe^) do @if NOT "%%%%~$PATH:i"=="" set exist=1
-echo if %%exist%%==0 echo.^&echo Error: curl.exe is not detected^&echo.^&pause^&exit /b
+echo if exist "curl.exe" set exist=1
+echo for %%%%i in ^(curl.exe^) do @if not "%%%%~$PATH:i"=="" set exist=1
+echo if %%exist%%==0 echo.^&echo Error: curl.exe is not detected^&echo.^&popd^&pause^&exit /b
 echo set "uri=temp_curl.txt"
 echo if defined speedLimit set "speedLimit=--limit-rate %%speedLimit%%"
 echo echo Downloading...
 echo echo.
-echo set "_work=%%~dp0"
-echo setlocal EnableDelayedExpansion
-echo pushd "^!_work^!"
 echo if exist "%%uri%%" del /f /q "%%uri%%"
 echo call :GenTXT
 echo curl.exe -q --create-dirs --retry 5 --retry-connrefused %%speedLimit%% -k -L -C - -K "%%uri%%"
@@ -622,10 +607,10 @@ echo :GenTXT
 echo set "LN="
 echo set "NC="
 echo set "SN="
-echo for /f "skip=1 delims=:" %%%%a in ^('findstr /N ^^:TXT "%%~f0"'^) do ^(
+echo for /f "skip=1 delims=:" %%%%a in ^('findstr /N ^^:TXT "%%~nx0"'^) do ^(
 echo if not defined SN ^(set "SN=%%%%a"^) else ^(set /a NC=%%%%a-SN-1^)
 echo ^)
-echo ^<"%%~f0" ^(
+echo ^<"%%~nx0" ^(
 echo for /L %%%%a in ^(1,1,%%SN%%^) do set /p =
 echo for /L %%%%a in ^(1,1,%%NC%%^) do ^(
 echo set LN=
@@ -641,91 +626,10 @@ echo :TXTBegin
 (echo url %url%/v%bit%_%vvv%.cab&echo -o %destDir%\Office\Data\v%bit%_%vvv%.cab)>>"%output%"
 
 if %proof%==1 (
-for %%a in (
-  sp%bit%%lcid%.cab
-  i%bit%0.cab
-  s%bit%0.cab
-  stream.%arc%.%lang%.proof.dat
-  ) do (
-  (echo url %url%/%vvv%/%%a&echo -o %destDir%\Office\Data\%vvv%\%%a)>>"%output%"
-  )
-if %dual%==0 if %arc%==x86 for %%a in (
-  i640.cab
-  ) do (
-  (echo url %url%/%vvv%/%%a&echo -o %destDir%\Office\Data\%vvv%\%%a)>>"%output%"
-  )
-if %dual%==1 (
-  (echo url %url%/v64_%vvv%.cab&echo -o %destDir%\Office\Data\v64.cab)>>"%output%"
-  (echo url %url%/v64_%vvv%.cab&echo -o %destDir%\Office\Data\v64_%vvv%.cab)>>"%output%"
-  )
-if %dual%==1 for %%a in (
-  sp64%lcid%.cab
-  i640.cab
-  s640.cab
-  stream.x64.%lang%.proof.dat
-  ) do (
-  (echo url %url%/%vvv%/%%a&echo -o %destDir%\Office\Data\%vvv%\%%a)>>"%output%"
-  )
-  (
-  echo :TXTEnd
-  echo exit /b
-  )>>"%output%"
+call :uProof
 goto :FIN
 )
-
-for %%a in (
-i%bit%%lcid%.cab
-s%bit%%lcid%.cab
-i%bit%0.cab
-s%bit%0.cab
-stream.%arc%.%lang%.dat
-) do (
-(echo url %url%/%vvv%/%%a&echo -o %destDir%\Office\Data\%vvv%\%%a)>>"%output%"
-)
-if %dual%==0 if %arc%==x86 for %%a in (
-i64%lcid%.cab
-i640.cab
-) do (
-(echo url %url%/%vvv%/%%a&echo -o %destDir%\Office\Data\%vvv%\%%a)>>"%output%"
-)
-if %full%==1 for %%a in (
-stream.%arc%.x-none.dat
-) do (
-(echo url %url%/%vvv%/%%a&echo -o %destDir%\Office\Data\%vvv%\%%a)>>"%output%"
-)
-if %full%==0 for %%a in (
-SetupLanguagePack.%arc%.%lang%.exe
-) do (
-(echo url %stp%/%%a&echo -o %destDir%\%%a)>>"%output%"
-)
-if %dual%==1 (
-(echo url %url%/v64_%vvv%.cab&echo -o %destDir%\Office\Data\v64.cab)>>"%output%"
-(echo url %url%/v64_%vvv%.cab&echo -o %destDir%\Office\Data\v64_%vvv%.cab)>>"%output%"
-)
-if %dual%==1 for %%a in (
-i64%lcid%.cab
-s64%lcid%.cab
-i640.cab
-s640.cab
-stream.x64.%lang%.dat
-) do (
-(echo url %url%/%vvv%/%%a&echo -o %destDir%\Office\Data\%vvv%\%%a)>>"%output%"
-)
-if %dual%==1 if %full%==1 for %%a in (
-stream.x64.x-none.dat
-) do (
-(echo url %url%/%vvv%/%%a&echo -o %destDir%\Office\Data\%vvv%\%%a)>>"%output%"
-)
-if %dual%==1 if %full%==0 for %%a in (
-SetupLanguagePack.x64.%lang%.exe
-) do (
-(echo url %stp%/%%a&echo -o %destDir%\%%a)>>"%output%"
-)
-
-(
-echo :TXTEnd
-echo exit /b
-)>>"%output%"
+call :uAll
 goto :FIN
 
 :OUTPUT4
@@ -753,12 +657,15 @@ echo ^)
 echo if not exist %%_uri%%\stream*.dat mkdir %%_uri%%
 echo for %%%%i in ^(
 echo i32*.cab
+echo i32*.cab.cat
 echo i64*.cab
+echo i64*.cab.cat
 echo s32*.cab
 echo s64*.cab
 echo sp32*.cab
 echo sp64*.cab
 echo stream*.dat
+echo stream*.dat.cat
 echo ^) do ^(
 echo if exist "%%%%i" move /y %%%%i %%_uri%%\
 echo ^)
@@ -788,80 +695,10 @@ if exist "%output%" del /f /q %output%
 echo %url%/v%bit%_%vvv%.cab>>"%output%"
 
 if %proof%==1 (
-for %%a in (
-  sp%bit%%lcid%.cab
-  i%bit%0.cab
-  s%bit%0.cab
-  stream.%arc%.%lang%.proof.dat
-  ) do (
-  echo %url%/%vvv%/%%a>>"%output%"
-  )
-if %dual%==0 if %arc%==x86 for %%a in (
-  i640.cab
-  ) do (
-  echo %url%/%vvv%/%%a>>"%output%"
-  )
-if %dual%==1 (
-  echo %url%/v64_%vvv%.cab>>"%output%"
-  )
-if %dual%==1 for %%a in (
-  sp64%lcid%.cab
-  i640.cab
-  s640.cab
-  stream.x64.%lang%.proof.dat
-  ) do (
-  echo %url%/%vvv%/%%a>>"%output%"
-  )
+call :uProof
 goto :FIN
 )
-
-for %%a in (
-i%bit%%lcid%.cab
-s%bit%%lcid%.cab
-i%bit%0.cab
-s%bit%0.cab
-stream.%arc%.%lang%.dat
-) do (
-echo %url%/%vvv%/%%a>>"%output%"
-)
-if %dual%==0 if %arc%==x86 for %%a in (
-i64%lcid%.cab
-i640.cab
-) do (
-echo %url%/%vvv%/%%a>>"%output%"
-)
-if %full%==0 for %%a in (
-SetupLanguagePack.%arc%.%lang%.exe
-) do (
-(echo %stp%/%%a)>>"%output%"
-)
-if %full%==1 for %%a in (
-stream.%arc%.x-none.dat
-) do (
-echo %url%/%vvv%/%%a>>"%output%"
-)
-if %dual%==1 (
-echo %url%/v64_%vvv%.cab>>"%output%"
-)
-if %dual%==1 for %%a in (
-i64%lcid%.cab
-s64%lcid%.cab
-i640.cab
-s640.cab
-stream.x64.%lang%.dat
-) do (
-echo %url%/%vvv%/%%a>>"%output%"
-)
-if %dual%==1 if %full%==1 for %%a in (
-stream.x64.x-none.dat
-) do (
-echo %url%/%vvv%/%%a>>"%output%"
-)
-if %dual%==1 if %full%==0 for %%a in (
-SetupLanguagePack.x64.%lang%.exe
-) do (
-(echo %stp%/%%a)>>"%output%"
-)
+call :uAll
 goto :FIN
 
 :FIN
@@ -870,7 +707,7 @@ echo %line%
 echo Channel : %chn%
 echo Version : %vvv%
 if defined utc echo Updated : %utc%
-echo Bitness : %arc%
+echo Bitness : %oar%
 echo Language: %lang%
 echo Output  : %output%
 if defined outpu3 echo           %outpu3%
