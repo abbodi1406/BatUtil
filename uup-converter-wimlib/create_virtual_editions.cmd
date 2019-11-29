@@ -8,7 +8,7 @@ set AutoStart=0
 
 :: Specify target editions to auto create separated with space or comma ,
 :: leave it empty to create *all* possible editions
-:: allowed: Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN,CoreSingleLanguage,ServerRdsh,IoTEnterprise
+:: allowed: Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN,CoreSingleLanguage,ProfessionalCountrySpecific,ProfessionalSingleLanguage,ServerRdsh,IoTEnterprise
 :: example: set "AutoEditions=Enterprise,ProfessionalWorkstation,Education"
 :: example: set "AutoEditions=Enterprise ServerRdsh"
 set "AutoEditions="
@@ -254,6 +254,8 @@ if /i %%#==EducationN if %EditionProN% equ 1 (set EducationN=1)
 if /i %%#==ProfessionalEducationN if %EditionProN% equ 1 (set ProfessionalEducationN=1)
 if /i %%#==ProfessionalWorkstationN if %EditionProN% equ 1 (set ProfessionalWorkstationN=1)
 if /i %%#==CoreSingleLanguage if %EditionHome% equ 1 (set CoreSingleLanguage=1)
+if /i %%#==ProfessionalCountrySpecific if %EditionPro% equ 1 (set ProfessionalCountrySpecific=1)
+if /i %%#==ProfessionalSingleLanguage if %EditionPro% equ 1 (set ProfessionalSingleLanguage=1)
 if /i %%#==ServerRdsh if %EditionPro% equ 1 (set ServerRdsh=1)
 if /i %%#==IoTEnterprise if %EditionPro% equ 1 if %_build% geq 18277 (set IoTEnterprise=1)
 if /i %%#==IoTEnterpriseS if %EditionLTSC% equ 1 if %_build% geq 18298 (set IoTEnterpriseS=1)
@@ -272,22 +274,24 @@ if %Enterprise% equ 0 echo. 1. Enterprise
 if %Education% equ 0 echo. 2. Education
 if %ProfessionalEducation% equ 0 echo. 3. Pro Education
 if %ProfessionalWorkstation% equ 0 echo. 4. Pro for Workstations
+if %ProfessionalCountrySpecific% equ 0 echo. 5. Pro Education
+if %ProfessionalSingleLanguage% equ 0 echo. 6. Pro for Workstations
 )
 if %EditionProN% equ 1 (
-if %EnterpriseN% equ 0 echo. 5. Enterprise N
-if %EducationN% equ 0 echo. 6. Education N
-if %ProfessionalEducationN% equ 0 echo. 7. Pro Education N
-if %ProfessionalWorkstationN% equ 0 echo. 8. Pro N for Workstations
+if %EnterpriseN% equ 0 echo. 7. Enterprise N
+if %EducationN% equ 0 echo. 8. Education N
+if %ProfessionalEducationN% equ 0 echo. 9. Pro Education N
+if %ProfessionalWorkstationN% equ 0 echo. 10. Pro N for Workstations
 )
 if %EditionHome% equ 1 (
-if %CoreSingleLanguage% equ 0 echo. 9. Home Single Language
+if %CoreSingleLanguage% equ 0 echo. 11. Home Single Language
 )
 if %EditionPro% equ 1 (
-if %ServerRdsh% equ 0 echo 10. Enterprise for Virtual Desktops
-if %IoTEnterprise% equ 0 if %_build% geq 18277 echo 11. IoT Enterprise {OEM}
+if %ServerRdsh% equ 0 echo 12. Enterprise for Virtual Desktops
+if %IoTEnterprise% equ 0 if %_build% geq 18277 echo 13. IoT Enterprise {OEM}
 )
 if %EditionLTSC% equ 1 (
-if %IoTEnterpriseS% equ 0 if %_build% geq 18298 echo 12. IoT Enterprise LTSC {OEM}
+if %IoTEnterpriseS% equ 0 if %_build% geq 18298 echo 14. IoT Enterprise LTSC {OEM}
 )
 exit /b
 
@@ -312,7 +316,7 @@ if errorlevel 1 goto :ALLMENU
 goto :MULTIMENU
 
 :ALLMENU
-for %%# in (Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,ServerRdsh) do (
+for %%# in (Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,ProfessionalCountrySpecific,ProfessionalSingleLanguage,ServerRdsh) do (
 if %EditionPro% equ 1 set %%#=1
 )
 for %%# in (EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN) do (
@@ -345,9 +349,11 @@ if %_single% equ 6 if %EditionProN% equ 1 if %EducationN% equ 0 (set EducationN=
 if %_single% equ 7 if %EditionProN% equ 1 if %ProfessionalEducationN% equ 0 (set ProfessionalEducationN=1&set verify=1)
 if %_single% equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (set ProfessionalWorkstationN=1&set verify=1)
 if %_single% equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
-if %_single% equ 10 if %EditionPro% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
-if %_single% equ 11 if %EditionPro% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
-if %_single% equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
+if %_single% equ 10 if %EditionPro% equ 1 if %ProfessionalCountrySpecific% equ 0 (set ProfessionalCountrySpecific=1&set verify=1)
+if %_single% equ 11 if %EditionPro% equ 1 if %ProfessionalSingleLanguage% equ 0 (set ProfessionalSingleLanguage=1&set verify=1)
+if %_single% equ 12 if %EditionPro% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
+if %_single% equ 13 if %EditionPro% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
+if %_single% equ 14 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
 if %verify% equ 1 goto :CREATEMENU
 set _single=
 goto :SINGLEMENU
@@ -378,9 +384,11 @@ if %%# equ 6 if %EditionProN% equ 1 if %EducationN% equ 0 (set EducationN=1&set 
 if %%# equ 7 if %EditionProN% equ 1 if %ProfessionalEducationN% equ 0 (set ProfessionalEducationN=1&set verify=1)
 if %%# equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (set ProfessionalWorkstationN=1&set verify=1)
 if %%# equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
-if %%# equ 10 if %EditionPro% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
-if %%# equ 11 if %EditionPro% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
-if %%# equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
+if %%# equ 10 if %EditionPro% equ 1 if %ProfessionalCountrySpecific% equ 0 (set ProfessionalCountrySpecific=1&set verify=1)
+if %%# equ 11 if %EditionPro% equ 1 if %ProfessionalSingleLanguage% equ 0 (set ProfessionalSingleLanguage=1&set verify=1)
+if %%# equ 12 if %EditionPro% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
+if %%# equ 13 if %EditionPro% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
+if %%# equ 14 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
 )
 if %verify% equ 1 goto :CREATEMENU
 set _index=
@@ -664,6 +672,8 @@ if /i %editionid%==ProfessionalWorkstation set DVDLABEL=CPRWA_%archl%FRE_%langid
 if /i %editionid%==ProfessionalWorkstationN set DVDLABEL=CPRWNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==ProfessionalEducation set DVDLABEL=CPREA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATION_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==ProfessionalEducationN set DVDLABEL=CPRENA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATIONN_OEMRET_%archl%FRE_%langid%
+if /i %editionid%==ProfessionalCountrySpecific set DVDLABEL=CPRCSA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%*PHCS*_OEMRET_%archl%FRE_%langid%
+if /i %editionid%==ProfessionalSingleLanguage set DVDLABEL=CPRSLA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%*PHSL*_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==ServerRdsh set DVDLABEL=CEV_%archl%FREV_%langid%_DV5&set DVDISO=%_label%MULTISESSION_VOL_%archl%FRE_%langid%&set _VL=1
 if /i %editionid%==IoTEnterprise set DVDLABEL=IOTE_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISE_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==IoTEnterpriseS set DVDLABEL=IOTS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISES_OEMRET_%archl%FRE_%langid%
@@ -701,6 +711,34 @@ set "DigitalProductId4=F804000004000000350035003000340031002D0030003400330036003
 set "Print=1"
 set "Insecure=0"
 set "desc=IoT Enterprise"
+set "source=%IndexPro%"
+call :WIM
+exit /b
+
+:ProfessionalCountrySpecific
+set "EditionID=%1"
+set "ProductId="
+set "OSProductContentId="
+set "OSProductPfn="
+set "DigitalProductId="
+set "DigitalProductId4="
+set "Print=1"
+set "Insecure=0"
+set "desc=Pro China Only"
+set "source=%IndexPro%"
+call :WIM
+exit /b
+
+:ProfessionalSingleLanguage
+set "EditionID=%1"
+set "ProductId="
+set "OSProductContentId="
+set "OSProductPfn="
+set "DigitalProductId="
+set "DigitalProductId4="
+set "Print=1"
+set "Insecure=0"
+set "desc=Pro Single Language"
 set "source=%IndexPro%"
 call :WIM
 exit /b
