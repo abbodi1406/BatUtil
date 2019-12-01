@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-set uiv=v5.2
+set uiv=v5.3
 :: when changing below options, recommended to set the new values between = and " marks
 
 :: target image or wim file
@@ -215,6 +215,7 @@ call :ssu
 call :csu
 call :esu
 call :general
+goto :eof
 if /i %IE11% equ ON (call :ie11) else (call :ie9)
 if /i %RDP% equ ON call :rdp
 if /i %ADLDS% equ ON call :adlds
@@ -251,11 +252,11 @@ expand.exe -f:* "%cab_dir%\*%ssu1st%*.cab" "%dest%" 1>nul 2>nul || (echo Error: 
 goto :eof
 
 :esu
-if not exist "%repo%\Security\*%ssu2nd%*-%arch%.msu" goto :eof
-if exist "%mountdir%\Windows\servicing\packages\package_for_%ssu2nd%*.mum" goto :eof
 set ssuver=0
 set shaupd=0
 for /f %%i in ('dir /b "%mountdir%\Windows\servicing\Version"') do set ssuver=%%i
+if not exist "%repo%\Security\*%ssu2nd%*-%arch%.msu" goto :eof
+if exist "%mountdir%\Windows\servicing\packages\package_for_%ssu2nd%*.mum" goto :eof
 if %ssuver:~9% lss 24383 goto :eof
 if %online%==1 (set ksub1=SOFTWARE) else (set ksub1=OFFSOFT&%_reg% load HKLM\!ksub1! "%mountdir%\Windows\System32\config\SOFTWARE" >nul)
 %_reg% query HKLM\%ksub1%\Microsoft\Windows\CurrentVersion\Servicing\Codesigning\SHA2 /v SHA2-Codesigning-Support 1>nul 2>nul && set shaupd=1
@@ -341,6 +342,7 @@ echo.
 echo ============================================================
 echo *** General Updates ***
 echo ============================================================
+set cat=General Updates
 cd General\
 call :counter
 call :cab
@@ -348,15 +350,14 @@ if exist "%repo%\General\*KB971033*.cab" del /f /q "%repo%\General\*KB971033*.ca
 if %_sum% equ 0 goto :eof
 call :mum
 if %_sum% equ 0 goto :eof
-set cat=General Updates
 goto :listdone
 
 :security
-if %online%==1 if %allcount% geq %onlinelimit% (goto :countlimit)
-if not exist "%repo%\Security\*.msu" goto :eof
 set ssuver=0
 set shaupd=0
 for /f %%i in ('dir /b "%mountdir%\Windows\servicing\Version"') do set ssuver=%%i
+if %online%==1 if %allcount% geq %onlinelimit% (goto :countlimit)
+if not exist "%repo%\Security\*.msu" goto :eof
 if %online%==1 (set ksub1=SOFTWARE) else (set ksub1=OFFSOFT&%_reg% load HKLM\!ksub1! "%mountdir%\Windows\System32\config\SOFTWARE" >nul)
 %_reg% query HKLM\%ksub1%\Microsoft\Windows\CurrentVersion\Servicing\Codesigning\SHA2 /v SHA2-Codesigning-Support 1>nul 2>nul && set shaupd=1
 if %online%==0 %_reg% unload HKLM\%ksub1% >nul
@@ -384,13 +385,13 @@ echo.
 echo ============================================================
 echo *** Hotfixes ***
 echo ============================================================
+set cat=Hotfixes
 cd Hotfix\
 call :counter
 call :cab
 if %_sum% equ 0 goto :eof
 call :mum
 if %_sum% equ 0 goto :eof
-set cat=Hotfixes
 goto :listdone
 
 :rdp
@@ -401,13 +402,13 @@ echo.
 echo ============================================================
 echo *** RDP Updates ***
 echo ============================================================
+set cat=RDP Updates
 cd Additional\RDP\
 call :counter
 call :cab
 if %_sum% equ 0 goto :eof
 call :mum
 if %_sum% equ 0 goto :eof
-set cat=RDP Updates
 goto :listdone
 
 :ie11
@@ -418,6 +419,7 @@ echo.
 echo ============================================================
 echo *** IE11 Updates ***
 echo ============================================================
+set cat=IE11 Updates
 cd Additional\_IE11\
 call :counter
 set IEcab=1
@@ -426,7 +428,6 @@ set IEcab=0
 if %_sum% equ 0 goto :eof
 call :mum
 if %_sum% equ 0 goto :eof
-set cat=IE11 Updates
 goto :listdone
 
 :ie9
@@ -438,6 +439,7 @@ echo.
 echo ============================================================
 echo *** IE9/IE8 Updates ***
 echo ============================================================
+set cat=IE Updates
 if exist "Extra\IE9\*.msu" (
 if not exist "%cab_dir%\IE9" (
 md "%cab_dir%\IE9"
@@ -455,7 +457,6 @@ set IEcab=0
 if %_sum% equ 0 goto :eof
 call :mum
 if %_sum% equ 0 goto :eof
-set cat=IE Updates
 goto :listdone
 
 :windows10
@@ -466,13 +467,13 @@ echo.
 echo ============================================================
 echo *** Windows10/Telemetry Updates ***
 echo ============================================================
+set cat=Win10/Tel Updates
 cd Additional\Windows10\
 call :counter
 call :cab
 if %_sum% equ 0 goto :eof
 call :mum
 if %_sum% equ 0 goto :eof
-set cat=Win10/Tel Updates
 goto :listdone
 
 :wmf
@@ -484,11 +485,11 @@ echo.
 echo ============================================================
 echo *** WMF Updates ***
 echo ============================================================
+set cat=WMF Updates
 cd Additional\WMF\
 call :counter
 call :cab
 if %_sum% equ 0 goto :eof
-set cat=WMF Updates
 call :mum
 if %_sum% equ 0 goto :eof
 goto :listdone
@@ -519,6 +520,7 @@ echo.
 echo ============================================================
 echo *** AD LDS Updates ***
 echo ============================================================
+set cat=AD LDS Updates
 cd /d "%repo%"
 cd Extra\AD_LDS\Updates\
 call :counter
@@ -526,7 +528,6 @@ call :cab
 if %_sum% equ 0 goto :eof
 call :mum
 if %_sum% equ 0 goto :eof
-set cat=AD LDS Updates
 goto :listdone
 
 :rsat
@@ -555,6 +556,7 @@ echo.
 echo ============================================================
 echo *** RSAT Updates ***
 echo ============================================================
+set cat=RSAT Updates
 cd /d "%repo%"
 cd Extra\RSAT\Updates\
 call :counter
@@ -562,7 +564,6 @@ call :cab
 if %_sum% equ 0 goto :eof
 call :mum
 if %_sum% equ 0 goto :eof
-set cat=RSAT Updates
 goto :listdone
 
 :online
@@ -679,7 +680,7 @@ if /i %kb%==KB2849696 (if exist "%mountdir%\Windows\servicing\packages\*IE-Spell
 if /i %kb%==KB2849697 (if exist "%mountdir%\Windows\servicing\packages\*IE-Hyphenation-Parent-Package-English*11.2.*.mum" set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB3191566 (if exist "%mountdir%\Windows\servicing\packages\*WinMan-WinIP*7.3.7601.16384.mum" set /a _sum-=1&set /a _msu-=1&goto :eof)
 for %%G in %rdp8% do (
-  if /i !kb!==%%G call set /a _sum-=1&call set /a _msu-=1&goto :eof
+  if /i !kb!==%%G (call set /a _sum-=1&call set /a _msu-=1&goto :eof)
 )
 if /i "%cat%"=="Security Updates" (
 if exist "%cab_dir%\check\" rd /s /q "%cab_dir%\check"

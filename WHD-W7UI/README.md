@@ -140,7 +140,10 @@ if you do not want these settings, edit the script, search for this line and del
 
 ## Changelog:
 
-* 5.1:  
+* 5.3:  
+fixed installing updates if SSU/SHA2 updates are already installed previously
+
+* 5.2:  
 new servicing stack update KB4523206
 
 * 5.1:  
