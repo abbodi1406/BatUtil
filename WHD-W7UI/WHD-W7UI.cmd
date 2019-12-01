@@ -215,7 +215,6 @@ call :ssu
 call :csu
 call :esu
 call :general
-goto :eof
 if /i %IE11% equ ON (call :ie11) else (call :ie9)
 if /i %RDP% equ ON call :rdp
 if /i %ADLDS% equ ON call :adlds
