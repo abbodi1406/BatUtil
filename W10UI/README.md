@@ -98,32 +98,36 @@ directory for temporary extracted files, default is on the same drive as the scr
 ## Configuration options (for advanced users):
 
 - Edit W10UI.ini to change the default value of main options:  
-> target  
-repo  
-dismroot  
-net35  
-cleanup  
-resetbase  
-winre  
-_cabdir  
-mountdir  
+> Target  
+Repo  
+DismRoot  
+Net35  
+Cleanup  
+ResetBase  
+WinRE  
+_CabDir  
+MountDir
 
 or set extra manual options below:
 
-* net35source  
+* Net35Source  
 specify custom "folder" path for microsoft-windows-netfx3-ondemand-package.cab
 
-* iso  
-create new iso file if the target is a distribution folder  
-require ADK installed, or placing oscdimg.exe or cdimage.exe next to the script
+* wim2esd  
+convert install.wim to install.esd, if the target is a distribution  
+warning: the process will consume very high amount of CPU and RAM resources
 
-* isodir  
-folder path to create iso file in
+* ISO  
+create new iso file, if the target is a distribution folder  
+require Win10 ADK, or place oscdimg.exe or cdimage.exe next to the script
 
-* delete_source  
+* ISODir  
+folder path for iso file, leave it blank to create in the script current directory
+
+* Delete_Source  
 keep or delete DVD distribution folder after creating updated ISO
 
-* autostart  
+* AutoStart  
 start the process automatically once you execute the script
 
 - Note: Do not change the structure of W10UI.ini, just set your options after the equal sign `=`
@@ -149,6 +153,11 @@ start the process automatically once you execute the script
 [WHDownloader](https://forums.mydigitallife.net/threads/44645)
 
 ## Changelog:
+
+7:5:  
+- Code improvements and fixes.
+
+- Added option wim2esd to convert install.wim to install.esd (only for distribution target)
 
 7:4:  
 - Detect and skip WinPE only updates for install.wim
