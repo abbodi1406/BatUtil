@@ -370,8 +370,8 @@ set CTRvcab=v64_%CTRver%.cab&set CTRicab=i640.cab&set CTRicabr=i64%CTRprm%.cab
 
 :MenuInitial
 set _O2019=1
-expand.exe -f:*.xml "!CTRsource!\Office\Data\%CTRvcab%" "!_temp!" >nul
-findstr /i Word2019Volume "!_temp!\VersionDescriptor.xml" 1>nul 2>nul || set _O2019=0
+expand.exe -f:*.xml "!CTRsource!\Office\Data\%CTRvcab%" "!_temp!." >nul
+find /i "Word2019Volume" "!_temp!\VersionDescriptor.xml" 1>nul 2>nul || set _O2019=0
 del /f /q "!_temp!\*.xml" 1>nul 2>nul
 set _Access=ON
 set _Excel=ON
@@ -730,8 +730,8 @@ goto :MenuChannel
 
 :MenuChannel2
 if %inpt%==0 (
-expand.exe -f:*.xml "!CTRsource!\Office\Data\%CTRvcab%" "!_temp!" >nul
-for /f "tokens=3 delims=<= " %%# in ('findstr /i DeliveryMechanism "!_temp!\VersionDescriptor.xml" 2^>nul') do set "FFNRoot=%%~#"
+expand.exe -f:*.xml "!CTRsource!\Office\Data\%CTRvcab%" "!_temp!." >nul
+for /f "tokens=3 delims=<= " %%# in ('find /i "DeliveryMechanism" "!_temp!\VersionDescriptor.xml" 2^>nul') do set "FFNRoot=%%~#"
 if "!FFNRoot!" neq "" for /l %%J in (1,1,9) do (
   if /i !FFNRoot! equ !ffn%%J! set inpt=%%J
   )

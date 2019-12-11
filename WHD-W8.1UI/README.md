@@ -4,19 +4,22 @@ Automated batch script to install/integrate Windows 8.1 Updates, depending on WH
 
 ## Features:
 
-* Supported targets:
-- Current Online OS
-- Offline image (already mounted directory, another partition)
-- Distribution folder (extracted iso, copied dvd/usb)
-- WIM file directly
+* Supported targets:  
+- Current Online OS  
+- Offline image (already mounted directory, or another partition)  
+- Distribution folder (extracted iso, copied dvd/usb)  
+- Distribution Drive (virtual mounted iso, inserted dvd drive, usb drive)  
+- WIM file directly (unmounted)
 
 * Enable .NET Framework 3.5 if available source detected
 
 checked locations: mounted iso, inserted dvd/usb, sxs folder for distribution target
 
-* Detect Windows 8.1 ADK [Deployment Tools](http://www.microsoft.com/en-us/download/details.aspx?id=39982) for offline integration
+* Detect Windows 8.1 ADK [Deployment Tools](http://www.microsoft.com/en-us/download/details.aspx?id=39982) for offline integration and iso/wim updating
 
-* Detect Windows 10 ADK [Deployment Tools](https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install) for offline integration
+* Detect Windows 10 ADK [Deployment Tools](https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install) for offline integration and iso/wim updating
+
+* Perform pending cleanup operation for online OS after restarting
 
 ## How to:
 
@@ -28,95 +31,151 @@ checked locations: mounted iso, inserted dvd/usb, sxs folder for distribution ta
 
 * Change the options to suit your needs, make sure all are set correctly, do not use quotes marks "" in paths
 
-* Press zero '0' to start the process
+* Press zero 0 to start the process
+
+* At the end, Press 9 to exit, or close the windows with red X button
 
 ## Options:
 
 Press each option corresponding number/letter to change it
 
-1. Target  
+* [1] Target  
 target windows image, default is current online system  
-if a wim file is available besides the script, it will be detected automatically
+if a wim file is available next to the script, it will be detected automatically
 
-2. WHD Repository  
-location of WHDownloader "Updates" folder
+* [2] WHD Repo  
+location for WHD repository "Updates" directory (default is next to the script)
 
-3. LDR branch  
+* [3] LDR branch  
 force installing of LDR branch for .NET updates that have it
 
-4. Hotfixes  
+* [4] Hotfixes  
 install updates found in "Hotfix"
 
-5. WU Satisfy  
+* [5] WU Satisfy  
 install updates found in "Additional\WU.Satisfy"
 
-6. Windows10  
-install Windows10 related updates found in "Additional\Windows10"  
-if you switch it ON, another option will be available: B. Block Windows10/Telemetry
+* [6] Windows10  
+install Windows10 related updates found in "Additional\Windows10"
 
-7. WMF  
+* [7] WMF  
 install (Windows Management Framework 5.1) package found in "Additional\WMF"
 
-8. RSAT updates  
+* [8] RSAT  
 install (Remote Server Administration Tools) package and updates found in "Extra\RSAT"
 
-9. Online installation limit  
+* [N] Enable .NET 3.5  
+enable .NET Framework 3.5 feature
+
+* [C] Cleanup System Image: YES      [T] Reset Base: YES  
+in this choice, the OS images will be rebased and superseded components will be "removed"  
+quick operation and reduce size further more.
+
+* [C] Cleanup System Image: YES      [T] Reset Base: NO  
+in this choice, the OS images will be cleaned and superseded components will be "delta-compressed"  
+safe operation, but might take long time to complete.
+
+* [L] Online installation limit  
 available only if the target is Current Online OS  
 limit number of updates that will be installed before requiring to reboot  
 installing a large number of updates on live OS makes the process slower and slower
 
-D. DISM  
+* [D] DISM
 available only if the target is an offline image  
 the path for custom dism.exe  
-required when the current Host OS is lower than Windows 8.1 without ADK installed
+required when the current Host OS is lower than Windows 7 without ADK installed
 
-E. Update WinRE.wim  
+* [U] Update WinRE.wim  
 available only if the target is a distribution folder, or WIM file  
 enable or disable updating winre.wim inside install.wim
 
-I. Selected Install.wim indexes  
+* [I] Install.wim selected indexes  
 available only if the target is a distribution folder, or WIM file  
-ability to select specific index(s) to update from install.wim, or all indexes by default
+a choice to select specific index(s) to update from install.wim, or all indexes by default
 
-## Manual options (for advanced users):
+* [K] Keep indexes  
+available only if you selected specific index(s) in above option [I]  
+a choice to only keep selected index(s) when rebuilding install.wim, or keep ALL indexes
 
-Edit the script with notepad (or text editor) to change
+* [M] Mount Directory  
+available only if the target is a distribution folder, or WIM file
+mount directory for updating wim files, default is on the same drive as the script
 
-* net35  
-process or skip enabling .NET 3.5 feature
-
-* iso  
-create new iso file if the target is a distribution folder  
-require ADK installed, or placing oscdimg.exe or cdimage.exe next to the script
-
-* delete_source  
-keep or delete DVD distribution folder after creating updated ISO
-
-* autostart  
-start the process automatically once you execute the script
-
-* cab_dir  
+* [E] Extraction Directory  
 directory for temporary extracted files, default is on the same drive as the script
 
-* mountdir / winremount  
-mount directory for updating wim files, default is on system drive C:\
+## Configuration options (for advanced users):
 
-* you can also change the default value of main Options  
-examples:  
-set LDR branch or Hotfixes as OFF  
-set specific folder as default for WHD repository  
-set custom dism.exe path on Windows 7
+* Edit WHD-W81UI.ini to change the default value of main options:  
+Target  
+Repo  
+DismRoot  
+Net35  
+Cleanup  
+ResetBase  
+WinRE  
+Cab_Dir  
+MountDir  
+WinreMount  
+OnlineLimit  
+LDRbranch  
+Hotfix  
+WUSatisfy  
+Windows10  
+WMF  
+RSAT
+
+* or set extra manual options below:
+
+- wim2esd  
+convert install.wim to install.esd, if the target is a distribution  
+warning: the process will consume very high amount of CPU and RAM resources
+
+- ISO  
+create new iso file, if the target is a distribution  
+require installed ADK, or place oscdimg.exe or cdimage.exe next to the script
+
+- ISODir  
+folder path for iso file, leave it blank to create in the script current directory
+
+- Delete_Source  
+keep or delete DVD distribution folder after creating updated ISO
+
+- AutoStart  
+start the process automatically once you execute the script
+
+* Note: Do not change the structure of WHD-W7UI.ini, just set your options after the equal sign =
+
+* To restore old behavior and change options by editing the script, simply detele WHD-W81UI.ini file
+
 
 ## Remarks:
 
-* for offline integration, if "Block Windows10/Telemetry" option is active, a simple script will be created on desktop: RunOnce_W10_Telemetry_Tasks.cmd  
+* How to perform the pending cleanup operation for online OS:  
+- run WHD-W81UI.cmd and install updates, assuming you choose to cleanup OS image (with or without resetbase)  
+- restart system  
+- run WHD-W81UI.cmd again, it will go directly to Cleanup or Reset OS image (it doesn't install or check any updates)
+
+* for offline integration, a simple script will be created on desktop RunOnce_W10_Telemetry_Tasks.cmd  
 after installing the OS, you need to run it as administrator, it will be self-deleted afterwards
 
-* WinPE images (boot.wim/winre.wim) will be updated only with:
-- servicing stack update
-- baseline updates
-- Monthly Quality Rollup
-- extra few WinPE update
+* WinPE images (boot.wim/winre.wim) will be updated only with:  
+- servicing stack update  
+- baseline updates  
+- Monthly Quality Rollup  
+- extra few WinPE updates
+
+## Debug Mode (for advanced users):
+
+* Create a log file of the integration process for debugging purposes
+
+* The operation progress will not be shown in this mode
+
+* How To:  
+- edit the script and change set _Debug=0 to 1  
+- set main options correctly, specially "target" and "repo"  
+- save and run the script as admin  
+- wait until command prompt window is closed and Debug.log is created
 
 ## Credits:
 
@@ -125,6 +184,14 @@ after installing the OS, you need to run it as administrator, it will be self-de
 [WHDownloader](https://forums.mydigitallife.net/threads/44645)
 
 ## Changelog:
+
+* 6.0:  
+lite revamp with backported features of W10UI  
+support for configuration file WHD-W81UI.ini  
+more menu options (.NET 3.5, Cleanup, install.wim indexes, Mount and Extraction dirs)  
+added manual options wim2esd, ISODir  
+implemented debug mode  
+code improvemens and fixes to avoid paths issues
 
 * 5.2:  
 new servicing stack update KB4524445

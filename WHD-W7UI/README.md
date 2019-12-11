@@ -4,13 +4,16 @@ Automated batch script to install/integrate Windows 7 Updates, depending on WHDo
 
 ## Features:
 
-* Supported targets:
-- Current Online OS
-- Offline image (already mounted directory, another partition)
-- Distribution folder (extracted iso, copied dvd/usb)
-- WIM file directly
+* Supported targets:  
+- Current Online OS  
+- Offline image (already mounted directory, or another partition)  
+- Distribution folder (extracted iso, copied dvd/usb)  
+- Distribution Drive (virtual mounted iso, inserted dvd drive, usb drive)  
+- WIM file directly (unmounted)
 
-* Detect Windows 8.1 ADK [Deployment Tools](http://www.microsoft.com/en-us/download/details.aspx?id=39982) for offline integration
+* Detect Windows 8.1 ADK [Deployment Tools](http://www.microsoft.com/en-us/download/details.aspx?id=39982) for offline integration and iso/wim updating
+
+* Detect Windows 10 ADK [imagex.exe and oscdimg.exe](https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install) for iso/wim updating
 
 ## How to:
 
@@ -22,115 +25,159 @@ Automated batch script to install/integrate Windows 7 Updates, depending on WHDo
 
 * Change the options to suit your needs, make sure all are set correctly, do not use quotes marks "" in paths
 
-* Press zero '0' to start the process
+* Press zero 0 to start the process
+
+* At the end, Press 9 to exit, or close the windows with red X button
 
 ## Options:
 
 Press each option corresponding number/letter to change it
 
-1. Target  
+* [1] Target  
 target windows image, default is current online system  
-if a wim file is available besides the script, it will be detected automatically
+if a wim file is available next to the script, it will be detected automatically
 
-2. WHD Repository  
-location of WHDownloader "Updates" folder
+* [2] WHD Repo  
+location for WHD repository "Updates" directory (default is next to the script)
 
-3. LDR branch  
+* [3] LDR branch  
 force installing of LDR branch for any updates that have it
 
-4. IE11  
+* [4] IE11  
 install (Internet Explorer 11) packages found in "Additional\_IE11"  
 if you switch it OFF, "Extra\IE9" will be installed if exist, otherwise "Extra\IE8" if exist
 
-5. RDP  
+* [5] RDP  
 install (Remote Desktop Protocol 8/8.1) packages found in "Additional\RDP"  
 if you switch it OFF, "Extra\WithoutRDP" updates will be installed if exist
 
-6. Hotfixes  
+* [6] Hotfixes  
 install updates found in "Hotfix"
 
-7. WMF  
+* [7] WMF  
 install (Windows Management Framework) packages found in "Additional\WMF"  
-these packages require .NET Framework 4.5 or higher to be installed
+these packages require .NET Framework 4.5 or higher to be already installed
 
-8. WAT (KB971033)  
+* [8] Features (WHD-W7UI_WithoutKB3125574.cmd only)  
+install updates found in "Extra\WithoutKB3125574\_Features"
+
+* [A] KB971033  
 install (Windows Activation Technologies) package found in "Additional\WAT"  
-this package is required for online genuine validation
+this package is required for online genuine validation for non-volume editions
 
-W. Windows10  
-install Windows10 related updates found in "Additional\Windows10"  
-if you switch it ON, another option will be available: B. Block Windows10/Telemetry
+* [W] Windows10  
+install Windows10 related updates found in "Additional\Windows10"
 
-S. ADLDS  
+* [S] ADLDS  
 install (Active Directory LDS) package and updates found in "Extra\AD_LDS"
 
-R. RSAT  
+* [R] RSAT  
 install (Remote Server Administration Tools) package and updates found in "Extra\RSAT"
 
-9. Online installation limit  
+* [L] Online installation limit  
 available only if the target is Current Online OS  
 limit number of updates that will be installed before requiring to reboot  
 installing a large number of updates on live OS makes the process slower and slower
 
-D. DISM  
+* [D] DISM
 available only if the target is an offline image  
 the path for custom dism.exe  
 required when the current Host OS is lower than Windows 7 without ADK installed
 
-E. Update WinRE.wim  
+* [U] Update WinRE.wim  
 available only if the target is a distribution folder, or WIM file  
 enable or disable updating winre.wim inside install.wim
 
-I. Selected Install.wim indexes  
+* [I] Install.wim selected indexes  
 available only if the target is a distribution folder, or WIM file  
-ability to select specific index(s) to update from install.wim, or all indexes by default
+a choice to select specific index(s) to update from install.wim, or all indexes by default
 
-## Manual options (for advanced users):
+* [K] Keep indexes  
+available only if you selected specific index(s) in above option [I]  
+a choice to only keep selected index(s) when rebuilding install.wim, or keep ALL indexes
 
-Edit the script with notepad (or text editor) to change
+* [M] Mount Directory  
+available only if the target is a distribution folder, or WIM file
+mount directory for updating wim files, default is on the same drive as the script
 
-* iso  
-create new iso file if the target is a distribution folder  
-require ADK installed, or placing oscdimg.exe or cdimage.exe next to the script
-
-* delete_source  
-keep or delete DVD distribution folder after creating updated ISO
-
-* autostart  
-start the process automatically once you execute the script
-
-* cab_dir  
+* [E] Extraction Directory  
 directory for temporary extracted files, default is on the same drive as the script
 
-* mountdir / winremount  
-mount directory for updating wim files, default is on system drive C:\
+## Configuration options (for advanced users):
 
-* you can also change the default value of main Options  
-examples:  
-set LDR branch or Hotfixes as OFF  
-set specific folder as default for WHD repository  
-set custom dism.exe path on Windows 7
+* Edit WHD-W7UI.ini to change the default value of main options:  
+Target  
+Repo  
+DismRoot  
+WinRE  
+Cab_Dir  
+MountDir  
+WinreMount  
+OnlineLimit  
+LDRbranch  
+IE11  
+RDP  
+Hotfix  
+Features  
+WAT  
+WMF  
+Windows10  
+ADLDS  
+RSAT
+
+* or set extra manual options below:
+
+- ISO  
+create new iso file, if the target is a distribution  
+require installed ADK, or place oscdimg.exe or cdimage.exe next to the script
+
+- ISODir  
+folder path for iso file, leave it blank to create in the script current directory
+
+- Delete_Source  
+keep or delete DVD distribution folder after creating updated ISO
+
+- AutoStart  
+start the process automatically once you execute the script
+
+* Note: Do not change the structure of WHD-W7UI.ini, just set your options after the equal sign =
+
+* To restore old behavior and change options by editing the script, simply detele WHD-W7UI.ini file
 
 ## Remarks:
 
-* for offline integration, if "Block Windows10/Telemetry" option is active, a simple script will be created on desktop: RunOnce_W10_Telemetry_Tasks.cmd  
+* for offline integration, a simple script will be created on desktop RunOnce_W10_Telemetry_Tasks.cmd  
 after installing the OS, you need to run it as administrator, it will be self-deleted afterwards
 
 * for offline integration, to process x64 update KB2603229 correctly, a simple script will be created on desktop: RunOnce_KB2603229_Fix.cmd  
 after installing the OS, you need to run it as administrator, it will be self-deleted afterwards
 
-* for offline integration, to rebuild wim files, you need either of:
-- imagex.exe placed next to WHD-W7UI.cmd
-- Windows 8.1 ADK is installed
-- Host OS is Windows 8.1
+* for offline integration, to rebuild wim files, you need either of:  
+- imagex.exe placed next to WHD-W7UI.cmd  
+- Windows 8.1 ADK or Windows 10 ADK is installed  
+- Host OS is Windows 8.1 or later
 
-* WinPE images (boot.wim/winre.wim) will be updated only with:
-- servicing stack update
+* WinPE images (boot.wim/winre.wim) will be updated only with:  
+- Servicing Stack Update  
+- SHA2 Code Signing Support Update  
+- Extended Servicing Stack Update  
 - Monthly Quality Rollup
 
-* Extra registry settings will be added one time only if "Hotfixes" is ON  
+* Extra registry settings will be added one time only if "Hotfixes" option is YES  
 if you do not want these settings, edit the script, search for this line and delete it:  
-`if /i %Hotfix% equ ON call :regfix`
+`if /i "%Hotfix%"=="YES" call :regfix`
+
+## Debug Mode (for advanced users):
+
+* Create a log file of the integration process for debugging purposes
+
+* The operation progress will not be shown in this mode
+
+* How To:  
+- edit the script and change set _Debug=0 to 1  
+- set main options correctly, specially "target" and "repo"  
+- save and run the script as admin  
+- wait until command prompt window is closed and Debug.log is created
 
 ## Credits:
 
@@ -139,6 +186,19 @@ if you do not want these settings, edit the script, search for this line and del
 [WHDownloader](https://forums.mydigitallife.net/threads/44645)
 
 ## Changelog:
+
+* 6.0:  
+lite revamp with backported features of W10UI  
+support for configuration file WHD-W7UI.ini  
+more menu options (WinRE.wim, install.wim indexes, Mount and Extraction dirs)  
+added manual option ISODir  
+implemented debug mode  
+code improvemens and fixes to avoid paths issues  
+optimized checking Security Updates  
+added detection support for Windows 10 ADK (for imagex.exe and oscdimg.exe only)  
+added theoretical support if Win7 build is bumped to 7602 after ESU  
+added support to suppress the EOS notification  
+new extended servicing stack update KB4531786
 
 * 5.3:  
 fixed installing updates if SSU/SHA2 updates are already installed previously
