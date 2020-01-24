@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.0
+@set uiv=v6.2
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -58,7 +58,7 @@ set Delete_Source=0
 :: ###################################################################
 
 :: Technical options for updates
-set ssu2nd=KB4531786
+set ssu2nd=KB4536952
 set ssu1st=KB4490628
 set sha2cs=KB4474419
 set rollup=KB3125574
@@ -908,6 +908,7 @@ set lc=1
 :PP
 if %lc% gtr %list% (
 if /i "%cat%"=="Security Updates" call :diagtrack %_Nul3%
+if /i "%cat%"=="IE11 Updates" if exist "!mountdir!\Windows\servicing\packages\Microsoft-Windows-EmbeddedCore-Package*amd64*.mum" call :iembedded %_Nul3%
 goto :eof
 )
 call set ldr=%%ldr%lc%%%
@@ -948,6 +949,20 @@ if not exist "!cab_dir!\" mkdir "!cab_dir!"
 goto :eof
 
 :: ###################################################################
+
+:iembedded
+if %online%==1 (
+set ksub1=SOFTWARE
+) else (
+set ksub1=OFFSOFT
+reg.exe load HKLM\!ksub1! "!mountdir!\Windows\System32\config\SOFTWARE"
+)
+reg.exe delete "HKLM\%ksub1%\Wow6432Node\Microsoft\Active Setup\Installed Components\{89820200-ECBD-11cf-8B85-00AA005B4383}" /f
+reg.exe add "HKLM\%ksub1%\Wow6432Node\Microsoft\Active Setup\Installed Components\{89820200-ECBD-11cf-8B85-00AA005B4383}" /f /v IsInstalled /t REG_DWORD /d 0
+if %online%==0 (
+reg.exe unload HKLM\%ksub1%
+)
+goto :eof
 
 :diagtrack
 if %online%==1 (

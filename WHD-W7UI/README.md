@@ -187,6 +187,9 @@ if you do not want these settings, edit the script, search for this line and del
 
 ## Changelog:
 
+* 6.1:  
+implemented IE11 registry fix for Embedded x64
+
 * 6.0:  
 lite revamp with backported features of W10UI  
 support for configuration file WHD-W7UI.ini  

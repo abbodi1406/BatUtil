@@ -154,6 +154,12 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+7:7:  
+- x64 target on x86 host: Fix for unseen registry flush error.
+
+7:6:  
+- x64 target on x86 host: Fix for wrong detection.
+
 7:5:  
 - Code improvements and fixes.
 

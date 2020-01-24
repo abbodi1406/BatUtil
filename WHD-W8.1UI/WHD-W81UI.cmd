@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.0
+@set uiv=v6.1
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -431,6 +431,7 @@ if not exist "%dest%\*.manifest" (
 expand.exe -f:*Windows*.cab "!repo!\Baseline\*%package%*%arch%.msu" . %_Null%
 mkdir "%dest%"
 expand.exe -f:* "*%package%*.cab" "%dest%" %_Null% || (
+  rmdir /s /q "%dest%\" %_Nul3%
   %_dism2%:"!cab_dir!" %dismtarget% /Add-Package /packagepath:.
   del /f /q "*%package%*.cab"
   cd /d "!repo!\Baseline"
@@ -491,6 +492,7 @@ if /i %package%==KB2938772 (
   )
 mkdir "!cab_dir!\%dest%"
 expand.exe -f:* "!cab_dir!\*%package%*.cab" "!cab_dir!\%dest%" %_Null% || (
+  rmdir /s /q "!cab_dir!\%dest%\" %_Nul3%
   for /f "tokens=* delims=" %%# in ('dir /b /a:-d "!cab_dir!\*%package%*.cab"') do set "ldr=!ldr! /packagepath:%%~#"
   goto :eof
   )
@@ -828,15 +830,13 @@ set /a allcount+=1
 set /a listc+=1
 if not exist "%dest%\*.manifest" (
 if %verb%==1 echo %count%/%_sum%: %package%
-expand.exe -f:* "%package%" "%dest%" %_Null% || (set "ldr=!ldr! /packagepath:%package%"&goto :eof)
+expand.exe -f:* "%package%" "%dest%" %_Null% || (rmdir /s /q "%dest%\" %_Nul3%&set "ldr=!ldr! /packagepath:%package%"&goto :eof)
 )
+if exist "%dest%\*cablist.ini" expand.exe -f:* "%dest%\*.cab" "%dest%" %_Null% || (rmdir /s /q "%dest%\" %_Nul3%&set "ldr=!ldr! /packagepath:%package%"&goto :eof)
+if exist "%dest%\*cablist.ini" (del /f /q "%dest%\*cablist.ini" %_Nul3%&del /f /q "%dest%\*.cab" %_Nul3%)
 if /i not "%LDRbranch%"=="YES" (set "ldr=!ldr! /packagepath:%dest%\update.mum"&goto :eof)
 if %_GDR% equ 1 (set "ldr=!ldr! /packagepath:%dest%\update.mum"&goto :eof)
 if exist "%dest%\update-bf.mum" (set "ldr=!ldr! /packagepath:%dest%\update-bf.mum") else (set "ldr=!ldr! /packagepath:%dest%\update.mum")
-if not exist "%dest%\*cablist.ini" goto :eof
-expand.exe -f:* "%dest%\*.cab" "%dest%" %_Null% || (set "ldr=!ldr! /packagepath:%package%")
-del /f /q "%dest%\*cablist.ini" %_Nul3%
-del /f /q "%dest%\*.cab" %_Nul3%
 goto :eof
 
 :listdone

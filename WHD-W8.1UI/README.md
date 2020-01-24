@@ -185,6 +185,9 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 6.1:  
+fixed cab offline integration on Windows 7 host
+
 * 6.0:  
 lite revamp with backported features of W10UI  
 support for configuration file WHD-W81UI.ini  
