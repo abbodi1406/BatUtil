@@ -24,11 +24,15 @@ however, if it's created using option:
 
 * Windows 10 distribution (ISO file, DVD/USB, ISO extracted to folder).
 
-* Windows 10 Language Packs, matching the distribution build version.
+* Windows 10 Language Packs, matching the distribution build version (Note: version 1909 is the same as version 1903).
 
 * Windows 10 OnDemand Packs if available (Optional, but recommended).
 
 * If you want the Standard WinPE localization: Windows 10 ADK (Deployment Tools & Preinstallation Environment).
+
+- Build 19041 - Windows 10 version 2004:  
+
+full ISO  
 
 - Build 18362 - Windows 10 version 1903 (and 1909):  
 http://download.microsoft.com/download/B/E/6/BE63E3A5-5D1C-43E7-9875-DFA2B301EC70/adk/adksetup.exe  

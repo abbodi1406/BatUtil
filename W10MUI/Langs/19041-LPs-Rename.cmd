@@ -1,0 +1,91 @@
+@echo off
+set lng=microsoft-windows-client-languagepack-package
+cd /d %~dp0
+call :UupRen 1>nul 2>nul
+exit /b
+
+:UupRen
+ren 5fda182a-0678-42a6-8f9b-689eeef68e90 %lng%_ar-sa-x86-ar-sa.esd
+ren e8dd124a-228c-4d3d-a4a7-c2af9700c9b2 %lng%_bg-bg-x86-bg-bg.esd
+ren 0b5db7e1-5d2c-4df4-97be-fa08995a8403 %lng%_ca-es-x86-ca-es.esd
+ren 4b598d84-b736-40c7-adc3-8df73961cb8f %lng%_cs-cz-x86-cs-cz.esd
+ren c16cc515-8d47-4968-957e-1c7d32245f9c %lng%_da-dk-x86-da-dk.esd
+ren a9d64095-80c9-43d1-9462-055ce25fa2cd %lng%_de-de-x86-de-de.esd
+ren 728b607f-13f2-484c-aaef-e04a544ffed8 %lng%_el-gr-x86-el-gr.esd
+ren d035a28b-eed9-4678-a507-613702c595d6 %lng%_en-gb-x86-en-gb.esd
+ren 7d786a6d-72d9-4be9-9aab-66bd546c24e5 %lng%_en-us-x86-en-us.esd
+ren 2bbe0f31-e529-4c8c-8eb3-caacdd9ebd59 %lng%_es-es-x86-es-es.esd
+ren c146c68e-ea9f-4ff9-8d5d-bf551e0561a9 %lng%_es-mx-x86-es-mx.esd
+ren d39a8f07-16f0-42f2-813d-5c26fde19bf9 %lng%_et-ee-x86-et-ee.esd
+ren efca4dc4-7d3b-4372-9ada-8567cb6a5d11 %lng%_fi-fi-x86-fi-fi.esd
+ren a15370b3-92fc-434c-8fee-7173e9f46394 %lng%_fr-ca-x86-fr-ca.esd
+ren 6b8dbb37-3381-435d-9fc4-a10cfbcb52b8 %lng%_fr-fr-x86-fr-fr.esd
+ren db40db2c-d88f-4cab-8426-5544f158e5ec %lng%_he-il-x86-he-il.esd
+ren 031197ca-df66-4c8d-92e1-def38d5a8c56 %lng%_hr-hr-x86-hr-hr.esd
+ren d65817d0-7a47-4839-89a3-e4e1834a13a4 %lng%_hu-hu-x86-hu-hu.esd
+ren 9bbb2b49-672a-48c0-a751-14e47951482b %lng%_id-id-x86-id-id.esd
+ren 898647c3-c94e-4aac-bafb-b2659079f425 %lng%_it-it-x86-it-it.esd
+ren e923cc47-3f78-47ac-b574-94200047ea27 %lng%_ja-jp-x86-ja-jp.esd
+ren ac2bda72-9986-444a-8479-dca7a2646280 %lng%_ko-kr-x86-ko-kr.esd
+ren 37c9b441-41eb-4b3e-8beb-e6da23334b06 %lng%_lt-lt-x86-lt-lt.esd
+ren de3fb786-fbb3-47b3-b9a1-d2beb88efff8 %lng%_lv-lv-x86-lv-lv.esd
+ren 44742f8d-ad04-48e7-8af9-723fd3d2d87e %lng%_nb-no-x86-nb-no.esd
+ren 08d84fdf-70c7-4e03-aa64-2dbc415de175 %lng%_nl-nl-x86-nl-nl.esd
+ren 5291bd28-23de-49d9-905d-1d9f5eff40f7 %lng%_pl-pl-x86-pl-pl.esd
+ren 7f8c0701-cb8c-45b8-86f7-7af941731e81 %lng%_pt-br-x86-pt-br.esd
+ren 315c56f0-5367-48f7-a254-b536c597a3e1 %lng%_pt-pt-x86-pt-pt.esd
+ren 396cc666-1a03-4294-9e3c-01a0288f41fd %lng%_ro-ro-x86-ro-ro.esd
+ren a9cb6472-c19c-447e-ae61-7c873d5b74f1 %lng%_ru-ru-x86-ru-ru.esd
+ren 5a2cdd8d-9210-47ae-a396-2e233e8ffdec %lng%_sk-sk-x86-sk-sk.esd
+ren 5f02792b-6ea5-44a8-bb9f-6e9d997ec165 %lng%_sl-si-x86-sl-si.esd
+ren 5df003fc-626c-4bd2-ac49-871e9af389c5 %lng%_sr-latn-rs-x86-sr-latn-rs.esd
+ren 10059dd9-bd04-450c-b163-26dabe8b84bc %lng%_sv-se-x86-sv-se.esd
+ren 8cb73406-8fff-4a12-b408-0af10ae899e3 %lng%_th-th-x86-th-th.esd
+ren 1650d682-71aa-4909-b433-3ed81797d8a6 %lng%_tr-tr-x86-tr-tr.esd
+ren df860023-17a5-492a-a5d0-2cd8b7fb7347 %lng%_uk-ua-x86-uk-ua.esd
+ren 9bedd075-b05a-4caf-920c-2068e158c236 %lng%_vi-vn-x86-vi-vn.esd
+ren 8747da35-5ba6-4969-bc20-b227b92783f8 %lng%_zh-cn-x86-zh-cn.esd
+ren d11e9f80-09dd-4321-a1d1-0a3d8c8292f1 %lng%_zh-tw-x86-zh-tw.esd
+
+ren aa323e76-f7ad-4784-b506-8e87f5fc66cb %lng%_ar-sa-amd64-ar-sa.esd
+ren ef48edda-957d-4156-ac5c-4edcae0a3a65 %lng%_bg-bg-amd64-bg-bg.esd
+ren 9cb892fe-1434-4e28-bc40-7a7ae4067985 %lng%_ca-es-amd64-ca-es.esd
+ren 0acb6f3d-e6d5-41ca-8d76-418d36b62479 %lng%_cs-cz-amd64-cs-cz.esd
+ren 543bbadd-80b0-46fa-a741-be6f4a6336fd %lng%_da-dk-amd64-da-dk.esd
+ren 49992171-8417-468c-829e-e2911b86f902 %lng%_de-de-amd64-de-de.esd
+ren b2fe6933-2b54-43b6-844e-276fe0c3d2d6 %lng%_el-gr-amd64-el-gr.esd
+ren 44394882-e59c-4678-895f-a53f312f4905 %lng%_en-gb-amd64-en-gb.esd
+ren 306a70bf-defd-4839-ac4d-bd23b63f5499 %lng%_en-us-amd64-en-us.esd
+ren d42b46e9-f0d9-45b3-936d-547c108e736d %lng%_es-es-amd64-es-es.esd
+ren b26b1ac4-a621-4074-8ad2-e5add89eee6e %lng%_es-mx-amd64-es-mx.esd
+ren 707ec5b3-4d55-484a-a075-01a1ac50546f %lng%_et-ee-amd64-et-ee.esd
+ren f8464474-7bad-40fc-9628-0018c611cd08 %lng%_fi-fi-amd64-fi-fi.esd
+ren 1218fc02-0a21-4aa0-8b98-c7de51416eca %lng%_fr-ca-amd64-fr-ca.esd
+ren 8f8b03c2-96e4-4880-a422-6b55eb6a888f %lng%_fr-fr-amd64-fr-fr.esd
+ren 84930e0e-9f61-426e-a741-835084581095 %lng%_he-il-amd64-he-il.esd
+ren b13f9a13-5081-4977-b598-f5405979a13a %lng%_hr-hr-amd64-hr-hr.esd
+ren 280c8786-2be0-44b8-9eb3-99087410de3d %lng%_hu-hu-amd64-hu-hu.esd
+ren 1bb55a46-5918-4eb3-8b00-6cea432736ba %lng%_id-id-amd64-id-id.esd
+ren aac2b881-a195-4015-a0fa-7bd33c8f4028 %lng%_it-it-amd64-it-it.esd
+ren e9e635df-2d8c-47ec-b70f-1ee7f6f72607 %lng%_ja-jp-amd64-ja-jp.esd
+ren 722d2e3c-e955-4dee-9af1-39720d0fd597 %lng%_ko-kr-amd64-ko-kr.esd
+ren 4322fad3-0951-434c-ab8f-72abac276abc %lng%_lt-lt-amd64-lt-lt.esd
+ren e7fee064-2853-4af8-bb1c-7ad91918e7ca %lng%_lv-lv-amd64-lv-lv.esd
+ren 597c4b01-f265-4bd1-99f6-7f3cfe6bcab9 %lng%_nb-no-amd64-nb-no.esd
+ren 9060c641-0114-4438-ac86-33bd6a428776 %lng%_nl-nl-amd64-nl-nl.esd
+ren 9462ffc4-a9e6-4be6-b73f-ba1ff9ce7779 %lng%_pl-pl-amd64-pl-pl.esd
+ren aea8ddda-7590-4133-87fc-da144009faa6 %lng%_pt-br-amd64-pt-br.esd
+ren 8fd2fb7b-c28b-4658-9926-86b33a250058 %lng%_pt-pt-amd64-pt-pt.esd
+ren b74e282c-c48c-4610-8766-64c372c7c553 %lng%_ro-ro-amd64-ro-ro.esd
+ren 5292eb5e-b9fb-4c96-ae79-4ed8a29e6b20 %lng%_ru-ru-amd64-ru-ru.esd
+ren 4f497ba4-b553-4d21-8ee3-a297f56308cd %lng%_sk-sk-amd64-sk-sk.esd
+ren 7d520112-257d-46ae-9deb-6cb8772492ff %lng%_sl-si-amd64-sl-si.esd
+ren c1643a73-2e60-49b1-a8ef-8b9d2fbb4476 %lng%_sr-latn-rs-amd64-sr-latn-rs.esd
+ren 86bc23e4-00a0-444c-bfac-2579c3f76f2f %lng%_sv-se-amd64-sv-se.esd
+ren 58c4243a-2898-417f-a5bf-cc8c917053a7 %lng%_th-th-amd64-th-th.esd
+ren f24f3f48-6acb-4669-a95f-a99b06a70bf3 %lng%_tr-tr-amd64-tr-tr.esd
+ren a06e9dfc-b372-4e54-9a64-5064e105e866 %lng%_uk-ua-amd64-uk-ua.esd
+ren c8c796fe-bed7-4d04-bc58-2f9c5ef75abf %lng%_vi-vn-amd64-vi-vn.esd
+ren 264c0dfc-cd48-4609-bcd7-dcedf5e4b360 %lng%_zh-cn-amd64-zh-cn.esd
+ren ab2fc798-6a38-4d7e-b497-6b680eec0f1d %lng%_zh-tw-amd64-zh-tw.esd
+exit /b

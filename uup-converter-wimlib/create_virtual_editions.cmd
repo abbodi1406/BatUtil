@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v41
+@set uivr=v44
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -216,9 +216,11 @@ if exist %ISOdir%\ rmdir /s /q %ISOdir%\
 7z.exe x "!ISOfile!" -o%ISOdir% * -r %_Const%
 
 :dCheck
-if %_Debug% neq 0 (
+if defined _Supp (
 if defined _args echo "!_args!"
 echo "!_work!"
+)
+if %_Debug% neq 0 (
 if %AutoStart% equ 0 set AutoStart=1
 )
 if not defined ISOdir exit /b
@@ -611,7 +613,10 @@ for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% 
   )
 )
 if defined isobranch set branch=%isobranch%
-if %revmajor%==18363 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
+if %revmajor%==18363 (
+if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
+if %version:~0,5%==18362 set version=18363%version:~5%
+)
 if %verminor% lss %revminor% (
 set version=%revision%
 set verminor=%revminor%

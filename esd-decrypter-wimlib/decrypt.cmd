@@ -564,7 +564,10 @@ for /f %%i in ('"bin\offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nu
   )
 )
 if defined isobranch set branch=%isobranch%
-if %revmajor%==18363 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
+if %revmajor%==18363 (
+if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
+if %version:~0,5%==18362 set version=18363%version:~5%
+)
 if %verminor% lss %revminor% (
 set version=%revision%
 set verminor=%revminor%
@@ -584,6 +587,7 @@ rmdir /s /q .\bin\temp
 set _rfr=refresh
 set _rsr=release_svc_%_rfr%
 if %revmajor%==18363 (set _label=%revision%.%_time%.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
+if %revision%==18363.592 (set _label=18363.592.200109-2016.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
 if %revision%==18363.418 (set _label=18363.418.191007-0143.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
 if %revision%==18363.356 (set _label=18363.356.190918-2052.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
 if %revision%==18362.356 (set _label=18362.356.190909-1636.19h1_%_rsr%_CLIENT&set branch=19h1_%_rsr%)

@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v41
+@set uivr=v44
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -459,6 +459,10 @@ set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Apply
 if exist ISOFOLDER\MediaMeta.xml del /f /q ISOFOLDER\MediaMeta.xml %_Nul3%
 rem rmdir /s /q ISOFOLDER\sources\uup\ %_Nul3%
+if %_build% geq 18890 (
+wimlib-imagex.exe extract "!MetadataESD!" 3 Windows\Boot\Fonts\* --dest-dir=ISOFOLDER\boot\fonts --no-acls --no-attributes %_Nul3%
+xcopy /CRY ISOFOLDER\boot\fonts\* ISOFOLDER\efi\microsoft\boot\fonts\ %_Nul3%
+)
 if exist ISOFOLDER\sources\ei.cfg (
 if %AIO% equ 1 del /f /q ISOFOLDER\sources\ei.cfg %_Nul3%
 if %_count% gtr 1 del /f /q ISOFOLDER\sources\ei.cfg %_Nul3%
@@ -488,17 +492,6 @@ if %ForceDism% equ 0 (
 call :BootPE
 ) else (
 call :BootADK
-)
-if %_build% geq 18890 (
-set "bcde=bin\bcdedit.exe"
-set "BCDBIOS=ISOFOLDER\boot\bcd"
-set "BCDUEFI=ISOFOLDER\efi\microsoft\boot\bcd"
-!bcde! /store !BCDBIOS! /set {default} bootmenupolicy legacy %_Nul3%
-!bcde! /store !BCDUEFI! /set {default} bootmenupolicy legacy %_Nul3%
-attrib -s -h -a "!BCDBIOS!.LOG*" %_Nul3%
-attrib -s -h -a "!BCDUEFI!.LOG*" %_Nul3%
-del /f /q "!BCDBIOS!.LOG*" %_Nul3%
-del /f /q "!BCDUEFI!.LOG*" %_Nul3%
 )
 if %StartVirtual% neq 0 (
   if %RefESD% neq 0 call :uups_backup
@@ -658,6 +651,7 @@ if %FixDisplay% equ 1 wimlib-imagex.exe info %_file% %%# "!_os%%#!" "!_os%%#!" -
 if %AddUpdates% equ 1 if exist "!_UUP!\*Windows10*KB*.cab" (
 if exist "!_cabdir!\" rmdir /s /q "!_cabdir!\"
 DEL /F /Q %systemroot%\Logs\DISM\* %_Nul3%
+if not exist "%systemroot%\Logs\DISM\" mkdir "%systemroot%\Logs\DISM" %_Nul3%
 if %_file%==%WIMFILE% (call :uups_update %WIMFILE%) else (call :uups_update)
 wimlib-imagex.exe optimize %_file% %_Supp%
 )
@@ -991,7 +985,10 @@ if defined isoupdate (
 7z.exe l "ISOFOLDER\sources\setuphost.exe" >.\bin\version.txt 2>&1
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set isover=%%i.%%j&set isomajor=%%i&set isominor=%%j&set isobranch=%%k&set isodate=%%l)
 del /f /q .\bin\version.txt %_Nul3%
-if %vermajor%==18363 if /i "%isobranch:~0,4%"=="19h1" set isobranch=19h2%isobranch:~4%
+if %vermajor%==18363 (
+if /i "%isobranch:~0,4%"=="19h1" set isobranch=19h2%isobranch:~4%
+if %isover:~0,5%==18362 set isover=18363%isover:~5%
+)
 if /i not "%isobranch%"=="WinBuild" (set isolabel=%isover%.%isodate%.%isobranch%_CLIENT)
 if not defined isolabel exit /b
 if %isominor% lss %verminor% exit /b
@@ -1163,7 +1160,12 @@ for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\vers
 del /f /q .\bin\version.txt %_Nul3%
 if /i not "%branch%"=="WinBuild" (set _label=%version%.%labeldate%.%branch%_CLIENT)
 if not defined isover (call :setlabel&exit /b)
-if %isomajor%==18363 if /i "%isobranch:~0,4%"=="19h1" set isobranch=19h2%isobranch:~4%
+if %isomajor%==18363 (
+if /i "%isobranch:~0,4%"=="19h1" set isobranch=19h2%isobranch:~4%
+if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
+if %version:~0,5%==18362 set version=18363%version:~5%
+)
+set _label=%version%.%labeldate%.%branch%_CLIENT
 if %isominor% gtr %verminor% (set _label=%isover%.%isodate%.%isobranch%_CLIENT)
 call :setlabel
 exit /b
@@ -1220,22 +1222,28 @@ set dismtarget=/image:"%_mount%"
 set servicingstack=
 set cumulative=
 set netroll=
+set secureboot=
 set ldr=
 for /f "tokens=* delims=" %%# in ('dir /b "!_UUP!\*Windows10*KB*.cab"') do (set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :mum)
-if not defined ldr if not defined cumulative if not defined servicingstack goto :eof
+if not defined secureboot if not defined ldr if not defined cumulative if not defined servicingstack goto :eof
 if defined servicingstack (
-%_dism2%:"!_cabdir!" %dismtarget% /Add-Package %servicingstack%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSSU.log" /Add-Package %servicingstack%
 if !errorlevel! neq 0 goto :errmount
-if not defined ldr if not defined cumulative call :cleanup
+if not defined secureboot if not defined ldr if not defined cumulative call :cleanup
 )
-if not defined ldr if not defined cumulative goto :eof
+if not defined secureboot if not defined ldr if not defined cumulative goto :eof
+if defined secureboot (
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSBoot.log" /Add-Package %secureboot%
+cmd /c exit /b !errorlevel!
+if /i "!=ExitCode!" neq "00000000" if /i "!=ExitCode!" neq "800f081e" goto :errmount
+)
 if defined ldr (
-%_dism2%:"!_cabdir!" %dismtarget% /Add-Package %ldr%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismUpdt.log" /Add-Package %ldr%
 cmd /c exit /b !errorlevel!
 if /i "!=ExitCode!" neq "00000000" if /i "!=ExitCode!" neq "800f081e" goto :errmount
 )
 if defined cumulative (
-%_dism2%:"!_cabdir!" %dismtarget% /Add-Package %cumulative%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
 cmd /c exit /b !errorlevel!
 if /i "!=ExitCode!" neq "00000000" if /i "!=ExitCode!" neq "800f081e" goto :errmount
 )
@@ -1256,7 +1264,7 @@ goto :%_rtrn%
 if not exist "!dest!\update.mum" goto :eof
 if exist "!dest!\*.psf.cix.xml" goto :eof
 if %_build% geq 17763 if not exist "%mumtarget%\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
-findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "!dest!\*.mum" %_Nul3% && (if exist "!dest!\*_*10.0.*.manifest" if not exist "!dest!\*_netfx4clientcorecomp*.manifest" (set "netroll=!netroll! /packagepath:!dest!\update.mum")))
+findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "!dest!\*.mum" %_Nul3% && (if exist "!dest!\*_*10.0.*.manifest" if not exist "!dest!\*_netfx4clientcorecomp.resources*.manifest" (set "netroll=!netroll! /packagepath:!dest!\update.mum")))
 findstr /i /m "Package_for_OasisAsset" "!dest!\update.mum" %_Nul3% && (if not exist "%mumtarget%\Windows\servicing\packages\*OasisAssets-Package*.mum" goto :eof)
 findstr /i /m "WinPE" "!dest!\update.mum" %_Nul3% && (
   %_Nul3% findstr /i /m "Edition\"" "!dest!\update.mum"
@@ -1264,6 +1272,12 @@ findstr /i /m "WinPE" "!dest!\update.mum" %_Nul3% && (
   )
 )
 if exist "!dest!\*_microsoft-windows-servicingstack_*.manifest" (set "servicingstack=!servicingstack! /packagepath:!dest!\update.mum"&goto :eof)
+if exist "!dest!\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" (
+if %winbuild% lss 9600 goto :eof
+if exist "%mumtarget%\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
+set secureboot=!secureboot! /packagepath:"!_UUP!\%package%"
+goto :eof
+)
 if exist "%mumtarget%\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
 findstr /i /m "WinPE" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (goto :eof))
 findstr /i /m "WinPE-NetFx-Package" "!dest!\update.mum" %_Nul3% && (findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (goto :eof))
@@ -1342,6 +1356,12 @@ reg.exe load HKLM\%ksub% "%_mount%\Windows\System32\Config\SOFTWARE" %_Nul1%
 reg.exe add HKLM\%ksub%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul1%
 reg.exe unload HKLM\%ksub% %_Nul1%
 )
+if /i %xOS%==x86 if /i %arch%==x64 if not exist "%_mount%\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
+reg.exe load HKLM\%ksub% "%_mount%\Windows\System32\Config\SOFTWARE" %_Nul1%
+reg.exe save HKLM\%ksub% "%_mount%\Windows\System32\Config\SOFTWARE2" %_Nul1%
+reg.exe unload HKLM\%ksub% %_Nul1%
+move /y "%_mount%\Windows\System32\Config\SOFTWARE2" "%_mount%\Windows\System32\Config\SOFTWARE" %_Nul1%
+)
 call :updatewim
 if %NetFx3% equ 1 if %dvd% equ 1 call :enablenet35
 if %%# equ 1 if %dvd% equ 1 (
@@ -1414,7 +1434,9 @@ reg.exe add HKLM\%ksub%\Microsoft\Windows\CurrentVersion\SideBySide\Configuratio
 reg.exe add HKLM\%ksub%\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v DisableResetbase /t REG_DWORD /d 1 /f %_Nul1%
 reg.exe add HKLM\%ksub%\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d %savc% /f %_Nul1%
 )
+if /i %xOS%==x86 if /i %arch%==x64 reg.exe save HKLM\%ksub% "%mumtarget%\Windows\System32\Config\SOFTWARE2" %_Nul1%
 reg.exe unload HKLM\%ksub% %_Nul1%
+if /i %xOS%==x86 if /i %arch%==x64 move /y "%mumtarget%\Windows\System32\Config\SOFTWARE2" "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 ) else (
 %_Nul3% offlinereg.exe "%mumtarget%\Windows\System32\Config\SOFTWARE" Microsoft\Windows\CurrentVersion\SideBySide\Configuration setvalue SupersededActions 3 4
 if exist "%mumtarget%\Windows\System32\Config\SOFTWARE.new" del /f /q "%mumtarget%\Windows\System32\Config\SOFTWARE"&ren "%mumtarget%\Windows\System32\Config\SOFTWARE.new" SOFTWARE
@@ -1451,9 +1473,9 @@ if exist "%mumtarget%\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" goto 
 if exist "%mumtarget%\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" goto :eof
 if not exist "%_target%\sources\sxs\*netfx3*.cab" goto :eof
 set "net35source=%_target%\sources\sxs"
-%_dism2%:"!_cabdir!" %dismtarget% /Enable-Feature /FeatureName:NetFx3 /All /LimitAccess /Source:"%net35source%"
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismNetFx3.log" /Enable-Feature /FeatureName:NetFx3 /All /LimitAccess /Source:"%net35source%"
 if not defined netroll if not defined cumulative call :cleanmanual&goto :eof
-%_dism2%:"!_cabdir!" %dismtarget% /Add-Package %netroll% %cumulative%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismNetFx3.log" /Add-Package %netroll% %cumulative%
 call :cleanmanual&goto :eof
 
 :setdate

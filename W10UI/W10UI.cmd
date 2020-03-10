@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v7.7
+@set uiv=v8.1
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -76,6 +76,7 @@ reg.exe query HKU\S-1-5-19 %_Null% || goto :E_Admin
 set "_oscdimg=%SysPath%\oscdimg.exe"
 set "_sbs=Microsoft\Windows\CurrentVersion\SideBySide\Configuration"
 set "_SxS=HKLM\SOFTWARE\%_sbs%"
+set "_CBS=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing"
 set "_log=%~dpn0"
 set "_work=%~dp0"
 if "%_work:~-1%"=="\" set "_work=%_work:~0,-1%"
@@ -139,7 +140,7 @@ goto :proceed
 
 :ReadINI
 find /i "%1 " W10UI.ini >nul || goto :eof
-for /f "tokens=1* delims==" %%A in ('find /i "%1 " W10UI.ini') do set "%1=%%~B"
+for /f "tokens=1* delims==" %%A in ('find /i "%1 " W10UI.ini') do call set "%1=%%~B"
 goto :eof
 
 :proceed
@@ -199,7 +200,7 @@ if /i "!target!"=="%SystemDrive%" (
 if %xOS%==amd64 (set arch=x64) else (set arch=x86)
 if %_init%==1 (goto :check) else (goto :mainmenu)
 )
-if "%target:~-4%"==".wim" (
+if /i "%target:~-4%"==".wim" (
 if exist "!target!" (
   set wim=1
   for %%# in ("!target!") do set "targetname=%%~nx#"&setlocal DisableDelayedExpansion&set "targetpath=%%~dp#"&setlocal EnableDelayedExpansion
@@ -276,7 +277,7 @@ if "!mountdir!"=="" (%_Goto%)
 if /i "!target!"=="%SystemDrive%" (set dismtarget=/online&set "mountdir=!target!"&set online=1&set build=%winbuild%) else (set dismtarget=/image:"!mountdir!")
 
 :mainboard2
-if %_Debug% neq 0 set "
+rem if %_Debug% neq 0 set "
 @cls
 echo ============================================================
 echo Running W10UI %uiv%
@@ -287,6 +288,7 @@ net stop wuauserv %_Nul3%
 del /f /q %systemroot%\Logs\CBS\* %_Nul3%
 )
 del /f /q %systemroot%\Logs\DISM\* %_Nul3%
+if not exist "%systemroot%\Logs\DISM\" mkdir "%systemroot%\Logs\DISM" %_Nul3%
 if defined onlineclean (
 if exist "%SystemRoot%\WinSxS\pending.xml" (
   echo.
@@ -406,6 +408,11 @@ if %wimfiles%==0 if exist "!target!\Windows\servicing\packages\%mumcheck%" (
 call :rollversion "!target!"
 if !skip!==1 (set /a _sum-=1&if %msu% equ 1 (set /a _msu-=1&goto :eof) else (set /a _cab-=1&goto :eof))
 )
+set "mumcheck=Package_for_DotNetRollup*.mum"
+if %wimfiles%==0 if exist "!target!\Windows\servicing\packages\%mumcheck%" (
+call :netversion "!target!"
+if !skip!==1 (set /a _sum-=1&if %msu% equ 1 (set /a _msu-=1&goto :eof) else (set /a _cab-=1&goto :eof))
+)
 if %msu% equ 0 goto :eof
 set "msucab=!msucab! %kb%"
 set /a count+=1
@@ -455,6 +462,7 @@ echo ============================================================
 set servicingstack=
 set cumulative=
 set netroll=
+set secureboot=
 set discard=0
 set discardre=0
 set ldr=&set listc=0&set list=1&set AC=100
@@ -480,14 +488,18 @@ echo Installing servicing stack update...
 echo ============================================================
 )
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSSU.log" /Add-Package %servicingstack%
-if not defined ldr if not defined cumulative call :cleanup
+if not defined secureboot if not defined ldr if not defined cumulative call :cleanup
 )
-if not defined ldr if not defined cumulative goto :eof
+if not defined secureboot if not defined ldr if not defined cumulative goto :eof
 if %verb%==1 (
 echo.
 echo ============================================================
 echo Installing updates...
 echo ============================================================
+)
+if defined secureboot %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSBoot.log" /Add-Package %secureboot%
+if %errorlevel% equ 1726 (
+%_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 if defined ldr %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismUpdt.log" /Add-Package %ldr%
 if defined cumulative %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
@@ -503,7 +515,7 @@ if %listc% geq %ac% (set /a AC+=100&set /a list+=1&set "ldr%list%=%ldr%"&set "ld
 set /a listc+=1
 if not exist "%dest%\update.mum" (set /a _sum-=1&goto :eof)
 if %build% geq 17763 if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
-findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && (if exist "%dest%\*_*10.0.*.manifest" if not exist "%dest%\*_netfx4clientcorecomp*.manifest" (set "netroll=!netroll! /packagepath:%dest%\update.mum")))
+findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && (if exist "%dest%\*_*10.0.*.manifest" if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" (set "netroll=!netroll! /packagepath:%dest%\update.mum")))
 findstr /i /m "Package_for_OasisAsset" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\servicing\packages\*OasisAssets-Package*.mum" set /a _sum-=1&goto :eof)
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
   %_Nul3% findstr /i /m "Edition\"" "%dest%\update.mum"
@@ -524,7 +536,18 @@ if exist "!mumtarget!\Windows\servicing\packages\%mumcheck%" (
 call :rollversion "!mumtarget!"
 if !skip!==1 (set /a _sum-=1&goto :eof)
 )
+set "mumcheck=Package_for_DotNetRollup*.mum"
+if exist "!mumtarget!\Windows\servicing\packages\%mumcheck%" (
+call :netversion "!mumtarget!"
+if !skip!==1 (set /a _sum-=1&goto :eof)
+)
 if exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" (set "servicingstack=!servicingstack! /packagepath:%dest%\update.mum"&goto :eof)
+if exist "%dest%\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" (
+if %winbuild% lss 9600 (set /a _sum-=1&goto :eof)
+if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
+set secureboot=!secureboot! /packagepath:"!repo!\!package!"
+goto :eof
+)
 if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (set /a _sum-=1&goto :eof))
 findstr /i /m "WinPE-NetFx-Package" "%dest%\update.mum" %_Nul3% && (findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (set /a _sum-=1&goto :eof))
@@ -551,6 +574,7 @@ goto :eof
 set skip=0
 set inver=0
 set kbver=0
+for /f %%i in ('dir /b /od "%~1\Windows\servicing\packages\%mumcheck%"') do set _pkg=%%~ni
 for /f "tokens=5-7 delims=~." %%i in ('dir /b /od "%~1\Windows\servicing\packages\%mumcheck%"') do set inver=%%i%%j%%k
 mkdir "!_cabdir!\check"
 if /i "%package:~-4%"==".msu" (expand.exe -f:*Windows*.cab "!repo!\!package!" "!_cabdir!\check" %_Nul3%) else (copy /y "!repo!\!package!" "!_cabdir!\check" %_Nul3%)
@@ -558,8 +582,9 @@ expand.exe -f:update.mum "!_cabdir!\check\*.cab" "!_cabdir!\check" %_Null%
 if not exist "!_cabdir!\check\*.mum" (set skip=1&rmdir /s /q "!_cabdir!\check\"&goto :eof)
 rem self note: do not remove " from set "kbver or add " at end
 for /f "tokens=5-7 delims==<. %TAB%" %%i in ('findstr /i Package_for_ "!_cabdir!\check\update.mum"') do set "kbver=%%i%%j%%k
-if %inver% geq %kbver% set skip=1
 rmdir /s /q "!_cabdir!\check\"
+if %inver% geq %kbver% set skip=1
+if %skip%==1 if %online%==1 reg query "%_CBS%\Packages\%_pkg%" /v CurrentState 2>nul | find /i "0x70" 1>nul || set skip=0
 goto :eof
 
 :rollversion
@@ -567,6 +592,7 @@ set skip=0
 set inver=0
 set kbver=0
 findstr /i /m "%kb%" "%~1\Windows\servicing\packages\%mumcheck%" %_Nul1% || goto :eof
+for /f %%i in ('dir /b /od "%~1\Windows\servicing\packages\%mumcheck%"') do set _pkg=%%~ni
 for /f "tokens=5-7 delims=~." %%i in ('dir /b /od "%~1\Windows\servicing\packages\%mumcheck%"') do set inver=%%i%%j%%k
 mkdir "!_cabdir!\check"
 if /i "%package:~-4%"==".msu" (expand.exe -f:*Windows*.cab "!repo!\!package!" "!_cabdir!\check" %_Nul3%) else (copy /y "!repo!\!package!" "!_cabdir!\check" %_Nul3%)
@@ -574,8 +600,27 @@ expand.exe -f:update.mum "!_cabdir!\check\*.cab" "!_cabdir!\check" %_Null%
 if not exist "!_cabdir!\check\*.mum" (set skip=1&rmdir /s /q "!_cabdir!\check\"&goto :eof)
 rem self note: do not remove " from set "kbver or add " at end
 for /f "tokens=5-7 delims==<. %TAB%" %%i in ('findstr /i Package_for_RollupFix "!_cabdir!\check\update.mum"') do set "kbver=%%i%%j%%k
-if %inver% geq %kbver% set skip=1
 rmdir /s /q "!_cabdir!\check\"
+if %inver% geq %kbver% set skip=1
+if %skip%==1 if %online%==1 reg query "%_CBS%\Packages\%_pkg%" /v CurrentState 2>nul | find /i "0x70" 1>nul || set skip=0
+goto :eof
+
+:netversion
+set skip=0
+set inver=0
+set kbver=0
+findstr /i /m "%kb%" "%~1\Windows\servicing\packages\%mumcheck%" %_Nul1% || goto :eof
+for /f %%i in ('dir /b /od "%~1\Windows\servicing\packages\%mumcheck%"') do set _pkg=%%~ni
+for /f "tokens=5-7 delims=~." %%i in ('dir /b /od "%~1\Windows\servicing\packages\%mumcheck%"') do set inver=%%i%%j%%k
+mkdir "!_cabdir!\check"
+if /i "%package:~-4%"==".msu" (expand.exe -f:*Windows*.cab "!repo!\!package!" "!_cabdir!\check" %_Nul3%) else (copy /y "!repo!\!package!" "!_cabdir!\check" %_Nul3%)
+expand.exe -f:update.mum "!_cabdir!\check\*.cab" "!_cabdir!\check" %_Null%
+if not exist "!_cabdir!\check\*.mum" (set skip=1&rmdir /s /q "!_cabdir!\check\"&goto :eof)
+rem self note: do not remove " from set "kbver or add " at end
+for /f "tokens=5-7 delims==<. %TAB%" %%i in ('findstr /i Package_for_DotNetRollup "!_cabdir!\check\update.mum"') do set "kbver=%%i%%j%%k
+rmdir /s /q "!_cabdir!\check\"
+if %inver% geq %kbver% set skip=1
+if %skip%==1 if %online%==1 reg query "%_CBS%\Packages\%_pkg%" /v CurrentState 2>nul | find /i "0x70" 1>nul || set skip=0
 goto :eof
 
 :enablenet35

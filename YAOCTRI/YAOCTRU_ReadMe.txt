@@ -2,11 +2,12 @@
 
 ## Intro 
 
-* A batch script to generate download links for Office Click To Run installation files
+* A command line script to generate download links for Office Click To Run installation files
 
-* It can generate links for latest available version online by default, or compile links for specific version offline  
+* It generate links for latest available version online by default, or compile links for specific version offline  
  
-to have the option to choose between the two mode always, edit the script and change to zero set latest=0
+to have the option to choose between the two mode always, edit the script and change to zero  
+set latest=0
 
 ## How To
 
@@ -62,6 +63,27 @@ to do so, edit the scripts prior downloading and change speedLimit
 * Aria2 script allow to change the parallel (concurrent) downloads  
 to do so, edit the script prior downloading and change set "parallel=1"
 
+## Proofing Tools
+
+* Installing proofing tools require using Office Deployment Tool Setup.exe with simple configuration xml file
+
+* The generator script will create this configuration file (one per architecture)
+
+* When you execute downloading script (Aria2, Wget, or cURL), it will move the config file(s) into the downloaded "Office" folder
+
+* Then, to install the proofing tools, run command prompt as administrator, and execute the following command as example:  
+Setup.exe /configure config_file.xml
+
+replace config_file.xml with the complete path for the config file inside Office folder
+
+## Credits
+
+* Creator       : @abbodi1406  
+* Special Thanks: @ratzlefatz / OfficeRTool
+
+___
+## Deprecated Note:
+
 * Downloading from plain text links will require to move and arrange the files in this similar directory hierarchy:
 
 C2R_Insiders
@@ -89,8 +111,3 @@ C2R_Insiders
                 stream.x64.x-none.dat
 
 in the above example: Insiders version 16.0.11414.20014, en-us language, Full Office source, both architectures
-
-## Credits
-
-* Creator       : @abbodi1406  
-* Special Thanks: @ratzlefatz / OfficeRTool

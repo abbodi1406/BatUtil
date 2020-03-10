@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.1
+@set uiv=v6.4
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -69,12 +69,12 @@ set Delete_Source=0
 :: ###################################################################
 
 :: Technical options for updates
-set ssu2=KB4524445
+set ssu2=KB4540725
 set ssu1=KB3021910
 set baselinelist=(KB2919355,KB3000850,KB2932046,KB2934018,KB2937592,KB2938439,KB2938772,KB3003057,KB3014442)
 set gdrlist=(KB3023219,KB3037576,KB3074545,KB3097992,KB3127222)
 set hv_integ_kb=hypervintegrationservices
-set hv_integ_vr=9600.18692
+set hv_integ_vr=9600.19456
 
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
@@ -216,7 +216,7 @@ if /i "!target!"=="%SystemDrive%" (
 if %xOS%==amd64 (set arch=x64) else (set arch=x86)
 if %_init%==1 (goto :check) else (goto :mainmenu)
 )
-if "%target:~-4%"==".wim" (
+if /i "%target:~-4%"==".wim" (
 if exist "!target!" (
   set wim=1
   for %%# in ("!target!") do set "targetname=%%~nx#"&setlocal DisableDelayedExpansion&set "targetpath=%%~dp#"&setlocal EnableDelayedExpansion
@@ -775,6 +775,7 @@ if /i %kb%==KB2894852 (if not exist "!mountdir!\Windows\Microsoft.NET\Framework\
 if /i %kb%==KB2973201 (if /i not "%CEdition%"=="ProfessionalWMC" set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB2978742 (if /i not "%CEdition%"=="ProfessionalWMC" set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB3172729 (if %winbuild% lss 9600 set /a _sum-=1&set /a _msu-=1&goto :eof)
+if /i %kb%==KB4502496 (if %winbuild% lss 9600 set /a _sum-=1&set /a _msu-=1&goto :eof)
 if exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" if %winpe% equ 0 (
 mkdir "!cab_dir!\check"
 if %msu% equ 1 (expand.exe -f:*Windows*.cab "%package%" "!cab_dir!\check" %_Null%) else (copy /y "%package%" "!cab_dir!\check\" %_Nul1%)

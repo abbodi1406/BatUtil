@@ -35,9 +35,9 @@ for %%A in (
 5440fd1f-7ecb-4221-8110-145efaa6372f
 64256afe-f5d9-4f86-8936-8840a6a4f5be
 492350f6-3a01-4f97-b9c0-c7c6ddf67d60
+55336b82-a18d-4dd6-b5f6-9e5095c314a6
 b8f9b850-328d-4355-9145-c59439a0c4cf
 7ffbc6bf-bc32-4f92-8982-f9dd17fd3114
-2e148de9-61c8-4051-b103-4af54baffbb4
 f2e724c1-748f-4b47-8fb8-8e0d210e9208
 ea4a4090-de26-49d7-93c1-91bff9e53fc3
 b61285dd-d9f7-41f2-9757-8f61cba4e9c8
@@ -46,7 +46,17 @@ set /a cc+=1
 set ffn!cc!=%%A
 )
 set /a cc=0
-for %%A in (Insiders,MonthlyTargeted,Monthly,SemiAnnualTargeted,SemiAnnual,PerpetualVL2019Targeted,PerpetualVL2019,DogfoodDevMain,MicrosoftElite) do (
+for %%A in (
+Insiders
+MonthlyTargeted
+Monthly
+MonthlyEnterprise
+SemiAnnualTargeted
+SemiAnnual
+PerpetualVL2019
+DogfoodDevMain
+MicrosoftElite
+) do (
 set /a cc+=1
 set chn!cc!=%%A
 )
@@ -77,9 +87,9 @@ echo Official CDNs:
 echo. 1. Insiders                            ^|   Insiders::DevMain
 echo. 2. Monthly [Targeted]                  ^|   Insiders::CC
 echo. 3. Monthly                             ^| Production::CC
-echo. 4. Semi-Annual [Targeted]              ^|   Insiders::FRDC
-echo. 5. Semi-Annual                         ^| Production::DC
-echo. 6. Perpetual2019 VL [Targeted]         ^|   Insiders::LTSC
+echo. 4. Monthly Enterprise                  ^| Production::MEC
+echo. 5. Semi-Annual [Targeted]              ^|   Insiders::FRDC
+echo. 6. Semi-Annual                         ^| Production::DC
 echo. 7. Perpetual2019 VL                    ^| Production::LTSC
 echo.
 echo Testing CDNs:
@@ -319,38 +329,58 @@ goto :OUTPUT%inpt%
 
 :uProof
 for %%a in (
-  sp%bit%%lcid%.cab
-  i%bit%0.cab
-  i%bit%0.cab.cat
-  s%bit%0.cab
-  stream.%arc%.%lang%.proof.dat
-  stream.%arc%.%lang%.proof.dat.cat
-  ) do (
-  call :EC1HO%inpt% %%a
-  )
+sp%bit%%lcid%.cab
+i%bit%0.cab
+i%bit%0.cab.cat
+s%bit%0.cab
+stream.%arc%.%lang%.proof.dat
+stream.%arc%.%lang%.proof.dat.cat
+) do (
+call :EC1HO%inpt% %%a
+)
 if %dual%==0 if %arc%==x86 for %%a in (
-  i640.cab
-  i640.cab.cat
-  ) do (
-  call :EC1HO%inpt%
-  )
+i640.cab
+i640.cab.cat
+) do (
+call :EC1HO%inpt% %%a
+)
 if %dual%==1 (
-  call :EC2HO%inpt% v64_%vvv%.cab
-  )
+call :EC2HO%inpt% v64_%vvv%.cab
+)
 if %dual%==1 for %%a in (
-  sp64%lcid%.cab
-  i640.cab
-  i640.cab.cat
-  s640.cab
-  stream.x64.%lang%.proof.dat
-  stream.x64.%lang%.proof.dat.cat
-  ) do (
-  call :EC1HO%inpt% %%a
-  )
-  if not %inpt%==4 (
-  echo :TXTEnd
-  echo exit /b
-  )>>"%output%"
+sp64%lcid%.cab
+i640.cab
+i640.cab.cat
+s640.cab
+stream.x64.%lang%.proof.dat
+stream.x64.%lang%.proof.dat.cat
+) do (
+call :EC1HO%inpt% %%a
+)
+set "stp=http://officecdn.microsoft.com/pr/wsus"
+call :EC3HO%inpt% Setup.exe
+(
+echo.^<Configuration^>
+echo.  ^<Add SourcePath="" OfficeClientEdition="%bit%"^>
+echo.    ^<Product ID="ProofingTools"^>
+echo.      ^<Language ID="%lang%"/^>
+echo.    ^</Product^>
+echo.  ^</Add^>
+echo.^</Configuration^>
+)>"%vvv%_%arc%_%lang%_Proofing.xml"
+if %dual%==1 (
+echo.^<Configuration^>
+echo.  ^<Add SourcePath="" OfficeClientEdition="64"^>
+echo.    ^<Product ID="ProofingTools"^>
+echo.      ^<Language ID="%lang%"/^>
+echo.    ^</Product^>
+echo.  ^</Add^>
+echo.^</Configuration^>
+)>"%vvv%_x64_%lang%_Proofing.xml"
+if not %inpt%==4 (
+echo :TXTEnd
+echo exit /b
+)>>"%output%"
 exit /b
 
 :uAll
@@ -475,6 +505,10 @@ echo if exist "%%uri%%" del /f /q "%%uri%%"
 echo call :GenTXT
 echo aria2c.exe -x16 -s16 -j%%parallel%% -c -R --max-overall-download-limit=%%speedLimit%% -d"%%destDir%%" -i"%%uri%%"
 echo if exist "%%uri%%" del /f /q "%%uri%%"
+if %proof%==1 (
+echo if exist "%vvv%_x86_%lang%_Proofing.xml" move /y "%vvv%_x86_%lang%_Proofing.xml" "%%destDir%%\Office\Proofing_%lang%_x86.xml"
+echo if exist "%vvv%_x64_%lang%_Proofing.xml" move /y "%vvv%_x64_%lang%_Proofing.xml" "%%destDir%%\Office\Proofing_%lang%_x64.xml"
+)
 echo echo.
 echo echo Done.
 echo echo Press any key to exit.
@@ -537,6 +571,10 @@ echo if exist "%%destDir%%\Office\Data\v32_*.cab" xcopy /cqry %%destDir%%\Office
 echo if exist "%%destDir%%\Office\Data\v64_*.cab" xcopy /cqry %%destDir%%\Office\Data\v64_*.cab %%destDir%%\Office\Data\v64.cab*
 echo if exist "%%destDir%%\Office\Data\SetupLanguagePack*.exe" move /y "%%destDir%%\Office\Data\SetupLanguagePack*.exe" "%%destDir%%\"
 echo if exist "%%uri%%" del /f /q "%%uri%%"
+if %proof%==1 (
+echo if exist "%vvv%_x86_%lang%_Proofing.xml" move /y "%vvv%_x86_%lang%_Proofing.xml" "%%destDir%%\Office\Proofing_%lang%_x86.xml"
+echo if exist "%vvv%_x64_%lang%_Proofing.xml" move /y "%vvv%_x64_%lang%_Proofing.xml" "%%destDir%%\Office\Proofing_%lang%_x64.xml"
+)
 echo echo.
 echo echo Done.
 echo echo Press any key to exit.
@@ -596,6 +634,10 @@ echo if exist "%%uri%%" del /f /q "%%uri%%"
 echo call :GenTXT
 echo curl.exe -q --create-dirs --retry 5 --retry-connrefused %%speedLimit%% -k -L -C - -K "%%uri%%"
 echo if exist "%%uri%%" del /f /q "%%uri%%"
+if %proof%==1 (
+echo if exist "%vvv%_x86_%lang%_Proofing.xml" move /y "%vvv%_x86_%lang%_Proofing.xml" "%destDir%\Office\Proofing_%lang%_x86.xml"
+echo if exist "%vvv%_x64_%lang%_Proofing.xml" move /y "%vvv%_x64_%lang%_Proofing.xml" "%destDir%\Office\Proofing_%lang%_x64.xml"
+)
 echo echo.
 echo echo Done.
 echo echo Press any key to exit.
@@ -682,6 +724,10 @@ echo if exist "%%%%i" move /y %%%%i %%_dst%%\
 echo ^)
 echo if exist "%%_dst%%\v32_*.cab" xcopy /cqry %%_dst%%\v32_*.cab %%_dst%%\v32.cab*
 echo if exist "%%_dst%%\v64_*.cab" xcopy /cqry %%_dst%%\v64_*.cab %%_dst%%\v64.cab*
+if %proof%==1 (
+echo if exist "%vvv%_x86_%lang%_Proofing.xml" move /y "%vvv%_x86_%lang%_Proofing.xml" "%%_rot%%\Office\Proofing_%lang%_x86.xml"
+echo if exist "%vvv%_x64_%lang%_Proofing.xml" move /y "%vvv%_x64_%lang%_Proofing.xml" "%%_rot%%\Office\Proofing_%lang%_x64.xml"
+)
 echo echo.
 echo echo Done.
 echo echo Press any key to exit.

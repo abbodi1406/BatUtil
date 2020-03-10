@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.2
+@set uiv=v6.3
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -65,7 +65,7 @@ set rollup=KB3125574
 set gdrlist=(KB2574819,KB2685811,KB2685813)
 set rdp8=(0)
 set hv_integ_kb=hypervintegrationservices
-set hv_integ_vr=9600.18692
+set hv_integ_vr=9600.19456
 
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
@@ -209,7 +209,7 @@ if /i "!target!"=="%SystemDrive%" (
 if %xOS%==amd64 (set arch=x64) else (set arch=x86)
 if %_init%==1 (goto :check) else (goto :mainmenu)
 )
-if "%target:~-4%"==".wim" (
+if /i "%target:~-4%"==".wim" (
 if exist "!target!" (
   set wim=1
   for %%# in ("!target!") do set "targetname=%%~nx#"&setlocal DisableDelayedExpansion&set "targetpath=%%~dp#"&setlocal EnableDelayedExpansion
@@ -366,7 +366,7 @@ goto :eof
 :ssu
 if not exist "!repo!\General\*%ssu1st%*-%arch%.msu" goto :eof
 if exist "!mountdir!\Windows\servicing\packages\package_for_%ssu1st%*.mum" goto :eof
-if %online%==1 if exist "%SystemRoot%\winsxs\pending.xml" (call set "ssulmt=ssu1st"&goto :stacklimit)
+if %online%==1 if exist "%SystemRoot%\winsxs\pending.xml" (call set "ssulmt=%ssu1st%"&goto :stacklimit)
 call :cleaner
 if %verb%==1 (
 echo.
@@ -386,9 +386,9 @@ cd /d "!cab_dir!"
 goto :eof
 
 :esu
-if not exist "!repo!\Security\*%ssu2nd%*-%arch%.msu" goto :eof
+if not exist "!repo!\Security\*%ssu2nd%*-%arch%.msu" if not exist "!repo!\Security\WithoutESU\*%ssu2nd%*-%arch%.msu" goto :eof
 if exist "!mountdir!\Windows\servicing\packages\package_for_%ssu2nd%*.mum" goto :eof
-if %online%==1 if exist "%SystemRoot%\winsxs\pending.xml" (call set "ssulmt=ssu2nd"&goto :stacklimit)
+if %online%==1 if exist "%SystemRoot%\winsxs\pending.xml" (call set "ssulmt=%ssu2nd%"&goto :stacklimit)
 set ssuver=0
 set shaupd=0
 for /f %%# in ('dir /b "!mountdir!\Windows\servicing\Version"') do set ssuver=%%#
@@ -404,8 +404,8 @@ echo ============================================================
 echo *** Extended Servicing Stack Update ***
 echo ============================================================
 )
-cd Security\
-set "dest=ESU"
+if exist "!repo!\Security\*%ssu2nd%*-%arch%.msu" (cd "Security\") else (cd "Security\WithoutESU\")
+set "dest=ESSU"
 if not exist "!cab_dir!\%dest%\*%ssu2nd%*.mum" (
 expand.exe -f:*Windows*.cab "*%ssu2nd%*%arch%.msu" "!cab_dir!" %_Null%
 mkdir "!cab_dir!\%dest%"
@@ -502,7 +502,7 @@ goto :listdone
 
 :security
 if %online%==1 if %allcount% geq %onlinelimit% goto :countlimit
-if not exist "!repo!\Security\*.msu" goto :eof
+if not exist "!repo!\Security\*.msu" if not exist "!repo!\Security\WithoutESU\*.msu" goto :eof
 set ssuver=0
 set shaupd=0
 for /f %%# in ('dir /b "!mountdir!\Windows\servicing\Version"') do set ssuver=%%#
@@ -518,7 +518,14 @@ echo *** Security Updates ***
 echo ============================================================
 )
 set "cat=Security Updates"
-cd Security\
+if not exist "!cab_dir!\Security\" (
+mkdir "!cab_dir!\Security"
+copy /y Security\*%arch%*.msu "!cab_dir!\Security\" %_Nul3%
+copy /y Security\*%arch%*.cab "!cab_dir!\Security\" %_Nul3%
+copy /y Security\WithoutESU\*%arch%*.msu "!cab_dir!\Security\" %_Nul3%
+copy /y Security\WithoutESU\*%arch%*.cab "!cab_dir!\Security\" %_Nul3%
+)
+cd /d "!cab_dir!\Security"
 call :counter
 call :cab1
 if %_sum% equ 0 goto :eof

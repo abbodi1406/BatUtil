@@ -187,6 +187,15 @@ if you do not want these settings, edit the script, search for this line and del
 
 ## Changelog:
 
+* 6.4:  
+new hyper-v integration services package KB4072650
+
+* 6.3:  
+added support for the new sub-category "Security\WithoutESU"
+
+* 6.2:  
+new extended servicing stack update KB4536952
+
 * 6.1:  
 implemented IE11 registry fix for Embedded x64
 

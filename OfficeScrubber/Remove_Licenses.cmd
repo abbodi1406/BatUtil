@@ -33,7 +33,7 @@ set "_Nul2=2>nul"
 set "_Nul6=2^>nul"
 set "_Nul3=1>nul 2>nul"
 
-title Uninstall Office Keys
+title Remove Office Licenses
 set OfficeC2R=0
 sc query ClickToRunSvc %_Nul3% && set OfficeC2R=1
 sc query OfficeSvc %_Nul3% && set OfficeC2R=1
@@ -52,7 +52,7 @@ echo ============================================================
 echo No installed Office ClickToRun or Office 2016 MSI detected
 echo.
 echo.
-choice /C YN /N /M "Continue with uninstalling Office keys anyway? [y/n]: "
+choice /C YN /N /M "Continue with removing Office licenses anyway? [y/n]: "
 if errorlevel 2 goto :eof
 if errorlevel 1 goto :main
 )
@@ -62,7 +62,7 @@ if %OfficeC2R% equ 1 echo Detected Office C2R
 if %OfficeMSI% equ 1 echo Detected Office 2016 MSI
 echo.
 echo.
-choice /C YN /N /M "Continue with uninstalling detected Office keys? [y/n]: "
+choice /C YN /N /M "Continue with removing detected Office licenses? [y/n]: "
 if errorlevel 2 goto :eof
 if errorlevel 1 goto :main
 
@@ -70,12 +70,11 @@ if errorlevel 1 goto :main
 cls
 echo.
 echo ============================================================
-echo Uninstalling Product Key^(s)
+echo Cleaning Office Licenses...
 echo ============================================================
 echo.
 pushd "!_work!\!xOS!"
-cleanospp.exe -PKey %_Nul3%
-call :cKMS %_Nul3%
+cleanospp.exe -Licenses %_Nul3%
 if exist "%SysPath%\spp\store_test\2.0\tokens.dat" (
 echo.
 echo ============================================================
@@ -84,32 +83,8 @@ echo ============================================================
 echo.
 cscript //Nologo //B %SysPath%\slmgr.vbs /rilc
 )
-set "msg=Finished.."
+set "msg=Finished."
 goto :end
-
-:cKMS
-set "OSPP=SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform"
-set "SPPk=SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform"
-if %winbuild% geq 9200 (
-set spp=SoftwareLicensingProduct
-) else (
-set spp=OfficeSoftwareProtectionProduct
-)
-for /f "tokens=2 delims==" %%G in ('"wmic path %spp% where (Name LIKE 'Office%%' AND PartialProductKey is not NULL) get ID /VALUE" %_Nul6%') do (set app=%%G&call :cAPP %_Nul3%)
-call :cREG %_Nul3%
-goto :eof
-
-:cAPP
-wmic path %spp% where ID='%app%' call ClearKeyManagementServiceMachine
-wmic path %spp% where ID='%app%' call ClearKeyManagementServicePort
-wmic path %spp% where ID='%app%' call UninstallProductKey
-goto :eof
-
-:cREG
-reg delete "HKLM\%OSPP%\0ff1ce15-a989-479d-af46-f275c6370663" /f
-reg delete "HKLM\%SPPk%\0ff1ce15-a989-479d-af46-f275c6370663" /f
-reg delete "HKU\S-1-5-20\%SPPk%\0ff1ce15-a989-479d-af46-f275c6370663" /f
-goto :eof
 
 :end
 echo.

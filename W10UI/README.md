@@ -154,6 +154,18 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+8.1:  
+- Enhanced installed updates detection on live online OS
+
+8.0:  
+- Fixed offline installation for secure boot update KB4524244
+
+7.9:  
+- Updated .NET CU detection for 1809 and later
+
+7.8:  
+- Fixed error regarding creating Dism logs
+
 7:7:  
 - x64 target on x86 host: Fix for unseen registry flush error.
 

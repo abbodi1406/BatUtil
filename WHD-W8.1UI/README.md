@@ -185,6 +185,15 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 6.4:  
+new servicing stack update KB4540725
+
+* 6.3:  
+new hyper-v integration services package KB4072650
+
+* 6.2:  
+support for secure boot update KB4502496
+
 * 6.1:  
 fixed cab offline integration on Windows 7 host
 
