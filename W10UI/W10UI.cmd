@@ -206,7 +206,7 @@ if exist "!target!" (
   for %%# in ("!target!") do set "targetname=%%~nx#"&setlocal DisableDelayedExpansion&set "targetpath=%%~dp#"&setlocal EnableDelayedExpansion
   )
 ) else (
-if exist "!target!\sources\install.wim" set dvd=1 
+if exist "!target!\sources\install.wim" set dvd=1
 if exist "!target!\Windows\regedit.exe" set offline=1
 )
 if %offline%==0 if %wim%==0 if %dvd%==0 (if %_init%==1 (set "target=%SystemDrive%"&goto :check) else (set "MESSAGE=Specified location is not valid"&goto :E_Target))
@@ -584,7 +584,7 @@ rem self note: do not remove " from set "kbver or add " at end
 for /f "tokens=5-7 delims==<. %TAB%" %%i in ('findstr /i Package_for_ "!_cabdir!\check\update.mum"') do set "kbver=%%i%%j%%k
 rmdir /s /q "!_cabdir!\check\"
 if %inver% geq %kbver% set skip=1
-if %skip%==1 if %online%==1 reg query "%_CBS%\Packages\%_pkg%" /v CurrentState 2>nul | find /i "0x70" 1>nul || set skip=0
+if %skip%==1 if %online%==1 reg query "%_CBS%\Packages\%_pkg%" /v CurrentState %_Nul2% | find /i "0x70" %_Nul1% || set skip=0
 goto :eof
 
 :rollversion
@@ -602,7 +602,7 @@ rem self note: do not remove " from set "kbver or add " at end
 for /f "tokens=5-7 delims==<. %TAB%" %%i in ('findstr /i Package_for_RollupFix "!_cabdir!\check\update.mum"') do set "kbver=%%i%%j%%k
 rmdir /s /q "!_cabdir!\check\"
 if %inver% geq %kbver% set skip=1
-if %skip%==1 if %online%==1 reg query "%_CBS%\Packages\%_pkg%" /v CurrentState 2>nul | find /i "0x70" 1>nul || set skip=0
+if %skip%==1 if %online%==1 reg query "%_CBS%\Packages\%_pkg%" /v CurrentState %_Nul2% | find /i "0x70" %_Nul1% || set skip=0
 goto :eof
 
 :netversion
@@ -620,7 +620,7 @@ rem self note: do not remove " from set "kbver or add " at end
 for /f "tokens=5-7 delims==<. %TAB%" %%i in ('findstr /i Package_for_DotNetRollup "!_cabdir!\check\update.mum"') do set "kbver=%%i%%j%%k
 rmdir /s /q "!_cabdir!\check\"
 if %inver% geq %kbver% set skip=1
-if %skip%==1 if %online%==1 reg query "%_CBS%\Packages\%_pkg%" /v CurrentState 2>nul | find /i "0x70" 1>nul || set skip=0
+if %skip%==1 if %online%==1 reg query "%_CBS%\Packages\%_pkg%" /v CurrentState %_Nul2% | find /i "0x70" %_Nul1% || set skip=0
 goto :eof
 
 :enablenet35

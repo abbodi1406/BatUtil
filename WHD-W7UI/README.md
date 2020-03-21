@@ -11,6 +11,8 @@ Automated batch script to install/integrate Windows 7 Updates, depending on WHDo
 - Distribution Drive (virtual mounted iso, inserted dvd drive, usb drive)  
 - WIM file directly (unmounted)
 
+* Install Extended Security Updates without the need for ESU eligibility bypass
+
 * Detect Windows 8.1 ADK [Deployment Tools](http://www.microsoft.com/en-us/download/details.aspx?id=39982) for offline integration and iso/wim updating
 
 * Detect Windows 10 ADK [imagex.exe and oscdimg.exe](https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install) for iso/wim updating
@@ -60,6 +62,9 @@ these packages require .NET Framework 4.5 or higher to be already installed
 
 * [8] Features (WHD-W7UI_WithoutKB3125574.cmd only)  
 install updates found in "Extra\WithoutKB3125574\_Features"
+
+* [X] ESUpdates  
+install extended security updates found in "Security\ESU"
 
 * [A] KB971033  
 install (Windows Activation Technologies) package found in "Additional\WAT"  
@@ -114,6 +119,7 @@ Cab_Dir
 MountDir  
 WinreMount  
 OnlineLimit  
+ESUpdates  
 LDRbranch  
 IE11  
 RDP  
@@ -182,10 +188,15 @@ if you do not want these settings, edit the script, search for this line and del
 ## Credits:
 
 [Creator](https://forums.mydigitallife.net/members/abbodi1406.204274/)  
-[Concept](https://forums.mydigitallife.net/members/burfadel.84828/)  
+[Installer Concept](https://forums.mydigitallife.net/members/burfadel.84828/)  
+ESUpdates Concept: IMI Kurwica  
+[Special assistance](http://www.windows-update-checker.com/)  
 [WHDownloader](https://forums.mydigitallife.net/threads/44645)
 
 ## Changelog:
+
+* 6.5:  
+added support for ESU updates, fixed winre.wim rebuilding
 
 * 6.4:  
 new hyper-v integration services package KB4072650

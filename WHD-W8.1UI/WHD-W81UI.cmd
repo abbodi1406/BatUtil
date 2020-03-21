@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.4
+@set uiv=v6.5
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -69,10 +69,9 @@ set Delete_Source=0
 :: ###################################################################
 
 :: Technical options for updates
-set ssu2=KB4540725
 set ssu1=KB3021910
-set baselinelist=(KB2919355,KB3000850,KB2932046,KB2934018,KB2937592,KB2938439,KB2938772,KB3003057,KB3014442)
-set gdrlist=(KB3023219,KB3037576,KB3074545,KB3097992,KB3127222)
+set baselinelist=KB2919355,KB3000850,KB2932046,KB2934018,KB2937592,KB2938439,KB2938772,KB3003057,KB3014442
+set gdrlist=KB3023219,KB3037576,KB3074545,KB3097992,KB3127222
 set hv_integ_kb=hypervintegrationservices
 set hv_integ_vr=9600.19456
 
@@ -222,7 +221,7 @@ if exist "!target!" (
   for %%# in ("!target!") do set "targetname=%%~nx#"&setlocal DisableDelayedExpansion&set "targetpath=%%~dp#"&setlocal EnableDelayedExpansion
   )
 ) else (
-if exist "!target!\sources\install.wim" set dvd=1 
+if exist "!target!\sources\install.wim" set dvd=1
 if exist "!target!\Windows\regedit.exe" set offline=1
 )
 if %offline%==0 if %wim%==0 if %dvd%==0 (if %_init%==1 (set "target=%SystemDrive%"&goto :check) else (set "MESSAGE=Specified location is not valid"&goto :E_Target))
@@ -289,7 +288,7 @@ if "!mountdir!"=="" (%_Goto%)
 if /i "!target!"=="%SystemDrive%" (set dismtarget=/online&set "mountdir=!target!"&set online=1) else (set dismtarget=/image:"!mountdir!")
 
 :mainboard2
-if %_Debug% neq 0 set "
+rem if %_Debug% neq 0 set "
 @cls
 echo ============================================================
 echo Running WHD-W81UI %uiv%
@@ -407,18 +406,32 @@ goto :eof
 
 :ssup
 if %online%==1 if exist "%SystemRoot%\winsxs\pending.xml" (goto :stacklimit)
+if not exist "!repo!\Baseline\*%arch%*.msu" goto :eof
 call :cleaner
 cd Baseline\
-set package=%ssu2%&call :ssus
-set package=%ssu1%&call :ssus
+set ssuver=0
+for /f %%# in ('dir /b "!mountdir!\Windows\servicing\Version"') do set ssuver=%%#
+for /f "tokens=2 delims=-" %%i in ('dir /b /a:-d "*%arch%*.msu"') do set "package=%%i"&call :ssul
+set ssuver=0
+for /f %%# in ('dir /b "!mountdir!\Windows\servicing\Version"') do set ssuver=%%#
+if %ssuver% equ 0 goto :eof
+set "package=%ssu1%"&call :ssus
 goto :eof
 
+:ssul
+for %%j in (%ssu1%,%baselinelist%) do if /i %%j==%package% goto :eof
+
 :ssus
-if not exist "!repo!\Baseline\*%package%*%arch%.msu" goto :eof
+if not exist "!repo!\Baseline\*%package%*%arch%*.msu" goto :eof
 if exist "!mountdir!\Windows\servicing\packages\package_for_%package%_rtm*6.3*.mum" goto :eof
-if /i %package%==%ssu2% if not exist "!mountdir!\Windows\servicing\packages\package_for_KB2919355_rtm*6.3*.mum" goto :eof
-if /i %package%==%ssu2% if not exist "!mountdir!\Windows\servicing\packages\package_for_KB2975061_rtm*6.3*.mum" if not exist "!mountdir!\Windows\servicing\packages\package_for_%ssu1%_rtm*6.3*.mum" goto :eof
-if /i %package%==%ssu1% if exist "!mountdir!\Windows\servicing\packages\package_for_%ssu2%_rtm*6.3*.mum" goto :eof
+if /i not %package%==%ssu1% (
+if not exist "!mountdir!\Windows\servicing\packages\package_for_KB2919355_rtm*6.3*.mum" goto :eof
+if not exist "!mountdir!\Windows\servicing\packages\package_for_KB2975061_rtm*6.3*.mum" if not exist "!mountdir!\Windows\servicing\packages\package_for_%ssu1%_rtm*6.3*.mum" goto :eof
+)
+if /i %package%==%ssu1% (
+if %ssuver:~4,4% equ 9600 if %ssuver:~9,5% gtr 17709 goto :eof
+if %ssuver:~4,4% gtr 9600 goto :eof
+)
 if %verb%==1 (
 echo.
 echo ============================================================
@@ -428,7 +441,7 @@ echo ============================================================
 cd /d "!cab_dir!"
 set "dest=%package%"
 if not exist "%dest%\*.manifest" (
-expand.exe -f:*Windows*.cab "!repo!\Baseline\*%package%*%arch%.msu" . %_Null%
+expand.exe -f:*Windows*.cab "!repo!\Baseline\*%package%*%arch%*.msu" . %_Null%
 mkdir "%dest%"
 expand.exe -f:* "*%package%*.cab" "%dest%" %_Null% || (
   rmdir /s /q "%dest%\" %_Nul3%
@@ -461,7 +474,7 @@ echo ============================================================
 echo.
 )
 set ldr=
-for %%# in %baselinelist% do (set "package=%%#"&call :baseline2)
+for %%# in (%baselinelist%) do (set "package=%%#"&call :baseline2)
 if not defined ldr goto :eof
 if %verb%==1 (
 echo.
@@ -487,8 +500,8 @@ echo %count%: %package%
 if /i %package%==KB2938772 (
   copy /y RTM\*%package%*%arch%.cab "!cab_dir!\" %_Nul1%
   ) else (
-  if exist "*%package%*%arch%.msu" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "*%package%*%arch%.msu"') do expand.exe -f:*Windows*.cab "%%~#" "!cab_dir!" %_Null%
-  if exist "RTM\*%package%*%arch%.msu" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "RTM\*%package%*%arch%.msu"') do expand.exe -f:*Windows*.cab "%%~#" "!cab_dir!" %_Null%
+  if exist "*%package%*%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "*%package%*%arch%*.msu"') do expand.exe -f:*Windows*.cab "%%~#" "!cab_dir!" %_Null%
+  if exist "RTM\*%package%*%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "RTM\*%package%*%arch%*.msu"') do expand.exe -f:*Windows*.cab "%%~#" "!cab_dir!" %_Null%
   )
 mkdir "!cab_dir!\%dest%"
 expand.exe -f:* "!cab_dir!\*%package%*.cab" "!cab_dir!\%dest%" %_Null% || (
@@ -592,7 +605,7 @@ echo *** WU Satisfy Updates ***
 echo ============================================================
 set "cat=WU Satisfy Updates"
 set _GDR=1
-if /i "%LDRbranch%"=="YES" if exist "!mountdir!\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" (for %%# in %gdrlist% do expand.exe -f:*Windows*.cab Additional\NET35\*%%#*%arch%.msu Additional\WU.Satisfy\ %_Null%)
+if /i "%LDRbranch%"=="YES" if exist "!mountdir!\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" (for %%# in (%gdrlist%) do expand.exe -f:*Windows*.cab Additional\NET35\*%%#*%arch%*.msu Additional\WU.Satisfy\ %_Null%)
 cd Additional\WU.Satisfy\
 if /i "%CEdition%"=="ProfessionalWMC" if exist "ProfessionalWMC\*%arch%*.msu" (expand.exe -f:*Windows*.cab ProfessionalWMC\*%arch%*.msu .\ %_Null%)
 call :counter
@@ -1464,7 +1477,7 @@ if %wimfiles%==1 (
 if /i "%targetname%"=="install.wim" (echo.&if %winre%==1 (echo [U] Update WinRE.wim: YES) else (echo [U] Update WinRE.wim: NO))
 if %imgcount% gtr 1 (
 echo.
-if "%indices%"=="*" echo [I] Install.wim selected indexes: All ^(%imgcount%^)
+if "%indices%"=="*" echo [I] Install.wim selected indexes: ALL ^(%imgcount%^)
 if not "%indices%"=="*" (if %keep%==1 (echo [I] Install.wim selected indexes: %indices% / [K] Keep indexes: Selected) else (if %keep%==0 echo [I] Install.wim selected indexes: %indices% / [K] Keep indexes: ALL))
 )
 echo.

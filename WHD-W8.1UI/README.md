@@ -185,6 +185,9 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 6.5:  
+auto detect and install latest servicing stack update
+
 * 6.4:  
 new servicing stack update KB4540725
 
