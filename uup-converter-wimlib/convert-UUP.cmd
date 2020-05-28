@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v44
+@set uivr=v45
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -104,7 +104,7 @@ set "_work=%_work:~0,-1%"
 set "_cabdir=%~d0\W10UItemp"
 if "%_work:~0,2%"=="\\" set "_cabdir=%~dp0temp\W10UItemp"
 for /f "skip=2 tokens=2*" %%a in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
-if exist "%SystemDrive%\Users\Public\Desktop\desktop.ini" set "_dsk=%SystemDrive%\Users\Public\Desktop"
+if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
 setlocal EnableDelayedExpansion
 if exist "!_work!\UUPs\*.esd" set "_UUP=!_work!\UUPs"
 if defined _args if exist "!_args!\*.esd" set "_UUP=%~1"
@@ -182,7 +182,7 @@ set AIO=0
 set FixDisplay=0
 set uups_esd_num=0
 set _count=0
-set _Enable=0
+set _actEP=0
 set _drv=%~d0
 set "_mount=%_drv%\MountUUP"
 set "_ntf=NTFS"
@@ -932,10 +932,17 @@ if %1 geq 10 set uups_esd=%uups_esd:~1%
 set "uups_esd%1=%uups_esd%"
 wimlib-imagex.exe info "!_UUP!\%uups_esd%" 3 >bin\info.txt 2>&1
 set ERRORTEMP=%ERRORLEVEL%
+if %ERRORTEMP% equ 73 (
+echo %_err%
+echo %uups_esd% file is corrupted
+echo.
+del /f /q bin\info.txt %_Nul3%
+set E_WIMLIB=1
+exit /b
+)
 if %ERRORTEMP% neq 0 (
 echo %_err%
-echo Could not execute wimlib-imagex.exe
-echo Use simple work path without special characters
+echo Could not parse info from %uups_esd%
 echo.
 del /f /q bin\info.txt %_Nul3%
 set E_WIMLIB=1
@@ -989,6 +996,9 @@ if %vermajor%==18363 (
 if /i "%isobranch:~0,4%"=="19h1" set isobranch=19h2%isobranch:~4%
 if %isover:~0,5%==18362 set isover=18363%isover:~5%
 )
+if %vermajor%==19042 (
+if %isover:~0,5%==19041 set isover=19042%isover:~5%
+)
 if /i not "%isobranch%"=="WinBuild" (set isolabel=%isover%.%isodate%.%isobranch%_CLIENT)
 if not defined isolabel exit /b
 if %isominor% lss %verminor% exit /b
@@ -1002,7 +1012,6 @@ echo %line%
 echo Adding updates files to ISO distribution . . .
 echo %line%
 echo.
-if %_build% gtr 18362 set _Enable=1 
 if exist "!_cabdir!\" rmdir /s /q "!_cabdir!\"
 if not exist "!_cabdir!\" mkdir "!_cabdir!"
 set "_dest=ISOFOLDER\sources\$OEM$\$1\UUP"
@@ -1069,7 +1078,7 @@ echo UPD: %pack%
 copy /y "!_UUP!\%pack%" "!_dest!\2%pack%" %_Nul3%
 if %_build% geq 18362 (
 expand.exe -f:microsoft-windows-*enablement-package*.mum "!_UUP!\%pack%" "!_cabdir!" %_Nul3%
-if exist "!_cabdir!\microsoft-windows-*enablement-package*.mum" set _Enable=1
+if exist "!_cabdir!\microsoft-windows-*enablement-package*.mum" set _actEP=1
 )
 exit /b
 
@@ -1094,7 +1103,7 @@ expand.exe -f:%_ss%_microsoft-updatetargeting-clientos*.manifest "!_UUP!\%pack%"
 
 if exist "!_cabdir!\*_microsoft-updatetargeting-clientos*.manifest" for /f "tokens=8 delims== " %%# in ('findstr /i Branch "!_cabdir!\*_microsoft-updatetargeting-clientos*.manifest"') do if not defined regbranch set regbranch=%%~#
 if defined regbranch set branch=%regbranch%
-if %_Enable% equ 1 if exist "!_cabdir!\*_microsoft-updatetargeting-clientos*.manifest" (
+if %_actEP% equ 1 if exist "!_cabdir!\*_microsoft-updatetargeting-clientos*.manifest" (
 for /f "tokens=8 delims== " %%# in ('findstr /i Branch "!_cabdir!\*_microsoft-updatetargeting-clientos*.manifest"') do set branch=%%~#
 for /f "tokens=%toe% delims=_." %%I in ('dir /b /a:-d /on "!_cabdir!\*_microsoft-updatetargeting-clientos*.manifest"') do if %%I gtr !vermajor! (set version=%%I.%%K&set vermajor=%%I&set verminor=%%K)
 )
@@ -1164,6 +1173,9 @@ if %isomajor%==18363 (
 if /i "%isobranch:~0,4%"=="19h1" set isobranch=19h2%isobranch:~4%
 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
 if %version:~0,5%==18362 set version=18363%version:~5%
+)
+if %isomajor%==19042 (
+if %version:~0,5%==19041 set version=19042%version:~5%
 )
 set _label=%version%.%labeldate%.%branch%_CLIENT
 if %isominor% gtr %verminor% (set _label=%isover%.%isodate%.%isobranch%_CLIENT)

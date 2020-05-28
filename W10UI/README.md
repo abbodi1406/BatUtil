@@ -154,6 +154,9 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+8.2:  
+- Added differentiation for Win10 20H1 and 20H2
+
 8.1:  
 - Enhanced installed updates detection on live online OS
 

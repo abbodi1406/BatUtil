@@ -156,12 +156,28 @@ goto :proceed
 
 :ReadINI
 find /i "%1 " WHD-W81UI.ini >nul || goto :eof
-for /f "tokens=1* delims==" %%A in ('find /i "%1 " WHD-W81UI.ini') do set "%1=%%~B"
+for /f "skip=2 tokens=1* delims==" %%A in ('find /i "%1 " WHD-W81UI.ini') do set "%1=%%~B"
 goto :eof
 
 :proceed
 if %_Debug% neq 0 set autostart=1
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+if "!repo!"=="" set "repo=Updates"
+if "!dismroot!"=="" set "DismRoot=dism.exe"
+if "!cab_dir!"=="" set "Cab_Dir=W81UItemp"
+if "!mountdir!"=="" set "MountDir=W81UImount"
+if "!winremount!"=="" set "WinreMount=W81UImountre"
+if "%Net35%"=="" set Net35=1
+if "%Cleanup%"=="" set Cleanup=0
+if "%ResetBase%"=="" set ResetBase=0
+if "%WinRE%"=="" set WinRE=1
+if "%ISO%"=="" set ISO=1
+if "%AutoStart%"=="" set AutoStart=0
+if "%Delete_Source%"=="" set Delete_Source=0
+if "%wim2esd%"=="" set wim2esd=0
+if "%OnlineLimit%"=="" set OnlineLimit=75
+for %%# in (LDRbranch Hotfix WUSatisfy) do if "!%%#!"=="" set "%%#=YES"
+for %%# in (Windows10 WMF RSAT) do if "!%%#!"=="" set "%%#=NO"
 set _ADK=0
 set "showdism=Host OS"
 set "_dism2=%dismroot% /NoRestart /ScratchDir"

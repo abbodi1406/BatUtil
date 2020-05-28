@@ -63,7 +63,7 @@ these packages require .NET Framework 4.5 or higher to be already installed
 * [8] Features (WHD-W7UI_WithoutKB3125574.cmd only)  
 install updates found in "Extra\WithoutKB3125574\_Features"
 
-* [X] ESUpdates  
+* [ X ] ESUpdates  
 install extended security updates found in "Security\ESU"
 
 * [A] KB971033  

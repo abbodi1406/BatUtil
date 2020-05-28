@@ -417,7 +417,7 @@ echo ^%%SystemRoot^%%\system32\wpeinit.exe
 echo ^%%SystemDrive^%%\sources\setup%1.exe
 echo.
 )>bin\winpeshl.ini
-for /f %%# in ('wimlib-imagex.exe.exe dir ISOFOLDER\sources\boot%1.wim 2 --path=\sources ^| find /i "setup.exe.mui"') do wimlib-imagex.exe update ISOFOLDER\sources\boot%1.wim 2 --command="rename '%%#' '%%~p#setup%1.exe.mui'" %_Nul3%
+for /f %%# in ('wimlib-imagex.exe dir ISOFOLDER\sources\boot%1.wim 2 --path=\sources ^| find /i "setup.exe.mui"') do wimlib-imagex.exe update ISOFOLDER\sources\boot%1.wim 2 --command="rename '%%#' '%%~p#setup%1.exe.mui'" %_Nul3%
 %_Nul3% wimlib-imagex.exe update ISOFOLDER\sources\boot%1.wim 2 --command="rename 'sources\setup.exe' 'sources\setup%1.exe'"
 %_Nul3% wimlib-imagex.exe update ISOFOLDER\sources\boot%1.wim 2 --command="add 'bin\winpeshl.ini' '\Windows\system32\winpeshl.ini'"
 %_Nul3% wimlib-imagex.exe extract ISOFOLDER\sources\boot%1.wim 2 sources\setup%1.exe --dest-dir=.\ISOFOLDER\sources --no-acls --no-attributes

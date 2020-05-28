@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v53
+@set uivr=v54
 @echo off
 :: Change to 1 to get ISO name similar to ESD name (ESD name must be the original, with or without sha1 hash suffix)
 set ISOnameESD=0
@@ -568,6 +568,9 @@ if %revmajor%==18363 (
 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
 if %version:~0,5%==18362 set version=18363%version:~5%
 )
+if %revmajor%==19042 (
+if %version:~0,5%==19041 set version=19042%version:~5%
+)
 if %verminor% lss %revminor% (
 set version=%revision%
 set verminor=%revminor%
@@ -586,6 +589,9 @@ if defined _label2 (set _label=%_label2%) else (set _label=%version%.%labeldate%
 rmdir /s /q .\bin\temp
 set _rfr=refresh
 set _rsr=release_svc_%_rfr%
+if %revmajor%==19042 (set _label=%revision%.%_time%.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
+if %revision%==19041.264 (set _label=19041.264.200511-0456.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
+if %revision%==19041.84  (set _label=19041.84.200218-1143.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
 if %revmajor%==18363 (set _label=%revision%.%_time%.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
 if %revision%==18363.592 (set _label=18363.592.200109-2016.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
 if %revision%==18363.418 (set _label=18363.418.191007-0143.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)

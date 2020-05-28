@@ -151,7 +151,7 @@ goto :proceed
 
 :ReadINI
 find /i "%1 " WHD-W7UI.ini >nul || goto :eof
-for /f "tokens=1* delims==" %%A in ('find /i "%1 " WHD-W7UI.ini') do set "%1=%%~B"
+for /f "skip=2 tokens=1* delims==" %%A in ('find /i "%1 " WHD-W7UI.ini') do set "%1=%%~B"
 goto :eof
 
 :proceed
@@ -160,6 +160,18 @@ for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 set win7=0
 if %winbuild% geq 7600 if %winbuild% lss 9200 set win7=1
 if exist "!_work!\imagex.exe" set "_imagex=!_work!\imagex.exe"
+if "!repo!"=="" set "repo=Updates"
+if "!dismroot!"=="" set "DismRoot=dism.exe"
+if "!cab_dir!"=="" set "Cab_Dir=W7UItemp"
+if "!mountdir!"=="" set "MountDir=W7UImount"
+if "!winremount!"=="" set "WinreMount=W7UImountre"
+if "%WinRE%"=="" set WinRE=1
+if "%ISO%"=="" set ISO=1
+if "%AutoStart%"=="" set AutoStart=0
+if "%Delete_Source%"=="" set Delete_Source=0
+if "%OnlineLimit%"=="" set OnlineLimit=75
+for %%# in (ESUpdates LDRbranch IE11 RDP) do if "!%%#!"=="" set "%%#=YES"
+for %%# in (Hotfix Windows10 WAT WMF ADLDS RSAT) do if "!%%#!"=="" set "%%#=NO"
 set _ADK=0
 set "ShowDism=Host OS"
 set "_dism2=%DismRoot% /NoRestart /ScratchDir"
