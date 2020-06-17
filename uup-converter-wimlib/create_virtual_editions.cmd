@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v45
+@set uivr=v46
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible

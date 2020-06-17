@@ -72,10 +72,10 @@ set _dir86=0
 set _iso64=0
 set _iso86=0
 
-dir /b /ad *amd64* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *amd64*') do if exist "%%~#\sources\*.wim" (set _dir64=1&set "ISOdir1=%%#"))
-dir /b /ad *x64* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x64*') do if exist "%%~#\sources\*.wim" (set _dir64=1&set "ISOdir1=%%#"))
-dir /b /ad *x32* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x32*') do if exist "%%~#\sources\*.wim" (set _dir86=1&set "ISOdir2=%%#"))
-dir /b /ad *x86* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x86*') do if exist "%%~#\sources\*.wim" (set _dir86=1&set "ISOdir2=%%#"))
+dir /b /ad *_amd64* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *amd64*') do if exist "%%~#\sources\*.wim" (set _dir64=1&set "ISOdir1=%%#"))
+dir /b /ad *_x64* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x64*') do if exist "%%~#\sources\*.wim" (set _dir64=1&set "ISOdir1=%%#"))
+dir /b /ad *_x32* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x32*') do if exist "%%~#\sources\*.wim" (set _dir86=1&set "ISOdir2=%%#"))
+dir /b /ad *_x86* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x86*') do if exist "%%~#\sources\*.wim" (set _dir86=1&set "ISOdir2=%%#"))
 if %_dir64% equ 1 if %_dir86% equ 1 goto :DUALMENU
 
 dir /b /a:-d *_amd64*.iso %_Nul3% && (set _iso64=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_amd64*.iso') do set "ISOfile1=%%#")
@@ -85,7 +85,7 @@ dir /b /a:-d *_x86*.iso %_Nul3% && (set _iso86=1&for /f "tokens=* delims=" %%# i
 if %_iso64% equ 1 if %_iso86% equ 1 goto :DUALMENU
 
 :prompt1
-cls
+@cls
 set _iso1=
 echo %line%
 echo Enter / Paste the complete path to 1st ISO file
@@ -143,7 +143,7 @@ echo Specified path is not a valid ISO file
 echo.
 echo Press any key to continue...
 pause >nul
-cls
+@cls
 goto :prompt2
 )
 echo "%_iso2%"| findstr /I /C:"amd64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso2%")
@@ -158,7 +158,7 @@ if %_iso64% equ 0 if %_iso86% equ 1 (set "MESSAGE=both ISO files are x86"&goto :
 
 :DUALMENU
 color 1F
-cls
+@cls
 echo %line%
 echo. Sources:
 echo.
@@ -179,7 +179,7 @@ if errorlevel 1 (set combine=1&set custom=1&if %_iso64% equ 1 (goto :dISO) else 
 goto :DUALMENU
 
 :dISO
-cls
+@cls
 echo.
 echo %line%
 echo Extracting ISO files . . .
@@ -196,7 +196,7 @@ if exist %ISOdir2%\ rmdir /s /q %ISOdir2%\
 7z.exe x "!ISOfile2!" -o%ISOdir2% * -r >nul
 
 :dCheck
-if %_iso64% equ 0 cls
+if %_iso64% equ 0 @cls
 echo.
 echo %line%
 echo Checking distributions Info . . .
@@ -389,10 +389,11 @@ echo.
 echo %line%
 echo Creating ISO . . .
 echo %line%
+%_Nul3% robocopy mARCHiso ISOFOLDER /E /XF .README
 if exist "ISOFOLDER\efi\microsoft\boot\efisys.bin" (
-cdimage.exe -bootdata:2#p0,e,b"ISOFOLDER\boot\etfsboot.com"#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -t%isotime% -g -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
+cdimage.exe -bootdata:2#p0,e,b"ISOFOLDER\boot\etfsboot.com"#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -t%isotime% -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
 ) else (
-cdimage.exe -b"ISOFOLDER\boot\etfsboot.com" -o -m -u2 -udfver102 -t%isotime% -g -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
+cdimage.exe -b"ISOFOLDER\boot\etfsboot.com" -o -m -u2 -udfver102 -t%isotime% -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
 )
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 (

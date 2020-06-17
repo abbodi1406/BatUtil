@@ -294,6 +294,7 @@ echo reg.exe delete %_Config% /f /v UpdateUrl 1^>nul 2^>nul
 echo reg.exe delete %_Config% /f /v UpdateToVersion 1^>nul 2^>nul
 echo reg.exe delete %_CTR%\Updates /f /v UpdateToVersion 1^>nul 2^>nul
 echo reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\OfficeUpdate /f 1^>nul 2^>nul
+echo reg.exe add HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\OfficeUpdate /f /v PreventBingInstall /t REG_DWORD /d 1 1^>nul 2^>nul
 echo start "" /WAIT "%%CommonProgramFiles%%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" ^^
 echo deliverymechanism=%CTRffn% platform=%CTRarc% culture=%CTRstp% b= displaylevel=%_disp% ^^
 echo forceappshutdown=%_shut% piniconstotaskbar=%_icon% acceptalleulas.16=%_eula% ^^
@@ -307,7 +308,7 @@ if %winbuild% geq 10240 echo pidkeys=%_keys% %_autoact% ^^
 if %winbuild% lss 10240 if /i "%_suite%"=="MondoVolume" echo pidkeys=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2 %_autoact% ^^
 if defined _suite echo %_suite%.excludedapps.16=%_excluded% ^^
 if defined _exclude1d echo %_exclude1d% ^^
-echo flt.useexptransportinplacepl=disabled flt.useofficehelperaddon=disabled flt.useoutlookshareaddon=disabled flt.usebingaddononinstall=disabled flt.usebingaddononupdate=disabled 1^>nul 2^>nul
+echo flt.useexptransportinplacepl=disabled flt.useofficehelperaddon=disabled flt.useoutlookshareaddon=disabled 1^>nul 2^>nul
 echo reg.exe add %_Config% /f /v UpdateChannel /t REG_SZ /d "%_url%/%CTRffn%" 1^>nul 2^>nul
 echo reg.exe add %_Config% /f /v UpdateChannelChanged /t REG_SZ /d True 1^>nul 2^>nul
 echo exit /b

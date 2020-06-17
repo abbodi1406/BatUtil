@@ -47,6 +47,7 @@ for %%# in (
 5440fd1f-7ecb-4221-8110-145efaa6372f
 64256afe-f5d9-4f86-8936-8840a6a4f5be
 492350f6-3a01-4f97-b9c0-c7c6ddf67d60
+55336b82-a18d-4dd6-b5f6-9e5095c314a6
 b8f9b850-328d-4355-9145-c59439a0c4cf
 7ffbc6bf-bc32-4f92-8982-f9dd17fd3114
 ea4a4090-de26-49d7-93c1-91bff9e53fc3
@@ -56,7 +57,16 @@ set /a cc+=1
 set ffn!cc!=%%#
 )
 set /a cc=0
-for %%# in (Insiders,MonthlyTargeted,Monthly,SemiAnnualTargeted,SemiAnnual,DogfoodDevMain,MicrosoftElite) do (
+for %%# in (
+InsiderFast
+MonthlyPreview
+Monthly
+MonthlyEnterprise
+SemiAnnualPreview
+SemiAnnual
+DogfoodDevMain
+MicrosoftElite
+) do (
 set /a cc+=1
 set chn!cc!=%%#
 )
@@ -423,7 +433,7 @@ echo Source  : "!CTRsource!"
 echo Version : %CTRver% / Arch: %CTRarc% / Lang: %CTRlng%
 echo %line%
 echo.
-echo. 1. Install Office 365 Suite
+echo. 1. Install Microsoft 365 Suite
 echo. 2. Install Office 2016 Suite
 if %_O2019%==1 (
 echo. 3. Install Office 2019 Suite
@@ -449,17 +459,17 @@ echo Version : %CTRver% / Arch: %CTRarc% / Lang: %CTRlng%
 echo %line%
 echo Select Products to Install:
 echo.
-echo. 1. Office 365 ProPlus        : %_O365Pro%
-echo. 2. Office 365 Business       : %_O365Bus%
-echo. 3. Office 365 Small Business : %_O365Sma%
-echo. 4. Office 365 Home           : %_O365Hom%
-echo. 5. Office 365 Education      : %_O365Edu%
+echo. 1. Microsoft 365 Enterprise        : %_O365Pro%
+echo. 2. Microsoft 365 Business          : %_O365Bus%
+echo. 3. Microsoft 365 Business Standard : %_O365Sma%
+echo. 4. Microsoft 365 Family            : %_O365Hom%
+echo. 5. Microsoft 365 Education         : %_O365Edu%
 echo.
 if %_O2019%==1 (
-echo. 6. Project Professional 2019 : %_O19PrjPro%
-echo. 7. Project Standard 2019     : %_O19PrjStd%
-echo. 8. Visio Professional 2019   : %_O19VisPro%
-echo. 9. Visio Standard 2019       : %_O19VisStd%
+echo. 6. Project Professional 2019       : %_O19PrjPro%
+echo. 7. Project Standard 2019           : %_O19PrjStd%
+echo. 8. Visio Professional 2019         : %_O19VisPro%
+echo. 9. Visio Standard 2019             : %_O19VisStd%
 )
 echo %line%
 choice /c 1234567890BX /n /m "Change a menu option, press 0 to proceed, B to go back, or X to exit: "
@@ -917,19 +927,22 @@ echo %line%
 echo Select Update Channel:
 echo.
 echo. 0. Default
-echo. 1. Insiders                            ^|   Insiders::DevMain
-echo. 2. Monthly [Targeted]                  ^|   Insiders::CC
-echo. 3. Monthly                             ^| Production::CC
-echo. 4. Semi-Annual [Targeted]              ^|   Insiders::FRDC
-echo. 5. Semi-Annual                         ^| Production::DC
+echo. 1. Beta    / Insider Fast              ^|   Insiders::DevMain
+echo. 2. Current / Monthly Preview           ^|   Insiders::CC
+echo. 3. Current / Monthly                   ^| Production::CC
 echo.
-echo. 6. DevMain Channel                     ^|    Dogfood::DevMain
-echo. 7. Microsoft Elite                     ^|  Microsoft::DevMain
+echo. 4. Monthly Enterprise                  ^| Production::MEC
+echo. 5. Semi-Annual Preview                 ^|   Insiders::FRDC
+echo. 6. Semi-Annual                         ^| Production::DC
+echo.
+echo. D. DevMain Channel                     ^|    Dogfood::DevMain
+echo. E. Microsoft Elite                     ^|  Microsoft::DevMain
 echo %line%
-choice /c 12345670BX /n /m "Choose a menu option to proceed, press B to go back, or X to exit: "
-if errorlevel 10 goto :eof
-if errorlevel 9 (if %_return%==1 (goto :MenuSuite365) else if %_return%==2 (goto :MenuSuite2016) else if %_return%==3 (goto :MenuSuite2019) else (goto :MenuApps))
-if errorlevel 8 (set inpt=0&goto :MenuChannel2)
+choice /c 123456DE0BX /n /m "Choose a menu option to proceed, press B to go back, or X to exit: "
+if errorlevel 11 goto :eof
+if errorlevel 10 (if %_return%==1 (goto :MenuSuite365) else if %_return%==2 (goto :MenuSuite2016) else if %_return%==3 (goto :MenuSuite2019) else (goto :MenuApps))
+if errorlevel 9 (set inpt=0&goto :MenuChannel2)
+if errorlevel 8 (set inpt=8&goto :MenuChannel2)
 if errorlevel 7 (set inpt=7&goto :MenuChannel2)
 if errorlevel 6 (set inpt=6&goto :MenuChannel2)
 if errorlevel 5 (set inpt=5&goto :MenuChannel2)
@@ -1119,6 +1132,7 @@ echo reg.exe delete %_Config% /f /v UpdateUrl 1^>nul 2^>nul
 echo reg.exe delete %_Config% /f /v UpdateToVersion 1^>nul 2^>nul
 echo reg.exe delete %_CTR%\Updates /f /v UpdateToVersion 1^>nul 2^>nul
 echo reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\OfficeUpdate /f 1^>nul 2^>nul
+echo reg.exe add HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\OfficeUpdate /f /v PreventBingInstall /t REG_DWORD /d 1 1^>nul 2^>nul
 echo start "" /WAIT "%%CommonProgramFiles%%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" ^^
 echo deliverymechanism=%CTRffn% platform=%CTRarc% culture=%CTRstp% b= displaylevel=%_disp% ^^
 echo forceappshutdown=%_shut% piniconstotaskbar=%_icon% acceptalleulas.16=%_eula% ^^
@@ -1130,7 +1144,7 @@ echo baseurl.16="!CTRsource!" ^^^^
 echo productstoadd="%_products%" ^^
 if defined _suite echo %_suite%.excludedapps.16=%_excluded% ^^
 if defined _exclude1d echo %_exclude1d% ^^
-echo flt.useexptransportinplacepl=disabled flt.useofficehelperaddon=disabled flt.useoutlookshareaddon=disabled flt.usebingaddononinstall=disabled flt.usebingaddononupdate=disabled 1^>nul 2^>nul
+echo flt.useexptransportinplacepl=disabled flt.useofficehelperaddon=disabled flt.useoutlookshareaddon=disabled 1^>nul 2^>nul
 echo reg.exe add %_Config% /f /v UpdateChannel /t REG_SZ /d "%_url%/%CTRffn%" 1^>nul 2^>nul
 echo reg.exe add %_Config% /f /v UpdateChannelChanged /t REG_SZ /d True 1^>nul 2^>nul
 echo exit /b

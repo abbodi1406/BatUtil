@@ -1,11 +1,46 @@
 @setlocal DisableDelayedExpansion
 @echo off
-:: set version choice to always check latest available online
-set latest=1
+:: ### Unattended Options ###
 
-:: set specific valid version offline
-set version=
+:: language
+:: run script without it to see supported langs
+set "uLanguage="
 
+:: channel
+:: InsiderFast, MonthlyPreview, Monthly
+:: MonthlyEnterprise, SemiAnnualPreview, SemiAnnual
+:: Perpetual2019, MicrosoftLTSC
+:: DogfoodDevMain, MicrosoftElite
+set "uChannel="
+
+:: level
+:: Win7, Default (Win 8.1/10)
+set "uLevel="
+
+:: bitness
+:: x86, x64, x86x64
+set "uBitness="
+
+:: type
+:: Full, Lang, Proof
+set "uType="
+
+:: output
+:: aria, wget, curl, text
+set "uOutput="
+
+:: ###################################################################
+:: # NORMALLY THERE IS NO NEED TO CHANGE ANYTHING BELOW THIS COMMENT #
+:: ###################################################################
+
+set "SysPath=%SystemRoot%\System32"
+if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
+set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set "xOS=amd64"
+if /i %PROCESSOR_ARCHITECTURE%==x86 (if not defined PROCESSOR_ARCHITEW6432 (
+  set "xOS=x86"
+  )
+)
 set "_temp=%temp%"
 set "_work=%~dp0"
 if "%_work:~-1%"=="\" set "_work=%_work:~0,-1%"
@@ -39,23 +74,25 @@ for %%A in (
 b8f9b850-328d-4355-9145-c59439a0c4cf
 7ffbc6bf-bc32-4f92-8982-f9dd17fd3114
 f2e724c1-748f-4b47-8fb8-8e0d210e9208
-ea4a4090-de26-49d7-93c1-91bff9e53fc3
+1d2d2ea6-1680-4c56-ac58-a441c8c24ff9
 b61285dd-d9f7-41f2-9757-8f61cba4e9c8
+ea4a4090-de26-49d7-93c1-91bff9e53fc3
 ) do (
 set /a cc+=1
 set ffn!cc!=%%A
 )
 set /a cc=0
 for %%A in (
-Insiders
-MonthlyTargeted
+InsiderFast
+MonthlyPreview
 Monthly
 MonthlyEnterprise
-SemiAnnualTargeted
+SemiAnnualPreview
 SemiAnnual
-PerpetualVL2019
-DogfoodDevMain
+Perpetual2019
+MicrosoftLTSC
 MicrosoftElite
+DogfoodDevMain
 ) do (
 set /a cc+=1
 set chn!cc!=%%A
@@ -71,10 +108,63 @@ for %%A in (32,64,00) do (
 set /a cc+=1
 set bit!cc!=%%A
 )
+set /a cc=0
+for %%A in (aria, wget, curl, text) do (
+set /a cc+=1
+set ott!cc!=%%A
+)
 
 set full=1
 set proof=0
 set "line=============================================================="
+
+if not exist "YAOCTRU.ini" goto :proceed
+findstr /i "YAOCTRU-Configuration" YAOCTRU.ini 1>nul 2>nul || goto :proceed
+for %%# in (
+uLanguage
+uChannel
+uLevel
+uBitness
+uType
+uOutput
+) do (
+call :ReadINI %%#
+)
+goto :proceed
+
+:ReadINI
+findstr /i "%1 " YAOCTRU.ini >nul || goto :eof
+for /f "tokens=1* delims==" %%A in ('findstr /i /c:"%1 " YAOCTRU.ini') do call set "%1=%%~B"
+goto :eof
+
+:proceed
+if not defined uLanguage goto :CHANNEL
+
+for /L %%# in (1,1,9) do if /i "!uLanguage!"=="!lang0%%#!" (set "lang=!lang0%%#!"&set "lcid=!lcid0%%#!")
+for /L %%# in (10,1,40) do if /i "!uLanguage!"=="!lang%%#!" (set "lang=!lang%%#!"&set "lcid=!lcid%%#!")
+
+set "chn=!chn3!"&set "ffn=!ffn3!"
+if defined uChannel (
+for /L %%# in (1,1,10) do if /i "!uChannel!"=="!chn%%#!" (set "chn=!chn%%#!"&set "ffn=!ffn%%#!")
+)
+
+set "arc=!arc3!"&set "bit=!bit3!"
+if defined uBitness (
+for /L %%# in (1,1,3) do if /i "!uBitness!"=="!arc%%#!" (set "arc=!arc%%#!"&set "bit=!bit%%#!")
+)
+
+if not defined uLevel set "uLevel=Default"
+
+if defined uType (
+if /i "!uType!"=="Lang" set full=0
+if /i "!uType!"=="Proof" set proof=1
+)
+
+set otpt=1
+if defined uOutput (
+for /L %%# in (1,1,4) do if /i "!uOutput!"=="!ott%%#!" (set "otpt=%%#")
+)
+goto :MRO
 
 :CHANNEL
 cls
@@ -83,65 +173,28 @@ set inpt=
 set verified=0
 echo %line%
 echo.
-echo Official CDNs:
-echo. 1. Insiders                            ^|   Insiders::DevMain
-echo. 2. Monthly [Targeted]                  ^|   Insiders::CC
-echo. 3. Monthly                             ^| Production::CC
-echo. 4. Monthly Enterprise                  ^| Production::MEC
-echo. 5. Semi-Annual [Targeted]              ^|   Insiders::FRDC
-echo. 6. Semi-Annual                         ^| Production::DC
-echo. 7. Perpetual2019 VL                    ^| Production::LTSC
+echo. 1. Beta    / Insider Fast              ^|   Insiders::DevMain
+echo. 2. Current / Monthly Preview           ^|   Insiders::CC
+echo. 3. Current / Monthly                   ^| Production::CC
 echo.
-echo Testing CDNs:
-echo. 8. DevMain Channel                     ^|    Dogfood::DevMain
+echo. 4. Monthly Enterprise                  ^| Production::MEC
+echo. 5. Semi-Annual Preview                 ^|   Insiders::FRDC
+echo. 6. Semi-Annual                         ^| Production::DC
+echo.
+echo. 7. Perpetual2019 VL                    ^| Production::LTSC
+echo. 8. Microsoft Perpetual                 ^|  Microsoft::LTSC
+echo.
 echo. 9. Microsoft Elite                     ^|  Microsoft::DevMain
+echo 10. DevMain Channel                     ^|    Dogfood::DevMain
+echo.
 echo %line%
 echo.
 set /p inpt= ^> Enter Channel option number, and press "Enter": 
 if "%inpt%"=="" goto :eof
-for /l %%i in (1,1,9) do (if %inpt%==%%i set verified=1)
+for /l %%i in (1,1,10) do (if %inpt%==%%i set verified=1)
 if %verified%==0 goto :CHANNEL
 set "ffn=!ffn%inpt%!"
 set "chn=!chn%inpt%!"
-
-if "%latest%"=="1" goto :MRO
-if defined version set "vvv=%version%"&goto :BITNESS
-
-:VERSION
-cls
-title ^>Choose Version^<
-set inpt=
-set verified=0
-echo %line%
-echo Channel : %chn%
-echo %line%
-echo.
-echo. 1. Latest Version
-echo. 2. Specific Version
-echo %line%
-echo.
-set /p inpt= ^> Enter Version option number, and press "Enter": 
-if "%inpt%"=="" goto :eof
-for /l %%i in (1,1,2) do (if %inpt%==%%i set verified=1)
-if %verified%==0 goto :VERSION
-if %inpt%==1 goto :MRO
-
-:SPECIFIC
-cls
-title ^>Specific Version^<
-set inpt=
-echo %line%
-echo Channel : %chn%
-echo %line%
-echo.
-echo Enter the version number
-echo make sure it is a valid version for the choosen channel
-echo %line%
-echo.
-set /p inpt= ^> 
-if "%inpt%"=="" goto :eof
-if "%inpt:~0,5%"=="16.0." set "vvv=%inpt%"&goto :BITNESS
-goto :SPECIFIC
 
 :MRO
 cls
@@ -157,8 +210,13 @@ echo.
 set "dms=https://mrodevicemgr.officeapps.live.com/mrodevicemgrsvc/api/v2/C2RReleaseData"
 pushd "!_temp!"
 if exist "C2R*.json" del /f /q "C2R*.json"
+if /i "!uLevel!"=="Win7" (
+powershell -nop -ep bypass -c "(New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1.0','C2R0.json')" 1>nul 2>nul
+) else (
 powershell -nop -ep bypass -c "(New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%','C2R0.json')" 1>nul 2>nul
 powershell -nop -ep bypass -c "(New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1.0','C2R7.json')" 1>nul 2>nul
+)
+if /i "!uLevel!"=="Default" if exist "C2R7.json" del /f /q "C2R7.json"
 if not exist "C2R*.json" (
 echo.
 echo %line%
@@ -173,8 +231,10 @@ goto :eof
 )
 for /f "tokens=2 delims=:, " %%G in ('findstr /i AvailableBuild C2R0.json') do set "vvv0=%%~G"
 for /f "tokens=2-6 delims=:/ " %%G in ('findstr /i TimestampUtc C2R0.json') do set "utc0=%%I-%%~G-%%H %%J:%%K
+if exist "C2R7.json" (
 for /f "tokens=2 delims=:, " %%G in ('findstr /i AvailableBuild C2R7.json') do set "vvv7=%%~G"
 for /f "tokens=2-6 delims=:/ " %%G in ('findstr /i TimestampUtc C2R7.json') do set "utc7=%%I-%%~G-%%H %%J:%%K
+)
 if not defined vvv0 (
 echo.
 echo %line%
@@ -187,26 +247,27 @@ goto :eof
 )
 if exist "C2R*.json" del /f /q "C2R*.json"
 popd
+if defined uLevel set "vvv=%vvv0%"&set "utc=%utc0%"&set "inpt=%otpt%"&goto :POSTout
 if not defined vvv7 set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
 if %vvv7:~5,5% gtr %vvv0:~5,5% set "vvv0=%vvv7%"&set "utc0=%utc7%"
 if "%vvv0%" equ "%vvv7%" set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
 
 :WIN
 cls
-title ^>Choose Version per Windows^<
+title ^>Choose Build Level^<
 set inpt=
 set verified=0
 echo %line%
 echo Channel : %chn%
 echo %line%
 echo.
-echo Selected channel offer different versions per OS:
+echo Selected channel offer different builds per OS level:
 echo.
-echo. 1. Version: %vvv0% [Windows 8.1 and 10]
-echo. 2. Version: %vvv7% [Windows 7]
+echo. 1. build: %vvv0% [Windows 8.1 and 10]
+echo. 2. build: %vvv7% [Windows 7]
 echo %line%
 echo.
-set /p inpt= ^> Enter Version option number, and press "Enter": 
+set /p inpt= ^> Enter Build option number, and press "Enter": 
 if "%inpt%"=="" goto :eof
 for /l %%i in (1,1,2) do (if %inpt%==%%i set verified=1)
 if %verified%==0 goto :WIN
@@ -317,6 +378,8 @@ set /p inpt= ^> Enter Output option number, and press "Enter":
 if "%inpt%"=="" goto :eof
 for /l %%i in (1,1,4) do (if %inpt%==%%i set verified=1)
 if %verified%==0 goto :OUTPUT
+
+:POSTout
 set "url=http://officecdn.microsoft.com/pr/%ffn%/Office/Data"
 set "stp=http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/Office/Data"
 set oar=%arc%
@@ -331,16 +394,13 @@ goto :OUTPUT%inpt%
 for %%a in (
 sp%bit%%lcid%.cab
 i%bit%0.cab
-i%bit%0.cab.cat
 s%bit%0.cab
 stream.%arc%.%lang%.proof.dat
-stream.%arc%.%lang%.proof.dat.cat
 ) do (
 call :EC1HO%inpt% %%a
 )
 if %dual%==0 if %arc%==x86 for %%a in (
 i640.cab
-i640.cab.cat
 ) do (
 call :EC1HO%inpt% %%a
 )
@@ -350,10 +410,8 @@ call :EC2HO%inpt% v64_%vvv%.cab
 if %dual%==1 for %%a in (
 sp64%lcid%.cab
 i640.cab
-i640.cab.cat
 s640.cab
 stream.x64.%lang%.proof.dat
-stream.x64.%lang%.proof.dat.cat
 ) do (
 call :EC1HO%inpt% %%a
 )
@@ -388,23 +446,19 @@ for %%a in (
 i%bit%%lcid%.cab
 s%bit%%lcid%.cab
 i%bit%0.cab
-i%bit%0.cab.cat
 s%bit%0.cab
 stream.%arc%.%lang%.dat
-stream.%arc%.%lang%.dat.cat
 ) do (
 call :EC1HO%inpt% %%a
 )
 if %dual%==0 if %arc%==x86 for %%a in (
 i64%lcid%.cab
 i640.cab
-i640.cab.cat
 ) do (
 call :EC1HO%inpt% %%a
 )
 if %full%==1 for %%a in (
 stream.%arc%.x-none.dat
-stream.%arc%.x-none.dat.cat
 ) do (
 call :EC1HO%inpt% %%a
 )
@@ -418,16 +472,13 @@ if %dual%==1 for %%a in (
 i64%lcid%.cab
 s64%lcid%.cab
 i640.cab
-i640.cab.cat
 s640.cab
 stream.x64.%lang%.dat
-stream.x64.%lang%.dat.cat
 ) do (
 call :EC1HO%inpt% %%a
 )
 if %dual%==1 if %full%==1 for %%a in (
 stream.x64.x-none.dat
-stream.x64.x-none.dat.cat
 ) do (
 call :EC1HO%inpt% %%a
 )
@@ -699,15 +750,12 @@ echo ^)
 echo if not exist %%_uri%%\stream*.dat mkdir %%_uri%%
 echo for %%%%i in ^(
 echo i32*.cab
-echo i32*.cab.cat
 echo i64*.cab
-echo i64*.cab.cat
 echo s32*.cab
 echo s64*.cab
 echo sp32*.cab
 echo sp64*.cab
 echo stream*.dat
-echo stream*.dat.cat
 echo ^) do ^(
 echo if exist "%%%%i" move /y %%%%i %%_uri%%\
 echo ^)
