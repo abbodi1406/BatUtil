@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v8.2
+@set uiv=v8.3
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -357,8 +357,16 @@ if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%
 set imgcount=%bootimg%&set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\boot.wim
 if defined isoupdate (
+  echo.
+  echo ============================================================
+  echo Adding setup dynamic update^(s^)...
+  echo ============================================================
+  echo.
   mkdir "!_cabdir!\du" %_Nul3%
-  for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
+  for %%i in (!isoupdate!) do (
+  echo %%~i
+  expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
+  )
   xcopy /CEDRUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!target!\sources\replacementmanifests\" %_Nul3%
   rmdir /s /q "!_cabdir!\du\" %_Nul3%
@@ -434,18 +442,56 @@ expand.exe -f:*Windows*.cab "!repo!\!package!" "!repo!" %_Null%
 goto :eof
 
 :cab2
-set /a count+=1
-echo %count%/%_sum%: %package%
 if exist "%dest%\" rmdir /s /q "%dest%\" %_Nul3%
 mkdir "%dest%"
-expand.exe -f:* "!repo!\!package!" "%dest%" %_Null% || (
-  rmdir /s /q "%dest%\" %_Nul3%
-  set directcab=!directcab! "!package!"
-)
+set /a count+=1
+expand.exe -f:update.mum "!repo!\!package!" "%dest%" %_Null%
 if not exist "%dest%\update.mum" (
+  echo %count%/%_sum%: %package% [Setup DU]
   rmdir /s /q "%dest%\" %_Nul3%
   set isoupdate=!isoupdate! "!package!"
   goto :eof
+)
+set "_type="
+if %build% geq 17763 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
+%_Nul3% findstr /i /m "Edition\"" "%dest%\update.mum"
+if errorlevel 1 set "_type=[WinPE]"
+)
+if not defined _type findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% && (
+set "_type=[LCU]"
+)
+if not defined _type expand.exe -f:*_microsoft-windows-servicingstack_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" (
+set "_type=[SSU]"
+)
+if not defined _type expand.exe -f:*_adobe-flash-for-windows_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_adobe-flash-for-windows_*.manifest" (
+set "_type=[Flash]"
+)
+if not defined _type expand.exe -f:*_netfx4*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_netfx4*.manifest" (
+findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || set "_type=[NetFx]"
+)
+if not defined _type expand.exe -f:*_microsoft-windows-s..boot-firmwareupdate_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" (
+set "_type=[SecureBoot]"
+)
+if not defined _type if %build% geq 18362 expand.exe -f:*enablement-package*.mum "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*enablement-package*.mum" (
+set "_type=[Enablement]"
+)
+if %build% geq 18362 if exist "%dest%\*enablement-package*.mum" expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" (
+set "_type=[Enablement / EdgeChromium]"
+)
+if not defined _type expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if not defined _type if exist "%dest%\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" (
+set "_type=[EdgeChromium]"
+)
+echo %count%/%_sum%: %package% %_type%
+expand.exe -f:* "!repo!\!package!" "%dest%" %_Null% || (
+  rmdir /s /q "%dest%\" %_Nul3%
+  set directcab=!directcab! "!package!"
 )
 if exist "%dest%\*cablist.ini" expand.exe -f:* "%dest%\*.cab" "%dest%" %_Null% || (
   rmdir /s /q "%dest%\" %_Nul3%
@@ -476,6 +522,9 @@ set servicingstack=
 set cumulative=
 set netroll=
 set secureboot=
+set edge=
+set safeos=
+set callclean=
 set discard=0
 set discardre=0
 set ldr=&set listc=0&set list=1&set AC=100
@@ -501,24 +550,44 @@ echo Installing servicing stack update...
 echo ============================================================
 )
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSSU.log" /Add-Package %servicingstack%
-if not defined secureboot if not defined ldr if not defined cumulative call :cleanup
+if not defined safeos if not defined secureboot if not defined edge if not defined ldr if not defined cumulative call :cleanup
 )
-if not defined secureboot if not defined ldr if not defined cumulative goto :eof
+if not defined safeos if not defined secureboot if not defined edge if not defined ldr if not defined cumulative goto :eof
 if %verb%==1 (
 echo.
 echo ============================================================
 echo Installing updates...
 echo ============================================================
 )
-if defined secureboot %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSBoot.log" /Add-Package %secureboot%
-if %errorlevel% equ 1726 (
-%_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if defined safeos (
+set callclean=1
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismWinPE.log" /Add-Package %safeos%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
-if defined ldr %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismUpdt.log" /Add-Package %ldr%
-if defined cumulative %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
-if %errorlevel% equ 1726 (
-%_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
-if defined cumulative %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
+if defined secureboot (
+set callclean=1
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSBoot.log" /Add-Package %secureboot%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+)
+if defined ldr (
+set callclean=1
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismUpdt.log" /Add-Package %ldr%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+)
+if %verb%==0 if not defined safeos if defined cumulative (
+set callclean=1
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+)
+if %verb%==1 if defined cumulative (
+set callclean=1
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+)
+if defined callclean call :cleanup
+if defined edge (
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismEdge.log" /Add-Package %edge%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 call :cleanup
 goto :eof
@@ -554,7 +623,25 @@ if exist "!mumtarget!\Windows\servicing\packages\%mumcheck%" (
 call :netversion "!mumtarget!"
 if !skip!==1 (set /a _sum-=1&goto :eof)
 )
-if exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" (set "servicingstack=!servicingstack! /packagepath:%dest%\update.mum"&goto :eof)
+if exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" (
+set "servicingstack=!servicingstack! /packagepath:%dest%\update.mum"
+goto :eof
+)
+if exist "%dest%\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
+if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
+set "edge=!edge! /packagepath:%dest%\update.mum"
+goto :eof
+)
+if exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
+if not exist "%mumtarget%\Windows\servicing\Packages\WinPE-SRT-Package~*.mum" (set /a _sum-=1&goto :eof)
+set "safeos=!safeos! /packagepath:%dest%\update.mum"
+goto :eof
+)
+if exist "%dest%\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" if not exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
+if not exist "%mumtarget%\Windows\servicing\Packages\WinPE-Rejuv-Package~*.mum" (set /a _sum-=1&goto :eof)
+set "safeos=!safeos! /packagepath:%dest%\update.mum"
+goto :eof
+)
 if exist "%dest%\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" (
 if %winbuild% lss 9600 (set /a _sum-=1&goto :eof)
 if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
@@ -579,7 +666,10 @@ if /i "!package!"=="%%~#" (
   goto :eof
   )
 )
-findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% && (set "cumulative=!cumulative! /packagepath:%dest%\update.mum"&goto :eof)
+findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% && (
+set "cumulative=!cumulative! /packagepath:%dest%\update.mum"
+goto :eof
+)
 set "ldr=!ldr! /packagepath:%dest%\update.mum"
 goto :eof
 
@@ -734,12 +824,19 @@ if %net35%==1 call :enablenet35
 if %dvd%==1 if exist "!mountdir!\sources\setup.exe" call :boots
 if %wim%==1 if exist "!_wimpath!\setup.exe" (
 if exist "!mountdir!\sources\setup.exe" copy /y "!mountdir!\sources\setup.exe" "!_wimpath!" %_Nul3%
-if not exist "!mountdir!\sources\setup.exe" if defined isoupdate (
+if defined isoupdate if not exist "!mountdir!\sources\setup.exe" if not exist "!_cabdir!\du\" (
+  echo.
+  echo ============================================================
+  echo Adding setup dynamic update^(s^)...
+  echo ============================================================
+  echo.
   mkdir "!_cabdir!\du" %_Nul3%
-  for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
+  for %%i in (!isoupdate!) do (
+  echo %%~i
+  expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
+  )
   xcopy /CERUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!target!\sources\replacementmanifests\" %_Nul3%
-  rmdir /s /q "!_cabdir!\du\" %_Nul3%
   )
 )
 if exist "!mountdir!\Windows\System32\Recovery\winre.wim" attrib -S -H -I "!mountdir!\Windows\System32\Recovery\winre.wim" %_Nul3%
@@ -791,7 +888,7 @@ copy /y "!mountdir!\Windows\Boot\PCAT\memtest.exe" "!target!\boot\" %_Nul1%
 if exist "!target!\setup.exe" copy /y "!mountdir!\setup.exe" "!target!\" %_Nul3%
 for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do set isover=%%i.%%j&set isomajor=%%i
 if %_chkEP% equ 1 if exist "!mountdir!\Windows\servicing\Packages\microsoft-windows-*enablement-package*.mum" set _actEP=1
-if not exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" if defined isoupdate (
+if defined isoupdate if not exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" (
   mkdir "!_cabdir!\du" %_Nul3%
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
   robocopy "!_cabdir!\du" "!mountdir!\sources" /XL /XX /XO %_Nul3%

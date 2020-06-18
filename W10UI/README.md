@@ -154,6 +154,12 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+8.3:  
+- Defer adding EdgeChormium update after CU  
+- Handle Safe OS (WinPE) updates separately  
+- Show when setup dynamic update is added  
+- Identify updates types as possible
+
 8.2:  
 - Added differentiation for Win10 20H1 and 20H2
 
