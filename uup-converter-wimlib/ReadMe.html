@@ -45,8 +45,6 @@
                 <br />
                 <li>You can also obtain UUP canonical source using one of these projects:<br />
                 <a href="https://uupdump.ml/">UUP dump website</a><br />
-                <a href="https://gitlab.com/uup-dump/downloader/tags">UUP dump downloader</a><br />
-                <a href="https://gitlab.com/uup-dump/uupdl/">UUPDL</a><br />
                 <a href="https://uup.rg-adguard.net/">UUP Generation Project</a></li>
             </ul>
             <hr />
@@ -138,7 +136,7 @@
                 <br />
                 <li>
                     <b>SkipISO</b><br /><br />
-                    If you are not interested to create ISO file currently, or want to create Multi-Architecture ISO (x86/x64) later with multi_arch_iso.cmd, or intend to manually use create_virtual_editions.cmd<br />
+                    If you are not interested to create ISO file currently, or want to create Multi-Architecture ISO (x86/x64) later with multi_arch_iso.cmd, or intend to manually use create_virtual_editions.cmd
                 </li>
                 <br />
                 <li>
@@ -149,7 +147,7 @@
                 <br />
                 <li>
                     <b>ForceDism</b><br /><br />
-                    Use the official method with dism.exe for creating boot.wim, which require Windows 10 Host OS or ADK.<br />
+                    Use the official method with dism.exe for creating boot.wim, which require Windows 10 Host OS or ADK.
                 </li>
                 <br />
                 <li>
@@ -157,6 +155,12 @@
                     Keep converted reference ESD files for future operations instead converting them each time.<br /><br />
                     if UUP source is Express, Reference ESDs and Edition ESDs will be copied to new folder "CanonicalUUP", practically, this convert/backup Express UUP source to Canonical.<br />
                     if UUP source is Canonical, Reference ESDs will be copied to the same UUP source folder, and original CAB files will be moved to subdirectory "Original".
+                </li>
+                <br />
+                <li>
+                    <b>SkipEdge</b><br /><br />
+                    Do not integrate Microsoft Edge Chromium with Feature Update Enablement Package (version 20H2 or later).<br /><br />
+					This option works only with option <b>AddUpdates=1</b> (Integrate). It has no effect on builds prior 18362
                 </li>
             </ul>
             <hr />
@@ -293,8 +297,9 @@
                 Leave this option empty to create all possible target editions.<br /><br />
                 Allowed values: Enterprise, Education, ProfessionalEducation, ProfessionalWorkstation, EnterpriseN, EducationN, ProfessionalEducationN, ProfessionalWorkstationN, CoreSingleLanguage, ServerRdsh, IoTEnterprise<br /><br />
                 Examples:<br />
-                <b>vAutoEditions=Enterprise,ProfessionalWorkstation,Education</b><br />
-                <b>vAutoEditions=</b>
+                <code>vAutoEditions=Enterprise<br />
+                vAutoEditions=Enterprise,ProfessionalWorkstation,Education<br />
+                vAutoEditions=</code>
                 </li>
                 <br />
                 <li>DeleteSource<br /><br />
@@ -397,12 +402,11 @@
 
             <h2><a name="Credits"></a>Credits</h2>
             <ul style="margin-top:0in;margin-bottom:0in">
-                <li><a href="https://github.com/uup-dump">mkuba50</a> - UUP dump</li>
+                <li><a href="https://github.com/uup-dump">whatever127 / mkuba50</a> - UUP dump</li>
                 <li><a href="https://wimlib.net">Eric Biggers</a> - wimlib</li>
                 <li><a href="https://www.7-zip.org">Igor Pavlov</a> - 7-zip</li>
                 <li><a href="http://reboot.pro/files/file/313-offlinereg">erwan.l</a> - offlinereg</li>
                 <li><a href="http://reboot.pro/topic/20471-windows-pe-5x-boot-problem">cdob</a> - create aio efisys.bin</li>
-                <li><a href="https://twitter.com/rgadguard">rgadguard</a> - initial script and co-enhancing</li>
                 <li>Special thanks to: @Enthousiast, @s1ave77, @Ratiborus58, @NecrosoftCore, @DiamondMonday, @WzorNET</li>
                 <li>cdimage, imagex and bcdedit are intellectual property of Microsoft Corporation.</li>
             </ul>

@@ -436,7 +436,7 @@ echo.  ^</Add^>
 echo.^</Configuration^>
 )>"%vvv%_x64_%lang%_Proofing.xml"
 if not %inpt%==4 (
-echo :TXTEnd
+echo :TXinfo:]
 echo exit /b
 )>>"%output%"
 exit /b
@@ -486,7 +486,7 @@ if %dual%==1 if %full%==0 (
 call :EC3HO%inpt% SetupLanguagePack.x64.%lang%.exe
 )
 if not %inpt%==4 (
-echo :TXTEnd
+echo :TXinfo:]
 echo exit /b
 )>>"%output%"
 exit /b
@@ -542,6 +542,8 @@ echo :: Set the number of parallel downloads
 echo set "parallel=1"
 echo.
 echo set "_work=%%~dp0"
+echo set "_work=%%_work:~0,-1%%"
+echo set "_batn=%%~nx0"
 echo setlocal EnableDelayedExpansion
 echo pushd "^!_work^!"
 echo set exist=0
@@ -553,7 +555,7 @@ echo set "uri=temp_aria2.txt"
 echo echo Downloading...
 echo echo.
 echo if exist "%%uri%%" del /f /q "%%uri%%"
-echo call :GenTXT
+echo call :GenTXT TXinfo ^> "%%uri%%"
 echo aria2c.exe -x16 -s16 -j%%parallel%% -c -R --max-overall-download-limit=%%speedLimit%% -d"%%destDir%%" -i"%%uri%%"
 echo if exist "%%uri%%" del /f /q "%%uri%%"
 if %proof%==1 (
@@ -568,22 +570,10 @@ echo pause ^>nul
 echo exit /b
 echo.
 echo :GenTXT
-echo set "LN="
-echo set "NC="
-echo set "SN="
-echo for /f "skip=1 delims=:" %%%%a in ^('findstr /N ^^:TXT "%%~nx0"'^) do ^(
-echo if not defined SN ^(set "SN=%%%%a"^) else ^(set /a NC=%%%%a-SN-1^)
-echo ^)
-echo ^<"%%~nx0" ^(
-echo for /L %%%%a in ^(1,1,%%SN%%^) do set /p =
-echo for /L %%%%a in ^(1,1,%%NC%%^) do ^(
-echo set LN=
-echo set /p LN=
-echo echo^(^^!LN^^!^)
-echo ^)^>"%%uri%%"
-echo goto TXTEnd
+echo set [=^&for /f "delims=:" %%%%s in ^('findstr /nbrc:":%%~1:\[" /c:":%%~1:\]" "^!_batn^!"'^) do if defined [ ^(set /a ]=%%%%s-3^) else set /a [=%%%%s-1
+echo ^<"^!_batn^!" ^(^(for /l %%%%i in ^(0 1 %%[%%^) do set /p =^)^&for /l %%%%i in ^(%%[%% 1 %%]%%^) do ^(set txt=^&set /p txt=^&echo^(^^!txt^^!^)^) ^&exit/b
 echo.
-echo :TXTBegin
+echo :TXinfo:[
 )>"%output%"
 
 (echo %url%/v%bit%_%vvv%.cab&echo.  out=Office\Data\v%bit%.cab&echo.)>>"%output%"
@@ -616,7 +606,7 @@ echo set "uri=temp_wget.txt"
 echo echo Downloading...
 echo echo.
 echo if exist "%%uri%%" del /f /q "%%uri%%"
-echo call :GenTXT
+echo call :GenTXT TXinfo ^> "%%uri%%"
 echo wget.exe --limit-rate=%%speedLimit%% --directory-prefix="%%destDir%%" --input-file="%%uri%%" --no-verbose --show-progress --progress=bar:force:noscroll --continue --retry-connrefused --tries=5 --ignore-case --force-directories --no-host-directories --cut-dirs=2
 echo if exist "%%destDir%%\Office\Data\v32_*.cab" xcopy /cqry %%destDir%%\Office\Data\v32_*.cab %%destDir%%\Office\Data\v32.cab*
 echo if exist "%%destDir%%\Office\Data\v64_*.cab" xcopy /cqry %%destDir%%\Office\Data\v64_*.cab %%destDir%%\Office\Data\v64.cab*
@@ -634,22 +624,10 @@ echo pause ^>nul
 echo exit /b
 echo.
 echo :GenTXT
-echo set "LN="
-echo set "NC="
-echo set "SN="
-echo for /f "skip=1 delims=:" %%%%a in ^('findstr /N ^^:TXT "%%~nx0"'^) do ^(
-echo if not defined SN ^(set "SN=%%%%a"^) else ^(set /a NC=%%%%a-SN-1^)
-echo ^)
-echo ^<"%%~nx0" ^(
-echo for /L %%%%a in ^(1,1,%%SN%%^) do set /p =
-echo for /L %%%%a in ^(1,1,%%NC%%^) do ^(
-echo set LN=
-echo set /p LN=
-echo echo^(^^!LN^^!^)
-echo ^)^>"%%uri%%"
-echo goto TXTEnd
+echo set [=^&for /f "delims=:" %%%%s in ^('findstr /nbrc:":%%~1:\[" /c:":%%~1:\]" "^!_batn^!"'^) do if defined [ ^(set /a ]=%%%%s-3^) else set /a [=%%%%s-1
+echo ^<"^!_batn^!" ^(^(for /l %%%%i in ^(0 1 %%[%%^) do set /p =^)^&for /l %%%%i in ^(%%[%% 1 %%]%%^) do ^(set txt=^&set /p txt=^&echo^(^^!txt^^!^)^) ^&exit/b
 echo.
-echo :TXTBegin
+echo :TXinfo:[
 )>"%output%"
 
 echo %url%/v%bit%_%vvv%.cab>>"%output%"
@@ -682,7 +660,7 @@ echo if defined speedLimit set "speedLimit=--limit-rate %%speedLimit%%"
 echo echo Downloading...
 echo echo.
 echo if exist "%%uri%%" del /f /q "%%uri%%"
-echo call :GenTXT
+echo call :GenTXT TXinfo ^> "%%uri%%"
 echo curl.exe -q --create-dirs --retry 5 --retry-connrefused %%speedLimit%% -k -L -C - -K "%%uri%%"
 echo if exist "%%uri%%" del /f /q "%%uri%%"
 if %proof%==1 (
@@ -697,22 +675,10 @@ echo pause ^>nul
 echo exit /b
 echo.
 echo :GenTXT
-echo set "LN="
-echo set "NC="
-echo set "SN="
-echo for /f "skip=1 delims=:" %%%%a in ^('findstr /N ^^:TXT "%%~nx0"'^) do ^(
-echo if not defined SN ^(set "SN=%%%%a"^) else ^(set /a NC=%%%%a-SN-1^)
-echo ^)
-echo ^<"%%~nx0" ^(
-echo for /L %%%%a in ^(1,1,%%SN%%^) do set /p =
-echo for /L %%%%a in ^(1,1,%%NC%%^) do ^(
-echo set LN=
-echo set /p LN=
-echo echo^(^^!LN^^!^)
-echo ^)^>"%%uri%%"
-echo goto TXTEnd
+echo set [=^&for /f "delims=:" %%%%s in ^('findstr /nbrc:":%%~1:\[" /c:":%%~1:\]" "^!_batn^!"'^) do if defined [ ^(set /a ]=%%%%s-3^) else set /a [=%%%%s-1
+echo ^<"^!_batn^!" ^(^(for /l %%%%i in ^(0 1 %%[%%^) do set /p =^)^&for /l %%%%i in ^(%%[%% 1 %%]%%^) do ^(set txt=^&set /p txt=^&echo^(^^!txt^^!^)^) ^&exit/b
 echo.
-echo :TXTBegin
+echo :TXinfo:[
 )>"%output%"
 
 (echo url %url%/v%bit%_%vvv%.cab&echo -o %destDir%\Office\Data\v%bit%.cab)>>"%output%"

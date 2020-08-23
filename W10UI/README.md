@@ -154,11 +154,23 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+8.6:  
+- Fixed fail-safe integration using update cab file directly
+
+8.5:  
+- Added SkipEdge option for EdgeChromium with Feature Update Enablement Package  
+- Fixed cosmetic double image cleanup without EdgeChromium update
+
+8.4:  
+- Fixed iso version for 19042 / 20H2
+
 8.3:  
-- Defer adding EdgeChormium update after CU  
+- Defer adding EdgeChromium update after CU  
 - Handle Safe OS (WinPE) updates separately  
 - Show when setup dynamic update is added  
-- Identify updates types as possible
+- Identify updates types as possible  
+- winre.wim will not be updated with CU if Safe OS update is detected and added, per Microsoft recommendation  
+https://docs.microsoft.com/en-us/windows/deployment/update/media-dynamic-update
 
 8.2:  
 - Added differentiation for Win10 20H1 and 20H2

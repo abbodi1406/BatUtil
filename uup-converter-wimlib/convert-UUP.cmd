@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v46
+@set uivr=v48
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -29,7 +29,7 @@ set wim2esd=0
 :: Change to 1 for not creating ISO file, result distribution folder will be kept
 set SkipISO=0
 
-:: Change to 1 for not adding winre.wim to install.wim/install.esd
+:: Change to 1 for not adding winre.wim into install.wim/install.esd
 set SkipWinRE=0
 
 :: Change to 1 to use dism.exe for creating boot.wim
@@ -40,6 +40,9 @@ set RefESD=0
 
 :: change to 1 to enable debug mode
 set _Debug=0
+
+:: change to 1 for not integrating EdgeChromium with Feature Update Enablement Package
+set SkipEdge=0
 
 :: script:	   abbodi1406, @rgadguard
 :: wimlib:	   synchronicity
@@ -242,6 +245,7 @@ SkipWinRE
 wim2esd
 ForceDism
 RefESD
+SkipEdge
 ) do (
 call :ReadINI %%#
 )
@@ -365,12 +369,18 @@ if %W10UI% neq 0 (
 if %ForceDism% neq 0 (echo. 8 - ForceDism   : Yes) else (echo. 8 - ForceDism   : No)
 )
 if %RefESD% neq 0 (echo. 9 - RefESD      : Yes) else (echo. 9 - RefESD      : No)
+if exist "!_UUP!\*Windows10*KB*.cab" if %W10UI% neq 0 (
+if %AddUpdates% equ 1 (
+  if %SkipEdge% neq 0 (echo. E - SkipEdge    : Yes) else (echo. E - SkipEdge    : No)
+  )
+)
 echo.
 echo %line%
 set /p userinp= ^> Enter your option and press "Enter": 
 if not defined userinp goto :MAINMENU
 set userinp=%userinp:~0,1%
 if %userinp% equ 0 goto :MAINMENU
+if /i %userinp%==E if %AddUpdates% equ 1 (if %SkipEdge% equ 0 (set SkipEdge=1) else (set SkipEdge=0))&goto :CONFMENU
 if %userinp% equ 9 (if %RefESD% equ 0 (set RefESD=1) else (set RefESD=0))&goto :CONFMENU
 if %userinp% equ 8 (if %W10UI% neq 0 (if %ForceDism% equ 0 (set ForceDism=1) else (set ForceDism=0)))&goto :CONFMENU
 if %userinp% equ 7 (if %SkipWinRE% equ 0 (set SkipWinRE=1) else (set SkipWinRE=0))&goto :CONFMENU
@@ -421,6 +431,7 @@ SkipWinRE
 wim2esd
 ForceDism
 RefESD
+SkipEdge
 ) do (
 if !%%#! neq 0 set _configured=1
 )
@@ -448,6 +459,7 @@ if %StartVirtual% neq 0 echo StartVirtual
   if !%%#! neq 0 echo %%#
   )
 )
+if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge
 call :uups_ref
 echo.
 echo %line%
@@ -813,6 +825,7 @@ for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% 
 )
 if defined isobranch set branch=%isobranch%
 if %revmajor%==18363 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
+if %revmajor%==19042 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 if %verminor% lss %revminor% (
 set version=%revision%
 set verminor=%revminor%
@@ -999,7 +1012,8 @@ if defined isoupdate (
   rmdir /s /q "%_cabdir%\du\" %_Nul3%
   echo.
 )
-7z.exe l "ISOFOLDER\sources\setuphost.exe" >.\bin\version.txt 2>&1
+call :setuphostprep
+7z.exe l "ISOFOLDER\sources\%_setup%" >.\bin\version.txt 2>&1
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set isover=%%i.%%j&set isomajor=%%i&set isominor=%%j&set isobranch=%%k&set isodate=%%l)
 del /f /q .\bin\version.txt %_Nul3%
 if %vermajor%==18363 (
@@ -1007,6 +1021,7 @@ if /i "%isobranch:~0,4%"=="19h1" set isobranch=19h2%isobranch:~4%
 if %isover:~0,5%==18362 set isover=18363%isover:~5%
 )
 if %vermajor%==19042 (
+if /i "%isobranch:~0,2%"=="vb" set isobranch=20h2%isobranch:~2%
 if %isover:~0,5%==19041 set isover=19042%isover:~5%
 )
 if /i not "%isobranch%"=="WinBuild" (set isolabel=%isover%.%isodate%.%isobranch%_CLIENT)
@@ -1027,6 +1042,10 @@ if not exist "!_cabdir!\" mkdir "!_cabdir!"
 set "_dest=ISOFOLDER\sources\$OEM$\$1\UUP"
 if not exist "!_dest!\" mkdir "!_dest!"
 copy /y bin\Updates.bat "!_dest!\" %_Nul3%
+if %_build% geq 18362 for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\*Windows10*KB*.cab"') do (
+expand.exe -f:microsoft-windows-*enablement-package*.mum "!_UUP!\%%#" "!_cabdir!" %_Nul3%
+if exist "!_cabdir!\microsoft-windows-*enablement-package*.mum" set _actEP=1
+)
 for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\*Windows10*KB*.cab"') do (set "pack=%%#"&call :external_cab)
 if not exist "!_dest!\*Windows10*KB*.cab" (
 rmdir /s /q "ISOFOLDER\sources\$OEM$\"
@@ -1086,10 +1105,6 @@ exit /b
 )
 echo UPD: %pack%
 copy /y "!_UUP!\%pack%" "!_dest!\2%pack%" %_Nul3%
-if %_build% geq 18362 (
-expand.exe -f:microsoft-windows-*enablement-package*.mum "!_UUP!\%pack%" "!_cabdir!" %_Nul3%
-if exist "!_cabdir!\microsoft-windows-*enablement-package*.mum" set _actEP=1
-)
 exit /b
 
 :external_netfx
@@ -1119,6 +1134,7 @@ for /f "tokens=%toe% delims=_." %%I in ('dir /b /a:-d /on "!_cabdir!\*_microsoft
 )
 
 if %vermajor%==18363 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
+if %vermajor%==19042 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 
 set _label=%version%.%labeldate%.%branch%_CLIENT
 call :setlabel
@@ -1186,7 +1202,8 @@ if defined isoupdate (
   if exist "%_cabdir%\du\replacementmanifests\" xcopy /CERY "%_cabdir%\du\replacementmanifests" "ISOFOLDER\sources\replacementmanifests\" %_Nul3%
   rmdir /s /q "%_cabdir%\du\" %_Nul3%
 )
-7z.exe l "ISOFOLDER\sources\setuphost.exe" >.\bin\version.txt 2>&1
+call :setuphostprep
+7z.exe l "ISOFOLDER\sources\%_setup%" >.\bin\version.txt 2>&1
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set version=%%i.%%j&set vermajor=%%i&set verminor=%%j&set branch=%%k&set labeldate=%%l)
 del /f /q .\bin\version.txt %_Nul3%
 if /i not "%branch%"=="WinBuild" (set _label=%version%.%labeldate%.%branch%_CLIENT)
@@ -1197,6 +1214,8 @@ if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
 if %version:~0,5%==18362 set version=18363%version:~5%
 )
 if %isomajor%==19042 (
+if /i "%isobranch:~0,2%"=="vb" set isobranch=20h2%isobranch:~2%
+if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 if %version:~0,5%==19041 set version=19042%version:~5%
 )
 set _label=%version%.%labeldate%.%branch%_CLIENT
@@ -1326,12 +1345,12 @@ cmd /c exit /b !errorlevel!
 if /i "!=ExitCode!" neq "00000000" if /i "!=ExitCode!" neq "800f081e" goto :errmount
 )
 if defined callclean call :cleanup
+if not defined edge goto :eof
 if defined edge (
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismEdge.log" /Add-Package %edge%
 cmd /c exit /b !errorlevel!
 if /i "!=ExitCode!" neq "00000000" if /i "!=ExitCode!" neq "800f081e" goto :errmount
 )
-call :cleanup
 goto :eof
 
 :errmount
@@ -1361,7 +1380,9 @@ goto :eof
 )
 if exist "!dest!\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (
 if exist "%mumtarget%\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
-set "edge=!edge! /packagepath:!dest!\update.mum"
+if not exist "!dest!\*enablement-package*.mum" set "edge=!edge! /packagepath:!dest!\update.mum"
+if exist "!dest!\*enablement-package*.mum" if %SkipEdge% equ 0 set "edge=!edge! /packagepath:!dest!\update.mum"
+if exist "!dest!\*enablement-package*.mum" if %SkipEdge% equ 1 for /f %%# in ('dir /b /a:-d "!dest!\*enablement-package~*.mum"') do set "ldr=!ldr! /packagepath:!dest!\%%#"
 goto :eof
 )
 if exist "!dest!\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (
@@ -1596,6 +1617,23 @@ if /i %1==Sep set "isotime=09/%isotime%"
 if /i %1==Oct set "isotime=10/%isotime%"
 if /i %1==Nov set "isotime=11/%isotime%"
 if /i %1==Dec set "isotime=12/%isotime%"
+exit /b
+
+:setuphostprep
+set _setup=setuphost.exe
+set "_WSH=SOFTWARE\Microsoft\Windows Script Host\Settings"
+reg query "HKCU\%_WSH%" /v Enabled %_Nul2% | find /i "0x0" %_Nul1% && (set _vbscu=1&reg delete "HKCU\%_WSH%" /v Enabled /f %_Nul3%)
+reg query "HKLM\%_WSH%" /v Enabled %_Nul2% | find /i "0x0" %_Nul1% && (set _vbslm=1&reg delete "HKLM\%_WSH%" /v Enabled /f %_Nul3%)
+ echo>bin\filever.vbs Set objFSO = CreateObject^("Scripting.FileSystemObject"^)
+echo>>bin\filever.vbs Wscript.Echo objFSO.GetFileVersion^(WScript.arguments^(0^)^)
+for /f "tokens=4 delims=." %%i in ('cscript //nologo bin\filever.vbs ISOFOLDER\sources\setuphost.exe') do (
+for /f "tokens=4 delims=." %%a in ('cscript //nologo bin\filever.vbs ISOFOLDER\sources\setupprep.exe') do (
+  if %%a gtr %%i set _setup=setupprep.exe
+  )
+)
+del /f /q .\bin\filever.vbs %_Nul3%
+if defined _vbscu reg add "HKCU\%_WSH%" /v Enabled /t REG_DWORD /d 0 /f %_Nul3%
+if defined _vbslm reg add "HKLM\%_WSH%" /v Enabled /t REG_DWORD /d 0 /f %_Nul3%
 exit /b
 
 :V_Auto

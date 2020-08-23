@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uivr=v12 AIO
+@set uivr=v13 AIO
 @echo off
 :: Licenses used for converting Office 365 ProPlus:
 :: set _O365asO2019=0 -> use Office 2016 Mondo (if you want some Office 365 features)
@@ -41,7 +41,7 @@ set "_log=%~dpn0"
 set "_work=%~dp0"
 if "%_work:~-1%"=="\" set "_work=%_work:~0,-1%"
 for /f "skip=2 tokens=2*" %%a in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
-if exist "%SystemDrive%\Users\Public\Desktop\desktop.ini" set "_dsk=%SystemDrive%\Users\Public\Desktop"
+if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
 setlocal EnableDelayedExpansion
 
 if %_Debug% EQU 0 (
@@ -203,8 +203,8 @@ set _sps=OfficeSoftwareProtectionService
 set _vbsi="!_OSPP15VBS!" /inslic:
 )
 set "_wmi="
-for /f "tokens=2 delims==" %%# in ('"wmic path %_sps% get version /value" %_Nul6%') do if not errorlevel 1 set "_wmi=%%#"
-if not defined _wmi (
+for /f "tokens=2 delims==" %%# in ('"wmic path %_sps% get version /value" %_Nul6%') do set "_wmi=%%#"
+if "%_wmi%"=="" (
 set "msg=Could not execute %_sps% WMI..."
 goto :TheEnd
 )
@@ -337,6 +337,11 @@ if %_Retail% EQU 1 reg query %_PRIDs%\ProPlusRetail.16 %_Nul3% && (
   find /i "Office16ProPlusR_OEM" "!_temp!\crvRetail.txt" %_Nul1% && set _ProPlus=0
   find /i "Office16ProPlusMSDNR_" "!_temp!\crvRetail.txt" %_Nul1% && set _ProPlus=0
   find /i "Office16ProPlusVL_MAK" "!_temp!\crvRetail.txt" %_Nul1% && set _ProPlus=0
+)
+find /i "Office16MondoVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (
+wmic path %spp% where 'ApplicationID="%_oApp%" AND LicenseFamily like "Office16O365%%"' get LicenseFamily %_Nul2% | find /i "O365" %_Nul1% && (
+  for %%a in (O365ProPlus,O365Business,O365SmallBusPrem,O365HomePrem,O365EduCloud) do set _%%a=0
+  )
 )
 
 if %_Cnvrt% NEQ 1 (if %_Office15% EQU 1 (goto :R15V) else (set "msg=Finished"&goto :TheEnd))
@@ -549,6 +554,11 @@ if %_Retail% EQU 1 reg query %_PR15IDs%\Active\ProPlusRetail\x-none %_Nul3% && (
   find /i "OfficeProPlusR_OEM" "!_temp!\crvRetail.txt" %_Nul1% && set _ProPlus=0
   find /i "OfficeProPlusMSDNR_" "!_temp!\crvRetail.txt" %_Nul1% && set _ProPlus=0
   find /i "OfficeProPlusVL_MAK" "!_temp!\crvRetail.txt" %_Nul1% && set _ProPlus=0
+)
+find /i "OfficeMondoVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (
+wmic path %spp% where 'ApplicationID="%_oApp%" AND LicenseFamily like "OfficeO365%%"' get LicenseFamily %_Nul2% | find /i "O365" %_Nul1% && (
+  for %%a in (O365ProPlus,O365Business,O365SmallBusPrem,O365HomePrem) do set _%%a=0
+  )
 )
 
 if %_Cnvrt% NEQ 1 (set "msg=Finished"&goto :TheEnd)
