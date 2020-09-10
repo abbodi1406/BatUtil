@@ -76,6 +76,10 @@ if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
   set "xDS=bin"
   )
 )
+if /i %PROCESSOR_ARCHITECTURE%==arm64 (
+  set "xOS=x86"
+  set "xDS=bin"
+)
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
 
