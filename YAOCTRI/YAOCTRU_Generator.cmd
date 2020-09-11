@@ -41,6 +41,9 @@ if /i %PROCESSOR_ARCHITECTURE%==x86 (if not defined PROCESSOR_ARCHITEW6432 (
   set "xOS=x86"
   )
 )
+for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+set "_psc="
+if %winbuild% lss 9200 set "_psc=$Tls12 = [Enum]::ToObject([System.Net.SecurityProtocolType], 3072); [System.Net.ServicePointManager]::SecurityProtocol = $Tls12;"
 set "_temp=%temp%"
 set "_work=%~dp0"
 if "%_work:~-1%"=="\" set "_work=%_work:~0,-1%"
@@ -138,7 +141,14 @@ for /f "tokens=1* delims==" %%A in ('findstr /i /c:"%1 " YAOCTRU.ini') do call s
 goto :eof
 
 :proceed
-if not defined uLanguage goto :CHANNEL
+if not defined uLanguage (
+set "uChannel="
+set "uLevel="
+set "uBitness="
+set "uType="
+set "uOutput="
+goto :CHANNEL
+)
 
 for /L %%# in (1,1,9) do if /i "!uLanguage!"=="!lang0%%#!" (set "lang=!lang0%%#!"&set "lcid=!lcid0%%#!")
 for /L %%# in (10,1,40) do if /i "!uLanguage!"=="!lang%%#!" (set "lang=!lang%%#!"&set "lcid=!lcid%%#!")
@@ -211,10 +221,9 @@ set "dms=https://mrodevicemgr.officeapps.live.com/mrodevicemgrsvc/api/v2/C2RRele
 pushd "!_temp!"
 if exist "C2R*.json" del /f /q "C2R*.json"
 if /i "!uLevel!"=="Win7" (
-powershell -nop -ep bypass -c "(New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1.0','C2R0.json')" 1>nul 2>nul
+1>nul 2>nul powershell -nop -c "%_psc% (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1.0','C2R0.json')"
 ) else (
-powershell -nop -ep bypass -c "(New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%','C2R0.json')" 1>nul 2>nul
-powershell -nop -ep bypass -c "(New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1.0','C2R7.json')" 1>nul 2>nul
+1>nul 2>nul powershell -nop -c "%_psc% (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%','C2R0.json'); (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1.0','C2R7.json')"
 )
 if /i "!uLevel!"=="Default" if exist "C2R7.json" del /f /q "C2R7.json"
 if not exist "C2R*.json" (
@@ -223,6 +232,7 @@ echo %line%
 echo ERROR:
 echo could not check available version online
 echo check internet connection and if powershell is disabled
+if %winbuild% lss 9200 echo check that Windows 7 is updated to support TLS 1.2 connection protocol
 echo %line%
 echo.
 echo Press any key to exit.
@@ -595,6 +605,8 @@ echo :: Limit the download speed, example: 1M, 500K "0 = unlimited"
 echo set "speedLimit=0"
 echo.
 echo set "_work=%%~dp0"
+echo set "_work=%%_work:~0,-1%%"
+echo set "_batn=%%~nx0"
 echo setlocal EnableDelayedExpansion
 echo pushd "^!_work^!"
 echo set exist=0
@@ -649,6 +661,8 @@ echo :: Limit the download speed, example: 1M, 500K "empty means unlimited"
 echo set speedLimit=
 echo.
 echo set "_work=%%~dp0"
+echo set "_work=%%_work:~0,-1%%"
+echo set "_batn=%%~nx0"
 echo setlocal EnableDelayedExpansion
 echo pushd "^!_work^!"
 echo set exist=0
