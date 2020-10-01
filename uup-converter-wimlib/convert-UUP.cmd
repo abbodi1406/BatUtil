@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v48
+@set uivr=v50
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -66,20 +66,15 @@ if "%~2"=="-elevated" set _elev=1
 :NoProgArgs
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
-set "xOS=amd64"
-set "xDS=bin\bin64;bin"
 set "_ComSpec=%SystemRoot%\System32\cmd.exe"
+set "xOS=%PROCESSOR_ARCHITECTURE%"
 if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
   set "_ComSpec=%SystemRoot%\Sysnative\cmd.exe"
-  ) else (
-  set "xOS=x86"
-  set "xDS=bin"
+  set "xOS=%PROCESSOR_ARCHITEW6432%"
   )
 )
-if /i %PROCESSOR_ARCHITECTURE%==arm64 (
-  set "xOS=x86"
-  set "xDS=bin"
-)
+set "xDS=bin\bin64;bin"
+if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
 
@@ -97,7 +92,7 @@ set _PSarg=%_PSarg:'=''%
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Null% powershell -noprofile -exec bypass -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
+  %_Null% powershell -noprofile -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
@@ -188,6 +183,7 @@ set EXPRESS=0
 set AIO=0
 set FixDisplay=0
 set uups_esd_num=0
+set uwinpe=0
 set _count=0
 set _actEP=0
 set _initial=0
@@ -284,7 +280,7 @@ if %uups_esd_num% equ 0 goto :E_ESD
 for /L %%# in (1,1,%uups_esd_num%) do call :uups_esd %%#
 if defined E_WIMLIB goto :QUIT
 if %uups_esd_num% gtr 1 goto :MULTIMENU
-set "MetadataESD=!_UUP!\%uups_esd1%"&set "arch=%arch1%"&set "langid=%langid1%"&set "editionid=%edition1%"
+set "MetadataESD=!_UUP!\%uups_esd1%"&set "_flg=%edition1%"&set "arch=%arch1%"&set "langid=%langid1%"&set "editionid=%edition1%"
 goto :MAINMENU
 
 :MULTIMENU
@@ -309,7 +305,7 @@ if not defined _index set _Debug=1&goto :QUIT
 if "%_index%"=="0" (set "_tag= AIO"&set "_ta2=AIO"&set AIO=1&goto :MAINMENU)
 for %%# in (%_index%) do call :setindex %%#
 if %_count% equ 1 for /L %%# in (1,1,%uups_esd_num%) do (
-if %_index1% equ %%# set "MetadataESD=!_UUP!\!uups_esd%%#!"&set "arch=!arch%%#!"&set "langid=!langid%%#!"&set "editionid=!edition%%#!"&goto :MAINMENU
+if %_index1% equ %%# set "MetadataESD=!_UUP!\!uups_esd%%#!"&set "_flg=!edition%%#!"&set "arch=!arch%%#!"&set "langid=!langid%%#!"&set "editionid=!edition%%#!"&goto :MAINMENU
 )
 set "_ta2=AIO"
 goto :MAINMENU
@@ -612,8 +608,8 @@ if %AddUpdates% equ 1 (
   )
 )
 call :uups_ref
-if %AIO% equ 1 set "MetadataESD=!_UUP!\%uups_esd1%"
-if %_count% gtr 1 set "MetadataESD=!_UUP!\!uups_esd%_index1%!"
+if %AIO% equ 1 set "MetadataESD=!_UUP!\%uups_esd1%"&set "_flg=%edition1%"
+if %_count% gtr 1 set "MetadataESD=!_UUP!\!uups_esd%_index1%!"&set "_flg=!edition%_index1%!"
 set _file=%WIMFILE%
 set _rtrn=RetWIM
 goto :InstallWim
@@ -650,7 +646,11 @@ if %WIMFILE%==install.wim set _rrr=%_rrr% --compress=LZX
 wimlib-imagex.exe export "!MetadataESD!" 3 %_file% --ref="!_UUP!\*.esd" %_rrr% %_Supp%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
-if %FixDisplay% equ 1 wimlib-imagex.exe info %_file% 1 "!_os!" "!_os!" --image-property DISPLAYNAME="!_os!" --image-property DISPLAYDESCRIPTION="!_os!" %_Nul3%
+if %FixDisplay% equ 1 (
+wimlib-imagex.exe info %_file% 1 "!_os!" "!_os!" --image-property DISPLAYNAME="!_os!" --image-property DISPLAYDESCRIPTION="!_os!" --image-property FLAGS=%_flg% %_Nul3%
+) else (
+wimlib-imagex.exe info %_file% 1 --image-property FLAGS=%_flg% %_Nul3%
+)
 set _img=1
 if %_count% gtr 1 for /L %%i in (2,1,%_count%) do (
 for /L %%# in (1,1,%uups_esd_num%) do if !_index%%i! equ %%# (
@@ -658,14 +658,22 @@ for /L %%# in (1,1,%uups_esd_num%) do if !_index%%i! equ %%# (
   call set ERRORTEMP=!ERRORLEVEL!
   if !ERRORTEMP! neq 0 goto :E_Export
   set /a _img+=1
-  if %FixDisplay% equ 1 wimlib-imagex.exe info %_file% !_img! "!_os%%#!" "!_os%%#!" --image-property DISPLAYNAME="!_os%%#!" --image-property DISPLAYDESCRIPTION="!_os%%#!" %_Nul3%
+  if %FixDisplay% equ 1 (
+    wimlib-imagex.exe info %_file% !_img! "!_os%%#!" "!_os%%#!" --image-property DISPLAYNAME="!_os%%#!" --image-property DISPLAYDESCRIPTION="!_os%%#!" --image-property FLAGS=!edition%%#! %_Nul3%
+    ) else (
+    wimlib-imagex.exe info %_file% !_img! --image-property FLAGS=!edition%%#! %_Nul3%
+    )
   )
 )
 if %AIO% equ 1 for /L %%# in (2,1,%uups_esd_num%) do (
 wimlib-imagex.exe export "!_UUP!\!uups_esd%%#!" 3 %_file% --ref="!_UUP!\*.esd" %_rrr% %_Supp%
 call set ERRORTEMP=!ERRORLEVEL!
 if !ERRORTEMP! neq 0 goto :E_Export
-if %FixDisplay% equ 1 wimlib-imagex.exe info %_file% %%# "!_os%%#!" "!_os%%#!" --image-property DISPLAYNAME="!_os%%#!" --image-property DISPLAYDESCRIPTION="!_os%%#!" %_Nul3%
+if %FixDisplay% equ 1 (
+  wimlib-imagex.exe info %_file% %%# "!_os%%#!" "!_os%%#!" --image-property DISPLAYNAME="!_os%%#!" --image-property DISPLAYDESCRIPTION="!_os%%#!" --image-property FLAGS=!edition%%#! %_Nul3%
+  ) else (
+  wimlib-imagex.exe info %_file% %%# --image-property FLAGS=!edition%%#! %_Nul3%
+  )
 )
 if %AddUpdates% equ 1 if exist "!_UUP!\*Windows10*KB*.cab" (
 if exist "!_cabdir!\" rmdir /s /q "!_cabdir!\"
@@ -688,7 +696,7 @@ echo.
 wimlib-imagex.exe export "!MetadataESD!" 2 temp\winre.wim --compress=LZX --boot %_Supp%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
-if %AddUpdates% equ 1 if exist "!_UUP!\*Windows10*KB*.cab" (
+if %uwinpe% equ 1 if %AddUpdates% equ 1 if exist "!_UUP!\*Windows10*KB*.cab" (
 call :uups_update temp\winre.wim
 )
 if %SkipWinRE% neq 0 goto :%_rtrn%
@@ -792,8 +800,8 @@ echo %line%
 echo Checking UUP Info . . .
 echo %line%
 set PREPARED=1
-if %AIO% equ 1 set "MetadataESD=!_UUP!\%uups_esd1%"&set "arch=%arch1%"&set "langid=%langid1%"
-if %_count% gtr 1 set "MetadataESD=!_UUP!\!uups_esd%_index1%!"&set "arch=!arch%_index1%!"&set "langid=!langid%_index1%!"
+if %AIO% equ 1 set "MetadataESD=!_UUP!\%uups_esd1%"&set "_flg=%edition1%"&set "arch=%arch1%"&set "langid=%langid1%"
+if %_count% gtr 1 set "MetadataESD=!_UUP!\!uups_esd%_index1%!"&set "_flg=!edition%_index1%!"&set "arch=!arch%_index1%!"&set "langid=!langid%_index1%!"
 wimlib-imagex.exe info "!MetadataESD!" 3 >bin\info.txt 2>&1
 for /f "tokens=1* delims=: " %%A in ('findstr /b "Name" bin\info.txt') do set "_os=%%B"
 for /f "tokens=2 delims=: " %%# in ('findstr /b "Build" bin\info.txt') do set _build=%%#
@@ -1261,38 +1269,46 @@ set "isotime=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdat
 set "_type="
 if %_build% geq 17763 findstr /i /m "WinPE" "!dest!\update.mum" %_Nul3% && (
 %_Nul3% findstr /i /m "Edition\"" "!dest!\update.mum"
-if errorlevel 1 set "_type=[WinPE]"
+if errorlevel 1 (set "_type=[WinPE]"&set uwinpe=1)
 )
-if not defined _type findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% && (
-set "_type=[LCU]"
+if not defined _type (
+expand.exe -f:*_microsoft-windows-sysreset_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (set "_type=[WinPE]"&set uwinpe=1)
 )
-if not defined _type expand.exe -f:*_microsoft-windows-servicingstack_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
-if exist "!dest!\*_microsoft-windows-servicingstack_*.manifest" (
-set "_type=[SSU]"
+if not defined _type (
+expand.exe -f:*_microsoft-windows-i..dsetup-rejuvenation_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (set "_type=[WinPE]"&set uwinpe=1)
 )
-if not defined _type expand.exe -f:*_adobe-flash-for-windows_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
-if exist "!dest!\*_adobe-flash-for-windows_*.manifest" (
-set "_type=[Flash]"
+if not defined _type (
+findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% && (set "_type=[LCU]"&set uwinpe=1)
 )
-if not defined _type expand.exe -f:*_netfx4*.manifest "!_UUP!\%package%" "!dest!" %_Null%
-if exist "!dest!\*_netfx4*.manifest" (
-findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || set "_type=[NetFx]"
+if not defined _type (
+expand.exe -f:*_microsoft-windows-servicingstack_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_microsoft-windows-servicingstack_*.manifest" (set "_type=[SSU]"&set uwinpe=1)
 )
-if not defined _type expand.exe -f:*_microsoft-windows-s..boot-firmwareupdate_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
-if exist "!dest!\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" (
-set "_type=[SecureBoot]"
+if not defined _type (
+expand.exe -f:*_adobe-flash-for-windows_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_adobe-flash-for-windows_*.manifest" set "_type=[Flash]"
 )
-if not defined _type if %_build% geq 18362 expand.exe -f:*enablement-package*.mum "!_UUP!\%package%" "!dest!" %_Null%
-if exist "!dest!\*enablement-package*.mum" (
-set "_type=[Enablement]"
+if not defined _type (
+expand.exe -f:*_netfx4*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_netfx4*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || set "_type=[NetFx]"
 )
-if %_build% geq 18362 if exist "!dest!\*enablement-package*.mum" expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
-if exist "!dest!\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" (
-set "_type=[Enablement / EdgeChromium]"
+if not defined _type (
+expand.exe -f:*_microsoft-windows-s..boot-firmwareupdate_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" set "_type=[SecureBoot]"
 )
-if not defined _type expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
-if not defined _type if exist "!dest!\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" (
-set "_type=[EdgeChromium]"
+if not defined _type if %_build% geq 18362 (
+expand.exe -f:*enablement-package*.mum "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*enablement-package*.mum" set "_type=[Enablement]"
+)
+if %_build% geq 18362 if exist "!dest!\*enablement-package*.mum" (
+expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[Enablement / EdgeChromium]"
+)
+if not defined _type (
+expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[EdgeChromium]"
 )
 echo %count%/%_cab%: %package% %_type%
 set %package%=1
@@ -1547,8 +1563,8 @@ reg.exe load HKLM\%ksub% "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 reg.exe add HKLM\%ksub%\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d %savr% /f %_Nul1%
 reg.exe unload HKLM\%ksub% %_Nul1%
 )
-if %Cleanup% neq 0 (
 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup
+if %Cleanup% neq 0 (
 if %ResetBase% neq 0 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase %_Null%
 )
 call :cleanmanual&goto :eof

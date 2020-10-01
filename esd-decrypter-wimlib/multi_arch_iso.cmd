@@ -15,17 +15,20 @@ set Preserve=0
 
 set "_Nul3=1>nul 2>nul"
 
+set _Debug=0
 set _elev=
 set _args=%1
 if defined _args if "%~1"=="-elevated" set _elev=1
 
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
-set "xDS=bin\bin64;bin"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (if not defined PROCESSOR_ARCHITEW6432 (
-  set "xDS=bin"
+set "xOS=%PROCESSOR_ARCHITECTURE%"
+if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
+  set "xOS=%PROCESSOR_ARCHITEW6432%"
   )
 )
+set "xDS=bin\bin64;bin"
+if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
 
@@ -42,7 +45,7 @@ set _PSarg=%_PSarg:'=''%
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Nul3% powershell -noprofile -exec bypass -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
+  %_Nul3% powershell -noprofile -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
@@ -51,22 +54,22 @@ set _PSarg=%_PSarg:'=''%
 
 :Passed
 set "_work=%~dp0"
+set "_work=%_work:~0,-1%"
 setlocal EnableDelayedExpansion
+
+:Begin
+title Multi-Architecture ISO
 pushd "!_work!"
 set _file=(7z.dll,7z.exe,bcdedit.exe,bfi.exe,cdimage.exe,libwim-15.dll,offlinereg.exe,offreg.dll,wimlib-imagex.exe)
 for %%# in %_file% do (
 if not exist ".\bin\%%#" (set _bin=%%#&goto :E_Bin)
 )
-
-:Begin
-title Multi-Architecture ISO
 set ERRORTEMP=
 set "ramdiskoptions={7619dcc8-fafe-11d9-b411-000476eba25f}"
 set combine=0
 set custom=0
 set winx=1
 set "line============================================================="
-
 set _dir64=0
 set _dir86=0
 set _iso64=0
@@ -84,6 +87,8 @@ dir /b /a:-d *_x32*.iso %_Nul3% && (set _iso86=1&for /f "tokens=* delims=" %%# i
 dir /b /a:-d *_x86*.iso %_Nul3% && (set _iso86=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_x86*.iso') do set "ISOfile2=%%#")
 if %_iso64% equ 1 if %_iso86% equ 1 goto :DUALMENU
 
+setlocal DisableDelayedExpansion
+
 :prompt1
 @cls
 set _iso1=
@@ -92,7 +97,7 @@ echo Enter / Paste the complete path to 1st ISO file
 echo %line%
 echo.
 set /p _iso1=
-if not defined _iso1 goto :QUIT
+if not defined _iso1 (set _Debug=1&goto :QUIT)
 set "_iso1=%_iso1:"=%"
 if not exist "%_iso1%" (
 echo.
@@ -112,10 +117,6 @@ echo Press any key to continue...
 pause >nul
 goto :prompt1
 )
-echo "%_iso1%"| findstr /I /C:"amd64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso1%")
-echo "%_iso1%"| findstr /I /C:"x64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso1%")
-echo "%_iso1%"| findstr /I /C:"x32" 1>nul && (set _iso86=1&set "ISOfile2=%_iso1%")
-echo "%_iso1%"| findstr /I /C:"x86" 1>nul && (set _iso86=1&set "ISOfile2=%_iso1%")
 
 :prompt2
 set _iso2=
@@ -125,7 +126,7 @@ echo Enter / Paste the complete path to 2nd ISO file
 echo %line%
 echo.
 set /p _iso2=
-if not defined _iso2 goto :QUIT
+if not defined _iso2 (set _Debug=1&goto :QUIT)
 set "_iso2=%_iso2:"=%"
 if not exist "%_iso2%" (
 echo.
@@ -146,11 +147,17 @@ pause >nul
 @cls
 goto :prompt2
 )
+
+echo "%_iso1%"| findstr /I /C:"amd64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso1%")
+echo "%_iso1%"| findstr /I /C:"x64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso1%")
+echo "%_iso1%"| findstr /I /C:"x32" 1>nul && (set _iso86=1&set "ISOfile2=%_iso1%")
+echo "%_iso1%"| findstr /I /C:"x86" 1>nul && (set _iso86=1&set "ISOfile2=%_iso1%")
 echo "%_iso2%"| findstr /I /C:"amd64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso2%")
 echo "%_iso2%"| findstr /I /C:"x64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso2%")
 echo "%_iso2%"| findstr /I /C:"x32" 1>nul && (set _iso86=1&set "ISOfile2=%_iso2%")
 echo "%_iso2%"| findstr /I /C:"x86" 1>nul && (set _iso86=1&set "ISOfile2=%_iso2%")
 
+setlocal EnableDelayedExpansion
 if %_iso64% equ 1 if %_iso86% equ 1 goto :DUALMENU
 if %_iso64% equ 0 if %_iso86% equ 0 (set "MESSAGE=could not detect architecture tags"&goto :E_MSG)
 if %_iso64% equ 1 if %_iso86% equ 0 (set "MESSAGE=both ISO files are x64"&goto :E_MSG)
@@ -173,7 +180,7 @@ echo. 2 - Create ISO with 2 separate install.wim/.esd ^(Win 10^)
 echo %line%
 echo.
 choice /c 120 /n /m "Choose a menu option: "
-if errorlevel 3 goto :QUIT
+if errorlevel 3 (set _Debug=1&goto :QUIT)
 if errorlevel 2 (if %_iso64% equ 1 (goto :dISO) else (goto :dCheck))
 if errorlevel 1 (set combine=1&set custom=1&if %_iso64% equ 1 (goto :dISO) else (goto :dCheck))
 goto :DUALMENU
@@ -238,7 +245,7 @@ move "!ISOdir1!" .\ISOFOLDER\x64 %_Nul3%
 move "!ISOdir2!" .\ISOFOLDER\x86 %_Nul3%
 )
 set archl=X86-X64
-if /i "%DVDLABEL1%" equ "%DVDLABEL2%" (
+if /i "%DVDLABEL1%"=="%DVDLABEL2%" (
 set DVDLABEL=%DVDLABEL1%_%archl%FRE_%langid%_DV9
 set DVDISO=%_label%%DVDISO1%_%archl%FRE_%langid%
 ) else (
@@ -401,14 +408,10 @@ if %ERRORTEMP% neq 0 (
   echo.
   echo Errors were reported during ISO creation.
   echo.
-  echo Press any key to exit.
-  pause >nul
   goto :QUIT
 )
 rmdir /s /q ISOFOLDER\
 echo.
-echo Press any key to exit.
-pause >nul
 goto :QUIT
 
 :dSETUP
@@ -479,24 +482,47 @@ if %1==2 exit /b
 
 wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 \Windows\System32\ntoskrnl.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
 7z.exe l .\bin\temp\ntoskrnl.exe >.\bin\temp\version.txt 2>&1
-for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" 2^>nul') do (set version=%%i.%%j&set vermajor=%%i&set verminor=%%j&set branch=%%k&set datetime=%%l)
+for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" 2^>nul') do (set version=%%i.%%j&set vermajor=%%i&set verminor=%%j&set branch=%%k&set labeldate=%%l)
 set revision=%version%&set revmajor=%vermajor%&set revminor=%verminor%
 if /i !ISOarch%1!==x86 (set _ss=x86) else if /i !ISOarch%1!==x64 (set _ss=amd64)
-if !ISOver%1! geq 10240 (
 wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision* --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-for /f "tokens=6,7 delims=_." %%i in ('dir /b /od .\bin\temp\*.manifest') do set revision=%%i.%%j&set revmajor=%%i&set revminor=%%j
-if !verminor! lss !revminor! (
-  set version=!revision!
-  for /f "tokens=5-10 delims=: " %%G in ('wimlib-imagex.exe info "!ISOdir%1!\sources\%WIMFILE%" 1 ^| find /i "Last Modification Time"') do (set mmm=%%G&set yyy=%%L&set ddd=%%H-%%I%%J)
-  call :setmmm !mmm!
+if exist "bin\temp\*.manifest" for /f "tokens=6,7 delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*.manifest') do set revision=%%A.%%B&set revmajor=%%A&set revminor=%%B
+if !ISOver%1! geq 15063 (
+wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+set "isokey=Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
+for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys 2^>nul ^| find /i "Client.OS""') do if not errorlevel 1 (
+  for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Branch 2^>nul"') do set "isobranch=%%~A"
+  for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Version 2^>nul"') do if %%A gtr !revmajor! (
+    set "revision=%%~A.%%B
+    set revmajor=%%~A
+    set "revminor=%%B
+    )
   )
+)
+del /f /q %SystemRoot%\temp\*.mum %_Nul3%
+wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
+if exist "%SystemRoot%\temp\Package_for_RollupFix*.mum" (
+set version=%revision%
+for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
+for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
+del /f /q %SystemRoot%\temp\*.mum
+set "labeldate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
+)
+if defined isobranch set branch=%isobranch%
+if %revmajor%==18363 (
+if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
+if %version:~0,5%==18362 set version=18363%version:~5%
+)
+if %revmajor%==19042 (
+if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
+if %version:~0,5%==19041 set version=19042%version:~5%
 )
 set _label2=
 if /i "%branch%"=="WinBuild" (
 wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes >nul
 for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" 2^>nul') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l_CLIENT&set branch=%%l)
 )
-if defined _label2 (set _label=%_label2%) else (set _label=%version%.%datetime%.%branch%_CLIENT)
+if defined _label2 (set _label=%_label2%) else (set _label=%version%.%labeldate%.%branch%_CLIENT)
 rmdir /s /q bin\temp\
 
 set langid=!ISOlang%1!
@@ -519,21 +545,6 @@ if /i %1==Sep set "isotime=09/%isotime%"
 if /i %1==Oct set "isotime=10/%isotime%"
 if /i %1==Nov set "isotime=11/%isotime%"
 if /i %1==Dec set "isotime=12/%isotime%"
-exit /b
-
-:setmmm
-if /i %1==Jan set "datetime=%yyy:~2%01%ddd%"
-if /i %1==Feb set "datetime=%yyy:~2%02%ddd%"
-if /i %1==Mar set "datetime=%yyy:~2%03%ddd%"
-if /i %1==Apr set "datetime=%yyy:~2%04%ddd%"
-if /i %1==May set "datetime=%yyy:~2%05%ddd%"
-if /i %1==Jun set "datetime=%yyy:~2%06%ddd%"
-if /i %1==Jul set "datetime=%yyy:~2%07%ddd%"
-if /i %1==Aug set "datetime=%yyy:~2%08%ddd%"
-if /i %1==Sep set "datetime=%yyy:~2%09%ddd%"
-if /i %1==Oct set "datetime=%yyy:~2%10%ddd%"
-if /i %1==Nov set "datetime=%yyy:~2%11%ddd%"
-if /i %1==Dec set "datetime=%yyy:~2%12%ddd%"
 exit /b
 
 :E_Admin
@@ -560,8 +571,6 @@ echo %_err%
 echo %MESSAGE%
 echo.
 echo.
-echo Press any key to exit.
-pause >nul
 
 :QUIT
 if exist bin\temp\ rmdir /s /q bin\temp\
@@ -569,7 +578,7 @@ if exist ISOFOLDER\ rmdir /s /q ISOFOLDER\
 if exist ISOx64\ rmdir /s /q ISOx64\
 if exist ISOx86\ rmdir /s /q ISOx86\
 popd
-echo Press 0 to exit.
+if %_Debug% neq 0 (exit /b) else (echo Press 0 to exit.)
 choice /c 0 /n
 if errorlevel 1 (exit) else (rem.)
 

@@ -154,6 +154,10 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+8.7:  
+- Implemented specific fixes for build 14393 (WinPE will not be updated with LCU)  
+- Enhanced Setup DU updating
+
 8.6:  
 - Fixed fail-safe integration using update cab file directly
 

@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v8.6
+@set uiv=v8.7
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -374,6 +374,8 @@ if defined isoupdate (
   )
   xcopy /CEDRUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!target!\sources\replacementmanifests\" %_Nul3%
+  if exist "!_cabdir!\du\*.dll" for /f %%# in ('dir /b /a:-d "!_cabdir!\du\*.dll"') do call :du_fix %%#
+  if exist "!_cabdir!\du\*.exe" for /f %%# in ('dir /b /a:-d "!_cabdir!\du\*.exe"') do call :du_fix %%#
   rmdir /s /q "!_cabdir!\du\" %_Nul3%
 )
 xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
@@ -389,6 +391,16 @@ cd /d "!target!"
 if %errorlevel% equ 0 (del /f /q sources\install.wim %_Nul3%) else (del /f /q sources\install.esd %_Nul3%)
 cd /d "!_work!"
 goto :fin
+
+:du_fix
+if /i %1==setup.exe goto :eof
+set "_fil1=!_cabdir!\du\%1"
+set "_fil2=!target!\sources\%1"
+if not exist "!_fil2!" goto :eof
+for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fil1:\=\\!'" get Version /value ^| find "="') do set /a "_ver1=%%a"
+for /f "tokens=5 delims==." %%i in ('wmic datafile where "name='!_fil2:\=\\!'" get Version /value ^| find "="') do set /a "_ver2=%%i"
+if %_ver1% gtr %_ver2% copy /y "!_fil1!" "!target!\sources\" %_Nul3%
+goto :eof
 
 :extract
 if %build% geq 18362 set _chkEP=1
@@ -462,36 +474,44 @@ if %build% geq 17763 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
 %_Nul3% findstr /i /m "Edition\"" "%dest%\update.mum"
 if errorlevel 1 set "_type=[WinPE]"
 )
-if not defined _type findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% && (
-set "_type=[LCU]"
+if not defined _type (
+expand.exe -f:*_microsoft-windows-sysreset_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || set "_type=[WinPE]"
 )
-if not defined _type expand.exe -f:*_microsoft-windows-servicingstack_*.manifest "!repo!\!package!" "%dest%" %_Null%
-if exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" (
-set "_type=[SSU]"
+if not defined _type (
+expand.exe -f:*_microsoft-windows-i..dsetup-rejuvenation_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || set "_type=[WinPE]"
 )
-if not defined _type expand.exe -f:*_adobe-flash-for-windows_*.manifest "!repo!\!package!" "%dest%" %_Null%
-if exist "%dest%\*_adobe-flash-for-windows_*.manifest" (
-set "_type=[Flash]"
+if not defined _type (
+findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% && set "_type=[LCU]"
 )
-if not defined _type expand.exe -f:*_netfx4*.manifest "!repo!\!package!" "%dest%" %_Null%
-if exist "%dest%\*_netfx4*.manifest" (
-findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || set "_type=[NetFx]"
+if not defined _type (
+expand.exe -f:*_microsoft-windows-servicingstack_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" set "_type=[SSU]"
 )
-if not defined _type expand.exe -f:*_microsoft-windows-s..boot-firmwareupdate_*.manifest "!repo!\!package!" "%dest%" %_Null%
-if exist "%dest%\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" (
-set "_type=[SecureBoot]"
+if not defined _type (
+expand.exe -f:*_adobe-flash-for-windows_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_adobe-flash-for-windows_*.manifest" set "_type=[Flash]"
 )
-if not defined _type if %build% geq 18362 expand.exe -f:*enablement-package*.mum "!repo!\!package!" "%dest%" %_Null%
-if exist "%dest%\*enablement-package*.mum" (
-set "_type=[Enablement]"
+if not defined _type (
+expand.exe -f:*_netfx4*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_netfx4*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || set "_type=[NetFx]"
 )
-if %build% geq 18362 if exist "%dest%\*enablement-package*.mum" expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "%dest%" %_Null%
-if exist "%dest%\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" (
-set "_type=[Enablement / EdgeChromium]"
+if not defined _type (
+expand.exe -f:*_microsoft-windows-s..boot-firmwareupdate_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" set "_type=[SecureBoot]"
 )
-if not defined _type expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "%dest%" %_Null%
-if not defined _type if exist "%dest%\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" (
-set "_type=[EdgeChromium]"
+if not defined _type if %build% geq 18362 (
+expand.exe -f:*enablement-package*.mum "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*enablement-package*.mum" set "_type=[Enablement]"
+)
+if %build% geq 18362 if exist "%dest%\*enablement-package*.mum" (
+expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[Enablement / EdgeChromium]"
+)
+if not defined _type (
+expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "%dest%" %_Null%
+if exist "%dest%\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[EdgeChromium]"
 )
 echo %count%/%_sum%: %package% %_type%
 expand.exe -f:* "!repo!\!package!" "%dest%" %_Null% || (
@@ -579,19 +599,42 @@ set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismUpdt.log" /Add-Package %ldr%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
-if %verb%==0 if not defined safeos if defined cumulative (
+:: winre.wim non-1607
+if %build% neq 14393 if %verb%==0 if not defined safeos if defined cumulative (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
-if %verb%==1 if defined cumulative (
+:: boot.wim non-1607
+if %build% neq 14393 if %verb%==1 if defined cumulative if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+)
+:: install.wim
+if %verb%==1 if defined cumulative if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
+set callclean=1
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if %build% equ 14393 if %wimfiles%==1 (
+  reg.exe load HKLM\TEMP "!mumtarget!\Windows\System32\Config\SYSTEM" %_Nul1%
+  reg.exe add "HKLM\TEMP\ControlSet001\Control\Session Manager\Kernel" /v DisableTsx /t REG_DWORD /d 1 /f %_Nul1%
+  reg.exe add "HKLM\TEMP\ControlSet001\Control\Session Manager\Memory Management" /v FeatureSettings /t REG_DWORD /d 3 /f %_Nul1%
+  reg.exe add "HKLM\TEMP\ControlSet001\Control\Session Manager\Memory Management" /v FeatureSettingsOverride /t REG_DWORD /d 3 /f %_Nul1%
+  reg.exe add "HKLM\TEMP\ControlSet001\Control\Session Manager\Memory Management" /v FeatureSettingsOverrideMask /t REG_DWORD /d 3 /f %_Nul1%
+  reg.exe unload HKLM\TEMP %_Nul1%
+  reg.exe load HKLM\TEMP "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
+  reg.exe add "HKLM\TEMP\Microsoft\Windows NT\CurrentVersion\Winlogon" /v Userinit /d "C:\Windows\system32\userinit.exe," /f %_Nul1%
+  reg.exe unload HKLM\TEMP %_Nul1%
+  )
 )
 if defined callclean call :cleanup
 if not defined edge goto :eof
 if defined edge (
+echo.
+echo ============================================================
+echo Installing EdgeChromium update...
+echo ============================================================
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismEdge.log" /Add-Package %edge%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
@@ -888,7 +931,7 @@ cd /d "!_cabdir!"
 goto :eof
 
 :boots
-if exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" xcopy /CDRY "!mountdir!\sources" "!target!\sources\" %_Nul3%
+if exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" xcopy /CDRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
 del /f /q "!target!\sources\background.bmp" %_Nul3%
 del /f /q "!target!\sources\xmllite.dll" %_Nul3%
 del /f /q "!target!\efi\microsoft\boot\*noprompt.*" %_Nul3%
@@ -948,6 +991,12 @@ echo ============================================================
 echo Resetting WinPE image base
 echo ============================================================
 )
+reg.exe load HKLM\TEMP "!mumtarget!\Windows\System32\Config\SYSTEM" %_Nul1%
+reg.exe add "HKLM\TEMP\ControlSet001\Control\Session Manager\Kernel" /v DisableTsx /t REG_DWORD /d 1 /f %_Nul1%
+reg.exe add "HKLM\TEMP\ControlSet001\Control\Session Manager\Memory Management" /v FeatureSettings /t REG_DWORD /d 3 /f %_Nul1%
+reg.exe add "HKLM\TEMP\ControlSet001\Control\Session Manager\Memory Management" /v FeatureSettingsOverride /t REG_DWORD /d 3 /f %_Nul1%
+reg.exe add "HKLM\TEMP\ControlSet001\Control\Session Manager\Memory Management" /v FeatureSettingsOverrideMask /t REG_DWORD /d 3 /f %_Nul1%
+reg.exe unload HKLM\TEMP %_Nul1%
 if %build% geq 16299 (
 set ksub=SOFTWIM
 reg.exe load HKLM\!ksub! "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
@@ -985,7 +1034,7 @@ reg.exe add HKLM\%ksub%\%_sbs% /v DisableResetbase /t REG_DWORD /d 1 /f %_Nul1%
 reg.exe add HKLM\%ksub%\%_sbs% /v SupersededActions /t REG_DWORD /d %savc% /f %_Nul1%
 if %online%==0 (
 if /i %xOS%==x86 if /i %arch%==x64 reg.exe save HKLM\%ksub% "!mumtarget!\Windows\System32\Config\SOFTWARE2" %_Nul1%
-reg.exe unload HKLM\%ksub% %_Nul1%
+reg.exe unload HKLM\!ksub! %_Nul1%
 if /i %xOS%==x86 if /i %arch%==x64 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup
@@ -999,7 +1048,7 @@ reg.exe add HKLM\%ksub%\%_sbs% /v DisableResetbase /t REG_DWORD /d 0 /f %_Nul1%
 reg.exe add HKLM\%ksub%\%_sbs% /v SupersededActions /t REG_DWORD /d %savr% /f %_Nul1%
 if %online%==0 (
 if /i %xOS%==x86 if /i %arch%==x64 reg.exe save HKLM\%ksub% "!mumtarget!\Windows\System32\Config\SOFTWARE2" %_Nul1%
-reg.exe unload HKLM\%ksub% %_Nul1%
+reg.exe unload HKLM\!ksub! %_Nul1%
 if /i %xOS%==x86 if /i %arch%==x64 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
 if %online%==0 if %build% geq 16299 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup
@@ -1304,7 +1353,7 @@ echo Creating updated ISO file...
 echo ============================================================
 if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else (set _ff="!_work!\cdimage.exe")
 cd /d "!target!"
-!_ff! -m -o -u2 -udfver102 -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -l"%isover%" . "%isofile%"
+!_ff! -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
 set errcode=%errorlevel%
 if %errcode% equ 0 move /y "%isofile%" "!isodir!\" %_Nul3%
 cd /d "!_work!"

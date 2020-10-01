@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v48
+@set uivr=v50
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -28,13 +28,13 @@ set wim2esd=0
 set SkipISO=0
 
 :: script:     abbodi1406
-:: new method: mkuba50
+:: new method: whatever127
 :: wimlib:     synchronicity
 :: offlinereg: erwan.l
 
 :: ###################################################################
 
-set "_Const=1>nul 2>nul"
+set "_Null=1>nul 2>nul"
 
 set _Debug=0
 set _elev=
@@ -47,15 +47,17 @@ if "%~5"=="-elevated" set _elev=1
 :NoProgArgs
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
-set "xDS=bin\bin64;bin"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (if not defined PROCESSOR_ARCHITEW6432 (
-  set "xDS=bin"
+set "xOS=%PROCESSOR_ARCHITECTURE%"
+if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
+  set "xOS=%PROCESSOR_ARCHITEW6432%"
   )
 )
+set "xDS=bin\bin64;bin"
+if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
 
-%_Const% reg query HKU\S-1-5-19 && (
+%_Null% reg query HKU\S-1-5-19 && (
   goto :Passed
   ) || (
   if defined _elev goto :E_Admin
@@ -65,11 +67,11 @@ set _PSarg="""%~f0""" -elevated
 if defined _args set _PSarg="""%~f0""" %_args:"="""% -elevated
 set _PSarg=%_PSarg:'=''%
 
-(%_Const% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %* -elevated) && (
+(%_Null% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %* -elevated) && (
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Const% powershell -noprofile -exec bypass -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
+  %_Null% powershell -noprofile -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
@@ -116,10 +118,7 @@ set _dvd=0
 set _iso=0
 set "line============================================================="
 if defined _args (
-if /i "%~1"=="autowim" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0
-if /i "%~1"=="autoesd" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=1
-if /i "%~1"=="manuwim" set wim2esd=0
-if /i "%~1"=="manuesd" set wim2esd=1
+set "_type=%~1"
 if /i not "%~2"=="" set "eLabel=%~2"
 if /i not "%~3"=="" set "eTime=%~3,%~4"
 )
@@ -146,6 +145,12 @@ findstr /b /i v%1 ConvertConfig.ini %_Nul1% && for /f "tokens=2 delims==" %%# in
 goto :eof
 
 :proceed
+if defined _args (
+if /i "%_type%"=="autowim" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0
+if /i "%_type%"=="autoesd" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=1
+if /i "%_type%"=="manuwim" set wim2esd=0
+if /i "%_type%"=="manuesd" set wim2esd=1
+)
 dir /b /ad . %_Nul3% || goto :checkdvd
 for /f "tokens=* delims=" %%# in ('dir /b /ad .') do (
 if exist "%%~#\sources\install.wim" set _dir=1&set "ISOdir=%%~#"
@@ -213,7 +218,7 @@ echo.
 echo "!ISOfile!"
 set "ISOdir=ISOUUP"
 if exist %ISOdir%\ rmdir /s /q %ISOdir%\
-7z.exe x "!ISOfile!" -o%ISOdir% * -r %_Const%
+7z.exe x "!ISOfile!" -o%ISOdir% * -r %_Null%
 
 :dCheck
 if defined _Supp (
@@ -415,9 +420,9 @@ echo %line%
 echo.
 echo "%ISOdir%"
 echo.
-robocopy "%ISOdir%" "ISOFOLDER" /E /A-:R %_Const%
+robocopy "%ISOdir%" "ISOFOLDER" /E /A-:R %_Null%
 ) else (
-move "%ISOdir%" ISOFOLDER %_Const%
+move "%ISOdir%" ISOFOLDER %_Null%
 )
 for %%# in (%vEditions%) do (
 find /i "<EDITIONID>%%#</EDITIONID>" bin\infoall.txt %_Nul1% && set %%#=0
@@ -450,7 +455,7 @@ if %DeleteSource% equ 1 (
   if %_all% equ 1 (
     if %images% equ 1 (
     ren ISOFOLDER\sources\%WimFile% temp.wim
-    wimlib-imagex.exe info ISOFOLDER\sources\temp.wim 1 "Windows 10 %desc%" "Windows 10 %desc%" %_Const%
+    wimlib-imagex.exe info ISOFOLDER\sources\temp.wim 1 "Windows 10 %desc%" "Windows 10 %desc%" %_Null%
     )
     if %images% neq 1 (
     wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
@@ -464,7 +469,7 @@ if %DeleteSource% neq 1 (
 wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
 )
 set /a index+=1
-wimlib-imagex.exe extract ISOFOLDER\sources\temp.wim %index% \Windows\System32\config\SOFTWARE \Windows\System32\config\SYSTEM \Windows\servicing\Editions\%EditionID%Edition.xml --dest-dir=.\bin\temp --no-acls --no-attributes %_Const%
+wimlib-imagex.exe extract ISOFOLDER\sources\temp.wim %index% \Windows\System32\config\SOFTWARE \Windows\System32\config\SYSTEM \Windows\servicing\Editions\%EditionID%Edition.xml --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 %_Nul3% reg load HKLM\SOF .\bin\temp\SOFTWARE
 %_Nul3% reg load HKLM\SYS .\bin\temp\SYSTEM
 for %%# in (EditionID,ProductId) do (
@@ -491,7 +496,7 @@ type nul>bin\temp\virtual.txt
 >>bin\temp\virtual.txt echo add 'bin^\temp^\SOFTWARE' '^\Windows^\System32^\config^\SOFTWARE'
 >>bin\temp\virtual.txt echo add 'bin^\temp^\SYSTEM' '^\Windows^\System32^\config^\SYSTEM'
 >>bin\temp\virtual.txt echo add 'bin^\temp^\%EditionID%Edition.xml' '^\Windows^\%EditionID%.xml'
-wimlib-imagex.exe update ISOFOLDER\sources\temp.wim %index% < bin\temp\virtual.txt %_Const%
+wimlib-imagex.exe update ISOFOLDER\sources\temp.wim %index% < bin\temp\virtual.txt %_Null%
 rmdir /s /q bin\temp\
 echo.
 wimlib-imagex.exe info ISOFOLDER\sources\temp.wim %index% --image-property WINDOWS/EDITIONID=%EditionID% --image-property FLAGS=%EditionID% --image-property DISPLAYNAME="Windows 10 %desc%" --image-property DISPLAYDESCRIPTION="Windows 10 %desc%"
@@ -601,7 +606,7 @@ if /i %arch%==x86 (set _ss=x86) else if /i %arch%==x64 (set _ss=amd64) else (set
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision*.manifest --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
 if exist "bin\temp\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens=%tok% delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*_microsoft-windows-coreos-revision*.manifest') do set revision=%%A.%%B&set revmajor=%%A&set revminor=%%B
 if %_build% geq 15063 (
-wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Const%
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 set "isokey=Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
 for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% ^| find /i "Client.OS""') do if not errorlevel 1 (
   for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Branch %_Nul6%"') do set "isobranch=%%~A"
@@ -637,7 +642,7 @@ if not exist "%SystemRoot%\temp\Package_for_RollupFix*.mum" set branch=WinBuild
 )
 set _label2=
 if /i "%branch%"=="WinBuild" (
-wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 \Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Const%
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 \Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l_CLIENT&set branch=%%l)
 )
 if defined _label2 (set _label=%_label2%) else (set _label=%version%.%labeldate%.%branch%_CLIENT)
