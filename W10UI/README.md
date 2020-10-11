@@ -154,6 +154,11 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+8.8:  
+- Added support to integrate Microsoft Defender update (defender-dism-[x86|x64].cab)  
+https://support.microsoft.com/en-us/help/4568292  
+- Improved integration for 20H2 Enablement/EdgeChromium package
+
 8.7:  
 - Implemented specific fixes for build 14393 (WinPE will not be updated with LCU)  
 - Enhanced Setup DU updating
