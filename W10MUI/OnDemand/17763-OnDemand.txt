@@ -1,8 +1,9 @@
-- Direct windowsupdate links for Languages OnDemand Packs files are no longer available
-
 - You need to download the correct OnDemand Packs that matches your selected Lang Packs from UUP source
 
-- Place the downloaded files here next to 17763-OnDemand-Rename.cmd, and then run it (double click)
+- You also need to download rename_script.cmd file  
+or you can use the same file downloaded with LPs
+
+- Place the downloaded files next to the script and run it
 
 - Afterwards, move the files into the correct folder architecture (x86 or x64)
 
@@ -14,10 +15,12 @@
 
 - Credits:
 https://uupdump.ml/
-https://github.com/whatever127
 
 =================================================================================================
 x86 (32 Bit)
+
+rename_script.cmd
+https://uupdump.ml/get.php?id=65b3e935-a0fc-48f6-a1dc-a57c9c8c21b2&renscript=1
 
 ar-SA
 https://uupdump.ml/getfile.php?id=65b3e935-a0fc-48f6-a1dc-a57c9c8c21b2&file=microsoft-windows-languagefeatures-basic-ar-sa-package-x86.cab
@@ -218,6 +221,9 @@ https://uupdump.ml/getfile.php?id=65b3e935-a0fc-48f6-a1dc-a57c9c8c21b2&file=micr
 
 =================================================================================================
 x64 (64 Bit)
+
+rename_script.cmd
+https://uupdump.ml/get.php?id=b497f6ed-c4d8-4dd3-9ab3-2edbe9dcf605&renscript=1
 
 ar-SA
 https://uupdump.ml/getfile.php?id=b497f6ed-c4d8-4dd3-9ab3-2edbe9dcf605&file=microsoft-windows-languagefeatures-basic-ar-sa-package-amd64.cab
