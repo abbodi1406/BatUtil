@@ -18,124 +18,69 @@ however, if it's created using option:
 - 2 separate install.wim, you can update each file separately by choosing x86 or x64 folder as distribution path
 - 1 combined install.wim, you can update it with W10MUI_Mini.cmd script
 
-______________________________
-
-## Notes:
-
-* version 1909 share the same build number and files with version 1903
-
-* version 20H2 share the same build number and files with version 2004
-
-* Since version 1809 (build 17763), regular windowsupdate links for cab files are no longer available
-
-instead, you need to download the required files from UUP source
-
-* UUP links depends on Update ID to fetch the files from Microsoft servers
-
-but sometimes, those Update IDs stop working or get removed by Microsoft
-
-the LangPacks/OnDemand files themselves are the same for all releases of the same build number
-
-* To get new ID, or if links for 17763 and later stop working:
-
-- visit [uupdump.ml](https://uupdump.ml/)
-
-- in "Search for builds" box, type the needed build number (e.g. 19041) and press Enter (or click the blue button)
-
-- from the listed builds, open one of them matching your needed Architecture
-
-- in "Search files" box on the right, type the word (language) followed by space, then your Lang ID  
-example: language fr-fr
-
-- click the blue search button (or press Enter)
-
-- download the listed files, then download and run File renaming script
-
-______________________________
-
 ## Requirements:
 
 * Working Environment: Windows 8.1 or later with at least 15 GB of free space.
 
 * Windows 10 distribution (ISO file, DVD/USB, ISO extracted to folder).
 
-* Windows 10 Language Packs, matching the distribution build version
+* Windows 10 Language Packs, matching the distribution build version (Note: version 1909 is the same as version 1903).
 
 * Windows 10 OnDemand Packs if available (Optional, but recommended).
 
 * If you want the Standard WinPE localization: Windows 10 ADK (Deployment Tools & Preinstallation Environment).
 
-- Build 19041 - Windows 10 version 2004 and 20H2:  
-```
+- Build 19041 - Windows 10 version 2004:  
 http://download.microsoft.com/download/8/6/c/86c218f3-4349-4aa5-beba-d05e48bbc286/adk/adksetup.exe
 http://download.microsoft.com/download/3/c/2/3c2b23b2-96a0-452c-b9fd-6df72266e335/adkwinpeaddons/adkwinpesetup.exe
-
 full ISO  
 http://software-download.microsoft.com/download/pr/19041.1.191206-1406.vb_release_amd64fre_ADK.iso
 http://software-download.microsoft.com/download/pr/19041.1.191206-1406.vb_release_amd64fre_adkwinpeaddons.iso
-```
 
-- Build 18362 - Windows 10 version 1903 and 1909:  
-```
+- Build 18362 - Windows 10 version 1903 (and 1909):  
 http://download.microsoft.com/download/B/E/6/BE63E3A5-5D1C-43E7-9875-DFA2B301EC70/adk/adksetup.exe  
 http://download.microsoft.com/download/E/F/A/EFA17CF0-7140-4E92-AC0A-D89366EBD79E/adkwinpeaddons/adkwinpesetup.exe
 
 full ISO  
 http://software-download.microsoft.com/download/pr/18362.1.190318-1202.19h1_release_amd64fre_ADK.iso  
 http://software-download.microsoft.com/download/pr/18362.1.190318-1202.19h1_release_amd64fre_adkwinpeaddons.iso
-```
 
 - Build 17763 - Windows 10 version 1809:  
-```
 http://download.microsoft.com/download/0/1/C/01CC78AA-B53B-4884-B7EA-74F2878AA79F/adk/adksetup.exe  
 http://download.microsoft.com/download/D/7/E/D7E22261-D0B3-4ED6-8151-5E002C7F823D/adkwinpeaddons/adkwinpesetup.exe
 
 full ISO  
 http://software-download.microsoft.com/download/pr/17763.1.180914-1434.rs5_release_amd64fre_ADK.iso  
 http://software-download.microsoft.com/download/pr/17763.1.180914-1434.rs5_release_amd64fre_ADKwinpeaddons.iso
-```
 
 - Build 17134 - Windows 10 version 1803:  
-```
 http://download.microsoft.com/download/6/8/9/689E62E5-C50F-407B-9C3C-B7F00F8C93C0/adk/adksetup.exe
 
 full ISO  
 https://software-download.microsoft.com/download/pr/17134.1.180410-1804.rs4_release_amd64fre_ADK.iso
-```
 
 - Build 16299 - Windows 10 version 1709:  
-```
 http://download.microsoft.com/download/3/1/E/31EC1AAF-3501-4BB4-B61C-8BD8A07B4E8A/adk/adksetup.exe
 
 full ISO  
 http://download.microsoft.com/download/3/1/E/31EC1AAF-3501-4BB4-B61C-8BD8A07B4E8A/16299.15.170928-1534.rs3_release_amd64fre_ADK.iso
-```
 
 - Build 15063 - Windows 10 version 1703:  
-```
 http://download.microsoft.com/download/5/D/9/5D915042-FCAA-4859-A1C3-29E198690493/adk/adksetup.exe
 
 full ISO  
 http://download.microsoft.com/download/5/D/9/5D915042-FCAA-4859-A1C3-29E198690493/15063.0.170317-1834.rs2_release_amd64fre_ADK.iso
-```
 
 - Build 14393 - Windows 10 version 1607:  
-```
 http://download.microsoft.com/download/9/A/E/9AE69DD5-BA93-44E0-864E-180F5E700AB4/adk/adksetup.exe
-```
 
 - Build 10586 - Windows 10 version 1511:  
-```
 http://download.microsoft.com/download/3/8/B/38BBCA6A-ADC9-4245-BCD8-DAA136F63C8B/adk/adksetup.exe
-```
 
 - Build 10240 - Windows 10 version 1507:  
-```
 http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe
-```
 
-______________________________
-
+___
 ## How To:
 
 * Step 1
@@ -232,8 +177,6 @@ optional, mount directory on another partition if available to speed integration
 	> The process will take quite some time to finish depending on number of LPs to add, so WAIT. If all went OK, You will get the "Finished" message.
 
 	> The new multilingual ISO can be found in the same directory besides the script. If you choose not to create iso file, the distribution folder "DVD" will remain after you close the script.
-
-______________________________
 
 ## Remarks:
 
