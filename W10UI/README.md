@@ -154,6 +154,12 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+8.9:  
+- Improved processing for 20H2 Enablement/EdgeChromium package  
+- Added support to install v1607 updates for unsupported editions (non Enterprise LTSB)  
+- Fixed detection for Adobe Flash Removal Update KB4577586  
+- Defender update will not be processed for online live OS
+
 8.8:  
 - Added support to integrate Microsoft Defender update (defender-dism-[x86|x64].cab)  
 https://support.microsoft.com/en-us/help/4568292  
