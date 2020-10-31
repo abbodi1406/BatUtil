@@ -73,7 +73,7 @@ set off2016reg=HKLM\SOFTWARE\Microsoft\Office\16.0\Common
 if %arch% equ x64 (set office2016=x64&set /a z+=1&set office2016b=64-bit {x64}) else (set office2016=x86&set /a z+=1&set office2016b=32-bit {x86})
 goto :checkdone
 )
-if %arch% equ x64 for /f "skip=2 tokens=2*" %%a in ('"reg.exe query HKLM\SOFTWARE\Wow6432Node\Microsoft\Office\15.0\Common\InstallRoot /v Path" 2^>nul') do if exist "%%b\OSPP.VBS" (
+if %arch% equ x64 for /f "skip=2 tokens=2*" %%a in ('"reg.exe query HKLM\SOFTWARE\Wow6432Node\Microsoft\Office\16.0\Common\InstallRoot /v Path" 2^>nul') do if exist "%%b\OSPP.VBS" (
 set off2016reg=HKLM\SOFTWARE\Wow6432Node\Microsoft\Office\16.0\Common
 set office2016=x86&set /a z+=1&set office2016b=32-bit {x86}
 goto :checkdone
@@ -98,6 +98,8 @@ for /f "skip=2 tokens=2*" %%a in ('reg.exe query %off2016reg%\ProductVersion /v 
 if defined spinst goto :spdone
 
 :top
+if defined loc cd /d "%loc%"
+
 echo If this message appears for an extended period of time, it is 
 echo recommended that you close this script.
 echo.

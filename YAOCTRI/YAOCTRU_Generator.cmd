@@ -42,8 +42,7 @@ if /i %PROCESSOR_ARCHITECTURE%==x86 (if not defined PROCESSOR_ARCHITEW6432 (
   )
 )
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
-set "_psc="
-if %winbuild% lss 9200 set "_psc=$Tls12 = [Enum]::ToObject([System.Net.SecurityProtocolType], 3072); [System.Net.ServicePointManager]::SecurityProtocol = $Tls12;"
+set "_psc=$Tls12 = [Enum]::ToObject([System.Net.SecurityProtocolType], 3072); [System.Net.ServicePointManager]::SecurityProtocol = $Tls12;"
 set "_temp=%temp%"
 set "_work=%~dp0"
 if "%_work:~-1%"=="\" set "_work=%_work:~0,-1%"
@@ -232,7 +231,7 @@ echo %line%
 echo ERROR:
 echo could not check available version online
 echo check internet connection and if powershell is disabled
-if %winbuild% lss 9200 echo check that Windows 7 is updated to support TLS 1.2 connection protocol
+echo check that Windows OS is updated to support TLS 1.2 connection protocol
 echo %line%
 echo.
 echo Press any key to exit.
