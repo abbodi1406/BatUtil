@@ -43,7 +43,7 @@ goto :check
 :prompt
 echo.
 echo ============================================================
-echo Enter the distribution path ^(without quotes marks ""^):
+echo Enter the distribution path ^(without quotes marks " "^):
 echo ISO file^, Extracted ISO folder^, DVD/USB drive letter
 echo ============================================================
 echo.
@@ -361,8 +361,8 @@ if not exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!
 call set _PP64=!_PP64! /packagepath:"%TEMPDIR%\!LPARCH%%j!\!LANGUAGE%%j!\update.mum"
 )
 )
-if %wimbit%==32 if "!_PP86!"=="" goto :E_ARCH
-if %wimbit%==64 if "!_PP64!"=="" goto :E_ARCH
+if %wimbit%==32 if not defined _PP86 goto :E_ARCH
+if %wimbit%==64 if not defined _PP64 goto :E_ARCH
 
 for /L %%i in (1, 1, %VERSIONS%) do (
 echo.
@@ -375,17 +375,19 @@ echo.
 echo ============================================================
 echo Add LPs to install.wim - index %%i/%VERSIONS%
 echo ============================================================
-if "!_PP64!" NEQ "" if /i !WIMARCH%%i!==amd64 (
+if defined _PP64 if /i !WIMARCH%%i!==amd64 (
 "%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_PP64!
 )
-if "!_ODbasic64!" NEQ "" if /i !WIMARCH%%i!==amd64 (
-"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic64! !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
+if defined _ODbasic64 if /i !WIMARCH%%i!==amd64 (
+"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic64!
+"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
 )
-if "!_PP86!" NEQ "" if /i !WIMARCH%%i!==x86 (
+if defined _PP86 if /i !WIMARCH%%i!==x86 (
 "%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_PP86!
 )
-if "!_ODbasic86!" NEQ "" if /i !WIMARCH%%i!==x86 (
-"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic86! !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
+if defined _ODbasic86 if /i !WIMARCH%%i!==x86 (
+"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic86!
+"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
 )
 echo.
 echo ============================================================
@@ -435,11 +437,11 @@ if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" i
   reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v DisableComponentBackups /t REG_DWORD /d 1 /f 1>nul 2>nul
   reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d 1 /f 1>nul 2>nul
   reg unload HKLM\TEMPWIM 1>nul 2>nul
-  if "!_PEM64!" NEQ "" if /i !WIMARCH%%i!==amd64 (
+  if defined _PEM64 if /i !WIMARCH%%i!==amd64 (
     "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEM64! !_PER64! !_PEF64!
     if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEX64!
   )
-  if "!_PEM86!" NEQ "" if /i !WIMARCH%%i!==x86 (
+  if defined _PEM86 if /i !WIMARCH%%i!==x86 (
     "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEM86! !_PER86! !_PEF86!
     if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEX86!
   )
@@ -500,12 +502,12 @@ if %WINPE%==1 (
   reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v DisableComponentBackups /t REG_DWORD /d 1 /f 1>nul 2>nul
   reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d 1 /f 1>nul 2>nul
   reg unload HKLM\TEMPWIM 1>nul 2>nul
-  if "!_PEM64!" NEQ "" if /i !BOOTARCH!==amd64 (
+  if defined _PEM64 if /i !BOOTARCH!==amd64 (
     "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEM64! !_PEF64!
     if exist "!BOOTMOUNTDIR!\Windows\servicing\Packages\WinPE-Rejuv-Package~31bf3856ad364e35~*.mum" "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PER64!
     if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEX64!
   )
-  if "!_PEM86!" NEQ "" if /i !BOOTARCH!==x86 (
+  if defined _PEM86 if /i !BOOTARCH!==x86 (
     "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEM86! !_PEF86!
     if exist "!BOOTMOUNTDIR!\Windows\servicing\Packages\WinPE-Rejuv-Package~31bf3856ad364e35~*.mum" "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PER86!
     if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEX86!
@@ -552,7 +554,7 @@ if %WINPE%==1 (
   reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v DisableComponentBackups /t REG_DWORD /d 1 /f 1>nul 2>nul
   reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d 1 /f 1>nul 2>nul
   reg unload HKLM\TEMPWIM 1>nul 2>nul
-  if "!_PEM64!" NEQ "" if /i !BOOTARCH!==amd64 (
+  if defined _PEM64 if /i !BOOTARCH!==amd64 (
     if exist "!BOOTMOUNTDIR!\Windows\servicing\Packages\WinPE-Setup-Package~31bf3856ad364e35~*.mum" (
       "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEM64! !_PES64! !_PEF64!
       ) else (
@@ -561,7 +563,7 @@ if %WINPE%==1 (
     )
     if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEX64!
   )
-  if "!_PEM86!" NEQ "" if /i !BOOTARCH!==x86 (
+  if defined _PEM86 if /i !BOOTARCH!==x86 (
     if exist "!BOOTMOUNTDIR!\Windows\servicing\Packages\WinPE-Setup-Package~31bf3856ad364e35~*.mum" (
       "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!BOOTMOUNTDIR!" /Add-Package !_PEM86! !_PES86! !_PEF86!
       ) else (
@@ -856,15 +858,19 @@ for /L %%j in (1, 1, %LANGUAGES%) do (
 goto :eof
 
 :EAfonts
-if /i !LANGUAGE%1!==ja-jp if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\meiryo.ttc" (
+if /i !LANGUAGE%1!==ja-jp (
 echo.
 echo ============================================================
 echo Add Font Support: !LANGUAGE%1!
 echo ============================================================
 echo.
+if not exist "!BOOTMOUNTDIR!\Windows\Boot\Fonts\jpn_boot.ttf" (
 icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /save "!TEMPDIR!\AclFile" 1>nul 2>nul&takeown /f "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /grant *S-1-5-32-544:F 1>nul 2>nul
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\jpn_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\meiryo_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\meiryon_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\meiryo.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msgothic.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&reg load HKLM\OFFLINE "!BOOTMOUNTDIR!\Windows\System32\config\SOFTWARE" >nul&reg import "%~dp0dism\EA\ja-jp.reg" >nul&reg unload HKLM\OFFLINE >nul
+copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\jpn_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\meiryo_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\meiryon_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul
 icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /setowner "NT Service\TrustedInstaller" 1>nul 2>nul&icacls "!BOOTMOUNTDIR!\Windows\Boot" /restore "!TEMPDIR!\AclFile" 1>nul 2>nul
+)
+reg load HKLM\OFFLINE "!BOOTMOUNTDIR!\Windows\System32\config\SOFTWARE" >nul&reg import "%~dp0dism\EA\ja-jp.reg" >nul&reg unload HKLM\OFFLINE >nul
+copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\meiryo.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msgothic.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul
 )
 if /i !LANGUAGE%1!==ko-kr (
 echo.
@@ -872,9 +878,13 @@ echo ============================================================
 echo Add Font Support: !LANGUAGE%1!
 echo ============================================================
 echo.
+if not exist "!BOOTMOUNTDIR!\Windows\Boot\Fonts\kor_boot.ttf" (
 icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /save "!TEMPDIR!\AclFile" 1>nul 2>nul&takeown /f "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /grant *S-1-5-32-544:F 1>nul 2>nul
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\kor_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\malgunn_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\malgun_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\malgun.ttf" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\gulim.ttc" (copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\gulim.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul)&reg load HKLM\OFFLINE "!BOOTMOUNTDIR!\Windows\System32\config\SOFTWARE" >nul&reg import "%~dp0dism\EA\ko-kr.reg" >nul&reg unload HKLM\OFFLINE >nul
+copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\kor_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\malgunn_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\malgun_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul
 icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /setowner "NT Service\TrustedInstaller" 1>nul 2>nul&icacls "!BOOTMOUNTDIR!\Windows\Boot" /restore "!TEMPDIR!\AclFile" 1>nul 2>nul
+)
+reg load HKLM\OFFLINE "!BOOTMOUNTDIR!\Windows\System32\config\SOFTWARE" >nul&reg import "%~dp0dism\EA\ko-kr.reg" >nul&reg unload HKLM\OFFLINE >nul
+copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\malgun.ttf" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\gulim.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul
 )
 if /i !LANGUAGE%1!==zh-cn (
 echo.
@@ -882,9 +892,13 @@ echo ============================================================
 echo Add Font Support: !LANGUAGE%1!
 echo ============================================================
 echo.
+if not exist "!BOOTMOUNTDIR!\Windows\Boot\Fonts\chs_boot.ttf" (
 icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /save "!TEMPDIR!\AclFile" 1>nul 2>nul&takeown /f "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /grant *S-1-5-32-544:F 1>nul 2>nul
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\chs_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyhn_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyh_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyh.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyhl.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\mingliub.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\simsun.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&reg load HKLM\OFFLINE "!BOOTMOUNTDIR!\Windows\System32\config\SOFTWARE" >nul&reg import "%~dp0dism\EA\zh-cn.reg" >nul&reg unload HKLM\OFFLINE >nul
+copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\chs_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyhn_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyh_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul
 icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /setowner "NT Service\TrustedInstaller" 1>nul 2>nul&icacls "!BOOTMOUNTDIR!\Windows\Boot" /restore "!TEMPDIR!\AclFile" 1>nul 2>nul
+)
+reg load HKLM\OFFLINE "!BOOTMOUNTDIR!\Windows\System32\config\SOFTWARE" >nul&reg import "%~dp0dism\EA\zh-cn.reg" >nul&reg unload HKLM\OFFLINE >nul
+copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyh.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyhl.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\mingliub.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\simsun.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul
 )
 if /i !LANGUAGE%1!==zh-hk (
 echo.
@@ -892,9 +906,13 @@ echo ============================================================
 echo Add Font Support: !LANGUAGE%1!
 echo ============================================================
 echo.
+if not exist "!BOOTMOUNTDIR!\Windows\Boot\Fonts\cht_boot.ttf" (
 icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /save "!TEMPDIR!\AclFile" 1>nul 2>nul&takeown /f "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /grant *S-1-5-32-544:F 1>nul 2>nul
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\cht_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjhn_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\mingliub.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\simsun.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&reg load HKLM\OFFLINE "!BOOTMOUNTDIR!\Windows\System32\config\SOFTWARE" >nul&reg import "%~dp0dism\EA\zh-hk.reg" >nul&reg unload HKLM\OFFLINE >nul
+copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\cht_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjhn_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul
 icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /setowner "NT Service\TrustedInstaller" 1>nul 2>nul&icacls "!BOOTMOUNTDIR!\Windows\Boot" /restore "!TEMPDIR!\AclFile" 1>nul 2>nul
+)
+reg load HKLM\OFFLINE "!BOOTMOUNTDIR!\Windows\System32\config\SOFTWARE" >nul&reg import "%~dp0dism\EA\zh-hk.reg" >nul&reg unload HKLM\OFFLINE >nul
+copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\mingliub.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\simsun.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul
 )
 if /i !LANGUAGE%1!==zh-tw (
 echo.
@@ -902,9 +920,13 @@ echo ============================================================
 echo Add Font Support: !LANGUAGE%1!
 echo ============================================================
 echo.
+if not exist "!BOOTMOUNTDIR!\Windows\Boot\Fonts\cht_boot.ttf" (
 icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /save "!TEMPDIR!\AclFile" 1>nul 2>nul&takeown /f "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /grant *S-1-5-32-544:F 1>nul 2>nul
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\cht_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjhn_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\mingliub.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\simsun.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" >nul&reg load HKLM\OFFLINE "!BOOTMOUNTDIR!\Windows\System32\config\SOFTWARE" >nul&reg import "%~dp0dism\EA\zh-tw.reg" >nul&reg unload HKLM\OFFLINE >nul
+copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\cht_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjhn_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh_boot.ttf" "!BOOTMOUNTDIR!\Windows\Boot\Fonts" 1>nul 2>nul
 icacls "!BOOTMOUNTDIR!\Windows\Boot\Fonts" /setowner "NT Service\TrustedInstaller" 1>nul 2>nul&icacls "!BOOTMOUNTDIR!\Windows\Boot" /restore "!TEMPDIR!\AclFile" 1>nul 2>nul
+)
+reg load HKLM\OFFLINE "!BOOTMOUNTDIR!\Windows\System32\config\SOFTWARE" >nul&reg import "%~dp0dism\EA\zh-tw.reg" >nul&reg unload HKLM\OFFLINE >nul
+copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\mingliub.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\simsun.ttc" "!BOOTMOUNTDIR!\Windows\Fonts" 1>nul 2>nul
 )
 goto :eof
 

@@ -326,8 +326,8 @@ echo !LANGUAGE%%j! / 64-bit
 call set _PP64=!_PP64! /packagepath:"%TEMPDIR%\!LPARCH%%j!\!LANGUAGE%%j!\update.mum"
 )
 )
-if %wimbit%==32 if "!_PP86!"=="" goto :E_ARCH
-if %wimbit%==64 if "!_PP64!"=="" goto :E_ARCH
+if %wimbit%==32 if not defined _PP86 goto :E_ARCH
+if %wimbit%==64 if not defined _PP64 goto :E_ARCH
 
 for /L %%i in (1, 1, %VERSIONS%) do (
 echo.
@@ -340,17 +340,19 @@ echo.
 echo ============================================================
 echo Add LPs to install.wim - index %%i/%VERSIONS%
 echo ============================================================
-if "!_PP64!" NEQ "" if /i !WIMARCH%%i!==amd64 (
+if defined _PP64 if /i !WIMARCH%%i!==amd64 (
 "%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_PP64!
 )
-if "!_ODbasic64!" NEQ "" if /i !WIMARCH%%i!==amd64 (
-"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic64! !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
+if defined _ODbasic64 if /i !WIMARCH%%i!==amd64 (
+"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic64!
+"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
 )
-if "!_PP86!" NEQ "" if /i !WIMARCH%%i!==x86 (
+if defined _PP86 if /i !WIMARCH%%i!==x86 (
 "%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_PP86!
 )
-if "!_ODbasic86!" NEQ "" if /i !WIMARCH%%i!==x86 (
-"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic86! !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
+if defined _ODbasic86 if /i !WIMARCH%%i!==x86 (
+"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic86!
+"%DISMRoot%" /ScratchDir:"%DISMTEMPDIR%" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
 )
 echo.
 echo ============================================================
@@ -382,11 +384,11 @@ if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" i
   reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v DisableComponentBackups /t REG_DWORD /d 1 /f 1>nul 2>nul
   reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d 1 /f 1>nul 2>nul
   reg unload HKLM\TEMPWIM 1>nul 2>nul
-  if "!_PEM64!" NEQ "" if /i !WIMARCH%%i!==amd64 (
+  if defined _PEM64 if /i !WIMARCH%%i!==amd64 (
     "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEM64! !_PER64! !_PEF64!
     if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEX64!
   )
-  if "!_PEM86!" NEQ "" if /i !WIMARCH%%i!==x86 (
+  if defined _PEM86 if /i !WIMARCH%%i!==x86 (
     "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEM86! !_PER86! !_PEF86!
     if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!DISMTEMPDIR!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEX86!
   )
