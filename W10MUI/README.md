@@ -4,6 +4,7 @@
 - Choice of language at setup
 - Languages packs preinstalled so that you can switch between them in the system
 - Multilingual Windows Recovery Environment with a choice of language at boot (if standard WinPE localization is on)
+- Preinstalled/Reinstalled latest updates
 
 * Supports any Windows 10 build starting 10240
 
@@ -22,6 +23,8 @@ ______________________________
 
 ## Notes:
 
+* If the distribution already contain installed updates (e.g. refresjed ISO media), it's required/recommended to add the latest updates after language packs
+
 * version 1909 share the same build number and files with version 1903
 
 * version 20H2 share the same build number and files with version 2004
@@ -32,7 +35,7 @@ instead, you need to download the required files from UUP source
 
 * UUP links depends on Update ID to fetch the files from Microsoft servers
 
-but sometimes, those Update IDs stop working or get removed by Microsoft
+sometimes, those Update IDs stop working or get removed by Microsoft
 
 the LangPacks/OnDemand files themselves are the same for all releases of the same build number
 
@@ -61,7 +64,9 @@ ______________________________
 
 * Windows 10 Language Packs, matching the distribution build version
 
-* Windows 10 OnDemand Packs if available (Optional, but recommended).
+* Windows 10 OnDemand Packs if available (Optional, recommended).
+
+* Windows 10 Updates msu/cab files (Optional, recommended).
 
 * If you want the Standard WinPE localization: Windows 10 ADK (Deployment Tools & Preinstallation Environment).
 
@@ -142,10 +147,12 @@ ______________________________
 	> Create a directory on a partition with enough space on it (at least 15 GB), depending on the number of LPs you are adding (e.g. C:\MUIDVD), and extract this package to the directory your created.
 
 * Step 2
-	> Place language packs (cab/esd) files in "Langs" folder.
+	> Place language packs (cab/esd) files in "Langs" folder.  
+	> Place ondemand packs (cab) files in "OnDemand\x86" or "OnDemand\x64" folder (based on architecture).
 
 * Step 3
-	> Place ondemand packs (cab) files in "OnDemand\x86" or "OnDemand\x64" folder (based on architecture)
+	> Place updates (msu/cab) files in "Updates" folder (you can add both architecture files together).  
+edit Updates\W10UI.ini to change the updates options, but don't change Target or Repo (leave them blank)
 
 * Step 4
 	> Edit the script with notepad and adjust the following variables to suite your needs, or leave it as-is:

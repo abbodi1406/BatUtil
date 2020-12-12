@@ -29,6 +29,7 @@ set "WORKDIR=%WORKDIR:~0,-1%"
 set "TEMPDIR=%WORKDIR%\TEMP"
 set "TMPDISM=%TEMPDIR%\scratch"
 set "EXTRACTDIR=%TEMPDIR%\extract"
+set "TMPUPDT=%TEMPDIR%\updtemp"
 set _drv=%~d0
 set _ntf=NTFS
 if /i not "%_drv%"=="%SystemDrive%" for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
@@ -146,6 +147,10 @@ if %_c% equ 0 goto :E_FILES
 set LANGUAGES=%_c%
 if exist ".\langs\*.cab" (for /f %%i in ('dir /b /o:n ".\langs\*.cab"') do call :setcountl %%i)
 if exist ".\langs\*.esd" (for /f %%i in ('dir /b /o:n ".\langs\*.esd"') do call :setcountl %%i)
+
+set foundupdates=0
+if exist ".\Updates\*Windows10*.cab" if exist ".\Updates\W10UI.cmd" set foundupdates=1
+if exist ".\Updates\*Windows10*.msu" if exist ".\Updates\W10UI.cmd" set foundupdates=1
 
 set /a count=0
 set _oa=0
@@ -390,6 +395,7 @@ echo ============================================================
 echo.
 "%DISMRoot%" /Quiet /Image:"%INSTALLMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE%
 "%DISMRoot%" /Quiet /Image:"%INSTALLMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE%
+if %foundupdates%==1 call Updates\W10UI.cmd 1 "%INSTALLMOUNTDIR%" "!TMPUPDT!"
 attrib -S -H -I "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" 1>nul 2>nul
 if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" if not exist "!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" (
   echo.
@@ -434,6 +440,7 @@ if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" i
   "!DISMRoot!" /Quiet /Image:"!WINREMOUNTDIR!" /Set-SKUIntlDefaults:!DEFAULTLANGUAGE!
   "!DISMRoot!" /Quiet /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Cleanup-Image /StartComponentCleanup
   "!DISMRoot!" /Quiet /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Cleanup-Image /StartComponentCleanup /ResetBase
+  if %foundupdates%==1 call Updates\W10UI.cmd 1 "!WINREMOUNTDIR!" "!TMPUPDT!"
   call :cleanup "!WINREMOUNTDIR!"
   echo.
   echo ============================================================
@@ -537,6 +544,13 @@ goto :END
 :remove
 if exist "!TEMPDIR!" (rmdir /s /q "!TEMPDIR!" 1>nul 2>nul || goto :E_DELDIR)
 if exist "!MOUNTDIR!" (rmdir /s /q "!MOUNTDIR!" 1>nul 2>nul || goto :E_DELDIR)
+if exist "Updates\msucab.txt" (
+  for /f %%# in (Updates\msucab.txt) do (
+  if exist "Updates\*%%~#*x86*.msu" if exist "Updates\*%%~#*x86*.cab" del /f /q "Updates\*%%~#*x86*.cab" 1>nul 2>nul
+  if exist "Updates\*%%~#*x64*.msu" if exist "Updates\*%%~#*x64*.cab" del /f /q "Updates\*%%~#*x64*.cab" 1>nul 2>nul
+  )
+  del /f /q Updates\msucab.txt
+)
 goto :eof
 
 :cleanup

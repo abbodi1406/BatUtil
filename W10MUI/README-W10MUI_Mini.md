@@ -10,10 +10,12 @@
 	> Create a directory on a partition with enough space on it (at least 15 GB), depending on the number of LPs you are adding (e.g. C:\MUIDVD), and extract this package to the directory your created.
 
 * Step 2
-	> Place language packs (cab/esd) files in "Langs" folder.
+	> Place language packs (cab/esd) files in "Langs" folder.  
+	> Place ondemand packs (cab) files in "OnDemand\x86" or "OnDemand\x64" folder (based on architecture).
 
 * Step 3
-	> Place ondemand packs (cab) files in "OnDemand\x86" or "OnDemand\x64" folder (based on architecture)
+	> Place updates (msu/cab) files in "Updates" folder (you can add both architecture files together).  
+edit Updates\W10UI.ini to change the updates options, but don't change Target or Repo (leave them blank)
 
 * Step 4
 	> Edit the script with notepad and adjust the following variables to suite your needs, or leave it as-is:

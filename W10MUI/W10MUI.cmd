@@ -32,6 +32,7 @@ set "DVDDIR=%WORKDIR%\_DVD"
 set "TEMPDIR=%WORKDIR%\TEMP"
 set "TMPDISM=%TEMPDIR%\scratch"
 set "EXTRACTDIR=%TEMPDIR%\extract"
+set "TMPUPDT=%TEMPDIR%\updtemp"
 set _drv=%~d0
 set _ntf=NTFS
 if /i not "%_drv%"=="%SystemDrive%" for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
@@ -155,6 +156,10 @@ if %_c% equ 0 goto :E_FILES
 set LANGUAGES=%_c%
 if exist ".\langs\*.cab" (for /f %%i in ('dir /b /o:n ".\langs\*.cab"') do call :setcountl %%i)
 if exist ".\langs\*.esd" (for /f %%i in ('dir /b /o:n ".\langs\*.esd"') do call :setcountl %%i)
+
+set foundupdates=0
+if exist ".\Updates\*Windows10*.cab" if exist ".\Updates\W10UI.cmd" set foundupdates=1
+if exist ".\Updates\*Windows10*.msu" if exist ".\Updates\W10UI.cmd" set foundupdates=1
 
 set /a count=0
 set _oa=0
@@ -387,6 +392,26 @@ call set _PP64=!_PP64! /PackagePath:!LANGUAGE%%j!\update.mum
 if %wimbit%==32 if not defined _PP86 goto :E_ARCH
 if %wimbit%==64 if not defined _PP64 goto :E_ARCH
 
+if %SLIM% EQU 1 goto :proceed
+echo.
+echo ============================================================
+echo Add language files to distribution
+echo ============================================================
+echo.
+if /i %BOOTARCH%==x86 for /L %%j in (1, 1, %LANGUAGES%) do (
+if /i !LPARCH%%j!==x86 (
+echo !LANGUAGE%%j! / 32-bit
+call :ISOmui %%j
+)
+)
+if /i %BOOTARCH%==amd64 for /L %%j in (1, 1, %LANGUAGES%) do (
+if /i !LPARCH%%j!==amd64 (
+echo !LANGUAGE%%j! / 64-bit
+call :ISOmui %%j
+)
+)
+
+:proceed
 for /L %%i in (1, 1, %VERSIONS%) do (
 echo.
 echo ============================================================
@@ -429,6 +454,7 @@ if %%i==%VERSIONS% (
 "%DISMRoot%" /Quiet /Image:"%INSTALLMOUNTDIR%" /Gen-LangINI /Distribution:"!DVDDIR!"
 "%DISMRoot%" /Quiet /Image:"%INSTALLMOUNTDIR%" /Set-SetupUILang:%DEFAULTLANGUAGE% /Distribution:"!DVDDIR!"
 )
+if %foundupdates%==1 call Updates\W10UI.cmd 1 "%INSTALLMOUNTDIR%" "!TMPUPDT!" "!DVDDIR!\sources"
 if %NET35%==1 if not exist "%INSTALLMOUNTDIR%\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" (
 echo.
 echo ============================================================
@@ -487,6 +513,7 @@ if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" i
   "!DISMRoot!" /Quiet /Image:"!WINREMOUNTDIR!" /Set-SKUIntlDefaults:!DEFAULTLANGUAGE!
   "!DISMRoot!" /Quiet /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Cleanup-Image /StartComponentCleanup
   "!DISMRoot!" /Quiet /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Cleanup-Image /StartComponentCleanup /ResetBase
+  if %foundupdates%==1 call Updates\W10UI.cmd 1 "!WINREMOUNTDIR!" "!TMPUPDT!"
   call :cleanup "!WINREMOUNTDIR!"
   echo.
   echo ============================================================
@@ -564,6 +591,8 @@ if %WINPE%==1 (
    )
   )
 )
+if %foundupdates%==1 call Updates\W10UI.cmd 1 "%BOOTMOUNTDIR%" "!TMPUPDT!"
+if exist "%BOOTMOUNTDIR%\sources\setup.exe" copy /y "%BOOTMOUNTDIR%\sources\setup.exe" "!DVDDIR!\sources" 1>nul 2>nul
 call :cleanup "%BOOTMOUNTDIR%"
 echo.
 echo ============================================================
@@ -629,6 +658,8 @@ if %WINPE%==1 (
 ) else (
   call :WIMman 1
 )
+if %foundupdates%==1 call Updates\W10UI.cmd 1 "%BOOTMOUNTDIR%" "!TMPUPDT!"
+if exist "%BOOTMOUNTDIR%\sources\setup.exe" copy /y "%BOOTMOUNTDIR%\sources\setup.exe" "!DVDDIR!\sources" 1>nul 2>nul
 call :cleanup "%BOOTMOUNTDIR%"
 echo.
 echo ============================================================
@@ -653,27 +684,7 @@ if exist "!DVDDIR!\install.wim" move /y "!DVDDIR!\install.wim" "!DVDDIR!\sources
 if %NET35%==1 if exist "!DVDDIR!\sources\sxs\*netfx3*.cab" del /f /q "!DVDDIR!\sources\sxs\*netfx3*.cab" >nul 2>&1
 xcopy "!DVDDIR!\efi\microsoft\boot\fonts\*" "!DVDDIR!\boot\fonts\" /chryi 1>nul 2>nul
 
-if %SLIM%==1 goto :slim
-echo.
-echo ============================================================
-echo Add language files to distribution
-echo ============================================================
-echo.
-if /i %BOOTARCH%==x86 for /L %%j in (1, 1, %LANGUAGES%) do (
-if /i !LPARCH%%j!==x86 (
-echo !LANGUAGE%%j! / 32-bit
-call :ISOmui %%j
-)
-)
-if /i %BOOTARCH%==amd64 for /L %%j in (1, 1, %LANGUAGES%) do (
-if /i !LPARCH%%j!==amd64 (
-echo !LANGUAGE%%j! / 64-bit
-call :ISOmui %%j
-)
-)
-goto :dvd
-
-:slim
+if %SLIM% NEQ 1 goto :dvd
 echo.
 echo ============================================================
 echo Cleanup ISO payload
@@ -705,7 +716,7 @@ move /y "!DVDDIR!\lang.ini" "!DVDDIR!\sources" >nul 2>&1
 move /y "!DVDDIR!\setup.exe" "!DVDDIR!\sources" >nul 2>&1
 
 :dvd
-rem if exist "!DVDDIR!\sources\uup" rmdir /s /q "!DVDDIR!\sources\uup" >nul 2>&1
+:: if exist "!DVDDIR!\sources\uup" rmdir /s /q "!DVDDIR!\sources\uup" >nul 2>&1
 if %ISO%==0 (set MESSAGE=Done. You need to create iso file yourself&goto :E_CREATEISO)
 pushd "!DVDDIR!"
 for %%a in (3 2 1) do (for /f "tokens=1 delims== " %%b in ('findstr %%a "sources\lang.ini"') do echo %%b>>"isolabel.txt")
@@ -820,12 +831,26 @@ echo ============================================================
 echo.
 if exist "!TEMPDIR!\" (rmdir /s /q "!TEMPDIR!\" 1>nul 2>nul || goto :E_DELDIR)
 if exist "!MOUNTDIR!\" (rmdir /s /q "!MOUNTDIR!\" 1>nul 2>nul || goto :E_DELDIR)
+if exist "Updates\msucab.txt" (
+  for /f %%# in (Updates\msucab.txt) do (
+  if exist "Updates\*%%~#*x86*.msu" if exist "Updates\*%%~#*x86*.cab" del /f /q "Updates\*%%~#*x86*.cab" 1>nul 2>nul
+  if exist "Updates\*%%~#*x64*.msu" if exist "Updates\*%%~#*x64*.cab" del /f /q "Updates\*%%~#*x64*.cab" 1>nul 2>nul
+  )
+  del /f /q Updates\msucab.txt
+)
 goto :END
 
 :remove
 if exist "!DVDDIR!\" (rmdir /s /q "!DVDDIR!" 1>nul 2>nul || goto :E_DELDIR)
 if exist "!TEMPDIR!\" (rmdir /s /q "!TEMPDIR!\" 1>nul 2>nul || goto :E_DELDIR)
 if exist "!MOUNTDIR!\" (rmdir /s /q "!MOUNTDIR!\" 1>nul 2>nul || goto :E_DELDIR)
+if exist "Updates\msucab.txt" (
+  for /f %%# in (Updates\msucab.txt) do (
+  if exist "Updates\*%%~#*x86*.msu" if exist "Updates\*%%~#*x86*.cab" del /f /q "Updates\*%%~#*x86*.cab" 1>nul 2>nul
+  if exist "Updates\*%%~#*x64*.msu" if exist "Updates\*%%~#*x64*.cab" del /f /q "Updates\*%%~#*x64*.cab" 1>nul 2>nul
+  )
+  del /f /q Updates\msucab.txt
+)
 goto :eof
 
 :cleanup
