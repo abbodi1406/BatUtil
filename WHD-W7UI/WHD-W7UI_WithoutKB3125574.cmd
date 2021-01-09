@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.5
+@set uiv=v6.6
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -384,7 +384,7 @@ call :ssu
 call :csu
 call :esu
 set winpe=1
-if /i "%ESUpdates%"=="YES" (call :eupdates) else (call :security)
+if /i "%ESUpdates%"=="YES" (call :secupdates) else (call :security)
 set winpe=0
 call :cleanmanual
 goto :eof
@@ -403,7 +403,7 @@ if /i "%Features%"=="YES" call :features
 if /i "%Windows10%"=="YES" call :windows10
 call :online
 call :security
-if /i "%ESUpdates%"=="YES" call :eupdates
+if /i "%ESUpdates%"=="YES" call :secupdates
 if /i "%Hotfix%"=="YES" call :regfix
 call :cleanmanual
 goto :eof
@@ -543,9 +543,12 @@ if %_sum% equ 0 goto :eof
 if /i not "%ESUpdates%"=="YES" if exist "!mountdir!\Windows\servicing\packages\Microsoft-Windows-EmbeddedCore-Package*amd64*.mum" if exist "!mountdir!\Windows\servicing\packages\*InternetExplorer*11.2.*.mum" set IEembed=1
 goto :listdone
 
-:eupdates
+:secupdates
 if %online%==1 if %allcount% geq %onlinelimit% goto :countlimit
-if not exist "!repo!\Security\ESU\*.msu" goto :eof
+if not exist "!repo!\Security\ESU\*.msu" (
+call :security
+goto :eof
+)
 set ssuver=7601.17514
 for /f "tokens=3,4 delims=." %%i in ('dir /b "!mountdir!\Windows\servicing\Version"') do set "ssuver=%%i.%%j"
 if %ssuver:~0,4% equ 7601 if %ssuver:~5,5% lss 24383 goto :eof
@@ -819,6 +822,7 @@ if /i %kb%==KB2603229 (
 goto :KB2603229
 )
 if /i %kb%==KB2646060 (
+if not exist "!mountdir!\Windows\servicing\packages\*Client-Features-Package*.mum" goto :eof
 goto :KB2646060
 )
 if /i %kb%==KB4099950 if %online%==0 (
@@ -907,6 +911,7 @@ if /i %kb%==%rollup% (set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==%ssu1st% (set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB4536952 (set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==%sha2cs% (set /a _sum-=1&set /a _msu-=1&goto :eof)
+if /i %kb%==KB3161102 if not exist "!mountdir!\Windows\servicing\packages\*TabletPC-OC-Package*.mum" if not exist "!mountdir!\Windows\servicing\packages\WinEmb-Tablet*.mum" (set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB917607 (if exist "!mountdir!\Windows\servicing\packages\*Winhelp-Update-Client*.mum" set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB971033 (if exist "!mountdir!\Windows\servicing\packages\*WindowsActivationTechnologies*.mum" set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB2670838 (if exist "!mountdir!\Windows\servicing\packages\*PlatformUpdate-Win7-SRV08R2*.mum" set /a _sum-=1&set /a _msu-=1&goto :eof)
@@ -973,6 +978,7 @@ echo *** This will require some disk space, please be patient ***
 echo ============================================================
 echo.
 )
+set cumulative=&set eupdates=&set monrol=0
 set ldr=&set listc=0&set list=1&set AC=100&set count=0
 cd /d "!cab_dir!"
 if /i "%cat%"=="WMF Updates" for %%G in (2872035,2872047,2809215,3033929) do (if exist "*%%G*.cab" del /f /q "*%%G*.cab" %_Nul1%)
@@ -1075,9 +1081,6 @@ echo Checking Applicable Updates
 echo ============================================================
 echo.
 )
-set cumulative=
-set eupdates=
-set monrol=0
 set count=0
 if %_cab% neq 0 (set msu=0&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *%arch%*.cab') do (set "package=%%#"&call :Ecab2))
 if %_msu% neq 0 (set msu=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *%arch%*.msu') do (set "package=%%#"&call :Ecab2))
@@ -1115,6 +1118,7 @@ echo *** This will require some disk space, please be patient ***
 echo ============================================================
 echo.
 )
+set cumulative=&set eupdates=&set monrol=0
 set ldr=&set listc=0&set list=1&set AC=100&set count=0
 cd /d "!cab_dir!"
 for /f "tokens=* delims=" %%# in ('dir /b /a:-d *.cab') do (set "package=%%#"&set "dest=%%~n#"&call :Emum2)
@@ -1562,8 +1566,10 @@ if %dvd%==1 if not defined isover (
 if %wim%==1 if exist "!_wimpath!\setup.exe" (
   if exist "!mountdir!\sources\setup.exe" copy /y "!mountdir!\sources\setup.exe" "!_wimpath!" %_Nul3%
 )
-if exist "!mountdir!\Windows\System32\Recovery\winre.wim" attrib -S -H -I "!mountdir!\Windows\System32\Recovery\winre.wim" %_Nul3%
-if %WinRE%==1 if exist "!mountdir!\Windows\System32\Recovery\winre.wim" if not exist "!_work!\winre.wim" call :winre
+if exist "!mountdir!\Windows\System32\Recovery\winre.wim" (
+attrib -S -H -I "!mountdir!\Windows\System32\Recovery\winre.wim" %_Nul3%
+if %WinRE%==1 if not exist "!_work!\winre.wim" call :winre
+)
 if exist "!mountdir!\Windows\System32\Recovery\winre.wim" if exist "!_work!\winre.wim" (
 echo.
 echo ============================================================
@@ -1596,6 +1602,7 @@ goto :eof
 
 :winre
 if !WinRE!==0 goto :eof
+dism.exe /english /get-wiminfo /wimfile:"!mountdir!\Windows\System32\Recovery\winre.wim" /index:1 | find /i "Version : 6.1.7601" %_Nul1% || (goto :eof)
   echo.
   echo ============================================================
   echo Updating winre.wim

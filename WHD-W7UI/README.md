@@ -195,6 +195,10 @@ ESUpdates Concept: IMI Kurwica
 
 ## Changelog:
 
+* 6.6:  
+fixed ESU updates mis-integration for multiple install.wim indexes  
+added applicability check for KB2646060/KB3161102/winre.wim
+
 * 6.5:  
 added support for ESU updates, fixed winre.wim rebuilding
 
