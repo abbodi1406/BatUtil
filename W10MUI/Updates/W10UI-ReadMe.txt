@@ -182,6 +182,11 @@ https://forums.mydigitallife.net/threads/44645
 ============================================================
 Changelog:
 ============================================================
+9.2:
+- Added detection for 19043 / v21H1 Enablement/EdgeChromium package
+- Added detection to install .NET 4.x main pack before .NET LP/Rollup
+- Skip wim2swm if install.wim size is less than 4GB
+
 9.0:
 - Improved detection for update KB number and version
 
@@ -193,7 +198,7 @@ note: if both wim2esd/wim2swm are 1, install.esd takes precedence over split ins
 - Added internal support to work with W10MUI.cmd (multilingual distribution script)
 
 8.9:
-- Improved processing for 20H2 Enablement/EdgeChromium package
+- Improved processing for v20H2 Enablement/EdgeChromium package
 - Added support to install v1607 updates for unsupported editions (non Enterprise LTSB)
 - Fixed detection for Adobe Flash Removal Update KB4577586
 - Defender update will not be processed for online live OS
@@ -201,7 +206,7 @@ note: if both wim2esd/wim2swm are 1, install.esd takes precedence over split ins
 8.8:
 - Added support to integrate Microsoft Defender update (defender-dism-[x86|x64].cab)
 https://support.microsoft.com/en-us/help/4568292
-- Improved integration for 20H2 Enablement/EdgeChromium package
+- Improved integration for v20H2 Enablement/EdgeChromium package
 
 8.7:
 - Implemented specific fixes for build 14393 (WinPE will not be updated with LCU)
@@ -215,7 +220,7 @@ https://support.microsoft.com/en-us/help/4568292
 - Fixed cosmetic double image cleanup without EdgeChromium update
 
 8.4:
-- Fixed iso version for 19042 / 20H2
+- Fixed iso version for 19042 / v20H2
 
 8.3:
 - Defer adding EdgeChromium update after CU

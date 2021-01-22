@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v9.0
+@set uiv=v9.1
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -227,9 +227,10 @@ rmdir /s /q "!_cabdir!\" %_Nul1%
 set _init=1
 
 :checktarget
-set _DNF=0
+set "_fixEP="
 set _actEP=0
 set _chkEP=0
+set _DNF=0
 set directcab=0
 set dvd=0
 set wim=0
@@ -423,6 +424,10 @@ if defined isoupdate (
 xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
 if %_DNF%==1 if exist "!target!\sources\sxs\*netfx3*.cab" (del /f /q "!target!\sources\sxs\*netfx3*.cab" %_Nul1%)
 :: if exist "!target!\sources\uup\" (rmdir /s /q "!target!\sources\uup\" %_Nul1%)
+cd /d "!target!\sources"
+for /f %%# in ('dir /b /a:-d install.wim') do set "_size=000000%%~z#"
+cd /d "!_work!"
+if "%_size%" lss "0000004194304000" set wim2swm=0
 if %wim2esd%==0 if %wim2swm%==0 goto :fin
 if %wim2esd%==0 if %wim2swm%==1 goto :swm
 echo.
@@ -465,7 +470,7 @@ call :counter
 if %_cab% neq 0 (
 set msu=0&set count=0
 if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (set "package=%%#"&call :cab1def)
-if exist "!repo!\*Windows10*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*Windows10*%arch%*.cab"') do (set "package=%%#"&call :cab1)
+if exist "!repo!\*Windows10*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows10*%arch%*.cab"') do (set "package=%%#"&call :cab1)
 )
 if %_msu% neq 0 (
 echo.
@@ -476,7 +481,7 @@ echo ============================================================
 echo.
 )
 set msu=1&set count=0&set msucab=
-for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*Windows10*%arch%*.msu"') do (set "package=%%#"&call :cab1)
+for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows10*%arch%*.msu"') do (set "package=%%#"&call :cab1)
 )
 if %_sum%==0 (echo.&echo All applicable updates are detected as installed&goto :eof)
 echo.
@@ -490,10 +495,10 @@ echo.
 cd /d "!_cabdir!"
 set _sum=0
 if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (call set /a _sum+=1)
-if exist "!repo!\*Windows10*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*Windows10*%arch%*.cab"') do (call set /a _sum+=1)
+if exist "!repo!\*Windows10*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows10*%arch%*.cab"') do (call set /a _sum+=1)
 set count=0&set isoupdate=
 if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :cab2)
-if exist "!repo!\*Windows10*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*Windows10*%arch%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :cab2)
+if exist "!repo!\*Windows10*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows10*%arch%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :cab2)
 goto :eof
 
 :cab1def
@@ -598,8 +603,10 @@ expand.exe -f:*_microsoft-windows-s..boot-firmwareupdate_*.manifest "!repo!\!pac
 if exist "checker\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" set "_type=[SecureBoot]"
 )
 if not defined _type if %build% geq 18362 (
-expand.exe -f:*enablement-package*.mum "!repo!\!package!" "checker" %_Null%
-if exist "checker\*enablement-package*.mum" set "_type=[Enablement]"
+expand.exe -f:microsoft-windows-*enablement-package~*.mum "!repo!\!package!" "checker" %_Null%
+if exist "checker\microsoft-windows-*enablement-package~*.mum" set "_type=[Enablement]"
+if exist "checker\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
+if exist "checker\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 )
 if %build% geq 18362 if exist "checker\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "checker" %_Null%
@@ -663,6 +670,7 @@ set "_EdgKey=%_Win%\x86_%_EdgCmp%_31bf3856ad364e35_none_c23f876ed27f912f"
 set mpamfe=
 set servicingstack=
 set cumulative=
+set netpack=
 set netroll=
 set secureboot=
 set edge=
@@ -680,9 +688,9 @@ if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-EnterpriseSEd
 if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-EnterpriseSNEdition~*.mum" set _ltsc=1
 if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _ltsc=1
 if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-Server*CorEdition~*.mum" set _ltsc=1
-if exist "!repo!\*Windows10*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*Windows10*%arch%*.cab"') do (call set /a _sum+=1))
+if exist "!repo!\*Windows10*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows10*%arch%*.cab"') do (call set /a _sum+=1))
 if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (call set /a _sum+=1))
-if exist "!repo!\*Windows10*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*Windows10*%arch%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :procmum))
+if exist "!repo!\*Windows10*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows10*%arch%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :procmum))
 if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :procmum))
 if %verb%==1 if %_sum%==0 if exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (echo.&echo All applicable updates are detected as installed&call set discard=1&goto :eof)
 if %verb%==1 if %_sum%==0 (echo.&echo All applicable updates are detected as installed&goto :eof)
@@ -695,6 +703,7 @@ reg.exe save HKLM\!ksub! "!mumtarget!\Windows\System32\Config\SOFTWARE2" %_Nul1%
 reg.exe unload HKLM\!ksub! %_Nul1%
 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
+if defined netpack set "ldr=!netpack! !ldr!"
 if defined servicingstack (
 if %verb%==1 (
 echo.
@@ -825,8 +834,8 @@ findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
 if %build% geq 19041 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
 findstr /i /m "Package_for_WindowsExperienceFeaturePack" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\servicing\packages\Microsoft-Windows-UserExperience-Desktop*.mum" set /a _sum-=1&goto :eof)
 )
-if exist "%dest%\%sss%_microsoft-updatetargeting-clientos*.manifest" if not defined vermajor (
-for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-clientos*.manifest"') do set updtver=%%I.%%K&set vermajor=%%I
+if exist "%dest%\%sss%_microsoft-updatetargeting-clientos*10.%_fixEP%*.manifest" if not defined vermajor (
+for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-clientos*10.%_fixEP%*.manifest"') do set updtver=%%I.%%K&set vermajor=%%I
 )
 for %%# in (
 Package_for_%kb%~
@@ -841,6 +850,11 @@ if !skip!==1 (set /a _sum-=1&goto :eof)
 )
 if exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" (
 set "servicingstack=!servicingstack! /packagepath:%dest%\update.mum"
+goto :eof
+)
+if exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" if exist "%dest%\*_netfx4clientcorecomp.resources*_en-us_*.manifest" (
+if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
+set "netpack=!netpack! /packagepath:%dest%\update.mum"
 goto :eof
 )
 if exist "%dest%\*_%_EdgCmp%_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
@@ -995,7 +1009,7 @@ echo.^</unattend^>
 goto :eof
 
 :Winner
-for /f "tokens=4 delims=_" %%# in ('dir /b "%dest%\%xBT%_%_SxsCmp%_*.manifest"') do (
+for /f "tokens=4 delims=_" %%# in ('dir /b /on "%dest%\%xBT%_%_SxsCmp%_*.manifest"') do (
 set "pv_al=%%#"
 )
 for /f "tokens=1-4 delims=." %%G in ('echo %pv_al%') do (
@@ -1113,7 +1127,7 @@ set _cab=0
 set _sum=0
 cd /d "!repo!"
 if exist "*Windows10*%arch%*.msu" (
-for /f "tokens=* delims=" %%# in ('dir /b "*Windows10*%arch%*.msu"') do (
+for /f "tokens=* delims=" %%# in ('dir /b /on "*Windows10*%arch%*.msu"') do (
   call set /a _msu+=1
   set "_name=%%#"
   if not "!_name!"=="!_name: =!" ren "!_name!" "!_name: =!"
@@ -1124,7 +1138,7 @@ for /f "tokens=* delims=" %%# in ('dir /b "*Windows10*%arch%*.msu"') do (
   )
 )
 if exist "*Windows10*%arch%*.cab" (
-for /f "tokens=* delims=" %%# in ('dir /b "*Windows10*%arch%*.cab"') do (
+for /f "tokens=* delims=" %%# in ('dir /b /on "*Windows10*%arch%*.cab"') do (
   call set /a _cab+=1
   set "_name=%%#"
   if not "!_name!"=="!_name: =!" ren "!_name!" "!_name: =!"
