@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v9.1
+@set uiv=v9.2
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -998,7 +998,7 @@ echo.        ^<package action="%1"^>
 findstr /i Package_for_RollupFix "%dest%\update.mum" %_Nul3% && (
 findstr /i Package_for_RollupFix "%dest%\update.mum" >>%1.xml
 ) || (
-findstr /i _for_KB "%dest%\update.mum" | findstr /i /v _RTM >>%1.xml
+findstr /i Package_for_KB "%dest%\update.mum" | findstr /i /v _RTM >>%1.xml
 )
 (
 if "%~1"=="stage" echo.            ^<source location="%dest%\update.mum" /^>

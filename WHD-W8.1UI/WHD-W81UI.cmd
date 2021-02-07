@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.5
+@set uiv=v6.6
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -397,15 +397,7 @@ reg.exe unload HKLM\OFFSOFT %_Nul1%
 set allcount=0
 set _GDR=0
 set winpe=0
-if exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
-call :ssup
-call :baseline
-call :security
-set winpe=1
-call :winpe
-set winpe=0
-goto :eof
-)
+if exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" goto :wpe
 call :ssup
 call :baseline
 call :general
@@ -420,6 +412,15 @@ if /i "%Windows10%"=="YES" call :windows10
 call :security
 goto :eof
 
+:wpe
+call :ssup
+call :baseline
+call :security
+set winpe=1
+call :winpe
+set winpe=0
+goto :eof
+
 :ssup
 if %online%==1 if exist "%SystemRoot%\winsxs\pending.xml" (goto :stacklimit)
 if not exist "!repo!\Baseline\*%arch%*.msu" goto :eof
@@ -427,7 +428,7 @@ call :cleaner
 cd Baseline\
 set ssuver=0
 for /f %%# in ('dir /b "!mountdir!\Windows\servicing\Version"') do set ssuver=%%#
-for /f "tokens=2 delims=-" %%i in ('dir /b /a:-d "*%arch%*.msu"') do set "package=%%i"&call :ssul
+for /f "tokens=2 delims=-" %%# in ('dir /b /a:-d "*%arch%*.msu"') do (set "package=%%#"&set "dest=%%~n#"&call :ssul)
 set ssuver=0
 for /f %%# in ('dir /b "!mountdir!\Windows\servicing\Version"') do set ssuver=%%#
 if %ssuver% equ 0 goto :eof
@@ -438,7 +439,7 @@ goto :eof
 for %%j in (%ssu1%,%baselinelist%) do if /i %%j==%package% goto :eof
 
 :ssus
-if not exist "!repo!\Baseline\*%package%*%arch%*.msu" goto :eof
+if not exist "*%package%*%arch%*.msu" goto :eof
 if exist "!mountdir!\Windows\servicing\packages\package_for_%package%_rtm*6.3*.mum" goto :eof
 if /i not %package%==%ssu1% (
 if not exist "!mountdir!\Windows\servicing\packages\package_for_KB2919355_rtm*6.3*.mum" goto :eof
@@ -455,7 +456,6 @@ echo *** Servicing Stack Update ***
 echo ============================================================
 )
 cd /d "!cab_dir!"
-set "dest=%package%"
 if not exist "%dest%\*.manifest" (
 expand.exe -f:*Windows*.cab "!repo!\Baseline\*%package%*%arch%*.msu" . %_Null%
 mkdir "%dest%"
@@ -490,7 +490,7 @@ echo ============================================================
 echo.
 )
 set ldr=
-for %%# in (%baselinelist%) do (set "package=%%#"&call :baseline2)
+for %%# in (%baselinelist%) do (set "package=%%#"&set "dest=%%~n#"&call :baseline2)
 if not defined ldr goto :eof
 if %verb%==1 (
 echo.
@@ -510,15 +510,12 @@ if /i %package%==KB3014442 goto :eof
 )
 if not exist "*%package%*%arch%*" if not exist "RTM\*%package%*%arch%*" goto :eof
 set /a count+=1
-set "dest=%package%"
 if not exist "!cab_dir!\%dest%\*.manifest" (
 echo %count%: %package%
-if /i %package%==KB2938772 (
-  copy /y RTM\*%package%*%arch%.cab "!cab_dir!\" %_Nul1%
-  ) else (
-  if exist "*%package%*%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "*%package%*%arch%*.msu"') do expand.exe -f:*Windows*.cab "%%~#" "!cab_dir!" %_Null%
-  if exist "RTM\*%package%*%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "RTM\*%package%*%arch%*.msu"') do expand.exe -f:*Windows*.cab "%%~#" "!cab_dir!" %_Null%
-  )
+if exist "*%package%*%arch%*.cab" copy /y *%package%*%arch%*.cab "!cab_dir!\" %_Nul1%
+if exist "RTM\*%package%*%arch%*.cab" copy /y RTM\*%package%*%arch%*.cab "!cab_dir!\" %_Nul1%
+if exist "*%package%*%arch%*.msu" expand.exe -f:*Windows*.cab "*%package%*%arch%*.msu" "!cab_dir!" %_Null%
+if exist "RTM\*%package%*%arch%*.msu" expand.exe -f:*Windows*.cab "RTM\*%package%*%arch%*.msu" "!cab_dir!" %_Null%
 mkdir "!cab_dir!\%dest%"
 expand.exe -f:* "!cab_dir!\*%package%*.cab" "!cab_dir!\%dest%" %_Null% || (
   rmdir /s /q "!cab_dir!\%dest%\" %_Nul3%
