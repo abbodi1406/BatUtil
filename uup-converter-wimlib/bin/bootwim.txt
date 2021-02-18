@@ -23,9 +23,12 @@ appraiser.dll
 ARUNIMG.dll
 arunres.dll
 autorun.dll
+bcd.dll
+bootsvc.dll
 cmisetup.dll
 compatctrl.dll
 compatprovider.dll
+compliance.ini
 cryptosetup.dll
 diager.dll
 diagnostic.dll
@@ -42,6 +45,7 @@ hwcompat.dll
 hwcompat.txt
 hwexclude.txt
 idwbinfo.txt
+imagelib.dll
 imagingprovider.dll
 input.dll
 lang.ini
@@ -59,6 +63,7 @@ reagent.xml
 rollback.exe
 schema.dat
 segoeui.ttf
+ServicingCommon.dll
 setup.exe
 setupcompat.dll
 SetupCore.dll
@@ -80,6 +85,7 @@ unattend.dll
 unbcl.dll
 upgloader.dll
 upgrade_frmwrk.xml
+utcapi.dll
 uxlib.dll
 uxlibres.dll
 vhdprovider.dll
@@ -93,6 +99,7 @@ wdscsl.dll
 wdsimage.dll
 wdstptc.dll
 wdsutil.dll
+wimgapi.dll
 wimprovider.dll
 win32ui.dll
 WinDlp.dll

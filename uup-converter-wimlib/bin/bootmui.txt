@@ -29,9 +29,11 @@ upgloader.dll.mui
 uxlibres.dll.mui
 vhdprovider.dll.mui
 vofflps.rtf
+vofflps_server.rtf
 w32uires.dll.mui
 wdsclient.dll.mui
 wdsimage.dll.mui
+wimgapi.dll.mui
 wimprovider.dll.mui
 WinDlp.dll.mui
 winsetup.dll.mui

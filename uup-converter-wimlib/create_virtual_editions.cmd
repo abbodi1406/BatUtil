@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v50
+@set uivr=v55
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -508,26 +508,24 @@ exit /b
 if exist ISOFOLDER\sources\ei.cfg del /f /q ISOFOLDER\sources\ei.cfg
 if exist ISOFOLDER\sources\%WimFile% del /f /q ISOFOLDER\sources\%WimFile%
 ren ISOFOLDER\sources\temp.wim %WimFile%
+if %DeleteSource% equ 1 call :dPREPARE
+if %wim2esd% equ 0 (
 echo %line%
 echo Rebuilding %WimFile% . . .
 echo %line%
 echo.
 wimlib-imagex.exe optimize ISOFOLDER\sources\%WimFile% %_Supp%
-if %DeleteSource% equ 1 (
-call :dPREPARE
-)
-if %wim2esd% equ 1 (
-echo.
+) else (
 echo %line%
 echo Converting install.wim to install.esd . . .
 echo %line%
 echo.
 wimlib-imagex.exe export ISOFOLDER\sources\install.wim all ISOFOLDER\sources\install.esd --compress=LZMS --solid %_Supp%
 call set ERRORTEMP=!ERRORLEVEL!
-if !ERRORTEMP! neq 0 goto :E_Export
+if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during export. Discarding install.esd&del /f /q ISOFOLDER\sources\install.esd %_Nul3%)
 if exist ISOFOLDER\sources\install.esd del /f /q ISOFOLDER\sources\install.wim
 )
-if %SkipISO% equ 1 (
+if %SkipISO% neq 0 (
   ren ISOFOLDER %DVDISO%
   echo.
   echo %line%
@@ -625,6 +623,10 @@ if %version:~0,5%==18362 set version=18363%version:~5%
 if %revmajor%==19042 (
 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 if %version:~0,5%==19041 set version=19042%version:~5%
+)
+if %revmajor%==19043 (
+if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
+if %version:~0,5%==19041 set version=19043%version:~5%
 )
 if %verminor% lss %revminor% (
 set version=%revision%
@@ -890,9 +892,6 @@ echo No operation performed.
 echo %line%
 echo.
 goto :QUIT
-
-:E_Export
-echo.&echo Errors were reported during export.&echo.&goto :QUIT
 
 :E_ISO
 ren ISOFOLDER %DVDISO%
