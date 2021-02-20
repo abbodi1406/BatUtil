@@ -159,6 +159,9 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+9.4:  
+- Fixed detection for SSU file and custom Updates location path
+
 9.3:  
 - Add proper detection and integration for the new SSU file name  
 - Added "theoretical " support for Windows 10 ARM64 target

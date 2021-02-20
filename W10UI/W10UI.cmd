@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v9.3
+@set uiv=v9.4
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -240,7 +240,8 @@ rmdir /s /q "!_cabdir!\" %_Nul1%
 set _init=1
 
 :checktarget
-set "_fixEP="
+set tmpssu=
+set _fixEP=
 set _actEP=0
 set _chkEP=0
 set _DNF=0
@@ -326,38 +327,10 @@ reg.exe query %_SxS% /v W10UIclean %_Nul3% && (set onlineclean=1&set online=1&se
 reg.exe query %_SxS% /v W10UIrebase %_Nul3% && (set onlineclean=1&set online=1&set cleanup=1&set resetbase=1)
 )
 if defined onlineclean goto :main2board
-set tmpssu=
-cd /d "!repo!"
-if exist "SSU-*-%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /on "SSU-*-%arch%*.msu"') do (set "ssupkg=%%#"&call :tmprenssu)
-if exist "SSU-*-%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "SSU-*-%arch%*.cab"') do (set "ssupkg=%%#"&call :tmprenssu)
-cd /d "!_work!"
 call :counter
 if %_sum%==0 set "repo="
 if /i not "!dismroot!"=="dism.exe" if exist "!dismroot!" goto :mainmenu
 goto :checkadk
-
-:tmprenssu
-set kbssu=
-mkdir "!_cabdir!\check"
-if /i "%ssupkg:~-4%"==".msu" (expand.exe -f:*.txt "%ssupkg%" "!_cabdir!\check" %_Null%) else (expand.exe -f:update.mum "%ssupkg%" "!_cabdir!\check" %_Null%)
-if not exist "!_cabdir!\check\*.txt" if not exist "!_cabdir!\check\*.mum" (rmdir /s /q "!_cabdir!\check\"&goto :eof)
-if exist "!_cabdir!\check\*.txt" (
-for /f "tokens=2 delims==" %%# in ('findstr /i /c:"KB Article" "!_cabdir!\check\*.txt"') do set kbssu=KB%%~#
-)
-if exist "!_cabdir!\check\update.mum" (
-for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "!_cabdir!\check\update.mum"') do set kbssu=%%~#
-)
-if "%kbssu%"=="" (rmdir /s /q "!_cabdir!\check\"&goto :eof)
-set _sfn=Windows10.0-%kbssu%-%arch%.cab
-if /i "%ssupkg:~-4%"==".msu" (
-expand.exe -f:*%arch%*.cab "%ssupkg%" "!_cabdir!\check" %_Null%
-for /f %%# in ('dir /b "!_cabdir!\check\*.cab"') do copy /y "!_cabdir!\check\%%#" %_sfn% %_Nul3%
-) else (
-copy /y %ssupkg% %_sfn% %_Nul3%
-)
-set "tmpssu=!tmpssu! %_sfn%"
-rmdir /s /q "!_cabdir!\check\"
-goto :eof
 
 :mainboard
 if %winbuild% lss 10240 if /i "!target!"=="%SystemDrive%" (%_Goto%)
@@ -1173,11 +1146,27 @@ echo ============================================================
 call :cleanup
 goto :eof
 
+:detector
+set _msu=0
+set _cab=0
+set _sum=0
+cd /d "!repo!"
+if not defined tmpssu if exist "SSU-*-%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /on "SSU-*-%arch%*.msu"') do (set "ssupkg=%%#"&call :tmprenssu)
+if not defined tmpssu if exist "SSU-*-%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "SSU-*-%arch%*.cab"') do (set "ssupkg=%%#"&call :tmprenssu)
+if exist "*Windows10*KB*%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /on "*Windows10*KB*%arch%*.msu"') do call set /a _msu+=1
+if exist "*Windows10*KB*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "*Windows10*KB*%arch%*.cab"') do call set /a _cab+=1
+if %online%==0 if exist "*defender-dism*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "*defender-dism*%arch%*.cab"') do call set /a _cab+=1
+cd /d "!_work!"
+set /a _sum=%_msu%+%_cab%
+goto :eof
+
 :counter
 set _msu=0
 set _cab=0
 set _sum=0
 cd /d "!repo!"
+if exist "SSU-*-%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /on "SSU-*-%arch%*.msu"') do (set "ssupkg=%%#"&call :tmprenssu)
+if exist "SSU-*-%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "SSU-*-%arch%*.cab"') do (set "ssupkg=%%#"&call :tmprenssu)
 if exist "*Windows10*KB*%arch%*.msu" (
 for /f "tokens=* delims=" %%# in ('dir /b /on "*Windows10*KB*%arch%*.msu"') do (
   call set /a _msu+=1
@@ -1213,16 +1202,27 @@ cd /d "!_work!"
 set /a _sum=%_msu%+%_cab%
 goto :eof
 
-:detector
-set _msu=0
-set _cab=0
-set _sum=0
-cd /d "!repo!"
-if exist "*Windows10*KB*%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /on "*Windows10*KB*%arch%*.msu"') do call set /a _msu+=1
-if exist "*Windows10*KB*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "*Windows10*KB*%arch%*.cab"') do call set /a _cab+=1
-if %online%==0 if exist "*defender-dism*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "*defender-dism*%arch%*.cab"') do call set /a _cab+=1
-cd /d "!_work!"
-set /a _sum=%_msu%+%_cab%
+:tmprenssu
+set kbssu=
+mkdir "!_cabdir!\check"
+if /i "%ssupkg:~-4%"==".msu" (expand.exe -f:*.txt "%ssupkg%" "!_cabdir!\check" %_Null%) else (expand.exe -f:update.mum "%ssupkg%" "!_cabdir!\check" %_Null%)
+if not exist "!_cabdir!\check\*.txt" if not exist "!_cabdir!\check\*.mum" (rmdir /s /q "!_cabdir!\check\"&goto :eof)
+if exist "!_cabdir!\check\*.txt" (
+for /f "tokens=2 delims==" %%# in ('findstr /i /c:"KB Article" "!_cabdir!\check\*.txt"') do set kbssu=KB%%~#
+)
+if exist "!_cabdir!\check\update.mum" (
+for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "!_cabdir!\check\update.mum"') do set kbssu=%%~#
+)
+if "%kbssu%"=="" (rmdir /s /q "!_cabdir!\check\"&goto :eof)
+set _sfn=Windows10.0-%kbssu%-%arch%.cab
+if /i "%ssupkg:~-4%"==".msu" (
+expand.exe -f:*%arch%*.cab "%ssupkg%" "!_cabdir!\check" %_Null%
+for /f %%# in ('dir /b "!_cabdir!\check\*.cab"') do copy /y "!_cabdir!\check\%%#" %_sfn% %_Nul3%
+) else (
+copy /y %ssupkg% %_sfn% %_Nul3%
+)
+set "tmpssu=!tmpssu! %_sfn%"
+rmdir /s /q "!_cabdir!\check\"
 goto :eof
 
 :cleaner
@@ -1590,7 +1590,7 @@ set /p _pp=
 if not defined _pp goto :mainmenu
 set "_pp=%_pp:"=%"
 if "%_pp:~-1%"=="\" set "_pp=!_pp:~0,-1!"
-if not exist "!_pp!\*Windows10*KB*KB*.msu" if not exist "!_pp!\*Windows10*KB*KB*.cab" if not exist "!_pp!\SSU-*-*.cab" (echo.&echo ERROR: Specified location is not valid&pause&goto :repomenu)
+if not exist "!_pp!\*Windows10*KB*.msu" if not exist "!_pp!\*Windows10*KB*.cab" if not exist "!_pp!\SSU-*-*.cab" (echo.&echo ERROR: Specified location is not valid&pause&goto :repomenu)
 set "repo=!_pp!"
 goto :mainmenu
 
