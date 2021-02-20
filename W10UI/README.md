@@ -159,6 +159,10 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+9.3:  
+- Add proper detection and integration for the new SSU file name  
+- Added "theoretical " support for Windows 10 ARM64 target
+
 9.2:  
 - Added detection for 19043 / v21H1 Enablement/EdgeChromium package  
 - Added detection to install .NET 4.x main pack before .NET LP/Rollup  
