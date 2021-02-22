@@ -25,9 +25,9 @@ ______________________________
 
 * If the distribution already contain installed updates (e.g. refresjed ISO media), it's required/recommended to add the latest updates after language packs
 
-* version 1909 share the same build number and files with version 1903
+* versions 20H2/21H2 share the same build number and files with version 2004
 
-* version 20H2 share the same build number and files with version 2004
+* version 1909 share the same build number and files with version 1903
 
 * Since version 1809 (build 17763), regular windowsupdate links for cab files are no longer available
 
@@ -70,7 +70,7 @@ ______________________________
 
 * If you want the Standard WinPE localization: Windows 10 ADK (Deployment Tools & Preinstallation Environment).
 
-- Build 19041 - Windows 10 version 2004 and 20H2:  
+- Build 19041 - Windows 10 version 2004 / 20H2 / 21H1:  
 ```
 http://download.microsoft.com/download/8/6/c/86c218f3-4349-4aa5-beba-d05e48bbc286/adk/adksetup.exe
 http://download.microsoft.com/download/3/c/2/3c2b23b2-96a0-452c-b9fd-6df72266e335/adkwinpeaddons/adkwinpesetup.exe
@@ -80,7 +80,7 @@ http://software-download.microsoft.com/download/pr/19041.1.191206-1406.vb_releas
 http://software-download.microsoft.com/download/pr/19041.1.191206-1406.vb_release_amd64fre_adkwinpeaddons.iso
 ```
 
-- Build 18362 - Windows 10 version 1903 and 1909:  
+- Build 18362 - Windows 10 version 1903 / 1909:  
 ```
 http://download.microsoft.com/download/B/E/6/BE63E3A5-5D1C-43E7-9875-DFA2B301EC70/adk/adksetup.exe  
 http://download.microsoft.com/download/E/F/A/EFA17CF0-7140-4E92-AC0A-D89366EBD79E/adkwinpeaddons/adkwinpesetup.exe
