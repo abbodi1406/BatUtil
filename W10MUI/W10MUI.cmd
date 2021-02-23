@@ -199,7 +199,8 @@ set _ODocr86=
 set _ODspeech86=
 set _ODtts86=
 set _ODintl86=
-set _ODextra86=
+set _ODext86=
+set _ODtra86=
 set _ODpaint86=
 set _ODnote86=
 set _ODpower86=
@@ -218,13 +219,13 @@ findstr /i /m Microsoft-Windows-LanguageFeatures-Speech update.mum 1>nul 2>nul &
 findstr /i /m Microsoft-Windows-LanguageFeatures-TextToSpeech update.mum 1>nul 2>nul && call set _ODtts86=!_ODtts86! /PackagePath:OAFILE%%j\update.mum
 findstr /i /m Microsoft-Windows-InternationalFeatures update.mum 1>nul 2>nul && call set _ODintl86=!_ODintl86! /PackagePath:OAFILE%%j\update.mum
 if %_lpver% GEQ 19041 (
-findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum 1>nul 2>nul && (set _ODextra86=1&call set _ODpaint86=!_ODpaint86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Notepad-FoD update.mum 1>nul 2>nul && (set _ODextra86=1&call set _ODnote86=!_ODnote86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum 1>nul 2>nul && (set _ODextra86=1&call set _ODpower86=!_ODpower86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum 1>nul 2>nul && (set _ODextra86=1&call set _ODpmcppc86=!_ODpmcppc86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum 1>nul 2>nul && (set _ODextra86=1&call set _ODpwsf86=!_ODpwsf86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-WordPad-FoD update.mum 1>nul 2>nul && (set _ODextra86=1&call set _ODword86=!_ODword86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum 1>nul 2>nul && (set _ODextra86=1&call set _ODsnip86=!_ODsnip86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum 1>nul 2>nul && (set _ODext86=1&call set _ODpaint86=!_ODpaint86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Notepad-FoD update.mum 1>nul 2>nul && (set _ODext86=1&call set _ODnote86=!_ODnote86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum 1>nul 2>nul && (set _ODext86=1&call set _ODpower86=!_ODpower86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum 1>nul 2>nul && (set _ODtra86=1&call set _ODpmcppc86=!_ODpmcppc86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum 1>nul 2>nul && (set _ODtra86=1&call set _ODpwsf86=!_ODpwsf86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-WordPad-FoD update.mum 1>nul 2>nul && (set _ODtra86=1&call set _ODword86=!_ODword86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum 1>nul 2>nul && (set _ODtra86=1&call set _ODsnip86=!_ODsnip86! /PackagePath:OAFILE%%j\update.mum)
   )
 popd
 )
@@ -235,7 +236,8 @@ set _ODocr64=
 set _ODspeech64=
 set _ODtts64=
 set _ODintl64=
-set _ODextra64=
+set _ODext64=
+set _ODtra64=
 set _ODpaint64=
 set _ODnote64=
 set _ODpower64=
@@ -254,13 +256,13 @@ findstr /i /m Microsoft-Windows-LanguageFeatures-Speech update.mum 1>nul 2>nul &
 findstr /i /m Microsoft-Windows-LanguageFeatures-TextToSpeech update.mum 1>nul 2>nul && call set _ODtts64=!_ODtts64! /PackagePath:OBFILE%%j\update.mum
 findstr /i /m Microsoft-Windows-InternationalFeatures update.mum 1>nul 2>nul && call set _ODintl64=!_ODintl64! /PackagePath:OBFILE%%j\update.mum
 if %_lpver% GEQ 19041 (
-findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum 1>nul 2>nul && (set _ODextra64=1&call set _ODpaint64=!_ODpaint64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Notepad-FoD update.mum 1>nul 2>nul && (set _ODextra64=1&call set _ODnote64=!_ODnote64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum 1>nul 2>nul && (set _ODextra64=1&call set _ODpower64=!_ODpower64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum 1>nul 2>nul && (set _ODextra64=1&call set _ODpmcppc64=!_ODpmcppc64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum 1>nul 2>nul && (set _ODextra64=1&call set _ODpwsf64=!_ODpwsf64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-WordPad-FoD update.mum 1>nul 2>nul && (set _ODextra64=1&call set _ODword64=!_ODword64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum 1>nul 2>nul && (set _ODextra64=1&call set _ODsnip64=!_ODsnip64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum 1>nul 2>nul && (set _ODext64=1&call set _ODpaint64=!_ODpaint64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Notepad-FoD update.mum 1>nul 2>nul && (set _ODext64=1&call set _ODnote64=!_ODnote64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum 1>nul 2>nul && (set _ODext64=1&call set _ODpower64=!_ODpower64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum 1>nul 2>nul && (set _ODtra64=1&call set _ODpmcppc64=!_ODpmcppc64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum 1>nul 2>nul && (set _ODtra64=1&call set _ODpwsf64=!_ODpwsf64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-WordPad-FoD update.mum 1>nul 2>nul && (set _ODtra64=1&call set _ODword64=!_ODword64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum 1>nul 2>nul && (set _ODtra64=1&call set _ODsnip64=!_ODsnip64! /PackagePath:OBFILE%%j\update.mum)
   )
 popd
 )
@@ -477,14 +479,16 @@ if /i !WIMARCH%%i!==amd64 if exist "!TEMPDIR!\FOD64\OBFILE1\update.mum" (
 pushd "!TEMPDIR!\FOD64"
 if defined _ODbasic64 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic64!
 if defined _ODbasic64 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
-if defined _ODextra64 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODpaint64! !_ODnote64! !_ODpower64! !_ODpmcppc64! !_ODpwsf64! !_ODword64! !_ODsnip64!
+if defined _ODext64 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODpaint64! !_ODnote64! !_ODpower64!
+if defined _ODtra64 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODpmcppc64! !_ODpwsf64! !_ODword64! !_ODsnip64!
 popd
 )
 if /i !WIMARCH%%i!==x86 if exist "!TEMPDIR!\FOD86\OAFILE1\update.mum" (
 pushd "!TEMPDIR!\FOD86"
 if defined _ODbasic86 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic86!
 if defined _ODbasic86 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
-if defined _ODextra86 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODpaint86! !_ODnote86! !_ODpower86! !_ODpmcppc86! !_ODpwsf86! !_ODword86! !_ODsnip86!
+if defined _ODext86 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODpaint86! !_ODnote86! !_ODpower86!
+if defined _ODtra86 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODpmcppc86! !_ODpwsf86! !_ODword86! !_ODsnip86!
 popd
 )
 echo.

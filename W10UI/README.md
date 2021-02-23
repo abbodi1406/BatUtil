@@ -159,6 +159,8 @@ start the process automatically once you execute the script
 
 ## Changelog:
 
+<details><summary>changelog</summary>
+
 9.4:  
 - Fixed detection for SSU file and custom Updates location path
 
@@ -427,3 +429,4 @@ you can revert to all indexes by entering * alone
 
 1.0:  
 - Initial release
+</details>
