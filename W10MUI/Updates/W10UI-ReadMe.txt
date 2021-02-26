@@ -182,11 +182,14 @@ https://forums.mydigitallife.net/threads/44645
 ============================================================
 Changelog:
 ============================================================
+9.5:
+- Added proper detection and integration for the new combined msu/cab files
+
 9.4:
 - Fixed detection for SSU file and custom Updates location path
 
 9.3:
-- Add proper detection and integration for the new SSU file name
+- Added proper detection and integration for the new SSU file name
 - Added "theoretical " support for Windows 10 ARM64 target
 
 9.2:

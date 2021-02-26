@@ -117,7 +117,7 @@ specify custom "folder" path for microsoft-windows-netfx3-ondemand-package.cab
 convert install.wim to install.esd, if the target is a distribution  
 warning: the process will consume very high amount of CPU and RAM resources
 
-# wim2swm
+* wim2swm  
 split install.wim into multiple install.swm files, if the target is a distribution
 
 note: if both wim2esd/wim2swm are 1, install.esd takes precedence over split install.swm
@@ -160,6 +160,9 @@ start the process automatically once you execute the script
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+9.5:  
+- Added proper detection and integration for the new combined msu/cab files
 
 9.4:  
 - Fixed detection for SSU file and custom Updates location path
