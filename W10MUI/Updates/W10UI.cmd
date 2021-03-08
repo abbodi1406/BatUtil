@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v9.5
+@set uiv=v9.6
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -256,6 +256,7 @@ set keep=0
 set targetname=0
 set _skpd=0
 set _skpp=0
+set uupboot=0
 if %_init%==1 if "!target!"=="" if exist "*.wim" (for /f "tokens=* delims=" %%# in ('dir /b /a:-d "*.wim"') do set "target=!_work!\%%~nx#")
 if "!target!"=="" set "target=%SystemDrive%"
 if "%target:~-1%"=="\" set "target=!target:~0,-1!"
@@ -430,6 +431,7 @@ if defined isoupdate (
   echo %%~i
   expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
   )
+  if %uupboot%==0 if exist "!_cabdir!\du\setup.exe" del /f /q "!_cabdir!\du\setup.exe" %_Nul3%
   xcopy /CEDRUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!target!\sources\replacementmanifests\" %_Nul3%
   if exist "!_cabdir!\du\*.dll" for /f %%# in ('dir /b /a:-d "!_cabdir!\du\*.dll"') do call :du_fix %%#
@@ -1402,6 +1404,7 @@ copy /y "!mountdir!\Windows\Boot\EFI\bootmgfw.efi" "!target!\efi\boot\%efifile%"
 copy /y "!mountdir!\Windows\Boot\EFI\bootmgr.efi" "!target!\" %_Nul1%
 if exist "!target!\setup.exe" copy /y "!mountdir!\setup.exe" "!target!\" %_Nul3%
 if defined isoupdate if not exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" (
+  set uupboot=1
   mkdir "!_cabdir!\du" %_Nul3%
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
   robocopy "!_cabdir!\du" "!mountdir!\sources" /XL /XX /XO %_Nul3%

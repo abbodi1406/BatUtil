@@ -161,6 +161,9 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
+9.6:  
+- Fix setup.exe conflict between boot.wim and DU for ISO distribution
+
 9.5:  
 - Added proper detection and integration for the new combined msu/cab files
 

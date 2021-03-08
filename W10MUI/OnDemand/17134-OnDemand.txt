@@ -16,6 +16,7 @@ http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/micr
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-ocr-bg-bg-package~31bf3856ad364e35~x86~~_61a27470bb93670d7e508074e19592591654b4b0.cab
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-texttospeech-bg-bg-package~31bf3856ad364e35~x86~~_9ca360bf3cb4147a1951e62b71ec2921f935bd20.cab
 cs-CZ
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-basic-cs-cz-package~31bf3856ad364e35~x86~~_46f8d2253acb308f6757f94fc77b541da84ba3c1.cab
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-handwriting-cs-cz-package~31bf3856ad364e35~x86~~_bba7caff4740149618a205b21591d0459433ef5e.cab
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-ocr-cs-cz-package~31bf3856ad364e35~x86~~_306607dc9dcb601eb573149ec67735ca189199e6.cab
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-texttospeech-cs-cz-package~31bf3856ad364e35~x86~~_766d625679267d2b8424fb51e5e70c9267347ec0.cab
@@ -206,6 +207,7 @@ http://download.windowsupdate.com/c/msdownload/update/software/updt/2018/04/micr
 http://download.windowsupdate.com/c/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-ocr-bg-bg-package~31bf3856ad364e35~amd64~~_23fe119005405e0c2e2971e955df965fc25ac141.cab
 http://download.windowsupdate.com/c/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-texttospeech-bg-bg-package~31bf3856ad364e35~amd64~~_2e0a50514a7eda271c2e03f5d0bcf42e8c172f25.cab
 cs-CZ
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-basic-cs-cz-package~31bf3856ad364e35~amd64~~_4575092a15db96a02595e76bfe09332ced601dab.cab
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-handwriting-cs-cz-package~31bf3856ad364e35~amd64~~_b78c11772a714a3f2e4132211ae97cf194f2fe42.cab
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-ocr-cs-cz-package~31bf3856ad364e35~amd64~~_5e5f3a14751dd5b2440698505a73cfe41195e3d4.cab
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2018/04/microsoft-windows-languagefeatures-texttospeech-cs-cz-package~31bf3856ad364e35~amd64~~_cfe5d78210002d8211f25be7c9834116802fd775.cab
