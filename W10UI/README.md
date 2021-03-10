@@ -161,6 +161,11 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
+9.7:  
+- Fix setup.exe conflict for UUP created ISO  
+- Fix cosmetic bug detecting EP KB5000736 as Flash  
+- Show W10UI version in the menu header
+
 9.6:  
 - Fix setup.exe conflict between boot.wim and DU for ISO distribution
 

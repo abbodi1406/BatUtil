@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v9.6
+@set uiv=v9.7
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -622,10 +622,6 @@ expand.exe -f:*_microsoft-windows-servicingstack_*.manifest "!repo!\!package!" "
 if exist "checker\*_microsoft-windows-servicingstack_*.manifest" set "_type=[SSU]"
 )
 if not defined _type (
-expand.exe -f:*_adobe-flash-for-windows_*.manifest "!repo!\!package!" "checker" %_Null%
-if exist "checker\*_adobe-flash-for-windows_*.manifest" findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% || set "_type=[Flash]"
-)
-if not defined _type (
 expand.exe -f:*_netfx4*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_netfx4*.manifest" findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% || set "_type=[NetFx]"
 )
@@ -646,6 +642,10 @@ if exist "checker\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_t
 if not defined _type (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[EdgeChromium]"
+)
+if not defined _type (
+expand.exe -f:*_adobe-flash-for-windows_*.manifest "!repo!\!package!" "checker" %_Null%
+if exist "checker\*_adobe-flash-for-windows_*.manifest" findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% || set "_type=[Flash]"
 )
 echo %count%/%_sum%: %package% %_type%
 if not exist "%dest%\update.mum" expand.exe -f:* "!repo!\!package!" "%dest%" %_Null% || (
@@ -1408,6 +1408,7 @@ if defined isoupdate if not exist "!mountdir!\Windows\servicing\Packages\WinPE-S
   mkdir "!_cabdir!\du" %_Nul3%
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
   robocopy "!_cabdir!\du" "!mountdir!\sources" /XL /XX /XO %_Nul3%
+  xcopy /CDRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
   rmdir /s /q "!_cabdir!\du\" %_Nul3%
 )
 if not defined vermajor goto :eof
@@ -1533,7 +1534,7 @@ takeown /f "!mumtarget!\Windows\WinSxS\ManifestCache\*.bin" /A %_Nul3%
 icacls "!mumtarget!\Windows\WinSxS\ManifestCache\*.bin" /grant *S-1-5-32-544:F %_Nul3%
 del /f /q "!mumtarget!\Windows\WinSxS\ManifestCache\*.bin" %_Nul3%
 )
-if exist "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\*" (
+if exist "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\$$Delete*" (
 takeown /f "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\*" /A %_Nul3%
 icacls "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F %_Nul3%
 del /f /q "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\*" %_Nul3%
@@ -1758,7 +1759,7 @@ goto :mainmenu
 :mainmenu
 if %autostart%==1 goto :mainboard
 @cls
-echo ============================================================
+echo ======================= W10UI %uiv% ==========================
 if /i "!target!"=="%SystemDrive%" (
 if %winbuild% lss 10240 (echo [1] Select offline target) else (echo [1] Target ^(%arch%^): Current OS)
 ) else (
