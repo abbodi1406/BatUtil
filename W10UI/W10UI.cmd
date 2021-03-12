@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v9.7
+@set uiv=v9.8
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -398,13 +398,14 @@ if not defined isoupdate goto :fin
 if %_offdu%==1 if not exist "!_cabdir!\du\" (
   mkdir "!_cabdir!\du" %_Nul3%
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
-  xcopy /CEDRUY "!_cabdir!\du" "!cmd_source!\" %_Nul3%
+  xcopy /CRUY "!_cabdir!\du" "!cmd_source!\" %_Nul3%
+  for /f %%# in ('dir /b /ad "!_cabdir!\du\*-*" %_Nul6%') do if exist "!cmd_source!\%%#\*.mui" copy /y "!_cabdir!\du\%%#\*" "!cmd_source!\%%#\" %_Nul3%
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!cmd_source!\replacementmanifests\" %_Nul3%
   )
 if exist "!mountdir!\sources\setup.exe" if not exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" (
   if not exist "!_cabdir!\du\" mkdir "!_cabdir!\du" %_Nul3%
   if not exist "!_cabdir!\du\" for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
-  xcopy /CEDRUY "!_cabdir!\du" "!mountdir!\sources\" %_Nul3%
+  xcopy /CRUY "!_cabdir!\du" "!mountdir!\sources\" %_Nul3%
   )
 goto :fin
 )
@@ -432,10 +433,11 @@ if defined isoupdate (
   expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
   )
   if %uupboot%==0 if exist "!_cabdir!\du\setup.exe" del /f /q "!_cabdir!\du\setup.exe" %_Nul3%
-  xcopy /CEDRUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
+  xcopy /CRUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
+  for /f %%# in ('dir /b /ad "!_cabdir!\du\*-*" %_Nul6%') do if exist "!target!\sources\%%#\*.mui" copy /y "!_cabdir!\du\%%#\*" "!target!\sources\%%#\" %_Nul3%
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!target!\sources\replacementmanifests\" %_Nul3%
-  if exist "!_cabdir!\du\*.dll" for /f %%# in ('dir /b /a:-d "!_cabdir!\du\*.dll"') do call :du_fix %%#
-  if exist "!_cabdir!\du\*.exe" for /f %%# in ('dir /b /a:-d "!_cabdir!\du\*.exe"') do call :du_fix %%#
+  rem if exist "!_cabdir!\du\*.dll" for /f %%# in ('dir /b /a:-d "!_cabdir!\du\*.dll"') do call :du_fix %%#
+  rem if exist "!_cabdir!\du\*.exe" for /f %%# in ('dir /b /a:-d "!_cabdir!\du\*.exe"') do call :du_fix %%#
   rmdir /s /q "!_cabdir!\du\" %_Nul3%
 )
 xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
@@ -469,7 +471,6 @@ cd /d "!_work!"
 goto :fin
 
 :du_fix
-if /i %1==setup.exe goto :eof
 set "_fil1=!_cabdir!\du\%1"
 set "_fil2=!target!\sources\%1"
 if not exist "!_fil2!" goto :eof
@@ -728,7 +729,7 @@ set "_EdgKey=%_Win%\amd64_%_EdgCmp%_31bf3856ad364e35_none_1e5e22f28add0265"
 ) else if exist "!mumtarget!\Windows\Servicing\Packages\*arm64*.mum" (
 set "xBT=arm64"
 set "_EsuKey=%_Win%\arm64_%_EsuCmp%_31bf3856ad364e35_none_0a0357560ca88a4d"
-set "_EdgKey=%_Win%\arm64_%_EdgCmp%_31bf3856ad364e35_none_1e5e22f28add0265"
+set "_EdgKey=%_Win%\arm64_%_EdgCmp%_31bf3856ad364e35_none_1e5e2b2c8adcf701"
 ) else (
 set "xBT=x86"
 set "_EsuKey=%_Win%\x86_%_EsuCmp%_31bf3856ad364e35_none_ade4bbd2544b1917"
@@ -959,7 +960,7 @@ if exist "%dest%\update.mum" if exist "!mumtarget!\Windows\servicing\Packages\*W
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (set /a _sum-=1&goto :eof))
 findstr /i /m "WinPE-NetFx-Package" "%dest%\update.mum" %_Nul3% && (findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (set /a _sum-=1&goto :eof))
 )
-if exist "%dest%\*_adobe-flash-for-windows_*.manifest" (
+if exist "%dest%\*_adobe-flash-for-windows_*.manifest" if not exist "%dest%\*enablement-package*.mum" (
 if not exist "!mumtarget!\Windows\servicing\packages\Adobe-Flash-For-Windows-Package*.mum" if not exist "!mumtarget!\Windows\servicing\packages\Microsoft-Windows-Client-Desktop-Required-Package*.mum" (set /a _sum-=1&goto :eof)
 if %build% geq 16299 (
   set flash=0
@@ -1339,7 +1340,8 @@ if defined isoupdate if not exist "!mountdir!\sources\setup.exe" if not exist "!
   echo %%~i
   expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
   )
-  xcopy /CERUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
+  xcopy /CRUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
+  for /f %%# in ('dir /b /ad "!_cabdir!\du\*-*" %_Nul6%') do if exist "!target!\sources\%%#\*.mui" copy /y "!_cabdir!\du\%%#\*" "!target!\sources\%%#\" %_Nul3%
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!target!\sources\replacementmanifests\" %_Nul3%
   )
 )
@@ -1390,7 +1392,7 @@ for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /on "!mountdir!\Windows\Wi
 goto :eof
 
 :boots
-if exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" xcopy /CDRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
+if exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" xcopy /CRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
 del /f /q "!target!\sources\background.bmp" %_Nul3%
 del /f /q "!target!\sources\xmllite.dll" %_Nul3%
 del /f /q "!target!\efi\microsoft\boot\*noprompt.*" %_Nul3%
@@ -1408,7 +1410,7 @@ if defined isoupdate if not exist "!mountdir!\Windows\servicing\Packages\WinPE-S
   mkdir "!_cabdir!\du" %_Nul3%
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
   robocopy "!_cabdir!\du" "!mountdir!\sources" /XL /XX /XO %_Nul3%
-  xcopy /CDRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
+  xcopy /CRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
   rmdir /s /q "!_cabdir!\du\" %_Nul3%
 )
 if not defined vermajor goto :eof

@@ -41,6 +41,7 @@ da-DK
 https://www.uupdump.net/getfile.php?id=4c5bfc63-e4a5-4ee3-af29-d487a5499f09&file=microsoft-windows-languagefeatures-basic-da-dk-package-x86.cab
 https://www.uupdump.net/getfile.php?id=4c5bfc63-e4a5-4ee3-af29-d487a5499f09&file=microsoft-windows-languagefeatures-handwriting-da-dk-package-x86.cab
 https://www.uupdump.net/getfile.php?id=4c5bfc63-e4a5-4ee3-af29-d487a5499f09&file=microsoft-windows-languagefeatures-ocr-da-dk-package-x86.cab
+https://www.uupdump.net/getfile.php?id=4c5bfc63-e4a5-4ee3-af29-d487a5499f09&file=microsoft-windows-languagefeatures-speech-da-dk-package
 https://www.uupdump.net/getfile.php?id=4c5bfc63-e4a5-4ee3-af29-d487a5499f09&file=microsoft-windows-languagefeatures-texttospeech-da-dk-package-x86.cab
 de-DE
 https://www.uupdump.net/getfile.php?id=4c5bfc63-e4a5-4ee3-af29-d487a5499f09&file=microsoft-windows-languagefeatures-basic-de-de-package-x86.cab
@@ -244,6 +245,7 @@ da-DK
 https://www.uupdump.net/getfile.php?id=59e1416f-3b11-4646-869a-c8cb060df0bf&file=microsoft-windows-languagefeatures-basic-da-dk-package-amd64.cab
 https://www.uupdump.net/getfile.php?id=59e1416f-3b11-4646-869a-c8cb060df0bf&file=microsoft-windows-languagefeatures-handwriting-da-dk-package-amd64.cab
 https://www.uupdump.net/getfile.php?id=59e1416f-3b11-4646-869a-c8cb060df0bf&file=microsoft-windows-languagefeatures-ocr-da-dk-package-amd64.cab
+https://www.uupdump.net/getfile.php?id=59e1416f-3b11-4646-869a-c8cb060df0bf&file=microsoft-windows-languagefeatures-speech-da-dk-package
 https://www.uupdump.net/getfile.php?id=59e1416f-3b11-4646-869a-c8cb060df0bf&file=microsoft-windows-languagefeatures-texttospeech-da-dk-package-amd64.cab
 de-DE
 https://www.uupdump.net/getfile.php?id=59e1416f-3b11-4646-869a-c8cb060df0bf&file=microsoft-windows-languagefeatures-basic-de-de-package-amd64.cab
