@@ -79,6 +79,8 @@ zh-cn / Chinese (Simplified)
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2017/03/lp_7fcf0963f5cfbb728cbe733c451d4f2f1456e6cf.cab
 zh-tw / Chinese (Traditional)
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2017/03/lp_b7de26075b638b8cc3827cfc2c47a6ed080bccdf.cab
+zh-hk / Chinese (Hong Kong S.A.R.)
+https://www.uupdump.net/getfile.php?id=fd9add47-948f-4017-9571-01c6cbbf4ad7&file=x86fre_client_zh-hk_lp.cab
 
 =================================================================================================
 x64 (64 Bit)
@@ -159,3 +161,5 @@ zh-cn / Chinese (Simplified)
 http://download.windowsupdate.com/c/msdownload/update/software/updt/2017/03/lp_3fb95390fed9e925a46172edb4ea80dabfc00e87.cab
 zh-tw / Chinese (Traditional)
 http://download.windowsupdate.com/c/msdownload/update/software/updt/2017/03/lp_8692b94b2e326baaf3c9e9b094cae04272677d74.cab
+zh-hk / Chinese (Hong Kong S.A.R.)
+https://www.uupdump.net/getfile.php?id=d89ce75a-6769-42fb-bd43-16e6c3758479&file=amd64fre_client_zh-hk_lp.cab

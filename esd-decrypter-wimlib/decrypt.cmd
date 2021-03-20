@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v56
+@set uivr=v58
 @echo off
 :: Change to 1 to get ISO name similar to ESD name (ESD name must be the original, with or without sha1 hash suffix)
 set ISOnameESD=0
@@ -569,6 +569,10 @@ if %revmajor%==19042 (
 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 if %version:~0,5%==19041 set version=19042%version:~5%
 )
+if %revmajor%==19043 (
+if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
+if %version:~0,5%==19041 set version=19043%version:~5%
+)
 if %verminor% lss %revminor% (
 set version=%revision%
 set verminor=%revminor%
@@ -587,13 +591,22 @@ if defined _label2 (set _label=%_label2%) else (set _label=%version%.%labeldate%
 rmdir /s /q .\bin\temp
 set _rfr=refresh
 set _rsr=release_svc_%_rfr%
+if %revmajor%==19043 (set _label=%revision%.%_time%.21h1_%_rsr%_CLIENT&set branch=21h1_%_rsr%)
+if %revision%==19043.867 (set _label=19043.867.210305-1751.21h1_%_rsr%_CLIENT&set branch=21h1_%_rsr%)
 if %revmajor%==19042 (set _label=%revision%.%_time%.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
+if %revision%==19042.631 (set _label=19042.631.201119-0144.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
+if %revision%==19042.630 (set _label=19042.630.201106-1636.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
+if %revision%==19042.572 (set _label=19042.572.201009-1947.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
+if %revision%==19042.508 (set _label=19042.508.200927-1902.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
 if %revision%==19042.450 (set _label=19042.450.200814-0345.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
+if %revision%==19041.572 (set _label=19041.572.201009-1946.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
+if %revision%==19041.508 (set _label=19041.508.200907-0256.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
 if %revision%==19041.450 (set _label=19041.450.200808-0726.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
 if %revision%==19041.388 (set _label=19041.388.200710-1729.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
 if %revision%==19041.264 (set _label=19041.264.200511-0456.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
 if %revision%==19041.84  (set _label=19041.84.200218-1143.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
 if %revmajor%==18363 (set _label=%revision%.%_time%.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
+if %revision%==18363.1139 (set _label=18363.1139.201008-0514.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
 if %revision%==18363.592 (set _label=18363.592.200109-2016.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
 if %revision%==18363.418 (set _label=18363.418.191007-0143.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
 if %revision%==18363.356 (set _label=18363.356.190918-2052.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
@@ -614,6 +627,9 @@ if %revision%==14393.447 (set _label=14393.0.161119-1705.rs1_%_rfr%_CLIENT&set b
 if %revision%==10586.164 (set _label=10586.0.160426-1409.th2_%_rfr%_CLIENT&set branch=th2_%_rfr%)
 if %revision%==10586.104 (set _label=10586.0.160212-2000.th2_%_rfr%_CLIENT&set branch=th2_%_rfr%)
 if %revision%==10240.16487 (set _label=10240.16393.150909-1450.th1_%_rfr%_CLIENT&set branch=th1_%_rfr%)
+
+if /i "%editionid%"=="PPIPro" if %revision%==19042.572 (set _label=19042.572.201012-1221.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
+if /i "%ESDedition1%"=="PPIPro" if %revision%==19042.572 (set _label=19042.572.201012-1221.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
 
 if %ISOnameESD% neq 0 call :setloop "%ENCRYPTEDESDN%"
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
@@ -795,6 +811,7 @@ if /i %ESDlang1% neq %ESDlang2% goto :prompt2
 if /i %ESDver1% neq %ESDver2% goto :prompt2
 
 :DUALMENU
+if %_Debug% neq 0 (set WIMFILE=install.esd&goto :Dual)
 color 1F
 cls
 echo %lin2%

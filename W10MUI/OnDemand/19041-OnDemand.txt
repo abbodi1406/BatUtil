@@ -63,6 +63,7 @@ https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=
 microsoft-windows-languagefeatures-basic-da-dk-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-da-dk-package-x86.cab
 microsoft-windows-languagefeatures-ocr-da-dk-package-x86.cab
+microsoft-windows-languagefeatures-speech-da-dk-package-x86.cab
 microsoft-windows-languagefeatures-texttospeech-da-dk-package-x86.cab
 microsoft-windows-mspaint-fod-package-x86-da-dk.cab
 microsoft-windows-notepad-fod-package-x86-da-dk.cab
@@ -583,6 +584,7 @@ https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=
 microsoft-windows-languagefeatures-basic-da-dk-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-da-dk-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-da-dk-package-amd64.cab
+microsoft-windows-languagefeatures-speech-da-dk-package-amd64.cab
 microsoft-windows-languagefeatures-texttospeech-da-dk-package-amd64.cab
 microsoft-windows-mspaint-fod-package-amd64-da-dk.cab
 microsoft-windows-mspaint-fod-package-wow64-da-dk.cab
