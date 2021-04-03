@@ -161,6 +161,9 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
+9.9:  
+- Extended `SkipEdge` option to skip EdgeChromium bunded with Cumulative Update
+
 9.8:  
 - Further enhancement to prevent setup.exe conflict (if ISO files dates are newer than DU)
 
