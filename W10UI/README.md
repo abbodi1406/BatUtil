@@ -161,6 +161,16 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
+10.1:  
+- Added detection for 19044 / v21H2 Enablement package
+- Fixed wrong ISO version detection in some scenarios
+
+10.0:  
+- Added "SkipEdge=2" option to skip LCU's EdgeChromium via "Microsoft\Edge" folder
+- Build 20231 and later, for updating install.wim, LCU will be added from cab file directly
+- Build 20231 and later, if ReservicingLCU is detected, .NET CU / LCU will not be re-added after enabling NetFx3 feature
+- Enhanced Flash updates detection to avoid confliction when Flash Removal update is merged with LCU
+
 9.9:  
 - Extended `SkipEdge` option to skip EdgeChromium bunded with Cumulative Update
 
@@ -186,7 +196,7 @@ start the process automatically once you execute the script
 - Added "theoretical " support for Windows 10 ARM64 target
 
 9.2:  
-- Added detection for 19043 / v21H1 Enablement/EdgeChromium package  
+- Added detection for 19043 / v21H1 Enablement package  
 - Added detection to install .NET 4.x main pack before .NET LP/Rollup  
 - Skip wim2swm if install.wim size is less than 4GB
 

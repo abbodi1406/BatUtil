@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v58
+@set uivr=v60
 @echo off
 :: Change to 1 to get ISO name similar to ESD name (ESD name must be the original, with or without sha1 hash suffix)
 set ISOnameESD=0
@@ -130,6 +130,7 @@ set VOL=0
 set UnifyWinre=0
 set SINGLE=0
 set newkeys=0
+set uLang=0
 set "_ram={7619dcc8-fafe-11d9-b411-000476eba25f}"
 set "line============================================================="
 set "lin2=%line%================"
@@ -193,11 +194,13 @@ if %ERRORTEMP% equ 74 set ENCRYPTED=1&goto :PRE_INFO
 if %ERRORTEMP% neq 0 goto :E_File
 
 :PRE_INFO
+set _SrvESD=0
 imagex.exe /info "!ENCRYPTEDESD!">bin\infoall.txt 2>&1
 find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionida=1) || (set editionida=0)
 find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionidn=1) || (set editionidn=0)
 find /i "CoreSingleLanguage</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionids=1) || (set editionids=0)
 find /i "CoreCountrySpecific</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionidc=1) || (set editionidc=0)
+find /i "<EDITIONID>Server" bin\infoall.txt %_Nul1% && (set _SrvESD=1)
 imagex.exe /info "!ENCRYPTEDESD!" 4 >bin\info.txt 2>&1
 for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do set build=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<MAJOR>" bin\info.txt') do set ver1=%%#
@@ -207,14 +210,20 @@ for /f "tokens=3 delims=<>" %%# in ('find /i "<EDITIONID>" bin\info.txt') do set
 for /f "tokens=3 delims=<>" %%# in ('find /i "<ARCH>" bin\info.txt') do (if %%# equ 0 (set arch=x86) else if %%# equ 9 (set arch=x64) else (set arch=arm64))
 for /f "tokens=3 delims=: " %%# in ('findstr /i /b /c:"Image Count" bin\infoall.txt') do (if %%# geq 5 set MULTI=%%#)
 if %build% leq 9600 goto :E_W81
+if /i %langid%==ru-ru set uLang=1
+if /i %langid%==zh-cn set uLang=1
+if /i %langid%==zh-tw set uLang=1
+if /i %langid%==zh-hk set uLang=1
 find /i "<DISPLAYNAME>" bin\info.txt %_Nul1% && (
 for /f "tokens=3 delims=<>" %%# in ('find /i "<DISPLAYNAME>" bin\info.txt') do set "_os=%%#"
+if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.txt') do set "_os=%%#"
 ) || (
 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.txt') do set "_os=%%#"
 )
 if %MULTI% neq 0 for /L %%A in (4,1,%MULTI%) do (
 imagex.exe /info "!ENCRYPTEDESD!" %%A | find /i "<DISPLAYNAME>" %_Nul1% && (
 for /f "tokens=3 delims=<>" %%# in ('imagex.exe /info "!ENCRYPTEDESD!" %%A ^| find /i "<DISPLAYNAME>"') do set "_os%%A=%%#"
+if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('imagex.exe /info "!ENCRYPTEDESD!" %%A ^| find /i "<NAME>"') do set "_os%%A=%%#"
 ) || (
 for /f "tokens=3 delims=<>" %%# in ('imagex.exe /info "!ENCRYPTEDESD!" %%A ^| find /i "<NAME>"') do set "_os%%A=%%#"
 )
@@ -551,7 +560,7 @@ if exist "bin\temp\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens
 if %build% geq 15063 (
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 4 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 set "isokey=Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
-for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% ^| find /i "Client.OS""') do if not errorlevel 1 (
+for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% ^| findstr /i /r ".*\.OS""') do if not errorlevel 1 (
   for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Branch %_Nul6%"') do set "isobranch=%%~A"
   for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Version %_Nul6%"') do if %%A gtr !revmajor! (
     set "revision=%%~A.%%B
@@ -573,6 +582,10 @@ if %revmajor%==19043 (
 if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
 if %version:~0,5%==19041 set version=19043%version:~5%
 )
+if %revmajor%==19044 (
+if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
+if %version:~0,5%==19041 set version=19044%version:~5%
+)
 if %verminor% lss %revminor% (
 set version=%revision%
 set verminor=%revminor%
@@ -585,53 +598,56 @@ set "labeldate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 set _label2=
 if /i "%branch%"=="WinBuild" (
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 4 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
-for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l_CLIENT&set branch=%%l)
+for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l&set branch=%%l)
 )
-if defined _label2 (set _label=%_label2%) else (set _label=%version%.%labeldate%.%branch%_CLIENT)
+if defined _label2 (set _label=%_label2%) else (set _label=%version%.%labeldate%.%branch%)
 rmdir /s /q .\bin\temp
 set _rfr=refresh
 set _rsr=release_svc_%_rfr%
-if %revmajor%==19043 (set _label=%revision%.%_time%.21h1_%_rsr%_CLIENT&set branch=21h1_%_rsr%)
-if %revision%==19043.867 (set _label=19043.867.210305-1751.21h1_%_rsr%_CLIENT&set branch=21h1_%_rsr%)
-if %revmajor%==19042 (set _label=%revision%.%_time%.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
-if %revision%==19042.631 (set _label=19042.631.201119-0144.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
-if %revision%==19042.630 (set _label=19042.630.201106-1636.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
-if %revision%==19042.572 (set _label=19042.572.201009-1947.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
-if %revision%==19042.508 (set _label=19042.508.200927-1902.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
-if %revision%==19042.450 (set _label=19042.450.200814-0345.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
-if %revision%==19041.572 (set _label=19041.572.201009-1946.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
-if %revision%==19041.508 (set _label=19041.508.200907-0256.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
-if %revision%==19041.450 (set _label=19041.450.200808-0726.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
-if %revision%==19041.388 (set _label=19041.388.200710-1729.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
-if %revision%==19041.264 (set _label=19041.264.200511-0456.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
-if %revision%==19041.84  (set _label=19041.84.200218-1143.vb_%_rsr%_CLIENT&set branch=vb_%_rsr%)
-if %revmajor%==18363 (set _label=%revision%.%_time%.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
-if %revision%==18363.1139 (set _label=18363.1139.201008-0514.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
-if %revision%==18363.592 (set _label=18363.592.200109-2016.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
-if %revision%==18363.418 (set _label=18363.418.191007-0143.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
-if %revision%==18363.356 (set _label=18363.356.190918-2052.19h2_%_rsr%_CLIENT&set branch=19h2_%_rsr%)
-if %revision%==18362.356 (set _label=18362.356.190909-1636.19h1_%_rsr%_CLIENT&set branch=19h1_%_rsr%)
-if %revision%==18362.295 (set _label=18362.295.190809-2228.19h1_%_rsr%_CLIENT&set branch=19h1_%_rsr%)
-if %revision%==18362.239 (set _label=18362.239.190709-0052.19h1_%_rsr%_CLIENT&set branch=19h1_%_rsr%)
-if %revision%==18362.175 (set _label=18362.175.190612-0046.19h1_%_rsr%_CLIENT&set branch=19h1_%_rsr%)
-if %revision%==18362.30  (set _label=18362.30.190401-1528.19h1_%_rsr%_CLIENT&set branch=19h1_%_rsr%)
-if %revision%==17763.379 (set _label=17763.379.190312-0539.rs5_%_rsr%_CLIENT&set branch=rs5_%_rsr%)
-if %revision%==17763.253 (set _label=17763.253.190108-0006.rs5_%_rsr%_CLIENT&set branch=rs5_%_rsr%)
-if %revision%==17763.107 (set _label=17763.107.181029-1455.rs5_%_rsr%_CLIENT&set branch=rs5_%_rsr%)
-if %revision%==17134.112 (set _label=17134.112.180619-1212.rs4_%_rsr%_CLIENT&set branch=rs4_%_rsr%)
-if %revision%==16299.125 (set _label=16299.125.171213-1220.rs3_%_rsr%_CLIENT&set branch=rs3_%_rsr%)
-if %revision%==16299.64  (set _label=16299.15.171109-1522.rs3_%_rsr%_CLIENT&set branch=rs3_%_rsr%)
-if %revision%==15063.483 (set _label=15063.0.170710-1358.rs2_%_rsr%_CLIENT&set branch=rs2_%_rsr%)
-if %revision%==15063.413 (set _label=15063.0.170607-1447.rs2_%_rsr%_CLIENT&set branch=rs2_%_rsr%)
-if %revision%==14393.447 (set _label=14393.0.161119-1705.rs1_%_rfr%_CLIENT&set branch=rs1_%_rfr%)
-if %revision%==10586.164 (set _label=10586.0.160426-1409.th2_%_rfr%_CLIENT&set branch=th2_%_rfr%)
-if %revision%==10586.104 (set _label=10586.0.160212-2000.th2_%_rfr%_CLIENT&set branch=th2_%_rfr%)
-if %revision%==10240.16487 (set _label=10240.16393.150909-1450.th1_%_rfr%_CLIENT&set branch=th1_%_rfr%)
+if %revmajor%==19044 (set _label=%revision%.%_time%.21h2_%_rsr%&set branch=21h2_%_rsr%)
+if %revmajor%==19043 (set _label=%revision%.%_time%.21h1_%_rsr%&set branch=21h1_%_rsr%)
+if %revision%==19043.928 (set _label=19043.928.210409-1212.21h1_%_rsr%&set branch=21h1_%_rsr%)
+if %revision%==19043.867 (set _label=19043.867.210305-1751.21h1_%_rsr%&set branch=21h1_%_rsr%)
+if %revmajor%==19042 (set _label=%revision%.%_time%.20h2_%_rsr%&set branch=20h2_%_rsr%)
+if %revision%==19042.631 (set _label=19042.631.201119-0144.20h2_%_rsr%&set branch=20h2_%_rsr%)
+if %revision%==19042.630 (set _label=19042.630.201106-1636.20h2_%_rsr%&set branch=20h2_%_rsr%)
+if %revision%==19042.572 (set _label=19042.572.201009-1947.20h2_%_rsr%&set branch=20h2_%_rsr%)
+if %revision%==19042.508 (set _label=19042.508.200927-1902.20h2_%_rsr%&set branch=20h2_%_rsr%)
+if %revision%==19042.450 (set _label=19042.450.200814-0345.20h2_%_rsr%&set branch=20h2_%_rsr%)
+if %revision%==19041.572 (set _label=19041.572.201009-1946.vb_%_rsr%&set branch=vb_%_rsr%)
+if %revision%==19041.508 (set _label=19041.508.200907-0256.vb_%_rsr%&set branch=vb_%_rsr%)
+if %revision%==19041.450 (set _label=19041.450.200808-0726.vb_%_rsr%&set branch=vb_%_rsr%)
+if %revision%==19041.388 (set _label=19041.388.200710-1729.vb_%_rsr%&set branch=vb_%_rsr%)
+if %revision%==19041.264 (set _label=19041.264.200511-0456.vb_%_rsr%&set branch=vb_%_rsr%)
+if %revision%==19041.84  (set _label=19041.84.200218-1143.vb_%_rsr%&set branch=vb_%_rsr%)
+if %revmajor%==18363 (set _label=%revision%.%_time%.19h2_%_rsr%&set branch=19h2_%_rsr%)
+if %revision%==18363.1139 (set _label=18363.1139.201008-0514.19h2_%_rsr%&set branch=19h2_%_rsr%)
+if %revision%==18363.592 (set _label=18363.592.200109-2016.19h2_%_rsr%&set branch=19h2_%_rsr%)
+if %revision%==18363.418 (set _label=18363.418.191007-0143.19h2_%_rsr%&set branch=19h2_%_rsr%)
+if %revision%==18363.356 (set _label=18363.356.190918-2052.19h2_%_rsr%&set branch=19h2_%_rsr%)
+if %revision%==18362.356 (set _label=18362.356.190909-1636.19h1_%_rsr%&set branch=19h1_%_rsr%)
+if %revision%==18362.295 (set _label=18362.295.190809-2228.19h1_%_rsr%&set branch=19h1_%_rsr%)
+if %revision%==18362.239 (set _label=18362.239.190709-0052.19h1_%_rsr%&set branch=19h1_%_rsr%)
+if %revision%==18362.175 (set _label=18362.175.190612-0046.19h1_%_rsr%&set branch=19h1_%_rsr%)
+if %revision%==18362.30  (set _label=18362.30.190401-1528.19h1_%_rsr%&set branch=19h1_%_rsr%)
+if %revision%==17763.379 (set _label=17763.379.190312-0539.rs5_%_rsr%&set branch=rs5_%_rsr%)
+if %revision%==17763.253 (set _label=17763.253.190108-0006.rs5_%_rsr%&set branch=rs5_%_rsr%)
+if %revision%==17763.107 (set _label=17763.107.181029-1455.rs5_%_rsr%&set branch=rs5_%_rsr%)
+if %revision%==17134.112 (set _label=17134.112.180619-1212.rs4_%_rsr%&set branch=rs4_%_rsr%)
+if %revision%==16299.125 (set _label=16299.125.171213-1220.rs3_%_rsr%&set branch=rs3_%_rsr%)
+if %revision%==16299.64  (set _label=16299.15.171109-1522.rs3_%_rsr%&set branch=rs3_%_rsr%)
+if %revision%==15063.483 (set _label=15063.0.170710-1358.rs2_%_rsr%&set branch=rs2_%_rsr%)
+if %revision%==15063.413 (set _label=15063.0.170607-1447.rs2_%_rsr%&set branch=rs2_%_rsr%)
+if %revision%==14393.447 (set _label=14393.0.161119-1705.rs1_%_rfr%&set branch=rs1_%_rfr%)
+if %revision%==10586.164 (set _label=10586.0.160426-1409.th2_%_rfr%&set branch=th2_%_rfr%)
+if %revision%==10586.104 (set _label=10586.0.160212-2000.th2_%_rfr%&set branch=th2_%_rfr%)
+if %revision%==10240.16487 (set _label=10240.16393.150909-1450.th1_%_rfr%&set branch=th1_%_rfr%)
 
-if /i "%editionid%"=="PPIPro" if %revision%==19042.572 (set _label=19042.572.201012-1221.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
-if /i "%ESDedition1%"=="PPIPro" if %revision%==19042.572 (set _label=19042.572.201012-1221.20h2_%_rsr%_CLIENT&set branch=20h2_%_rsr%)
+if /i "%editionid%"=="PPIPro" if %revision%==19042.572 (set _label=19042.572.201012-1221.20h2_%_rsr%&set branch=20h2_%_rsr%)
+if /i "%ESDedition1%"=="PPIPro" if %revision%==19042.572 (set _label=19042.572.201012-1221.20h2_%_rsr%&set branch=20h2_%_rsr%)
 
 if %ISOnameESD% neq 0 call :setloop "%ENCRYPTEDESDN%"
+if %_SrvESD% equ 1 (set _label=%_label%_SERVER) else (set _label=%_label%_CLIENT)
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set _label=!_label:%%#=%%#!
 set branch=!branch:%%#=%%#!
@@ -650,11 +666,13 @@ if %editionida% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_lab
 if %editionids% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDSL_OEMRET_%archl%FRE_%langid%
 if %editionidc% equ 1 set DVDLABEL=CCCHA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDCHINA_OEMRET_%archl%FRE_%langid%
 if %build% geq 16299 (if %VOL% equ 1 (set DVDLABEL=CCSA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%BUSINESS_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CONSUMER_OEMRET_%archl%FRE_%langid%))
+if %_SrvESD% equ 1 (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV9&set DVDISO=%_label%_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV9&set DVDISO=%_label%_OEMRET_%archl%FRE_%langid%))
 if defined branch exit /b
 )
 
 :SINGLEINFO
 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%%editionid%_RET_%archl%FRE_%langid%
+if %_SrvESD% equ 1 set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%-%editionid%_RET_%archl%FRE_%langid%
 if /i %editionid%==Core set DVDLABEL=CCRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CORE_OEMRET_%archl%FRE_%langid%&exit /b
 if /i %editionid%==CoreN set DVDLABEL=CCRNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COREN_OEMRET_%archl%FRE_%langid%&exit /b
 if /i %editionid%==CoreSingleLanguage set DVDLABEL=CSLA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%SINGLELANGUAGE_OEM_%archl%FRE_%langid%&exit /b
@@ -678,6 +696,15 @@ if /i %editionid%==ProfessionalWorkstation (if %VOL% equ 1 (set DVDLABEL=CPRWA_%
 if /i %editionid%==ProfessionalWorkstationN (if %VOL% equ 1 (set DVDLABEL=CPRWNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRWNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_OEMRET_%archl%FRE_%langid%))&exit /b
 if /i %editionid%==ProfessionalSingleLanguage set DVDLABEL=CPRSLA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%PROSINGLELANGUAGE_OEM_%archl%FRE_%langid%&exit /b
 if /i %editionid%==ProfessionalCountrySpecific set DVDLABEL=CPRCHA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%PROCHINA_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CloudEdition (if %VOL% equ 1 (set DVDLABEL=CWCA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%CLOUD_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CWCA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUD_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==CloudEditionN (if %VOL% equ 1 (set DVDLABEL=CWCNNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%CLOUDN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CWCNNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUDN_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerStandard (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%STANDARD_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%STANDARD_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerStandardCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%STANDARDCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%STANDARDCORE_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerDatacenter (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%DATACENTER_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%DATACENTER_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerDatacenterCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%DATACENTERCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%DATACENTERCORE_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerAzureStackHCICor set DVDLABEL=SASH_%archl%FRE_%langid%_DV5&set DVDISO=%_label%AZURESTACKHCI_RET_%archl%FRE_%langid%&exit /b
+if /i %editionid%==ServerTurbine (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_DV5&set DVDISO=%_label%TURBINE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_DV5&set DVDISO=%_label%TURBINE_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerTurbineCor (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_DV5&set DVDISO=%_label%TURBINECOR_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_DV5&set DVDISO=%_label%TURBINECOR_OEMRET_%archl%FRE_%langid%))&exit /b
 exit /b
 
 :setloop
@@ -686,6 +713,7 @@ set _tn=4
 :startLoop
 for /f "tokens=%_tn% delims=._" %%A in ("%~n1") do (
   echo %%A|find /i "client" >nul && goto :endLoop
+  echo %%A|find /i "server" >nul && goto :endLoop
   set "_tv%_tn%=%%A"
   set /a _tn+=1
   goto startLoop
@@ -697,7 +725,7 @@ for /l %%B in (4,1,%_tn%) do (
   if defined _esdb (set "_esdb=!_esdb!_!_tv%%B!") else (set "_esdb=!_tv%%B!")
 )
 set branch=%_esdb%
-set _label=%version%.%labeldate%.%branch%_CLIENT
+set _label=%version%.%labeldate%.%branch%
 exit /b
 
 :setdate
@@ -804,6 +832,7 @@ set ESDver%%#=0
 set ESDlang%%#=0
 )
 for /f "delims=" %%# in ('dir /b /a:-d *.esd') do call :dCount %%#
+set _SrvESD=0
 call :dInfo 1
 call :dInfo 2
 if /i %ESDarch1% equ %ESDarch2% goto :prompt2
@@ -1053,6 +1082,7 @@ find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditiona%1
 find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditionn%1=1) || (set ESDeditionn%1=0)
 find /i "CoreSingleLanguage</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditions%1=1) || (set ESDeditions%1=0)
 find /i "CoreCountrySpecific</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditionc%1=1) || (set ESDeditionc%1=0)
+find /i "<EDITIONID>Server" bin\infoall.txt %_Nul1% && (set _SrvESD=1)
 imagex.exe /info "!ESDfile%1!" 4 >bin\info.txt 2>&1
 for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do set ESDver%1=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<EDITIONID>" bin\info.txt') do set ESDedition%1=%%#
@@ -1099,6 +1129,8 @@ if /i !ESDedition%1!==ProfessionalWorkstation (if !ESDvol%1! equ 1 (set DVDLABEL
 if /i !ESDedition%1!==ProfessionalWorkstationN (if !ESDvol%1! equ 1 (set DVDLABEL%1=CPRWNA&set DVDISO%1=PROWORKSTATIONN_VOL) else (set DVDLABEL%1=CPRWNA&set DVDISO%1=PROWORKSTATIONN_OEMRET))
 if /i !ESDedition%1!==ProfessionalSingleLanguage set DVDLABEL%1=CPRSLA&set DVDISO%1=PROSINGLELANGUAGE_OEM
 if /i !ESDedition%1!==ProfessionalCountrySpecific set DVDLABEL%1=CPRCHA&set DVDISO%1=PROCHINA_OEM
+if /i !ESDedition%1!==CloudEdition (if !ESDvol%1! equ 1 (set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_VOL) else (set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_OEMRET))
+if /i !ESDedition%1!==CloudEditionN (if !ESDvol%1! equ 1 (set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_VOL) else (set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_OEMRET))
 if !ESDmulti%1! geq 5 (
 if !ESDeditionn%1! equ 1 set DVDLABEL%1=CCSNA&set DVDISO%1=MULTIN_OEMRET
 if !ESDeditions%1! equ 1 set DVDLABEL%1=CCSA&set DVDISO%1=MULTISL_OEMRET

@@ -219,8 +219,8 @@ set WIMFILE%%#=0
 )
 call :dInfo 1
 call :dInfo 2
+:: if /i "%ISOver1%" neq "%ISOver2%" (set "MESSAGE=ISO distributions have different Windows versions."&goto :E_MSG)
 if /i "%ISOarch1%" equ "%ISOarch2%" (set "MESSAGE=ISO distributions have the same architecture."&goto :E_MSG)
-if /i "%ISOver1%" neq "%ISOver2%"   (set "MESSAGE=ISO distributions have different Windows versions."&goto :E_MSG)
 if /i "%ISOlang1%" neq "%ISOlang2%" (set "MESSAGE=ISO distributions have different languages."&goto :E_MSG)
 if /i "%WIMFILE1%" neq "%WIMFILE2%" (set "MESSAGE=ISO distributions have different install file format."&goto :E_MSG)
 if %combine% equ 0 if %winx% equ 0  (set "MESSAGE=ISO with 2 separate install files require Windows 10 setup files"&goto :E_MSG)

@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v9.9
+@set uiv=v10.1
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -34,6 +34,7 @@ set ResetBase=0
 set WinRE=1
 
 :: 1 = do not install EdgeChromium with Enablement Package or Cumulative Update
+:: 2 = alternative workaround to avoid EdgeChromium with Cumulative Update only
 set SkipEdge=0
 
 :: optional, set directory for temporary extracted files (default is on the same drive as the script)
@@ -275,8 +276,8 @@ if exist "!target!\Windows\regedit.exe" set offline=1
 )
 if %offline%==0 if %wim%==0 if %dvd%==0 (if %_init%==1 (set "target=%SystemDrive%"&goto :check) else (set "MESSAGE=Specified location is not valid"&goto :E_Target))
 if %offline%==1 (
-dir /b /ad "!target!\Windows\servicing\Version\10.0.*" %_Nul3% || (set "MESSAGE=Detected target offline image is not Windows 10"&goto :E_Target)
-for /f "tokens=3 delims=." %%# in ('dir /b /ad "!target!\Windows\servicing\Version\10.0.*"') do set build=%%#
+dir /b /ad "!target!\Windows\Servicing\Version\10.0.*" %_Nul3% || (set "MESSAGE=Detected target offline image is not Windows 10"&goto :E_Target)
+for /f "tokens=3 delims=." %%# in ('dir /b /ad "!target!\Windows\Servicing\Version\10.0.*"') do set _build=%%#
 set "mountdir=!target!"
 set arch=x86
 if exist "!target!\Windows\SysWOW64\cmd.exe" set arch=x64
@@ -289,7 +290,7 @@ echo Please wait...
 echo ============================================================
 cd /d "!targetpath!"
 dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 | find /i "Version : 10.0" %_Nul1% || (set "MESSAGE=Detected wim version is not Windows 10"&goto :E_Target)
-for /f "tokens=4 delims=:. " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 ^| find /i "Version :"') do set build=%%#
+for /f "tokens=4 delims=:. " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 ^| find /i "Version :"') do set _build=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 ^| find /i "Architecture"') do set arch=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%targetname%" ^| find /i "Index"') do set imgcount=%%#
 for /L %%# in (1,1,!imgcount!) do (
@@ -307,7 +308,7 @@ echo ============================================================
 copy /y nul "!target!\#.rw" %_Nul3% && (del /f /q "!target!\#.rw" %_Nul3%) || (set copytarget=1)
 cd /d "!target!"
 dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 | find /i "Version : 10.0" %_Nul1% || (set "MESSAGE=Detected install.wim version is not Windows 10"&goto :E_Target)
-for /f "tokens=4 delims=:. " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 ^| find /i "Version :"') do set build=%%#
+for /f "tokens=4 delims=:. " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 ^| find /i "Version :"') do set _build=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 ^| find /i "Architecture"') do set arch=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" ^| find /i "Index"') do set imgcount=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\boot.wim" ^| find /i "Index"') do set bootimg=%%#
@@ -340,7 +341,7 @@ if "!repo!"=="" (%_Goto%)
 if "%repo:~-1%"=="\" set "repo=!repo:~0,-1!"
 if "!_cabdir!"=="" (%_Goto%)
 if "!mountdir!"=="" (%_Goto%)
-if /i "!target!"=="%SystemDrive%" (set dismtarget=/online&set "mountdir=!target!"&set online=1&set build=%winbuild%) else (set dismtarget=/image:"!mountdir!")
+if /i "!target!"=="%SystemDrive%" (set dismtarget=/online&set "mountdir=!target!"&set online=1&set _build=%winbuild%) else (set dismtarget=/image:"!mountdir!")
 
 :main2board
 if %_embd% equ 0 (@cls) else (echo.)
@@ -369,7 +370,7 @@ if exist "%SystemRoot%\WinSxS\pending.xml" (
 set verb=0
 set "mountdir=!target!"
 set dismtarget=/online
-set build=%winbuild%
+set _build=%winbuild%
 call :cleanup
 reg.exe delete %_SxS% /v W10UIclean /f %_Nul3%
 reg.exe delete %_SxS% /v W10UIrebase /f %_Nul3%
@@ -398,12 +399,12 @@ if not defined isoupdate goto :fin
 if %_offdu%==1 if not exist "!_cabdir!\du\" (
   mkdir "!_cabdir!\du" %_Nul3%
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
-  if exist "!mountdir!\sources\setup.exe" if exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" if exist "!_cabdir!\du\setup.exe" del /f /q "!_cabdir!\du\setup.exe" %_Nul3%
+  if exist "!mountdir!\sources\setup.exe" if exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" if exist "!_cabdir!\du\setup.exe" del /f /q "!_cabdir!\du\setup.exe" %_Nul3%
   xcopy /CRUY "!_cabdir!\du" "!cmd_source!\" %_Nul3%
   for /f %%# in ('dir /b /ad "!_cabdir!\du\*-*" %_Nul6%') do if exist "!cmd_source!\%%#\*.mui" copy /y "!_cabdir!\du\%%#\*" "!cmd_source!\%%#\" %_Nul3%
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!cmd_source!\replacementmanifests\" %_Nul3%
   )
-if exist "!mountdir!\sources\setup.exe" if not exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" (
+if exist "!mountdir!\sources\setup.exe" if not exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" (
   if not exist "!_cabdir!\du\" mkdir "!_cabdir!\du" %_Nul3%
   if not exist "!_cabdir!\du\" for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
   robocopy "!_cabdir!\du" "!mountdir!\sources" /XL /XX /XO %_Nul3%
@@ -553,8 +554,8 @@ Package_for_ServicingStack
 Package_for_RollupFix
 Package_for_DotNetRollup
 Package_for_WindowsExperienceFeaturePack
-) do if exist "!target!\Windows\servicing\packages\%%#*.mum" (
-set "mumcheck=!target!\Windows\servicing\packages\%%#*.mum"
+) do if exist "!target!\Windows\Servicing\packages\%%#*.mum" (
+set "mumcheck=!target!\Windows\Servicing\packages\%%#*.mum"
 set "pkgcheck=%%#"
 call :mumversion !pkgcheck:~0,14!
 if !skip!==1 (set /a _sum-=1&if %msu% equ 1 (set /a _msu-=1&goto :eof) else (set /a _cab-=1&goto :eof))
@@ -604,7 +605,7 @@ rmdir /s /q "checker\" %_Nul3%
 goto :eof
 )
 set "_type="
-if %build% geq 17763 findstr /i /m "WinPE" "checker\update.mum" %_Nul3% && (
+if %_build% geq 17763 findstr /i /m "WinPE" "checker\update.mum" %_Nul3% && (
 %_Nul3% findstr /i /m "Edition\"" "checker\update.mum"
 if errorlevel 1 set "_type=[WinPE]"
 )
@@ -634,13 +635,14 @@ if not defined _type (
 expand.exe -f:*_microsoft-windows-s..boot-firmwareupdate_*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" set "_type=[SecureBoot]"
 )
-if not defined _type if %build% geq 18362 (
+if not defined _type if %_build% geq 18362 (
 expand.exe -f:microsoft-windows-*enablement-package~*.mum "!repo!\!package!" "checker" %_Null%
 if exist "checker\microsoft-windows-*enablement-package~*.mum" set "_type=[Enablement]"
 if exist "checker\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "checker\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
+if exist "checker\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
 )
-if %build% geq 18362 if exist "checker\*enablement-package*.mum" (
+if %_build% geq 18362 if exist "checker\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[Enablement / EdgeChromium]"
 )
@@ -653,6 +655,7 @@ expand.exe -f:*_adobe-flash-for-windows_*.manifest "!repo!\!package!" "checker" 
 if exist "checker\*_adobe-flash-for-windows_*.manifest" findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% || set "_type=[Flash]"
 )
 echo %count%/%_sum%: %package% %_type%
+:: if %_build% geq 20231 if /i "%_type%"=="[LCU]" goto :eof
 if not exist "%dest%\update.mum" expand.exe -f:* "!repo!\!package!" "%dest%" %_Null% || (
   rmdir /s /q "%dest%\" %_Nul3%
   set directcab=!directcab! !package!
@@ -762,22 +765,22 @@ set discard=0
 set discardre=0
 set ldr=&set listc=0&set list=1&set AC=100
 set _sum=0
-if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
-if %build% neq 14393 if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-PPIProEdition~*.mum" set LTSC=1
+if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+if %_build% neq 14393 if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-PPIProEdition~*.mum" set LTSC=1
 if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-EnterpriseS*Edition~*.mum" set LTSC=1
 if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-IoTEnterpriseS*Edition~*.mum" set LTSC=1
 if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set LTSC=1
 if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-Server*ACorEdition~*.mum" set LTSC=0
 )
 if exist "!repo!\*Windows10*KB*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows10*KB*%arch%*.cab"') do (call set /a _sum+=1))
-if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (call set /a _sum+=1))
+if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (call set /a _sum+=1))
 if exist "!repo!\*Windows10*KB*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows10*KB*%arch%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :procmum))
-if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :procmum))
-if %verb%==1 if %_sum%==0 if exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (echo.&echo All applicable updates are detected as installed&call set discard=1&goto :eof)
+if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :procmum))
+if %verb%==1 if %_sum%==0 if exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (echo.&echo All applicable updates are detected as installed&call set discard=1&goto :eof)
 if %verb%==1 if %_sum%==0 (echo.&echo All applicable updates are detected as installed&goto :eof)
 if %verb%==0 if %_sum%==0 (echo.&echo All applicable updates are detected as installed&call set discardre=1&goto :eof)
 if %listc% lss %ac% set "ldr%list%=%ldr%"
-if %online%==0 if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
+if %online%==0 if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 reg.exe load HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 if %winbuild% lss 15063 if /i %arch%==arm64 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul1%
 if %winbuild% lss 9600 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul1%
@@ -811,7 +814,7 @@ if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 if defined secureboot (
 set callclean=1
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSBoot.log" /Add-Package %secureboot%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSecureBoot.log" /Add-Package %secureboot%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 if defined ldr (
@@ -846,23 +849,23 @@ set "_DsmLog=DismLCU.log"
 for %%# in (%dupdt%) do (set "dest=%%~n#"&call :pXML)
 )
 :: winre.wim non-1607
-if %build% neq 14393 if %verb%==0 if not defined safeos if defined cumulative (
+if %_build% neq 14393 if %verb%==0 if not defined safeos if defined cumulative (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU_winre.log" /Add-Package %cumulative%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 :: boot.wim non-1607
-if %build% neq 14393 if %verb%==1 if defined cumulative if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
+if %_build% neq 14393 if %verb%==1 if defined cumulative if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU_boot.log" /Add-Package %cumulative%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 :: install.wim
-if %verb%==1 if defined cumulative if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
+if %verb%==1 if defined cumulative if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
-if %build% equ 14393 if %wimfiles% equ 1 call :MeltdownSpectre
+if %_build% equ 14393 if %wimfiles% equ 1 call :MeltdownSpectre
 )
 if defined callclean call :cleanup
 if defined mpamfe (
@@ -888,7 +891,7 @@ goto :eof
 if %listc% geq %ac% (set /a AC+=100&set /a list+=1&set "ldr%list%=%ldr%"&set "ldr=")
 set /a listc+=1
 if exist "%dest%\*defender*.xml" (
-if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
+if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
 call :defender_check
 goto :eof
 )
@@ -912,16 +915,16 @@ for /f "tokens=%tn% delims=-" %%A in ('echo !package!') do (
 )
 :endmumLoop
 if "%kb%"=="" (set /a _sum-=1&goto :eof)
-if %build% geq 17763 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
+if %_build% geq 17763 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && (if exist "%dest%\*_*10.0.*.manifest" if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" (set "netroll=!netroll! /packagepath:%dest%\update.mum")))
-findstr /i /m "Package_for_OasisAsset" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\servicing\packages\*OasisAssets-Package*.mum" set /a _sum-=1&goto :eof)
+findstr /i /m "Package_for_OasisAsset" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\*OasisAssets-Package*.mum" set /a _sum-=1&goto :eof)
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
   %_Nul3% findstr /i /m "Edition\"" "%dest%\update.mum"
   if errorlevel 1 (set /a _sum-=1&goto :eof)
   )
 )
-if %build% geq 19041 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
-findstr /i /m "Package_for_WindowsExperienceFeaturePack" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\servicing\packages\Microsoft-Windows-UserExperience-Desktop*.mum" set /a _sum-=1&goto :eof)
+if %_build% geq 19041 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+findstr /i /m "Package_for_WindowsExperienceFeaturePack" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\Microsoft-Windows-UserExperience-Desktop*.mum" set /a _sum-=1&goto :eof)
 )
 if exist "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest" if not defined vermajor (
 for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set updtver=%%I.%%K&set vermajor=%%I
@@ -932,8 +935,8 @@ Package_for_ServicingStack
 Package_for_RollupFix
 Package_for_DotNetRollup
 Package_for_WindowsExperienceFeaturePack
-) do if exist "!mumtarget!\Windows\servicing\packages\%%#*.mum" (
-set "mumcheck=!mumtarget!\Windows\servicing\packages\%%#*.mum"
+) do if exist "!mumtarget!\Windows\Servicing\packages\%%#*.mum" (
+set "mumcheck=!mumtarget!\Windows\Servicing\packages\%%#*.mum"
 set "pkgcheck=%%#"
 call :mumversion !pkgcheck:~0,14!
 if !skip!==1 (set /a _sum-=1&goto :eof)
@@ -943,13 +946,13 @@ set "servicingstack=!servicingstack! /packagepath:%dest%\update.mum"
 goto :eof
 )
 if exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" if exist "%dest%\*_netfx4clientcorecomp.resources*_en-us_*.manifest" (
-if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
+if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
 set "netpack=!netpack! /packagepath:%dest%\update.mum"
 goto :eof
 )
 if exist "%dest%\*_%_EdgCmp%_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
-if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
-if exist "%dest%\*enablement-package*.mum" if %SkipEdge% equ 0 (
+if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
+if exist "%dest%\*enablement-package*.mum" if %SkipEdge% neq 1 (
   for /f %%# in ('dir /b /a:-d "%dest%\*enablement-package~*.mum"') do set "ldr=!ldr! /packagepath:%dest%\%%#"
   set "edge=!edge! /packagepath:%dest%\update.mum"
   )
@@ -958,54 +961,63 @@ if not exist "%dest%\*enablement-package*.mum" set "edge=!edge! /packagepath:%de
 goto :eof
 )
 if exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
-if not exist "%mumtarget%\Windows\servicing\Packages\WinPE-SRT-Package~*.mum" (set /a _sum-=1&goto :eof)
+if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /packagepath:%dest%\update.mum"
 goto :eof
 )
 if exist "%dest%\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" if not exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
-if not exist "%mumtarget%\Windows\servicing\Packages\WinPE-Rejuv-Package~*.mum" (set /a _sum-=1&goto :eof)
+if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /packagepath:%dest%\update.mum"
 goto :eof
 )
 if exist "%dest%\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" (
 if %winbuild% lss 9600 (set /a _sum-=1&goto :eof)
-if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
+if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
 set secureboot=!secureboot! /packagepath:"!repo!\!package!"
 goto :eof
 )
-if exist "%dest%\update.mum" if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
+if exist "%dest%\update.mum" if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (set /a _sum-=1&goto :eof))
 findstr /i /m "WinPE-NetFx-Package" "%dest%\update.mum" %_Nul3% && (findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (set /a _sum-=1&goto :eof))
 )
-if exist "%dest%\*_adobe-flash-for-windows_*.manifest" if not exist "%dest%\*enablement-package*.mum" (
-if not exist "!mumtarget!\Windows\servicing\packages\Adobe-Flash-For-Windows-Package*.mum" if not exist "!mumtarget!\Windows\servicing\packages\Microsoft-Windows-Client-Desktop-Required-Package*.mum" (set /a _sum-=1&goto :eof)
-if %build% geq 16299 (
+if exist "%dest%\*_adobe-flash-for-windows_*.manifest" if not exist "%dest%\*enablement-package*.mum" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
+if not exist "!mumtarget!\Windows\Servicing\packages\Adobe-Flash-For-Windows-Package*.mum" if not exist "!mumtarget!\Windows\Servicing\packages\Microsoft-Windows-Client-Desktop-Required-Package*.mum" (set /a _sum-=1&goto :eof)
+if %_build% geq 16299 (
   set flash=0
-  for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "%dest%\update.mum" %_Nul6%') do if exist "!mumtarget!\Windows\servicing\packages\%%~#*.mum" set flash=1
+  for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "%dest%\update.mum" %_Nul6%') do if exist "!mumtarget!\Windows\Servicing\packages\%%~#*.mum" set flash=1
   if "!flash!"=="0" (set /a _sum-=1&goto :eof)
   )
 )
 for %%# in (%directcab%) do (
 if /i "!package!"=="%%~#" (
-  set cumulative=!cumulative! /packagepath:"!repo!\!package!"
+  set "cumulative=!cumulative! /packagepath:"!repo!\!package!""
   goto :eof
   )
 )
 if exist "%dest%\update.mum" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% && (
-if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (set "cumulative=!cumulative! /packagepath:%dest%\update.mum"&goto :eof)
+if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set "cumulative=!cumulative! /packagepath:%dest%\update.mum"&goto :eof)
 if exist "%dest%\*_%_EsuCmp%_*.manifest" if not exist "%dest%\*_%_CedCmp%_*.manifest" if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
 if exist "%dest%\*_%_CedCmp%_*.manifest" if not exist "%dest%\*_%_EsuCmp%_*.manifest" if %SkipEdge% equ 1 (set "cupdt=!cupdt! !package!"&goto :eof)
+if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 2 (
+  mkdir "!mumtarget!\Program Files\Microsoft\Edge\Application" %_Nul3%
+  if exist "!mumtarget!\Program Files (x86)\Common Files\" mkdir "!mumtarget!\Program Files (x86)\Microsoft\Edge\Application" %_Nul3%
+  )
 if exist "%dest%\*_%_EsuCmp%_*.manifest" if exist "%dest%\*_%_CedCmp%_*.manifest" (
-if %SkipEdge% equ 0 if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
+if %SkipEdge% neq 1 if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
 if %SkipEdge% equ 1 if %LTSC% equ 0 (set "dupdt=!dupdt! !package!"&goto :eof)
 if %SkipEdge% equ 1 if %LTSC% equ 1 (set "cupdt=!cupdt! !package!"&goto :eof)
 )
+if %online%==0 if %_build% geq 20231 (set "cumulative=!cumulative! /packagepath:"!repo!\!package!""&goto :eof)
 set "cumulative=!cumulative! /packagepath:%dest%\update.mum"
 goto :eof
 )
-if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (set "ldr=!ldr! /packagepath:%dest%\update.mum"&goto :eof)
+if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set "ldr=!ldr! /packagepath:%dest%\update.mum"&goto :eof)
 if exist "%dest%\*_%_EsuCmp%_*.manifest" if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
 if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 1 (set "cupdt=!cupdt! !package!"&goto :eof)
+if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 2 (
+  mkdir "!mumtarget!\Program Files\Microsoft\Edge\Application" %_Nul3%
+  if exist "!mumtarget!\Program Files (x86)\Common Files\" mkdir "!mumtarget!\Program Files (x86)\Microsoft\Edge\Application" %_Nul3%
+  )
 set "ldr=!ldr! /packagepath:%dest%\update.mum"
 goto :eof
 
@@ -1198,7 +1210,7 @@ set "kv_mj=%%G"&set "kv_mn=%%H"&set "kv_bl=%%I"&set "kv_dl=%%J"
 goto :eof
 
 :enablenet35
-if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
+if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
 if exist "!mumtarget!\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" goto :eof
 if not defined net35source (
 for %%# in (D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do if exist "%%#:\sources\sxs\*netfx3*.cab" set "net35source=%%#:\sources\sxs"
@@ -1225,6 +1237,10 @@ goto :eof
 cd /d "!_cabdir!"
 set _DNF=1
 if not defined netroll if not defined cumulative (
+call :cleanup
+goto :eof
+)
+if %_build% geq 20231 dir /b /ad "!mumtarget!\Windows\Servicing\LCU\Package_for_RollupFix*" %_Nul3% && (
 call :cleanup
 goto :eof
 )
@@ -1365,7 +1381,7 @@ call :update
 if %net35%==1 call :enablenet35
 if %dvd%==1 (
 if not defined isomajor for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do set isover=%%i.%%j&set isomajor=%%i
-if %_actEP% equ 0 if exist "!mountdir!\Windows\servicing\Packages\microsoft-windows-*enablement-package~*.mum" if not exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" call :detectEP
+if %_actEP% equ 0 if exist "!mountdir!\Windows\Servicing\Packages\microsoft-windows-*enablement-package~*.mum" if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" call :detectEP
 if exist "!mountdir!\sources\setup.exe" call :boots
 )
 if %wim%==1 if exist "!_wimpath!\setup.exe" (
@@ -1425,15 +1441,16 @@ goto :eof
 set vermajor=
 set _fixEP=
 set _actEP=1
-if exist "!mountdir!\Windows\servicing\Packages\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
-if exist "!mountdir!\Windows\servicing\Packages\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest" (
-for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /on "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set updtver=%%I.%%K&set vermajor=%%I
+for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set updtver=%%I.%%K&set vermajor=%%I
 )
 goto :eof
 
 :boots
-if exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" xcopy /CRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
+if exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" xcopy /CRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
 del /f /q "!target!\sources\background.bmp" %_Nul3%
 del /f /q "!target!\sources\xmllite.dll" %_Nul3%
 del /f /q "!target!\efi\microsoft\boot\*noprompt.*" %_Nul3%
@@ -1446,7 +1463,7 @@ copy /y "!mountdir!\Windows\Boot\PCAT\memtest.exe" "!target!\boot\" %_Nul1%
 copy /y "!mountdir!\Windows\Boot\EFI\bootmgfw.efi" "!target!\efi\boot\%efifile%" %_Nul1%
 copy /y "!mountdir!\Windows\Boot\EFI\bootmgr.efi" "!target!\" %_Nul1%
 if exist "!target!\setup.exe" copy /y "!mountdir!\setup.exe" "!target!\" %_Nul3%
-if defined isoupdate if not exist "!mountdir!\Windows\servicing\Packages\WinPE-Setup-Package~*.mum" (
+if defined isoupdate if not exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" (
   set uupboot=1
   mkdir "!_cabdir!\du" %_Nul3%
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
@@ -1489,8 +1506,8 @@ goto :eof
 
 :cleanup
 set savc=0&set savr=1
-if %build% geq 18362 (set savc=3&set savr=3)
-if exist "!mumtarget!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
+if %_build% geq 18362 (set savc=3&set savr=3)
+if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 if %verb%==1 (
 echo.
 echo ============================================================
@@ -1498,7 +1515,7 @@ echo Resetting WinPE image base
 echo ============================================================
 )
 call :MeltdownSpectre
-if %build% geq 16299 if /i not %arch%==arm64 (
+if %_build% geq 16299 if /i not %arch%==arm64 (
 set ksub=SOFTWIM
 reg.exe load HKLM\!ksub! "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 reg.exe add HKLM\!ksub!\%_sbs% /v SupersededActions /t REG_DWORD /d %savr% /f %_Nul1%
@@ -1557,7 +1574,7 @@ if /i %xOS%==x86 if /i not %arch%==x86 reg.exe save HKLM\%ksub% "!mumtarget!\Win
 reg.exe unload HKLM\!ksub! %_Nul1%
 if /i %xOS%==x86 if /i not %arch%==x86 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
-if %online%==0 if %build% geq 16299 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup
+if %online%==0 if %_build% geq 16299 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%

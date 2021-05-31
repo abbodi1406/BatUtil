@@ -44,7 +44,7 @@
                 <li>You can get UUP files by performing upgrade from Windows 10 build to later build (starting 15063, aka version 1703).</li>
                 <br />
                 <li>You can also obtain UUP canonical source using one of these projects:<br />
-                <a href="https://uupdump.ml/">UUP dump website</a><br />
+                <a href="https://uupdump.net/">UUP dump website</a><br />
                 <a href="https://uup.rg-adguard.net/">UUP Generation Project</a></li>
             </ul>
             <hr />
@@ -159,8 +159,9 @@
                 <br />
                 <li>
                     <b>SkipEdge</b><br /><br />
-                    Do not integrate Microsoft Edge Chromium with Feature Update Enablement Package (version 20H2 or later).<br /><br />
-					This option works only with option <b>AddUpdates=1</b> (Integrate). It has no effect on builds prior 18362
+                    Set option to <strong>1</strong> : Do not integrate Microsoft Edge Chromium with Feature Update Enablement Package or Cumulative Update.<br />
+                    Set option to <strong>2</strong> : Skip Microsoft Edge Chromium with or Cumulative Update via alternative workaround.<br /><br />
+					This option works only with option <b>AddUpdates=1</b> (Integrate).
                 </li>
             </ul>
             <hr />
@@ -240,8 +241,8 @@
                 <br />
                 <li>The following editions are now exist as "virtual upgrade editions" with base editions:<br /><br />
                 <code>Home -&gt; Home Single Language<br />
-                Pro N -&gt; Enterprise N, Education N, Pro Education N, Pro N for Workstations<br />
-                Pro -&gt; Enterprise, Education, Pro Education, Pro for Workstations, Enterprise for Virtual Desktops, IoT Enterprise (build 18277 and later)</code>
+                Pro N -&gt; Enterprise N, Education N, Pro Education N, Pro N for Workstations, Cloud N (build 21364 and later)<br />
+                Pro -&gt; Enterprise, Education, Pro Education, Pro for Workstations, Enterprise multi-session, IoT Enterprise (build 18277 and later), Cloud (build 21364 and later)</code>
                 </li>
                 <br />
                 <li>Therefore, the extra script is to help create these additional editions from UUP source.
@@ -295,7 +296,7 @@
                 <li>AutoEditions<br /><br />
                 Specify editions to auto create with <b>AutoStart</b> option, separate the editions with a comma ,<br /><br />
                 Leave this option empty to create all possible target editions.<br /><br />
-                Allowed values: Enterprise, Education, ProfessionalEducation, ProfessionalWorkstation, EnterpriseN, EducationN, ProfessionalEducationN, ProfessionalWorkstationN, CoreSingleLanguage, ServerRdsh, IoTEnterprise<br /><br />
+                Allowed values: Enterprise, Education, ProfessionalEducation, ProfessionalWorkstation, EnterpriseN, EducationN, ProfessionalEducationN, ProfessionalWorkstationN, CoreSingleLanguage, ServerRdsh, IoTEnterprise, CloudEdition, CloudEditionN<br /><br />
                 Examples:<br />
                 <code>vAutoEditions=Enterprise<br />
                 vAutoEditions=Enterprise,ProfessionalWorkstation,Education<br />
