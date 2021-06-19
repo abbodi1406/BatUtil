@@ -195,13 +195,13 @@ if %ERRORTEMP% neq 0 goto :E_File
 
 :PRE_INFO
 set _SrvESD=0
-imagex.exe /info "!ENCRYPTEDESD!">bin\infoall.txt 2>&1
+imagex /info "!ENCRYPTEDESD!">bin\infoall.txt 2>&1
 find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionida=1) || (set editionida=0)
 find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionidn=1) || (set editionidn=0)
 find /i "CoreSingleLanguage</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionids=1) || (set editionids=0)
 find /i "CoreCountrySpecific</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionidc=1) || (set editionidc=0)
 find /i "<EDITIONID>Server" bin\infoall.txt %_Nul1% && (set _SrvESD=1)
-imagex.exe /info "!ENCRYPTEDESD!" 4 >bin\info.txt 2>&1
+imagex /info "!ENCRYPTEDESD!" 4 >bin\info.txt 2>&1
 for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do set build=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<MAJOR>" bin\info.txt') do set ver1=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<MINOR>" bin\info.txt') do set ver2=%%#
@@ -221,11 +221,11 @@ if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.
 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.txt') do set "_os=%%#"
 )
 if %MULTI% neq 0 for /L %%A in (4,1,%MULTI%) do (
-imagex.exe /info "!ENCRYPTEDESD!" %%A | find /i "<DISPLAYNAME>" %_Nul1% && (
-for /f "tokens=3 delims=<>" %%# in ('imagex.exe /info "!ENCRYPTEDESD!" %%A ^| find /i "<DISPLAYNAME>"') do set "_os%%A=%%#"
-if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('imagex.exe /info "!ENCRYPTEDESD!" %%A ^| find /i "<NAME>"') do set "_os%%A=%%#"
+imagex /info "!ENCRYPTEDESD!" %%A | find /i "<DISPLAYNAME>" %_Nul1% && (
+for /f "tokens=3 delims=<>" %%# in ('imagex /info "!ENCRYPTEDESD!" %%A ^| find /i "<DISPLAYNAME>"') do set "_os%%A=%%#"
+if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('imagex /info "!ENCRYPTEDESD!" %%A ^| find /i "<NAME>"') do set "_os%%A=%%#"
 ) || (
-for /f "tokens=3 delims=<>" %%# in ('imagex.exe /info "!ENCRYPTEDESD!" %%A ^| find /i "<NAME>"') do set "_os%%A=%%#"
+for /f "tokens=3 delims=<>" %%# in ('imagex /info "!ENCRYPTEDESD!" %%A ^| find /i "<NAME>"') do set "_os%%A=%%#"
 )
 )
 del /f /q bin\info*.txt
@@ -414,7 +414,7 @@ wimlib-imagex.exe export "!ENCRYPTEDESD!" %source% ISOFOLDER\sources\%WIMFILE% %
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
 if defined _single (
-for /f "tokens=3 delims=<>" %%# in ('imagex.exe /info ISOFOLDER\sources\%WIMFILE% 1 ^| find /i "<EDITIONID>"') do set editionid=%%#
+for /f "tokens=3 delims=<>" %%# in ('imagex /info ISOFOLDER\sources\%WIMFILE% 1 ^| find /i "<EDITIONID>"') do set editionid=%%#
 call :SINGLEINFO
 %_Nul3% call :GUID ISOFOLDER\sources\%WIMFILE% 1
 goto :CREATEISO
@@ -772,8 +772,8 @@ echo %line%
 echo Unifying winre.wim . . .
 echo %line%
 echo.
-for /f "tokens=3 delims=<>" %%# in ('imagex.exe /info "!ENCRYPTEDESD!" 4 ^| findstr /i HIGHPART') do set "installhigh=%%#"
-for /f "tokens=3 delims=<>" %%# in ('imagex.exe /info "!ENCRYPTEDESD!" 4 ^| findstr /i LOWPART') do set "installlow=%%#"
+for /f "tokens=3 delims=<>" %%# in ('imagex /info "!ENCRYPTEDESD!" 4 ^| findstr /i HIGHPART') do set "installhigh=%%#"
+for /f "tokens=3 delims=<>" %%# in ('imagex /info "!ENCRYPTEDESD!" 4 ^| findstr /i LOWPART') do set "installlow=%%#"
 wimlib-imagex.exe extract %1 1 Windows\System32\Recovery\winre.wim --dest-dir=.\bin\temp --no-acls --no-attributes %_Supp%
 echo.
 echo Updating winre.wim in different indexes . . .
@@ -1077,13 +1077,13 @@ set "ESDfile%count%=%1"
 exit /b
 
 :dInfo
-imagex.exe /info "!ESDfile%1!">bin\infoall.txt 2>&1
+imagex /info "!ESDfile%1!">bin\infoall.txt 2>&1
 find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditiona%1=1) || (set ESDeditiona%1=0)
 find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditionn%1=1) || (set ESDeditionn%1=0)
 find /i "CoreSingleLanguage</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditions%1=1) || (set ESDeditions%1=0)
 find /i "CoreCountrySpecific</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditionc%1=1) || (set ESDeditionc%1=0)
 find /i "<EDITIONID>Server" bin\infoall.txt %_Nul1% && (set _SrvESD=1)
-imagex.exe /info "!ESDfile%1!" 4 >bin\info.txt 2>&1
+imagex /info "!ESDfile%1!" 4 >bin\info.txt 2>&1
 for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do set ESDver%1=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<EDITIONID>" bin\info.txt') do set ESDedition%1=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<DEFAULT>" bin\info.txt') do set ESDlang%1=%%#

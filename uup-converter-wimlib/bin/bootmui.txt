@@ -21,6 +21,7 @@ setup.exe.mui
 setup_help_upgrade_or_custom.rtf
 setupcompat.dll.mui
 SetupCore.dll.mui
+SetupMgr.dll.mui
 setupplatform.exe.mui
 SetupPrep.exe.mui
 smiengine.dll.mui

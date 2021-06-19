@@ -113,6 +113,10 @@ or set extra manual options below:
 * Net35Source  
 specify custom "folder" path for microsoft-windows-netfx3-ondemand-package.cab
 
+* SkipEdge  
+1 = do not install EdgeChromium with Enablement Package or Cumulative Update  
+2 = alternative workaround to skip EdgeChromium with Cumulative Update only
+
 * wim2esd  
 convert install.wim to install.esd, if the target is a distribution  
 warning: the process will consume very high amount of CPU and RAM resources
@@ -155,11 +159,18 @@ start the process automatically once you execute the script
 
 [Creator](https://forums.mydigitallife.net/members/abbodi1406.204274/)  
 [Concept](https://forums.mydigitallife.net/members/burfadel.84828/)  
-[WHDownloader](https://forums.mydigitallife.net/threads/44645)
+[WHDownloader](https://forums.mydigitallife.net/threads/44645)  
+[SxSExpand](https://forums.mydigitallife.net/members/superbubble.250156/)  
+[PSFExtractor / th1r5bvn23](https://www.betaworld.org/)
 
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.2:  
+- Build 18362, added alternative workaround to suppress Supplemental Servicing or SkipEdge
+- Build 20231 and later, LCU will be re-extracted from cab file for updating install.wim
+- Build 21382 and later, added support for new LCU PSFX format (cab + psf), require external PSFExtractor/SxSExpand
 
 10.1:  
 - Added detection for 19044 / v21H2 Enablement package

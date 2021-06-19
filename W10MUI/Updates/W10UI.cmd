@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.1
+@set uiv=v10.2
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -58,7 +58,7 @@ set wim2esd=0
 set wim2swm=0
 
 :: create new iso file
-:: require Win10 ADK, or place oscdimg.exe or cdimage.exe next to the script
+:: require Win10 ADK, or place oscdimg.exe or cdimage.exe next to the script, or inside bin folder
 set ISO=1
 
 :: folder path for iso file, leave it blank to create ISO in the script current directory
@@ -147,6 +147,12 @@ echo The window will be closed when finished
 :Begin
 title Installer for Windows 10 Updates
 cd /d "!_work!"
+set "_dLog=%SystemRoot%\Logs\DISM"
+set psfnet=0
+if exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set psfnet=1
+if exist "%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set psfnet=1
+set psfsup=0
+if exist "bin\PSFExtractor.exe" if exist "bin\SxSExpand.exe" set psfsup=1
 if not exist "W10UI.ini" goto :proceed
 find /i "[W10UI-Configuration]" W10UI.ini %_Nul1% || goto :proceed
 setlocal DisableDelayedExpansion
@@ -353,8 +359,8 @@ net stop trustedinstaller %_Nul3%
 net stop wuauserv %_Nul3%
 del /f /q %systemroot%\Logs\CBS\* %_Nul3%
 )
-del /f /q %systemroot%\Logs\DISM\* %_Nul3%
-if not exist "%systemroot%\Logs\DISM\" mkdir "%systemroot%\Logs\DISM" %_Nul3%
+del /f /q %_dLog%\* %_Nul3%
+if not exist "%_dLog%\" mkdir "%_dLog%" %_Nul3%
 if defined onlineclean (
 if exist "%SystemRoot%\WinSxS\pending.xml" (
   echo.
@@ -388,12 +394,12 @@ set "target=!_work!\DVD10UI"
 call :extract
 if %_sum%==0 goto :fin
 if %online%==1 (
-call :update
+call :doupdate
 if %net35%==1 call :enablenet35
 goto :fin
 )
 if %offline%==1 (
-call :update
+call :doupdate
 if %net35%==1 call :enablenet35
 if not defined isoupdate goto :fin
 if %_offdu%==1 if not exist "!_cabdir!\du\" (
@@ -594,6 +600,14 @@ if exist "checker\*defender*.xml" (
 rmdir /s /q "checker\" %_Nul3%
 goto :eof
 )
+expand.exe -f:*.psf.cix.xml "!repo!\!package!" "checker" %_Null%
+if exist "checker\*.psf.cix.xml" (
+findstr /i /m "PSFXVersion" "checker\update.mum" %_Nul3% || (rmdir /s /q "checker\" %_Nul3%&goto :eof)
+if not exist "!repo!\%package:~0,-4%.psf" (rmdir /s /q "checker\" %_Nul3%&goto :eof)
+if %psfnet% equ 0 (rmdir /s /q "checker\" %_Nul3%&goto :eof)
+if %psfsup% equ 0 (rmdir /s /q "checker\" %_Nul3%&goto :eof)
+set psf_%package%=1
+)
 expand.exe -f:toc.xml "!repo!\!package!" "checker" %_Null%
 if exist "checker\toc.xml" (
 echo %count%/%_sum%: %package% [Combined]
@@ -668,6 +682,19 @@ if exist "%dest%\*cablist.ini" (
   del /f /q "%dest%\*cablist.ini" %_Nul3%
   del /f /q "%dest%\*.cab" %_Nul3%
 )
+if defined psf_%package% (
+copy /y "!repo!\%package:~0,-4%.*" . %_Nul3%
+if not exist "PSFExtractor.exe" (
+  copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
+  copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
+  )
+PSFExtractor.exe %package% %_Null%
+if !errorlevel! neq 0 (
+  echo Error: failed to extract PSF update
+  rmdir /s /q "%dest%\" %_Nul3%
+  set psf_%package%=
+  )
+)
 rmdir /s /q "checker\" %_Nul3%
 goto :eof
 
@@ -703,7 +730,7 @@ findstr /i /m "%_ufn%" cmpcab.txt %_Nul3% || echo %_ufn%>>cmpcab.txt
 move /y "%dest%\%compkg%" "!repo!\%_ufn%" %_Nul3%
 goto :eof
 
-:update
+:doupdate
 set verb=1
 set "mumtarget=!mountdir!"
 if not "%1"=="" (
@@ -725,32 +752,38 @@ set COMPONENTS=COMPONENTS
 set SOFTWARE=uiSOFTWARE
 set COMPONENTS=uiCOMPONENTS
 )
-set "_Win=HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide\Winners"
+set "_Wnn=HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide\Winners"
 set "_Cmp=HKLM\%COMPONENTS%\DerivedData\Components"
+set "_Pkt=31bf3856ad364e35"
 set "_EsuCmp=microsoft-client-li..pplementalservicing"
 set "_EdgCmp=microsoft-windows-e..-firsttimeinstaller"
 set "_CedCmp=microsoft-windows-edgechromium"
+set "_EsuIdn=Microsoft-Client-Licensing-SupplementalServicing"
+set "_EdgIdn=Microsoft-Windows-EdgeChromium-FirstTimeInstaller"
+set "_CedIdn=Microsoft-Windows-EdgeChromium"
 if exist "!mumtarget!\Windows\Servicing\Packages\*arm64*.mum" (
 set "xBT=arm64"
-set "_EsuKey=%_Win%\arm64_%_EsuCmp%_31bf3856ad364e35_none_0a0357560ca88a4d"
-set "_EdgKey=%_Win%\arm64_%_EdgCmp%_31bf3856ad364e35_none_1e5e2b2c8adcf701"
-set "_CedKey=%_Win%\arm64_%_CedCmp%_31bf3856ad364e35_none_df3eefecc502346d"
+set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0a0357560ca88a4d"
+set "_EdgKey=%_Wnn%\arm64_%_EdgCmp%_%_Pkt%_none_1e5e2b2c8adcf701"
+set "_CedKey=%_Wnn%\arm64_%_CedCmp%_%_Pkt%_none_df3eefecc502346d"
 ) else if exist "!mumtarget!\Windows\Servicing\Packages\*amd64*.mum" (
 set "xBT=amd64"
-set "_EsuKey=%_Win%\amd64_%_EsuCmp%_31bf3856ad364e35_none_0a0357560ca88a4d"
-set "_EdgKey=%_Win%\amd64_%_EdgCmp%_31bf3856ad364e35_none_1e5e22f28add0265"
-set "_CedKey=%_Win%\amd64_%_CedCmp%_31bf3856ad364e35_none_df3ee7b2c5023fd1"
+set "_EsuKey=%_Wnn%\amd64_%_EsuCmp%_%_Pkt%_none_0a0357560ca88a4d"
+set "_EdgKey=%_Wnn%\amd64_%_EdgCmp%_%_Pkt%_none_1e5e22f28add0265"
+set "_CedKey=%_Wnn%\amd64_%_CedCmp%_%_Pkt%_none_df3ee7b2c5023fd1"
 ) else (
 set "xBT=x86"
-set "_EsuKey=%_Win%\x86_%_EsuCmp%_31bf3856ad364e35_none_ade4bbd2544b1917"
-set "_EdgKey=%_Win%\x86_%_EdgCmp%_31bf3856ad364e35_none_c23f876ed27f912f"
-set "_CedKey=%_Win%\x86_%_CedCmp%_31bf3856ad364e35_none_83204c2f0ca4ce9b"
+set "_EsuKey=%_Wnn%\x86_%_EsuCmp%_%_Pkt%_none_ade4bbd2544b1917"
+set "_EdgKey=%_Wnn%\x86_%_EdgCmp%_%_Pkt%_none_c23f876ed27f912f"
+set "_CedKey=%_Wnn%\x86_%_CedCmp%_%_Pkt%_none_83204c2f0ca4ce9b"
 )
+for /f "tokens=4,5,6 delims=_" %%H in ('dir /b "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-foundation_*.manifest"') do set "_Fnd=microsoft-w..-foundation_%_Pkt%_%%H_%%~nJ"
 set mpamfe=
 set servicingstack=
 set cumulative=
 set netpack=
 set netroll=
+set netlcu=
 set secureboot=
 set edge=
 set safeos=
@@ -760,6 +793,7 @@ set supdt=
 set cupdt=
 set dupdt=
 set overall=
+set lcupkg=
 set LTSC=0
 set discard=0
 set discardre=0
@@ -797,7 +831,7 @@ echo ============================================================
 echo Installing servicing stack update...
 echo ============================================================
 )
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSSU.log" /Add-Package %servicingstack%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismSSU.log" /Add-Package %servicingstack%
 if not defined overall call :cleanup
 )
 if not defined overall if not defined mpamfe goto :eof
@@ -809,64 +843,73 @@ echo ============================================================
 )
 if defined safeos (
 set callclean=1
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismWinPE.log" /Add-Package %safeos%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismWinPE.log" /Add-Package %safeos%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 if defined secureboot (
 set callclean=1
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismSecureBoot.log" /Add-Package %secureboot%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismSecureBoot.log" /Add-Package %secureboot%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 if defined ldr (
 set callclean=1
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismUpdt.log" /Add-Package %ldr%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismUpdt.log" /Add-Package %ldr%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 if defined fupdt (
 set "_SxsKey=%_EdgKey%"
 set "_SxsCmp=%_EdgCmp%"
+set "_SxsIdn=%_EdgIdn%"
+set "_SxsCF=256"
 set "_DsmLog=DismEdge.log"
 for %%# in (%fupdt%) do (set "dest=%%~n#"&call :pXML)
 )
 if defined supdt (
 set "_SxsKey=%_EsuKey%"
 set "_SxsCmp=%_EsuCmp%"
+set "_SxsIdn=%_EsuIdn%"
+set "_SxsCF=64"
 set "_DsmLog=DismESU.log"
 for %%# in (%supdt%) do (set "dest=%%~n#"&call :pXML)
 )
 if defined cupdt (
 set "_SxsKey=%_CedKey%"
 set "_SxsCmp=%_CedCmp%"
-set "_DsmLog=DismLCU.log"
+set "_SxsIdn=%_CedIdn%"
+set "_SxsCF=256"
+set "_DsmLog=DismLCUs.log"
 for %%# in (%cupdt%) do (set "dest=%%~n#"&call :pXML)
 )
 set _dualSxS=
 if defined dupdt (
+set _dualSxS=1
 set "_SxsKey=%_EsuKey%"
 set "_SxsCmp=%_EsuCmp%"
-set _dualSxS=1
-set "_DsmLog=DismLCU.log"
+set "_SxsIdn=%_EsuIdn%"
+set "_SxsCF=64"
+set "_DsmLog=DismLCUs.log"
 for %%# in (%dupdt%) do (set "dest=%%~n#"&call :pXML)
 )
 :: winre.wim non-1607
 if %_build% neq 14393 if %verb%==0 if not defined safeos if defined cumulative (
 set callclean=1
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU_winre.log" /Add-Package %cumulative%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_winre.log" /Add-Package %cumulative%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 :: boot.wim non-1607
 if %_build% neq 14393 if %verb%==1 if defined cumulative if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 set callclean=1
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU_boot.log" /Add-Package %cumulative%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_boot.log" /Add-Package %cumulative%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 )
 :: install.wim
 if %verb%==1 if defined cumulative if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 set callclean=1
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismLCU.log" /Add-Package %cumulative%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU.log" /Add-Package %cumulative%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 if %_build% equ 14393 if %wimfiles% equ 1 call :MeltdownSpectre
 )
+if defined lcupkg call :ReLCU
 if defined callclean call :cleanup
 if defined mpamfe (
 echo.
@@ -882,8 +925,33 @@ echo.
 echo ============================================================
 echo Installing EdgeChromium update...
 echo ============================================================
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\DismEdge.log" /Add-Package %edge%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismEdge.log" /Add-Package %edge%
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+)
+goto :eof
+
+:ReLCU
+if exist "%lcudir%\update.mum" if exist "%lcudir%\*.manifest" goto :eof
+rem echo.
+rem echo 1/1: %lcupkg% [LCU]
+if not exist "%lcudir%\" mkdir "%lcudir%"
+expand.exe -f:*.psf.cix.xml "!repo!\%lcupkg%" "%lcudir%" %_Null%
+if exist "%lcudir%\*.psf.cix.xml" (
+if not exist "%lcupkg%" (
+  copy /y "!repo!\%lcupkg:~0,-4%.*" . %_Nul3%
+  )
+if not exist "PSFExtractor.exe" (
+  copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
+  copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
+  )
+PSFExtractor.exe %lcupkg% %_Null%
+goto :eof
+)
+expand.exe -f:* "!repo!\%lcupkg%" "%lcudir%" %_Null%
+if exist "%lcudir%\*cablist.ini" (
+  expand.exe -f:* "%lcudir%\*.cab" "%lcudir%" %_Null%
+  del /f /q "%lcudir%\*cablist.ini" %_Nul3%
+  del /f /q "%lcudir%\*.cab" %_Nul3%
 )
 goto :eof
 
@@ -894,6 +962,9 @@ if exist "%dest%\*defender*.xml" (
 if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
 call :defender_check
 goto :eof
+)
+if not exist "%dest%\update.mum" (
+if /i "%lcupkg%"=="%package%" call :ReLCU
 )
 set _dcu=0
 if not exist "%dest%\update.mum" (
@@ -961,12 +1032,12 @@ if not exist "%dest%\*enablement-package*.mum" set "edge=!edge! /packagepath:%de
 goto :eof
 )
 if exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
-if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" (set /a _sum-=1&goto :eof)
+if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /packagepath:%dest%\update.mum"
 goto :eof
 )
 if exist "%dest%\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" if not exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
-if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" (set /a _sum-=1&goto :eof)
+if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /packagepath:%dest%\update.mum"
 goto :eof
 )
@@ -995,30 +1066,44 @@ if /i "!package!"=="%%~#" (
   )
 )
 if exist "%dest%\update.mum" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% && (
+rem if %_build% geq 20231 (set "cumulative=!cumulative! /packagepath:"!_UUP!\!package!""&goto :eof)
+if %_build% geq 20231 (
+  set "lcudir=%dest%"
+  set "lcupkg=!package!"
+  )
 if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set "cumulative=!cumulative! /packagepath:%dest%\update.mum"&goto :eof)
+set "netlcu=!netlcu! /packagepath:%dest%\update.mum"
 if exist "%dest%\*_%_EsuCmp%_*.manifest" if not exist "%dest%\*_%_CedCmp%_*.manifest" if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
 if exist "%dest%\*_%_CedCmp%_*.manifest" if not exist "%dest%\*_%_EsuCmp%_*.manifest" if %SkipEdge% equ 1 (set "cupdt=!cupdt! !package!"&goto :eof)
-if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 2 (
-  mkdir "!mumtarget!\Program Files\Microsoft\Edge\Application" %_Nul3%
-  if exist "!mumtarget!\Program Files (x86)\Common Files\" mkdir "!mumtarget!\Program Files (x86)\Microsoft\Edge\Application" %_Nul3%
-  )
+if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 2 call :deEdge
 if exist "%dest%\*_%_EsuCmp%_*.manifest" if exist "%dest%\*_%_CedCmp%_*.manifest" (
-if %SkipEdge% neq 1 if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
-if %SkipEdge% equ 1 if %LTSC% equ 0 (set "dupdt=!dupdt! !package!"&goto :eof)
-if %SkipEdge% equ 1 if %LTSC% equ 1 (set "cupdt=!cupdt! !package!"&goto :eof)
-)
-if %online%==0 if %_build% geq 20231 (set "cumulative=!cumulative! /packagepath:"!repo!\!package!""&goto :eof)
+  if %SkipEdge% neq 1 if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
+  if %SkipEdge% equ 1 if %LTSC% equ 0 (set "dupdt=!dupdt! !package!"&goto :eof)
+  if %SkipEdge% equ 1 if %LTSC% equ 1 (set "cupdt=!cupdt! !package!"&goto :eof)
+  )
 set "cumulative=!cumulative! /packagepath:%dest%\update.mum"
 goto :eof
 )
 if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set "ldr=!ldr! /packagepath:%dest%\update.mum"&goto :eof)
 if exist "%dest%\*_%_EsuCmp%_*.manifest" if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
 if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 1 (set "cupdt=!cupdt! !package!"&goto :eof)
-if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 2 (
-  mkdir "!mumtarget!\Program Files\Microsoft\Edge\Application" %_Nul3%
-  if exist "!mumtarget!\Program Files (x86)\Common Files\" mkdir "!mumtarget!\Program Files (x86)\Microsoft\Edge\Application" %_Nul3%
-  )
+if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 2 call :deEdge
 set "ldr=!ldr! /packagepath:%dest%\update.mum"
+goto :eof
+
+:deEdge
+  mkdir "!mumtarget!\Program Files\Microsoft\Edge\Application" %_Nul3%
+  mkdir "!mumtarget!\Program Files\Microsoft\EdgeUpdate" %_Nul3%
+  type nul>"!mumtarget!\Program Files\Microsoft\Edge\Edge.dat" 2>&1
+  type nul>"!mumtarget!\Program Files\Microsoft\Edge\Edge.LCU.dat" 2>&1
+  type nul>"!mumtarget!\Program Files\Microsoft\EdgeUpdate\EdgeUpdate.dat" 2>&1
+  if exist "!mumtarget!\Windows\SysWOW64\cmd.exe" (
+    mkdir "!mumtarget!\Program Files (x86)\Microsoft\Edge\Application" %_Nul3%
+    mkdir "!mumtarget!\Program Files (x86)\Microsoft\EdgeUpdate" %_Nul3%
+    type nul>"!mumtarget!\Program Files (x86)\Microsoft\Edge\Edge.dat" 2>&1
+    type nul>"!mumtarget!\Program Files (x86)\Microsoft\Edge\Edge.LCU.dat" 2>&1
+    type nul>"!mumtarget!\Program Files (x86)\Microsoft\EdgeUpdate\EdgeUpdate.dat" 2>&1
+    )
 goto :eof
 
 :mumversion
@@ -1089,21 +1174,23 @@ copy /y "!mumtarget!\Program Files (x86)\Windows Defender\%%#\MpAsDesc.dll.mui" 
 goto :eof
 
 :pXML
+if %_build% neq 18362 (
 call :cXML stage
 echo.
 echo Processing 1 of 1 - Staging %dest%
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\%_DsmLog%" /Apply-Unattend:stage.xml
-if %errorlevel% neq 0 if %errorlevel% neq 3010 goto :eof
-call :Winner
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\%_DsmLog%" /Apply-Unattend:stage.xml
+if !errorlevel! neq 0 if !errorlevel! neq 3010 goto :eof
+)
+if %_build% neq 18362 (call :Winner) else (call :Suppress)
 if defined _dualSxS (
 set "_SxsKey=%_CedKey%"
 set "_SxsCmp=%_CedCmp%"
-call :Winner
-set "_SxsKey=%_EsuKey%"
-set "_SxsCmp=%_EsuCmp%"
+set "_SxsIdn=%_CedIdn%"
+set "_SxsCF=256"
+if %_build% neq 18362 (call :Winner) else (call :Suppress)
 )
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%systemroot%\Logs\DISM\%_DsmLog%" /Add-Package /packagepath:"%dest%\update.mum"
-del /f /q stage.xml %_Nul3%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\%_DsmLog%" /Add-Package /packagepath:"%dest%\update.mum"
+if %_build% neq 18362 (del /f /q stage.xml %_Nul3%)
 goto :eof
 
 :cXML
@@ -1127,6 +1214,30 @@ echo.^</unattend^>
 )>>%1.xml
 goto :eof
 
+:Suppress
+for /f %%# in ('dir /b /a:-d "%dest%\%xBT%_%_SxsCmp%_*.manifest"') do set "_SxsCom=%%~n#"
+for /f "tokens=4 delims=_" %%# in ('echo %_SxsCom%') do set "_SxsVer=%%#"
+if not exist "!mumtarget!\Windows\WinSxS\Manifests\%_SxsCom%.manifest" (
+%_Nul3% icacls "!mumtarget!\Windows\WinSxS\Manifests" /save "!_cabdir!\acl.txt"
+%_Nul3% takeown /f "!mumtarget!\Windows\WinSxS\Manifests" /A
+%_Nul3% icacls "!mumtarget!\Windows\WinSxS\Manifests" /grant:r "*S-1-5-32-544:(OI)(CI)(F)"
+%_Nul3% copy /y "%dest%\%_SxsCom%.manifest" "!mumtarget!\Windows\WinSxS\Manifests\"
+%_Nul3% icacls "!mumtarget!\Windows\WinSxS\Manifests" /setowner "NT SERVICE\TrustedInstaller"
+%_Nul3% icacls "!mumtarget!\Windows\WinSxS" /restore "!_cabdir!\acl.txt"
+%_Nul3% del /f /q "!_cabdir!\acl.txt"
+)
+reg.exe query HKLM\%COMPONENTS% %_Nul3% || reg.exe load HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS" %_Nul3%
+reg.exe query "%_Cmp%\%_SxsCom%" %_Nul3% && goto :Winner
+for /f "skip=1 tokens=* delims=" %%# in ('certutil -hashfile "%dest%\%_SxsCom%.manifest" SHA256^|findstr /i /v CertUtil') do set "_SxsSha=%%#"
+set "_SxsSha=%_SxsSha: =%"
+set "_psin=%_SxsIdn%, Culture=neutral, Version=%_SxsVer%, PublicKeyToken=%_Pkt%, ProcessorArchitecture=%xBT%, versionScope=NonSxS"
+for /f "tokens=* delims=" %%# in ('powershell -nop -c "$str = '%_psin%'; $bytes = [System.Text.Encoding]::ASCII.GetBytes($str); $hex = New-Object -TypeName System.Text.StringBuilder -ArgumentList ($bytes.Length * 2); foreach ($byte in $bytes) {$hex.AppendFormat('{0:x2}', $byte) > $null}; $hex.ToString()" %_Nul6%') do set "_SxsHsh=%%#"
+%_Nul3% reg.exe add "%_Cmp%\%_SxsCom%" /f /v "c^!%_Fnd%" /t REG_BINARY /d ""
+%_Nul3% reg.exe add "%_Cmp%\%_SxsCom%" /f /v identity /t REG_BINARY /d "%_SxsHsh%"
+%_Nul3% reg.exe add "%_Cmp%\%_SxsCom%" /f /v S256H /t REG_BINARY /d "%_SxsSha%"
+%_Nul3% reg.exe add "%_Cmp%\%_SxsCom%" /f /v CF /t REG_DWORD /d "%_SxsCF%"
+for /f "tokens=* delims=" %%# in ('reg.exe query HKLM\%COMPONENTS%\DerivedData\VersionedIndex %_Nul6% ^| findstr /i VersionedIndex') do reg.exe delete "%%#" /f %_Nul3%
+
 :Winner
 for /f "tokens=4 delims=_" %%# in ('dir /b /a:-d "%dest%\%xBT%_%_SxsCmp%_*.manifest"') do (
 set "pv_al=%%#"
@@ -1139,7 +1250,7 @@ set kv_al=
 if %online%==0 reg.exe load HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul3%
 if not exist "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_%_SxsCmp%_*.manifest" goto :SkipChk
 reg.exe query "%_SxsKey%" %_Nul3% || goto :SkipChk
-reg.exe load HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS" %_Nul3%
+reg.exe query HKLM\%COMPONENTS% %_Nul3% || reg.exe load HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS" %_Nul3%
 reg.exe query "%_Cmp%" /f "%xBT%_%_SxsCmp%_*" /k %_Nul2% | find /i "HKEY_LOCAL_MACHINE" %_Nul1% || goto :SkipChk
 call :ChkESUver %_Nul3%
 set "wv_bl=0"&set "wv_dl=0"
@@ -1200,7 +1311,7 @@ set kv_al=
 reg.exe query "%_SxsKey%\%kv_os%" /ve | findstr \( | findstr \. || goto :eof
 for /f "tokens=2*" %%a in ('reg.exe query "%_SxsKey%\%kv_os%" /ve ^| findstr \(') do set "kv_al=%%b"
 if "%kv_al%"=="" goto :eof
-reg.exe query "%_Cmp%" /f "%xBT%_%_SxsCmp%_31bf3856ad364e35_%kv_al%_*" /k %_Nul2% | find /i "%kv_al%" %_Nul1% || (
+reg.exe query "%_Cmp%" /f "%xBT%_%_SxsCmp%_%_Pkt%_%kv_al%_*" /k %_Nul2% | find /i "%kv_al%" %_Nul1% || (
 set kv_al=
 goto :eof
 )
@@ -1227,7 +1338,7 @@ echo ============================================================
 echo Adding .NET Framework 3.5 feature
 echo ============================================================
 cd /d "!net35source!"
-%_dism2%:"!_cabdir!" /LogPath:"%systemroot%\Logs\DISM\DismNetFx3.log" %dismtarget% /Enable-Feature /FeatureName:NetFx3 /All /LimitAccess /Source:.
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Enable-Feature /FeatureName:NetFx3 /All /LimitAccess /Source:.
 if %errorlevel% neq 0 if %errorlevel% neq 3010 (
 cd /d "!_cabdir!"
 set _DNF=1
@@ -1236,7 +1347,7 @@ goto :eof
 )
 cd /d "!_cabdir!"
 set _DNF=1
-if not defined netroll if not defined cumulative (
+if not defined netroll if not defined netlcu if not defined cumulative (
 call :cleanup
 goto :eof
 )
@@ -1248,7 +1359,12 @@ echo.
 echo ============================================================
 echo Reinstalling cumulative update^(s^)...
 echo ============================================================
-%_dism2%:"!_cabdir!" /LogPath:"%systemroot%\Logs\DISM\DismNetFx3.log" %dismtarget% /Add-Package %netroll% %cumulative%
+if defined netlcu (
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netroll% %netlcu%
+) else (
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netroll% %cumulative%
+)
+if defined lcupkg call :ReLCU
 call :cleanup
 goto :eof
 
@@ -1377,7 +1493,7 @@ cd /d "!_wimpath!"
 %_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:%_wimfile% /Index:%%# /MountDir:"!mountdir!"
 if !errorlevel! neq 0 goto :E_MOUNT
 cd /d "!_cabdir!"
-call :update
+call :doupdate
 if %net35%==1 call :enablenet35
 if %dvd%==1 (
 if not defined isomajor for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do set isover=%%i.%%j&set isomajor=%%i
@@ -1488,7 +1604,7 @@ goto :eof
   %_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:winre.wim /Index:1 /MountDir:"!winremount!"
   if %errorlevel% neq 0 goto :E_MOUNT
   cd /d "!_cabdir!"
-  call :update winre
+  call :doupdate winre
   if !discardre!==1 (
   %_dism2%:"!_cabdir!" /Unmount-Wim /MountDir:"!winremount!" /Discard
   if !errorlevel! neq 0 goto :E_MOUNT
@@ -1632,6 +1748,8 @@ if defined tmpssu (
   for %%# in (%tmpssu%) do del /f /q "!repo!\%%~#" %_Nul3%
   set tmpssu=
 )
+dism.exe /Image:"!winremount!" /Get-Packages %_Null%
+dism.exe /Image:"!mountdir!" /Get-Packages %_Null%
 dism.exe /Unmount-Wim /MountDir:"!winremount!" /Discard %_Nul3%
 dism.exe /Unmount-Wim /MountDir:"!mountdir!" /Discard
 dism.exe /Cleanup-Mountpoints %_Nul3%
@@ -1876,7 +1994,7 @@ if errorlevel 1 goto :targetmenu
 goto :mainmenu
 
 :ISO
-if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\cdimage.exe" goto :eof
+if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\cdimage.exe" if not exist "!_work!\bin\cdimage.exe" goto :eof
 if "!isodir!"=="" set "isodir=!_work!"
 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
 set "isodate=%_date:~0,4%-%_date:~4,2%-%_date:~6,2%"
@@ -1887,7 +2005,10 @@ echo.
 echo ============================================================
 echo Creating updated ISO file...
 echo ============================================================
-if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else (set _ff="!_work!\cdimage.exe")
+echo.
+echo ISO Location:
+echo "!isodir!"
+if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else if exist "!_work!\cdimage.exe" (set _ff="!_work!\cdimage.exe") else (set _ff="!_work!\bin\cdimage.exe")
 cd /d "!target!"
 if /i not %arch%==arm64 (
 !_ff! -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"

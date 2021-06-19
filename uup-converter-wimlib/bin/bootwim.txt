@@ -94,6 +94,7 @@ w32uires.dll
 warning.gif
 wdsclient.dll
 wdsclientapi.dll
+wdscommonlib.dll
 wdscore.dll
 wdscsl.dll
 wdsimage.dll
