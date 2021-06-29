@@ -1267,7 +1267,7 @@ set lculabel=1
 findstr /i /m "Package_for_RollupFix" "!_cabdir!\update.mum" %_Nul3% && (
 echo LCU: %pack%
 if exist "!_cabdir!\*.psf.cix.xml" (call :external_psf) else (copy /y "!_UUP!\%pack%" "!_dest!\3%pack%" %_Nul3%)
-it !lculabel! equ 1 call :external_label
+if !lculabel! equ 1 call :external_label
 exit /b
 )
 echo UPD: %pack%
