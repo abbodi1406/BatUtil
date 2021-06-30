@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v63
+@set uivr=v65
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -257,19 +257,19 @@ goto :dInfo
 if %AutoStart% equ 0 goto :MULTIMENU
 if not defined AutoEditions set "AutoEditions=%vEditions%"
 for %%# in (%AutoEditions%) do (
-if /i %%#==Enterprise if %EditionPro% equ 1 (set Enterprise=1)
-if /i %%#==Education if %EditionPro% equ 1 (set Education=1)
-if /i %%#==ProfessionalEducation if %EditionPro% equ 1 (set ProfessionalEducation=1)
-if /i %%#==ProfessionalWorkstation if %EditionPro% equ 1 (set ProfessionalWorkstation=1)
+if /i %%#==Enterprise if %EditionProf% equ 1 (set Enterprise=1)
+if /i %%#==Education if %EditionProf% equ 1 (set Education=1)
+if /i %%#==ProfessionalEducation if %EditionProf% equ 1 (set ProfessionalEducation=1)
+if /i %%#==ProfessionalWorkstation if %EditionProf% equ 1 (set ProfessionalWorkstation=1)
 if /i %%#==EnterpriseN if %EditionProN% equ 1 (set EnterpriseN=1)
 if /i %%#==EducationN if %EditionProN% equ 1 (set EducationN=1)
 if /i %%#==ProfessionalEducationN if %EditionProN% equ 1 (set ProfessionalEducationN=1)
 if /i %%#==ProfessionalWorkstationN if %EditionProN% equ 1 (set ProfessionalWorkstationN=1)
 if /i %%#==CoreSingleLanguage if %EditionHome% equ 1 (set CoreSingleLanguage=1)
-if /i %%#==ServerRdsh if %EditionPro% equ 1 (set ServerRdsh=1)
-if /i %%#==IoTEnterprise if %EditionPro% equ 1 if %_build% geq 18277 (set IoTEnterprise=1)
+if /i %%#==ServerRdsh if %EditionProf% equ 1 (set ServerRdsh=1)
+if /i %%#==IoTEnterprise if %EditionProf% equ 1 if %_build% geq 18277 (set IoTEnterprise=1)
 if /i %%#==IoTEnterpriseS if %EditionLTSC% equ 1 if %_build% geq 18298 (set IoTEnterpriseS=1)
-if /i %%#==CloudEdition if %EditionPro% equ 1 if %_build% geq 21364 (set CloudEdition=1)
+if /i %%#==CloudEdition if %EditionProf% equ 1 if %_build% geq 21364 (set CloudEdition=1)
 if /i %%#==CloudEditionN if %EditionProN% equ 1 if %_build% geq 21364 (set CloudEditionN=1)
 )
 goto :CREATEMENU
@@ -281,7 +281,7 @@ set %%#=0
 for %%# in (%vEditions%) do (
 find /i "<EDITIONID>%%#</EDITIONID>" bin\infoall.txt %_Nul1% && set %%#=1
 )
-if %EditionPro% equ 1 (
+if %EditionProf% equ 1 (
 if %Enterprise% equ 0 echo. 1. Enterprise
 if %Education% equ 0 echo. 2. Education
 if %ProfessionalEducation% equ 0 echo. 3. Pro Education
@@ -296,18 +296,18 @@ if %ProfessionalWorkstationN% equ 0 echo. 8. Pro N for Workstations
 if %EditionHome% equ 1 (
 if %CoreSingleLanguage% equ 0 echo. 9. Home Single Language
 )
-if %EditionPro% equ 1 (
+if %EditionProf% equ 1 (
 if %ServerRdsh% equ 0 echo 10. Enterprise multi-session
 if %IoTEnterprise% equ 0 if %_build% geq 18277 echo 11. IoT Enterprise {OEM}
 )
 if %EditionLTSC% equ 1 (
 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 echo 12. IoT Enterprise LTSC {OEM}
 )
-if %EditionPro% equ 1 (
-if %CloudEdition% equ 0 if %_build% geq 21364 echo 13. Cloud
+if %EditionProf% equ 1 (
+if %CloudEdition% equ 0 if %_build% geq 21364 echo 13. SE {Cloud}
 )
 if %EditionProN% equ 1 (
-if %CloudEditionN% equ 0 if %_build% geq 21364 echo 14. Cloud N
+if %CloudEditionN% equ 0 if %_build% geq 21364 echo 14. SE N {Cloud N}
 )
 exit /b
 
@@ -333,15 +333,15 @@ goto :MULTIMENU
 
 :ALLMENU
 for %%# in (Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,ServerRdsh) do (
-if %EditionPro% equ 1 set %%#=1
+if %EditionProf% equ 1 set %%#=1
 )
 for %%# in (EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN) do (
 if %EditionProN% equ 1 set %%#=1
 )
 if %EditionHome% equ 1 set CoreSingleLanguage=1
-if %EditionPro% equ 1 if %_build% geq 18277 set IoTEnterprise=1
+if %EditionProf% equ 1 if %_build% geq 18277 set IoTEnterprise=1
 if %EditionLTSC% equ 1 if %_build% geq 18298 set IoTEnterpriseS=1
-if %EditionPro% equ 1 if %_build% geq 21364 set CloudEdition=1
+if %EditionProf% equ 1 if %_build% geq 21364 set CloudEdition=1
 if %EditionProN% equ 1 if %_build% geq 21364 set CloudEditionN=1
 goto :CREATEMENU
 
@@ -358,19 +358,19 @@ echo %line%
 set /p _single= ^> Enter your option and press "Enter": 
 if not defined _single (set _Debug=1&goto :QUIT)
 if "%_single%"=="0" (set "_single="&goto :MULTIMENU)
-if %_single% equ 1 if %EditionPro% equ 1 if %Enterprise% equ 0 (set Enterprise=1&set verify=1)
-if %_single% equ 2 if %EditionPro% equ 1 if %Education% equ 0 (set Education=1&set verify=1)
-if %_single% equ 3 if %EditionPro% equ 1 if %ProfessionalEducation% equ 0 (set ProfessionalEducation=1&set verify=1)
-if %_single% equ 4 if %EditionPro% equ 1 if %ProfessionalWorkstation% equ 0 (set ProfessionalWorkstation=1&set verify=1)
+if %_single% equ 1 if %EditionProf% equ 1 if %Enterprise% equ 0 (set Enterprise=1&set verify=1)
+if %_single% equ 2 if %EditionProf% equ 1 if %Education% equ 0 (set Education=1&set verify=1)
+if %_single% equ 3 if %EditionProf% equ 1 if %ProfessionalEducation% equ 0 (set ProfessionalEducation=1&set verify=1)
+if %_single% equ 4 if %EditionProf% equ 1 if %ProfessionalWorkstation% equ 0 (set ProfessionalWorkstation=1&set verify=1)
 if %_single% equ 5 if %EditionProN% equ 1 if %EnterpriseN% equ 0 (set EnterpriseN=1&set verify=1)
 if %_single% equ 6 if %EditionProN% equ 1 if %EducationN% equ 0 (set EducationN=1&set verify=1)
 if %_single% equ 7 if %EditionProN% equ 1 if %ProfessionalEducationN% equ 0 (set ProfessionalEducationN=1&set verify=1)
 if %_single% equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (set ProfessionalWorkstationN=1&set verify=1)
 if %_single% equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
-if %_single% equ 10 if %EditionPro% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
-if %_single% equ 11 if %EditionPro% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
+if %_single% equ 10 if %EditionProf% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
+if %_single% equ 11 if %EditionProf% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
 if %_single% equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
-if %_single% equ 13 if %EditionPro% equ 1 if %CloudEdition% equ 0 if %_build% geq 21364 (set CloudEdition=1&set verify=1)
+if %_single% equ 13 if %EditionProf% equ 1 if %CloudEdition% equ 0 if %_build% geq 21364 (set CloudEdition=1&set verify=1)
 if %_single% equ 14 if %EditionProN% equ 1 if %CloudEditionN% equ 0 if %_build% geq 21364 (set CloudEditionN=1&set verify=1)
 if %verify% equ 1 goto :CREATEMENU
 set _single=
@@ -393,19 +393,19 @@ set /p _index= ^> Enter your option and press "Enter":
 if not defined _index (set _Debug=1&goto :QUIT)
 if "%_index%"=="0" (set "_index="&goto :MULTIMENU)
 for %%# in (%_index%) do (
-if %%# equ 1 if %EditionPro% equ 1 if %Enterprise% equ 0 (set Enterprise=1&set verify=1)
-if %%# equ 2 if %EditionPro% equ 1 if %Education% equ 0 (set Education=1&set verify=1)
-if %%# equ 3 if %EditionPro% equ 1 if %ProfessionalEducation% equ 0 (set ProfessionalEducation=1&set verify=1)
-if %%# equ 4 if %EditionPro% equ 1 if %ProfessionalWorkstation% equ 0 (set ProfessionalWorkstation=1&set verify=1)
+if %%# equ 1 if %EditionProf% equ 1 if %Enterprise% equ 0 (set Enterprise=1&set verify=1)
+if %%# equ 2 if %EditionProf% equ 1 if %Education% equ 0 (set Education=1&set verify=1)
+if %%# equ 3 if %EditionProf% equ 1 if %ProfessionalEducation% equ 0 (set ProfessionalEducation=1&set verify=1)
+if %%# equ 4 if %EditionProf% equ 1 if %ProfessionalWorkstation% equ 0 (set ProfessionalWorkstation=1&set verify=1)
 if %%# equ 5 if %EditionProN% equ 1 if %EnterpriseN% equ 0 (set EnterpriseN=1&set verify=1)
 if %%# equ 6 if %EditionProN% equ 1 if %EducationN% equ 0 (set EducationN=1&set verify=1)
 if %%# equ 7 if %EditionProN% equ 1 if %ProfessionalEducationN% equ 0 (set ProfessionalEducationN=1&set verify=1)
 if %%# equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (set ProfessionalWorkstationN=1&set verify=1)
 if %%# equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
-if %%# equ 10 if %EditionPro% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
-if %%# equ 11 if %EditionPro% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
+if %%# equ 10 if %EditionProf% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
+if %%# equ 11 if %EditionProf% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
 if %%# equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
-if %%# equ 13 if %EditionPro% equ 1 if %CloudEdition% equ 0 if %_build% geq 21364 (set CloudEdition=1&set verify=1)
+if %%# equ 13 if %EditionProf% equ 1 if %CloudEdition% equ 0 if %_build% geq 21364 (set CloudEdition=1&set verify=1)
 if %%# equ 14 if %EditionProN% equ 1 if %CloudEditionN% equ 0 if %_build% geq 21364 (set CloudEditionN=1&set verify=1)
 )
 if %verify% equ 1 goto :CREATEMENU
@@ -474,18 +474,18 @@ if %DeleteSource% equ 1 (
   if %_all% equ 1 (
     if %images% equ 1 (
     ren ISOFOLDER\sources\%WimFile% temp.wim
-    wimlib-imagex.exe info ISOFOLDER\sources\temp.wim 1 "Windows 10 %desc%" "Windows 10 %desc%" %_Null%
+    wimlib-imagex.exe info ISOFOLDER\sources\temp.wim 1 "%winver% %desc%" "%winver% %desc%" %_Null%
     )
     if %images% neq 1 (
-    wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
+    wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "%winver% %desc%" "%winver% %desc%" %_Supp%
     )
   )
   if %_all% neq 1 (
-  wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
+  wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "%winver% %desc%" "%winver% %desc%" %_Supp%
   )
 )
 if %DeleteSource% neq 1 (
-wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "Windows 10 %desc%" "Windows 10 %desc%" %_Supp%
+wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "%winver% %desc%" "%winver% %desc%" %_Supp%
 )
 set /a index+=1
 wimlib-imagex.exe extract ISOFOLDER\sources\temp.wim %index% \Windows\System32\config\SOFTWARE \Windows\System32\config\SYSTEM \Windows\servicing\Editions\%EditionID%Edition.xml --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
@@ -518,7 +518,7 @@ type nul>bin\temp\virtual.txt
 wimlib-imagex.exe update ISOFOLDER\sources\temp.wim %index% < bin\temp\virtual.txt %_Null%
 rmdir /s /q bin\temp\
 echo.
-wimlib-imagex.exe info ISOFOLDER\sources\temp.wim %index% --image-property WINDOWS/EDITIONID=%EditionID% --image-property FLAGS=%EditionID% --image-property DISPLAYNAME="Windows 10 %desc%" --image-property DISPLAYDESCRIPTION="Windows 10 %desc%"
+wimlib-imagex.exe info ISOFOLDER\sources\temp.wim %index% --image-property WINDOWS/EDITIONID=%EditionID% --image-property FLAGS=%EditionID% --image-property DISPLAYNAME="%winver% %desc%" --image-property DISPLAYDESCRIPTION="%winver% %desc%"
 echo.
 set modified=1
 exit /b
@@ -571,49 +571,74 @@ goto :QUIT
 :dInfo
 if exist "%ISOdir%\sources\install.wim" (set WimFile=install.wim) else (set WimFile=install.esd&set wim2esd=0)
 imagex /info "%ISOdir%\sources\%WimFile%" | findstr /i /c:"LZMS" %_Nul1% && (set wim2esd=0)
-imagex /info "%ISOdir%\sources\%WimFile%">bin\infoall.txt 2>&1
-find /i "Core</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionHome=1) || (set EditionHome=0)
-find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionPro=1) || (set EditionPro=0)
-find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionProN=1) || (set EditionProN=0)
-wimlib-imagex.exe info "%ISOdir%\sources\%WimFile%" 1 >bin\info.txt 2>&1
+wimlib-imagex.exe info "%ISOdir%\sources\%WimFile%" 1 %_Nul3%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 (
 echo %_err%
 echo Could not execute wimlib-imagex.exe
 echo Use simple work path without special characters
 echo.
-del /f /q bin\info.txt %_Nul3%
 goto :QUIT
 )
-for /f "tokens=2 delims=: " %%# in ('findstr /i /b "Build" bin\info.txt') do set _build=%%#
-for /f "tokens=3 delims=: " %%# in ('findstr /i "Default" bin\info.txt') do set langid=%%#
-for /f "tokens=2 delims=: " %%# in ('findstr /i "Architecture" bin\info.txt') do (if /i %%# equ x86 (set arch=x86) else if /i %%# equ x86_64 (set arch=x64) else (set arch=arm64))
+imagex /info "%ISOdir%\sources\%WimFile%">bin\infoall.txt 2>&1
 for /f "tokens=3 delims=: " %%# in ('findstr /i /b /c:"Image Count" bin\infoall.txt') do set images=%%#
-del /f /q bin\info.txt %_Nul3%
+for /l %%# in (1,1,%images%) do imagex /info "%ISOdir%\sources\%WimFile%" %%# >bin\info%%#.txt 2>&1
+for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info1.txt') do set _build=%%#
+for /f "tokens=3 delims=<>" %%# in ('find /i "<DEFAULT>" bin\info1.txt') do set "langid=%%#"
+for /f "tokens=3 delims=<>" %%# in ('find /i "<ARCH>" bin\info1.txt') do (if %%# equ 0 (set "arch=x86") else if %%# equ 9 (set "arch=x64") else (set "arch=arm64"))
+set EditionHome=0
+set EditionProf=0
+set EditionProN=0
+set EditionLTSC=0
+find /i "Core</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionHome=1)
+find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionProf=1)
+find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionProN=1)
+if %_build% geq 18298 (
+find /i "EnterpriseS</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionLTSC=1)
+)
+for /L %%# in (1,1,%images%) do (
+if %EditionHome% equ 1 (find /i "Core</EDITIONID>" bin\info%%#.txt %_Nul3% && (set IndexHome=%%#))
+if %EditionProf% equ 1 (find /i "Professional</EDITIONID>" bin\info%%#.txt %_Nul3% && (set IndexProf=%%#))
+if %EditionProN% equ 1 (find /i "ProfessionalN</EDITIONID>" bin\info%%#.txt %_Nul3% && (set IndexProN=%%#))
+if %EditionLTSC% equ 1 (find /i "EnterpriseS</EDITIONID>" bin\info%%#.txt %_Nul3% && (set IndexLTSC=%%#))
+)
+set "wtxHome=Windows 10"
+set "wtxProf=Windows 10"
+set "wtxProN=Windows 10"
+set "wtxLTSC=Windows 10"
+if %EditionHome% equ 1 (
+find /i "<NAME>" bin\info%IndexHome%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxHome=Windows 11")
+find /i "<NAME>" bin\info%IndexHome%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxHome=Windows 12")
+)
+if %EditionProf% equ 1 (
+find /i "<NAME>" bin\info%IndexProf%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxProf=Windows 11")
+find /i "<NAME>" bin\info%IndexProf%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxProf=Windows 12")
+)
+if %EditionProN% equ 1 (
+find /i "<NAME>" bin\info%IndexProN%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxProN=Windows 11")
+find /i "<NAME>" bin\info%IndexProN%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxProN=Windows 12")
+)
+if %EditionLTSC% equ 1 (
+find /i "<NAME>" bin\info%IndexLTSC%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxLTSC=Windows 11")
+find /i "<NAME>" bin\info%IndexLTSC%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxLTSC=Windows 12")
+)
+for /l %%# in (1,1,%images%) do del /f /q bin\info%%#.txt %_Nul3%
 if %_build% lss 17063 (
 set "MESSAGE=ISO build %_build% do not support virtual editions"
 if %_iso% equ 1 rmdir /s /q "%ISOdir%\"
 goto :E_MSG
 )
-set EditionLTSC=0
-if %_build% geq 18298 find /i "EnterpriseS</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionLTSC=1)
-if %EditionHome% equ 0 if %EditionPro% equ 0 if %EditionProN% equ 0 if %EditionLTSC% equ 0 (
+if %EditionHome% equ 0 if %EditionProf% equ 0 if %EditionProN% equ 0 if %EditionLTSC% equ 0 (
 set "MESSAGE=No supported source edition detected"
 if %_iso% equ 1 rmdir /s /q "%ISOdir%\"
 goto :E_MSG
 )
-for /l %%# in (1,1,%images%) do (
-if %EditionHome% equ 1 (imagex /info "%ISOdir%\sources\%WimFile%" %%# | find /i "Core</EDITIONID>" %_Nul1% && set IndexHome=%%#)
-if %EditionPro% equ 1 (imagex /info "%ISOdir%\sources\%WimFile%" %%# | find /i "Professional</EDITIONID>" %_Nul1% && set IndexPro=%%#)
-if %EditionProN% equ 1 (imagex /info "%ISOdir%\sources\%WimFile%" %%# | find /i "ProfessionalN</EDITIONID>" %_Nul1% && set IndexProN=%%#)
-if %EditionLTSC% equ 1 (imagex /info "%ISOdir%\sources\%WimFile%" %%# | find /i "EnterpriseS</EDITIONID>" %_Nul1% && set IndexLTSC=%%#)
-)
-if %EditionPro% equ 1 set /a _sum+=5
+if %EditionProf% equ 1 set /a _sum+=5
 if %EditionProN% equ 1 set /a _sum+=4
 if %EditionHome% equ 1 set /a _sum+=1
-if %EditionLTSC% equ 1 set /a _sum+=1
-if %EditionPro% equ 1 if %_build% geq 18277 set /a _sum+=1
-if %EditionPro% equ 1 if %_build% geq 21364 set /a _sum+=1
+if %EditionLTSC% equ 1 if %_build% geq 18298 set /a _sum+=1
+if %EditionProf% equ 1 if %_build% geq 18277 set /a _sum+=1
+if %EditionProf% equ 1 if %_build% geq 21364 set /a _sum+=1
 if %EditionProN% equ 1 if %_build% geq 21364 set /a _sum+=1
 wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
 7z.exe l .\bin\temp\setuphost.exe >.\bin\temp\version.txt 2>&1
@@ -730,6 +755,7 @@ if %_build% lss 18298 exit /b
 set "EditionID=%1"
 set "desc=IoT Enterprise LTSC"
 set "source=%IndexLTSC%"
+set "winver=%wtxLTSC%"
 call :WIM
 exit /b
 
@@ -744,7 +770,8 @@ set "DigitalProductId4=F804000004000000350035003000340031002D0030003400330036003
 set "Print=1"
 set "Insecure=0"
 set "desc=IoT Enterprise"
-set "source=%IndexPro%"
+set "source=%IndexProf%"
+set "winver=%wtxProf%"
 call :WIM
 exit /b
 
@@ -758,7 +785,8 @@ set "DigitalProductId4=F804000004000000350035003000340031002D0030003400330032003
 set "Print=1"
 set "Insecure=0"
 set "desc=Enterprise multi-session"
-set "source=%IndexPro%"
+set "source=%IndexProf%"
+set "winver=%wtxProf%"
 call :WIM
 exit /b
 
@@ -772,7 +800,8 @@ set "DigitalProductId4=F804000004000000350035003000340031002D0030003300320039003
 set "Print=1"
 set "Insecure=0"
 set "desc=Enterprise"
-set "source=%IndexPro%"
+set "source=%IndexProf%"
+set "winver=%wtxProf%"
 call :WIM
 exit /b
 
@@ -786,7 +815,8 @@ set "DigitalProductId4=F804000004000000350035003000340031002D0030003300320038003
 set "Print=1"
 set "Insecure=0"
 set "desc=Education"
-set "source=%IndexPro%"
+set "source=%IndexProf%"
+set "winver=%wtxProf%"
 call :WIM
 exit /b
 
@@ -800,7 +830,8 @@ set "DigitalProductId4=F804000004000000350035003000340031002D0030003300380030003
 set "Print=0"
 set "Insecure=1"
 set "desc=Pro Education"
-set "source=%IndexPro%"
+set "source=%IndexProf%"
+set "winver=%wtxProf%"
 call :WIM
 exit /b
 
@@ -814,7 +845,8 @@ set "DigitalProductId4=F804000004000000350035003000340031002D0030003300390031003
 set "Print=0"
 set "Insecure=1"
 set "desc=Pro for Workstations"
-set "source=%IndexPro%"
+set "source=%IndexProf%"
+set "winver=%wtxProf%"
 call :WIM
 exit /b
 
@@ -828,8 +860,9 @@ set "DigitalProductId=a40000000300000030303437352d38303030302d30303030302d414138
 set "DigitalProductId4=f804000004000000350035003000340031002d00300034003700350038002d003000300030002d003000300030003000300030002d00300030002d0031003000330033002d00310039003000340032002e0030003000300030002d003100310036003200300032003100000000000000000000000000000000000000000000000000000000000000390032006600620038003700320036002d0039003200610038002d0034006600660063002d0039003400630065002d0066003800320065003000370034003400340036003500330000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000043006c006f0075006400450064006900740069006f006e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000961200000000e02f4e1cfb11241c0900636972e5f0d63c608ba93e4720664c3858b991e1cc7a277780e018e825b3ae1f30148c66f7e5b0bef9dca012f82b093d6350ed21b50aebca55a81cecd47ad94f5b0043006f005d005800320032002d0035003300380034003700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 set "Print=0"
 set "Insecure=1"
-set "desc=Cloud"
-set "source=%IndexPro%"
+set "desc=SE"
+set "source=%IndexProf%"
+set "winver=%wtxProf%"
 call :WIM
 exit /b
 
@@ -844,6 +877,7 @@ set "Print=1"
 set "Insecure=0"
 set "desc=Enterprise N"
 set "source=%IndexProN%"
+set "winver=%wtxProN%"
 call :WIM
 exit /b
 
@@ -858,6 +892,7 @@ set "Print=1"
 set "Insecure=0"
 set "desc=Education N"
 set "source=%IndexProN%"
+set "winver=%wtxProN%"
 call :WIM
 exit /b
 
@@ -872,6 +907,7 @@ set "Print=0"
 set "Insecure=1"
 set "desc=Pro Education N"
 set "source=%IndexProN%"
+set "winver=%wtxProN%"
 call :WIM
 exit /b
 
@@ -886,6 +922,7 @@ set "Print=0"
 set "Insecure=1"
 set "desc=Pro N for Workstations"
 set "source=%IndexProN%"
+set "winver=%wtxProN%"
 call :WIM
 exit /b
 
@@ -899,8 +936,9 @@ set "DigitalProductId=a40000000300000030303437362d32303030302d30303030302d414139
 set "DigitalProductId4=f804000004000000350035003000340031002d00300034003700360032002d003000300030002d003000300030003000300030002d00300030002d0031003000330033002d00310039003000340032002e0030003000300030002d003100310036003200300032003100000000000000000000000000000000000000000000000000000000000000640034006200640063003600370038002d0030006100340062002d0034006100330032002d0061003500620033002d0061006100610032003400630033006200300066003200340000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000043006c006f0075006400450064006900740069006f006e004e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009a1200000000083f35e14bd1e61c0900ffc38a76e892bd57eadfade6e936a55ce150993173ee18b032ce8e375692b16e46be16aecc3daeedb01882e374a0eff0da5337243ced353b562c337e864dccea5b0043006f005d005800320032002d0035003300380038003400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 set "Print=0"
 set "Insecure=1"
-set "desc=Cloud N"
+set "desc=SE N"
 set "source=%IndexProN%"
+set "winver=%wtxProN%"
 call :WIM
 exit /b
 
@@ -915,6 +953,7 @@ set "Print=0"
 set "Insecure=1"
 set "desc=Home Single Language"
 set "source=%IndexHome%"
+set "winver=%wtxHome%"
 call :WIM
 exit /b
 

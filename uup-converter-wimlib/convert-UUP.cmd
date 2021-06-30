@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v63
+@set uivr=v65
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -106,7 +106,8 @@ set _PSarg=%_PSarg:'=''%
 set "_log=%~dpn0"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
-set "_cabdir=%~d0\W10UIuup"
+set _drv=%~d0
+set "_cabdir=%_drv%\W10UIuup"
 if "%_work:~0,2%"=="\\" set "_cabdir=%~dp0temp\W10UIuup"
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
@@ -150,6 +151,15 @@ title UUP -^> ISO %uivr%
 set psfnet=0
 if exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set psfnet=1
 if exist "%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set psfnet=1
+set /a _cdr=0
+for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_Volume where (DriveLetter is not NULL) get DriveLetter /value" ^| findstr ^=') do (
+set /a _cdr+=1
+set "_udr!_cdr!=%%#"
+)
+for /L %%j in (1,1,%_cdr%) do for %%# in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+if not defined _sdr (if /i not "!_udr%%j!"=="%%#" set "_sdr=%%#:")
+)
+if not defined _sdr set psfnet=0
 set "_dLog=%SystemRoot%\Logs\DISM"
 set _dism1=dism.exe /English
 set _dism2=dism.exe /English /ScratchDir
@@ -199,11 +209,11 @@ set _skpd=0
 set _skpp=0
 set _eosC=0
 set _eosP=0
+set _eosT=0
 set relite=0
 set _SrvESD=0
 set _Srvr=0
 set _initial=0
-set _drv=%~d0
 set "_mount=%_drv%\MountUUP"
 set "_ntf=NTFS"
 if /i not "%_drv%"=="%SystemDrive%" for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
@@ -478,7 +488,7 @@ if %StartVirtual% neq 0 echo StartVirtual
   if !%%#! neq 0 echo %%#
   )
 )
-if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge
+if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge %SkipEdge%
 call :uups_ref
 echo.
 echo %line%
@@ -615,7 +625,7 @@ echo Configured Options . . .
 echo %line%
 echo.
 if %AddUpdates% equ 1 (
-  echo AddUpdates
+  echo AddUpdates %AddUpdates%
   if %Cleanup% neq 0 echo Cleanup
   if %Cleanup% neq 0 if %ResetBase% neq 0 echo ResetBase
   )
@@ -1041,13 +1051,14 @@ echo.
 set E_WIMLIB=1
 exit /b
 )
-set "_wtx=Windows 10"
 imagex /info "!_UUP!\%uups_esd%" 3 >bin\info.txt 2>&1
 for /f "tokens=3 delims=<>" %%# in ('find /i "<DEFAULT>" bin\info.txt') do set "langid%1=%%#"
 for /f "tokens=3 delims=<>" %%# in ('find /i "<EDITIONID>" bin\info.txt') do set "edition%1=%%#"
 for /f "tokens=3 delims=<>" %%# in ('find /i "<ARCH>" bin\info.txt') do (if %%# equ 0 (set "arch%1=x86") else if %%# equ 9 (set "arch%1=x64") else (set "arch%1=arm64"))
 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.txt') do set "_oname%1=%%#"
-for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do if %%# geq 21900 set "_wtx=Windows 11"
+set "_wtx=Windows 10"
+find /i "<NAME>" bin\info.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "_wtx=Windows 11")
+find /i "<NAME>" bin\info.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "_wtx=Windows 12")
 echo !edition%1!|findstr /i /b "Server" %_Nul3% && (set _SrvESD=1&set _ESDSrv%1=1)
 if !_ESDSrv%1! equ 1 findstr /i /c:"Server Core" bin\info.txt %_Nul3% && (
 if /i "!edition%1!"=="ServerStandard" set "edition%1=ServerStandardCore"
@@ -1267,7 +1278,7 @@ set lculabel=1
 findstr /i /m "Package_for_RollupFix" "!_cabdir!\update.mum" %_Nul3% && (
 echo LCU: %pack%
 if exist "!_cabdir!\*.psf.cix.xml" (call :external_psf) else (copy /y "!_UUP!\%pack%" "!_dest!\3%pack%" %_Nul3%)
-it !lculabel! equ 1 call :external_label
+if !lculabel! equ 1 call :external_label
 exit /b
 )
 echo UPD: %pack%
@@ -1317,7 +1328,8 @@ call :setlabel
 exit /b
 
 :external_psf
-pushd "!_cabdir!"
+subst %_sdr% "!_cabdir!"
+pushd %_sdr%
 copy /y "!_UUP!\%pack:~0,-4%.*" . %_Nul3%
 if not exist "PSFExtractor.exe" (
   copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
@@ -1326,16 +1338,20 @@ if not exist "PSFExtractor.exe" (
   )
 PSFExtractor.exe %pack% %_Null%
 if !errorlevel! neq 0 (
-  echo Error: failed to extract PSF update
   set lculabel=0
+  echo Error: failed to extract PSF update
+  rmdir /s /q %pack:~0,-4% %_Nul3%
   popd
+  subst %_sdr% /d
   exit /b
   )
 cd %pack:~0,-4%
 del /f /q *.psf.cix.xml %_Nul3%
 ..\cabarc.exe -m LZX:21 -r -p N ..\3psf.cab *.* %_Null%
 cd..
+rmdir /s /q %pack:~0,-4% %_Nul3%
 popd
+subst %_sdr% /d
 move /y "!_cabdir!\3psf.cab" "!_dest!\3%pack%" %_Nul3%
 exit /b
 
@@ -1476,6 +1492,7 @@ set psf_%package%=1
 if not defined isodate findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% && (
 findstr /i /m /c:"Microsoft-Windows-CoreEdition" "!dest!\update.mum" %_Nul3% || set _eosC=1
 findstr /i /m /c:"Microsoft-Windows-ProfessionalEdition" "!dest!\update.mum" %_Nul3% || set _eosP=1
+findstr /i /m /c:"Microsoft-Windows-PPIProEdition" "!dest!\update.mum" %_Nul3% || set _eosT=1
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 copy /y "!dest!\update.mum" %SystemRoot%\temp\ %_Nul1%
 set "mumfile=%SystemRoot%\temp\update.mum"
@@ -1564,7 +1581,8 @@ if exist "!dest!\*cablist.ini" (
   del /f /q "!dest!\*.cab" %_Nul3%
 )
 if defined psf_%package% (
-pushd "!_cabdir!"
+subst %_sdr% "!_cabdir!"
+pushd %_sdr%
 copy /y "!_UUP!\%package:~0,-4%.*" . %_Nul3%
 if not exist "PSFExtractor.exe" (
   copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
@@ -1573,10 +1591,11 @@ if not exist "PSFExtractor.exe" (
 PSFExtractor.exe %package% %_Null%
 if !errorlevel! neq 0 (
   echo Error: failed to extract PSF update
-  rmdir /s /q "!dest!\" %_Nul3%
+  rmdir /s /q %package:~0,-4% %_Nul3%
   set psf_%package%=
   )
 popd
+subst %_sdr% /d
 )
 goto :eof
 
@@ -1774,7 +1793,8 @@ rem echo 1/1: %lcupkg% [LCU]
 if not exist "!lcudir!\" mkdir "!lcudir!"
 expand.exe -f:*.psf.cix.xml "!_UUP!\%lcupkg%" "!lcudir!" %_Null%
 if exist "!lcudir!\*.psf.cix.xml" (
-pushd "!_cabdir!"
+subst %_sdr% "!_cabdir!"
+pushd %_sdr%
 if not exist "%lcupkg%" (
   copy /y "!_UUP!\%lcupkg:~0,-4%.*" . %_Nul3%
   )
@@ -1784,6 +1804,7 @@ if not exist "PSFExtractor.exe" (
   )
 PSFExtractor.exe %lcupkg% %_Null%
 popd
+subst %_sdr% /d
 goto :eof
 )
 expand.exe -f:* "!_UUP!\%lcupkg%" "!lcudir!" %_Null%
@@ -2168,6 +2189,7 @@ set iCorS=0
 set iCorC=0
 set iEntr=0
 set iEntN=0
+set iTeam=0
 if /i not %~nx1==winre.wim for /L %%# in (1,1,%imgcount%) do (
 if !iCore! equ 0 (find /i "Core</EDITIONID>" bin\info%%#.txt %_Nul3% && set iCore=%%#)
 if !iCorN! equ 0 (find /i "CoreN</EDITIONID>" bin\info%%#.txt %_Nul3% && set iCorN=%%#)
@@ -2175,15 +2197,22 @@ if !iCorS! equ 0 (find /i "CoreSingleLanguage</EDITIONID>" bin\info%%#.txt %_Nul
 if !iCorC! equ 0 (find /i "CoreCountrySpecific</EDITIONID>" bin\info%%#.txt %_Nul3% && set iCorC=%%#)
 if !iEntr! equ 0 (find /i "Professional</EDITIONID>" bin\info%%#.txt %_Nul3% && set iEntr=%%#)
 if !iEntN! equ 0 (find /i "ProfessionalN</EDITIONID>" bin\info%%#.txt %_Nul3% && set iEntN=%%#)
+if !iTeam! equ 0 (find /i "PPIPro</EDITIONID>" bin\info%%#.txt %_Nul3% && set iTeam=%%#)
 )
 del /f /q bin\info*.txt %_Nul3%
 if /i %~nx1==winre.wim set "indices=1"
 if /i not %~nx1==winre.wim for /L %%# in (1,1,%imgcount%) do (
-if %_eosP% equ 0 if %_eosC% equ 0 (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
-if %_eosP% equ 0 if %_eosC% equ 1 if %%# neq %iCore% if %%# neq %iCorN% if %%# neq %iCorS% if %%# neq %iCorC% (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
-if %_eosP% equ 1 if %%# neq %iEntr% if %%# neq %iEntN% (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
+if %_eosT% equ 0 if %_eosP% equ 0 if %_eosC% equ 0 (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
+if %_eosT% equ 0 if %_eosP% equ 0 if %_eosC% equ 1 if %%# neq %iCore% if %%# neq %iCorN% if %%# neq %iCorS% if %%# neq %iCorC% (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
+if %_eosT% equ 0 if %_eosP% equ 1 if %_eosC% equ 1 if %%# neq %iEntr% if %%# neq %iEntN% if %%# neq %iCore% if %%# neq %iCorN% if %%# neq %iCorS% if %%# neq %iCorC% (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
+if %_eosT% equ 0 if %_eosP% equ 1 if %_eosC% equ 0 if %%# neq %iEntr% if %%# neq %iEntN% (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
+if %_eosT% equ 1 if %_eosP% equ 0 if %_eosC% equ 0 if %%# neq %iTeam% (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
+if %_eosT% equ 1 if %_eosP% equ 0 if %_eosC% equ 1 if %%# neq %iTeam% if %%# neq %iCore% if %%# neq %iCorN% if %%# neq %iCorS% if %%# neq %iCorC% (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
+if %_eosT% equ 1 if %_eosP% equ 1 if %_eosC% equ 0 if %%# neq %iTeam% if %%# neq %iEntr% if %%# neq %iEntN% (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
+if %_eosT% equ 1 if %_eosP% equ 1 if %_eosC% equ 1 if %%# neq %iTeam% if %%# neq %iEntr% if %%# neq %iEntN% if %%# neq %iCore% if %%# neq %iCorN% if %%# neq %iCorS% if %%# neq %iCorC% (if defined indices (set "indices=!indices!,%%#") else (set "indices=%%#"))
 )
-if defined indices for %%# in (%indices%) do (
+if not defined indices goto :eof
+for %%# in (%indices%) do (
 %_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:"%_wim%" /Index:%%# /MountDir:"%_mount%"
 if !errorlevel! neq 0 (
 %_dism1% /Image:"%_mount%" /Get-Packages %_Null%
@@ -2444,7 +2473,13 @@ echo Removing temporary files . . .
 echo %line%
 echo.
 )
-rmdir /s /q "!_cabdir!\"
+rmdir /s /q "!_cabdir!\" %_Nul3%
+)
+if exist "!_cabdir!\" (
+mkdir %_drv%\_del286 %_Null%
+robocopy %_drv%\_del286 "!_cabdir!" /MIR %_Null%
+rmdir /s /q %_drv%\_del286\ %_Null%
+rmdir /s /q "!_cabdir!\" %_Nul3%
 )
 if %_Debug% neq 0 (%FullExit%) else (echo Press 0 to exit.)
 choice /c 0 /n
