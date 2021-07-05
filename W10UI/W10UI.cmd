@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.2
+@set uiv=v10.3
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -151,8 +151,28 @@ set "_dLog=%SystemRoot%\Logs\DISM"
 set psfnet=0
 if exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set psfnet=1
 if exist "%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set psfnet=1
+set /a _cdr=0
+for %%# in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+set /a _cdr+=1
+set "_adr!_cdr!=%%#"
+)
+set /a _cdr=0
+for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_Volume where (DriveLetter is not NULL) get DriveLetter /value" ^| findstr ^=') do (
+set /a _cdr+=1
+set "_udr!_cdr!=%%#"
+)
+for /L %%A in (1,1,%_cdr%) do (
+  for /L %%# in (1,1,26) do (
+  if defined _adr%%# (if /i "!_udr%%A!"=="!_adr%%#!" set "_adr%%#=")
+  )
+)
+for /L %%# in (1,1,26) do (
+  if not defined _sdr (if defined _adr%%# set "_sdr=!_adr%%#!:")
+)
+if not defined _sdr set psfnet=0
 set psfsup=0
 if exist "bin\PSFExtractor.exe" if exist "bin\SxSExpand.exe" set psfsup=1
+if %psfnet% equ 0 set psfsup=0
 if not exist "W10UI.ini" goto :proceed
 find /i "[W10UI-Configuration]" W10UI.ini %_Nul1% || goto :proceed
 setlocal DisableDelayedExpansion
@@ -604,7 +624,6 @@ expand.exe -f:*.psf.cix.xml "!repo!\!package!" "checker" %_Null%
 if exist "checker\*.psf.cix.xml" (
 findstr /i /m "PSFXVersion" "checker\update.mum" %_Nul3% || (rmdir /s /q "checker\" %_Nul3%&goto :eof)
 if not exist "!repo!\%package:~0,-4%.psf" (rmdir /s /q "checker\" %_Nul3%&goto :eof)
-if %psfnet% equ 0 (rmdir /s /q "checker\" %_Nul3%&goto :eof)
 if %psfsup% equ 0 (rmdir /s /q "checker\" %_Nul3%&goto :eof)
 set psf_%package%=1
 )
@@ -683,6 +702,8 @@ if exist "%dest%\*cablist.ini" (
   del /f /q "%dest%\*.cab" %_Nul3%
 )
 if defined psf_%package% (
+subst %_sdr% "!_cabdir!"
+pushd %_sdr%
 copy /y "!repo!\%package:~0,-4%.*" . %_Nul3%
 if not exist "PSFExtractor.exe" (
   copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
@@ -694,6 +715,8 @@ if !errorlevel! neq 0 (
   rmdir /s /q "%dest%\" %_Nul3%
   set psf_%package%=
   )
+popd
+subst %_sdr% /d
 )
 rmdir /s /q "checker\" %_Nul3%
 goto :eof
@@ -937,6 +960,8 @@ rem echo 1/1: %lcupkg% [LCU]
 if not exist "%lcudir%\" mkdir "%lcudir%"
 expand.exe -f:*.psf.cix.xml "!repo!\%lcupkg%" "%lcudir%" %_Null%
 if exist "%lcudir%\*.psf.cix.xml" (
+subst %_sdr% "!_cabdir!"
+pushd %_sdr%
 if not exist "%lcupkg%" (
   copy /y "!repo!\%lcupkg:~0,-4%.*" . %_Nul3%
   )
@@ -945,6 +970,8 @@ if not exist "PSFExtractor.exe" (
   copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
   )
 PSFExtractor.exe %lcupkg% %_Null%
+popd
+subst %_sdr% /d
 goto :eof
 )
 expand.exe -f:* "!repo!\%lcupkg%" "%lcudir%" %_Null%
@@ -1967,8 +1994,8 @@ if %wimfiles%==1 (
 if /i "%targetname%"=="install.wim" (echo.&if %winre%==1 (echo [7] Update WinRE.wim: YES) else (echo [7] Update WinRE.wim: NO))
 if %imgcount% gtr 1 (
 echo.
-if "%indices%"=="*" echo [8] Install.wim selected indexes: ALL ^(%imgcount%^)
-if not "%indices%"=="*" (if %keep%==1 (echo [8] Install.wim selected indexes: %indices% / [K] Keep indexes: Selected) else (if %keep%==0 echo [8] Install.wim selected indexes: %indices% / [K] Keep indexes: ALL))
+if "%indices%"=="*" echo [8] %targetname% selected indexes: ALL ^(%imgcount%^)
+if not "%indices%"=="*" (if %keep%==1 (echo [8] %targetname% selected indexes: %indices% / [K] Keep indexes: Selected) else (if %keep%==0 echo [8] %targetname% selected indexes: %indices% / [K] Keep indexes: ALL))
 )
 echo.
 echo [M] Mount Directory: "!mountdir!"
