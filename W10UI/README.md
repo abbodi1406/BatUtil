@@ -1,6 +1,9 @@
-# Windows 10 Updates Installer
+# Windows NT 10.0 Updates Installer
 
-Automated batch script to install/integrate Windows 10 Updates
+Automated script to install or integrate updates for:  
+- Windows 10
+- Windows 11
+- Windows Server 2016, 2019, 2022
 
 ## Features:
 
@@ -20,7 +23,7 @@ Automated batch script to install/integrate Windows 10 Updates
 * Enable .NET Framework 3.5 if available source detected, and reinstall Cumulative updates afterwards.  
 valid locations: mounted iso, inserted dvd/usb, sxs folder for distribution target, custom specified folder path
 
-* Detect Windows 10 ADK [Deployment Tools](https://msdn.microsoft.com/en-us/windows/hardware/dn913721.aspx) for offline integration
+* Detect Windows NT 10.0 ADK [Deployment Tools](https://docs.microsoft.com/windows-hardware/get-started/adk-install) for offline integration
 
 ## Limitations:
 
@@ -63,7 +66,7 @@ location of updates files
 
 3. DISM  
 the path for custom dism.exe  
-required when the current Host OS is lower than Windows 10 without ADK installed
+required when the current Host OS is lower than Windows NT 10.0 without ADK installed
 
 4. Enable .NET 3.5  
 process or skip enabling .NET 3.5 feature
@@ -128,7 +131,7 @@ note: if both wim2esd/wim2swm are 1, install.esd takes precedence over split ins
 
 * ISO  
 create new iso file, if the target is a distribution folder  
-require Win10 ADK, or place oscdimg.exe or cdimage.exe next to the script
+require Windows ADK, or place oscdimg.exe or cdimage.exe next to the script
 
 * ISODir  
 folder path for iso file, leave it blank to create in the script current directory
@@ -166,6 +169,10 @@ start the process automatically once you execute the script
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.4:  
+- Rebrand to Windows NT 10.0 Updates Installer
+- Improved PSF files processing, and updated PSFExtractor.exe
 
 10.3:  
 - Added workaround for long path issue when extracting PSF updates

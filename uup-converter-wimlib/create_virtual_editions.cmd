@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v66
+@set uivr=v67
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -88,8 +88,12 @@ set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
 setlocal EnableDelayedExpansion
 pushd "!_work!"
-if exist "convert-UUP.cmd" for /f "tokens=2 delims==" %%# in ('findstr /i /b /c:"set _Debug" "convert-UUP.cmd"') do if not defined _udbg set _udbg=%%#
+if exist "convert-UUP.cmd" (
+for /f "tokens=2 delims==" %%# in ('findstr /i /b /c:"set _Debug" "convert-UUP.cmd"') do if not defined _udbg set _udbg=%%#
+for /f "tokens=2 delims==" %%# in ('findstr /i /b /c:"@set uivr" "convert-UUP.cmd"') do if not defined _uver set _uver=%%#
+)
 if defined _udbg set _Debug=%_udbg%
+if defined _uver set uivr=%_uver%
 
 if %_Debug% equ 0 (
   set "_Nul1=1>nul"

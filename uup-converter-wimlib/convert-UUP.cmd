@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v66
+@set uivr=v67
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -152,7 +152,7 @@ set psfnet=0
 if exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set psfnet=1
 if exist "%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set psfnet=1
 set /a _cdr=0
-for %%# in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+for %%# in (E F G H I J K L M N O P Q R S T U V W X Y Z) do (
 set /a _cdr+=1
 set "_adr!_cdr!=%%#"
 )
@@ -161,12 +161,16 @@ for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_Volume where (DriveLetter 
 set /a _cdr+=1
 set "_udr!_cdr!=%%#"
 )
+for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_LogicalDisk where (DeviceID is not NULL) get DeviceID /value" ^| findstr ^=') do (
+set /a _cdr+=1
+set "_udr!_cdr!=%%#"
+)
 for /L %%A in (1,1,%_cdr%) do (
-  for /L %%# in (1,1,26) do (
+  for /L %%# in (1,1,22) do (
   if defined _adr%%# (if /i "!_udr%%A!"=="!_adr%%#!" set "_adr%%#=")
   )
 )
-for /L %%# in (1,1,26) do (
+for /L %%# in (1,1,22) do (
   if not defined _sdr (if defined _adr%%# set "_sdr=!_adr%%#!:")
 )
 if not defined _sdr set psfnet=0
@@ -1256,7 +1260,7 @@ del /f /q "!_cabdir!\*.xml" %_Nul3%
 if not exist "!_cabdir!\update.mum" exit /b
 expand.exe -f:*.psf.cix.xml "!_UUP!\%pack%" "!_cabdir!" %_Null%
 if exist "!_cabdir!\*.psf.cix.xml" (
-findstr /i /m "PSFXVersion" "!_cabdir!\update.mum" %_Nul3% || exit /b
+findstr /i /m "PSFX" "!_cabdir!\update.mum" %_Nul3% || exit /b
 if not exist "!_UUP!\%pack:~0,-4%.psf" exit /b
 if %psfnet% equ 0 exit /b
 )
@@ -1342,30 +1346,38 @@ call :setlabel
 exit /b
 
 :external_psf
-subst %_sdr% "!_cabdir!"
-pushd %_sdr%
+set _sbst=0
+subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
+if !_sbst! equ 1 pushd %_sdr%
 copy /y "!_UUP!\%pack:~0,-4%.*" . %_Nul3%
-if not exist "PSFExtractor.exe" (
-  copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
-  copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
-  copy /y "!_work!\bin\cabarc.exe" . %_Nul3%
-  )
+if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
+if not exist "SxSExpand.exe" copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
+if not exist "cabarc.exe" copy /y "!_work!\bin\cabarc.exe" . %_Nul3%
 PSFExtractor.exe %pack% %_Null%
 if !errorlevel! neq 0 (
   set lculabel=0
   echo Error: failed to extract PSF update
   rmdir /s /q %pack:~0,-4% %_Nul3%
-  popd
-  subst %_sdr% /d
+  if !_sbst! equ 1 popd
+  if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
   exit /b
   )
 cd %pack:~0,-4%
-del /f /q *.psf.cix.xml %_Nul3%
+rem del /f /q *.psf.cix.xml %_Nul3%
 ..\cabarc.exe -m LZX:21 -r -p N ..\3psf.cab *.* %_Null%
+if !errorlevel! neq 0 (
+  set lculabel=0
+  echo Error: failed to repack PSF update
+  cd..
+  rmdir /s /q %pack:~0,-4% %_Nul3%
+  if !_sbst! equ 1 popd
+  if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
+  exit /b
+  )
 cd..
 rmdir /s /q %pack:~0,-4% %_Nul3%
-popd
-subst %_sdr% /d
+if !_sbst! equ 1 popd
+if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
 move /y "!_cabdir!\3psf.cab" "!_dest!\3%pack%" %_Nul3%
 exit /b
 
@@ -1498,7 +1510,7 @@ goto :eof
 )
 expand.exe -f:*.psf.cix.xml "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*.psf.cix.xml" (
-findstr /i /m "PSFXVersion" "!dest!\update.mum" %_Nul3% || goto :eof
+findstr /i /m "PSFX" "!dest!\update.mum" %_Nul3% || goto :eof
 if not exist "!_UUP!\%package:~0,-4%.psf" goto :eof
 if %psfnet% equ 0 goto :eof
 set psf_%package%=1
@@ -1599,9 +1611,10 @@ if exist "!dest!\*cablist.ini" (
   del /f /q "!dest!\*cablist.ini" %_Nul3%
   del /f /q "!dest!\*.cab" %_Nul3%
 )
+set _sbst=0
 if defined psf_%package% (
-subst %_sdr% "!_cabdir!"
-pushd %_sdr%
+subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
+if !_sbst! equ 1 pushd %_sdr%
 copy /y "!_UUP!\%package:~0,-4%.*" . %_Nul3%
 if not exist "PSFExtractor.exe" (
   copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
@@ -1613,8 +1626,8 @@ if !errorlevel! neq 0 (
   rmdir /s /q %package:~0,-4% %_Nul3%
   set psf_%package%=
   )
-popd
-subst %_sdr% /d
+if !_sbst! equ 1 popd
+if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
 )
 goto :eof
 
@@ -1813,9 +1826,10 @@ rem echo.
 rem echo 1/1: %lcupkg% [LCU]
 if not exist "!lcudir!\" mkdir "!lcudir!"
 expand.exe -f:*.psf.cix.xml "!_UUP!\%lcupkg%" "!lcudir!" %_Null%
+set _sbst=0
 if exist "!lcudir!\*.psf.cix.xml" (
-subst %_sdr% "!_cabdir!"
-pushd %_sdr%
+subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
+if !_sbst! equ 1 pushd %_sdr%
 if not exist "%lcupkg%" (
   copy /y "!_UUP!\%lcupkg:~0,-4%.*" . %_Nul3%
   )
@@ -1824,8 +1838,8 @@ if not exist "PSFExtractor.exe" (
   copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
   )
 PSFExtractor.exe %lcupkg% %_Null%
-popd
-subst %_sdr% /d
+if !_sbst! equ 1 popd
+if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
 goto :eof
 )
 expand.exe -f:* "!_UUP!\%lcupkg%" "!lcudir!" %_Null%

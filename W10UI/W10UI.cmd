@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.3
+@set uiv=v10.4
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -145,14 +145,14 @@ echo The window will be closed when finished
 @exit /b
 
 :Begin
-title Installer for Windows 10 Updates
+title Installer for Windows NT 10.0 Updates
 cd /d "!_work!"
 set "_dLog=%SystemRoot%\Logs\DISM"
 set psfnet=0
 if exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set psfnet=1
 if exist "%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set psfnet=1
 set /a _cdr=0
-for %%# in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+for %%# in (E F G H I J K L M N O P Q R S T U V W X Y Z) do (
 set /a _cdr+=1
 set "_adr!_cdr!=%%#"
 )
@@ -161,12 +161,16 @@ for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_Volume where (DriveLetter 
 set /a _cdr+=1
 set "_udr!_cdr!=%%#"
 )
+for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_LogicalDisk where (DeviceID is not NULL) get DeviceID /value" ^| findstr ^=') do (
+set /a _cdr+=1
+set "_udr!_cdr!=%%#"
+)
 for /L %%A in (1,1,%_cdr%) do (
-  for /L %%# in (1,1,26) do (
+  for /L %%# in (1,1,22) do (
   if defined _adr%%# (if /i "!_udr%%A!"=="!_adr%%#!" set "_adr%%#=")
   )
 )
-for /L %%# in (1,1,26) do (
+for /L %%# in (1,1,22) do (
   if not defined _sdr (if defined _adr%%# set "_sdr=!_adr%%#!:")
 )
 if not defined _sdr set psfnet=0
@@ -302,8 +306,8 @@ if exist "!target!\Windows\regedit.exe" set offline=1
 )
 if %offline%==0 if %wim%==0 if %dvd%==0 (if %_init%==1 (set "target=%SystemDrive%"&goto :check) else (set "MESSAGE=Specified location is not valid"&goto :E_Target))
 if %offline%==1 (
-dir /b /ad "!target!\Windows\Servicing\Version\10.0.*" %_Nul3% || (set "MESSAGE=Detected target offline image is not Windows 10"&goto :E_Target)
-for /f "tokens=3 delims=." %%# in ('dir /b /ad "!target!\Windows\Servicing\Version\10.0.*"') do set _build=%%#
+dir /b /ad "!target!\Windows\Servicing\Version\10.*.*" %_Nul3% || (set "MESSAGE=Detected target offline image is not Windows NT 10.0"&goto :E_Target)
+for /f "tokens=3 delims=." %%# in ('dir /b /ad "!target!\Windows\Servicing\Version\10.*.*"') do set _build=%%#
 set "mountdir=!target!"
 set arch=x86
 if exist "!target!\Windows\SysWOW64\cmd.exe" set arch=x64
@@ -315,7 +319,7 @@ echo ============================================================
 echo Please wait...
 echo ============================================================
 cd /d "!targetpath!"
-dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 | find /i "Version : 10.0" %_Nul1% || (set "MESSAGE=Detected wim version is not Windows 10"&goto :E_Target)
+dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 | find /i "Version : 10." %_Nul1% || (set "MESSAGE=Detected wim version is not Windows NT 10.0"&goto :E_Target)
 for /f "tokens=4 delims=:. " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 ^| find /i "Version :"') do set _build=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 ^| find /i "Architecture"') do set arch=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%targetname%" ^| find /i "Index"') do set imgcount=%%#
@@ -333,7 +337,7 @@ echo Please wait...
 echo ============================================================
 copy /y nul "!target!\#.rw" %_Nul3% && (del /f /q "!target!\#.rw" %_Nul3%) || (set copytarget=1)
 cd /d "!target!"
-dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 | find /i "Version : 10.0" %_Nul1% || (set "MESSAGE=Detected install.wim version is not Windows 10"&goto :E_Target)
+dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 | find /i "Version : 10." %_Nul1% || (set "MESSAGE=Detected install.wim version is not Windows NT 10.0"&goto :E_Target)
 for /f "tokens=4 delims=:. " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 ^| find /i "Version :"') do set _build=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 ^| find /i "Architecture"') do set arch=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" ^| find /i "Index"') do set imgcount=%%#
@@ -701,9 +705,10 @@ if exist "%dest%\*cablist.ini" (
   del /f /q "%dest%\*cablist.ini" %_Nul3%
   del /f /q "%dest%\*.cab" %_Nul3%
 )
+set _sbst=0
 if defined psf_%package% (
-subst %_sdr% "!_cabdir!"
-pushd %_sdr%
+subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
+if !_sbst! equ 1 pushd %_sdr%
 copy /y "!repo!\%package:~0,-4%.*" . %_Nul3%
 if not exist "PSFExtractor.exe" (
   copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
@@ -715,8 +720,8 @@ if !errorlevel! neq 0 (
   rmdir /s /q "%dest%\" %_Nul3%
   set psf_%package%=
   )
-popd
-subst %_sdr% /d
+if !_sbst! equ 1 popd
+if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
 )
 rmdir /s /q "checker\" %_Nul3%
 goto :eof
@@ -959,9 +964,10 @@ rem echo.
 rem echo 1/1: %lcupkg% [LCU]
 if not exist "%lcudir%\" mkdir "%lcudir%"
 expand.exe -f:*.psf.cix.xml "!repo!\%lcupkg%" "%lcudir%" %_Null%
+set _sbst=0
 if exist "%lcudir%\*.psf.cix.xml" (
-subst %_sdr% "!_cabdir!"
-pushd %_sdr%
+subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
+if !_sbst! equ 1 pushd %_sdr%
 if not exist "%lcupkg%" (
   copy /y "!repo!\%lcupkg:~0,-4%.*" . %_Nul3%
   )
@@ -970,8 +976,8 @@ if not exist "PSFExtractor.exe" (
   copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
   )
 PSFExtractor.exe %lcupkg% %_Null%
-popd
-subst %_sdr% /d
+if !_sbst! equ 1 popd
+if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
 goto :eof
 )
 expand.exe -f:* "!repo!\%lcupkg%" "%lcudir%" %_Null%
@@ -1014,7 +1020,7 @@ for /f "tokens=%tn% delims=-" %%A in ('echo !package!') do (
 :endmumLoop
 if "%kb%"=="" (set /a _sum-=1&goto :eof)
 if %_build% geq 17763 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
-findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && (if exist "%dest%\*_*10.0.*.manifest" if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" (set "netroll=!netroll! /packagepath:%dest%\update.mum")))
+findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && (if exist "%dest%\*_*10.*.*.manifest" if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" (set "netroll=!netroll! /packagepath:%dest%\update.mum")))
 findstr /i /m "Package_for_OasisAsset" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\*OasisAssets-Package*.mum" set /a _sum-=1&goto :eof)
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
   %_Nul3% findstr /i /m "Edition\"" "%dest%\update.mum"
@@ -1503,6 +1509,12 @@ echo ============================================================
 echo.
 rmdir /s /q "!_cabdir!\" %_Nul1%
 )
+if exist "!_cabdir!\" (
+mkdir %_drv%\_del286 %_Null%
+robocopy %_drv%\_del286 "!_cabdir!" /MIR %_Null%
+rmdir /s /q %_drv%\_del286\ %_Null%
+rmdir /s /q "!_cabdir!\" %_Nul3%
+)
 goto :eof
 
 :mount
@@ -1828,7 +1840,7 @@ for /f "skip=2 tokens=2*" %%i in ('reg.exe query "%regKeyPath%" /v KitsRoot10') 
 set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
 if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
 set _ADK=1
-set "showdism=Windows 10 ADK"
+set "showdism=Windows NT 10.0 ADK"
 set "Path=%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 )
 if exist "%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe" (
@@ -1878,9 +1890,10 @@ goto :mainmenu
 @cls
 set _pp=
 echo.
-echo If current OS is lower than Windows 10, and Windows 10 ADK is not detected
-echo you must install it, or specify a manual Windows 10 dism.exe for integration
-echo you can select dism.exe located in Windows 10 distribution "sources" folder
+echo If current OS is lower than Windows NT 10.0
+echo you must install Windows ADK
+echo or specify a manual Windows NT 10.0 dism.exe for integration
+echo you can select dism.exe located in the distribution "sources" folder
 echo.
 echo.
 echo Enter the full path for dism.exe
@@ -1978,7 +1991,7 @@ echo.
 if "!repo!"=="" (echo [2] Select updates location) else (echo [2] Updates: "!repo!")
 echo.
 if %winbuild% lss 10240 (
-if %_ADK% equ 0 (echo [3] Select Windows 10 dism.exe) else (echo [3] DISM: "!showdism!")
+if %_ADK% equ 0 (echo [3] Select Windows NT 10.0 dism.exe) else (echo [3] DISM: "!showdism!")
 ) else (
 echo [3] DISM: "!showdism!"
 )
