@@ -1,5 +1,27 @@
 @setlocal DisableDelayedExpansion
 @echo off
+set "_cmdf=%~f0"
+if exist "%SystemRoot%\Sysnative\cmd.exe" (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" %*"
+exit /b
+)
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" %*"
+exit /b
+)
+set _silent=0
+set "_args=%*"
+if not defined _args goto :NoProgArgs
+if "%~1"=="" set "_args="&goto :NoProgArgs
+set _args=%_args:"=%
+for %%A in (%_args%) do (
+if /i "%%A"=="/s" (set _silent=1
+) else if /i "%%A"=="-s" (set _silent=1
+)
+
+:NoProgArgs
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
@@ -167,7 +189,7 @@ stream.%CTRarc%.%CTRstp%.dat
 if not exist "!CTRsource!\Office\Data\%CTRver%\%%#" set "ERRFILE=%%#"&goto :E_FILE
 )
 
-set _O365=0
+set _Of365=0
 set _OneDrive=ON
 if defined _excluded (
 echo %_excluded%| findstr /i "OneDrive" 1>nul && set _OneDrive=OFF
@@ -177,6 +199,11 @@ if not defined _suite goto :sku
 
 if %winbuild% lss 10240 (
 set "_suit2="
+if /i "%_suite%"=="ProPlus2021Retail" (set _suite=ProPlusRetail&set _suit2=ProPlus2021Retail)
+if /i "%_suite%"=="Professional2021Retail" (set _suite=ProfessionalRetail&set _suit2=Professional2021Retail)
+if /i "%_suite%"=="Standard2021Retail" (set _suite=StandardRetail&set _suit2=Standard2021Retail)
+if /i "%_suite%"=="HomeBusiness2021Retail" (set _suite=HomeBusinessRetail&set _suit2=HomeBusiness2021Retail)
+if /i "%_suite%"=="HomeStudent2021Retail" (set _suite=HomeStudentRetail&set _suit2=HomeStudent2021Retail)
 if /i "%_suite%"=="ProPlus2019Retail" (set _suite=ProPlusRetail&set _suit2=ProPlus2019Retail)
 if /i "%_suite%"=="Professional2019Retail" (set _suite=ProfessionalRetail&set _suit2=Professional2019Retail)
 if /i "%_suite%"=="Standard2019Retail" (set _suite=StandardRetail&set _suit2=Standard2019Retail)
@@ -190,7 +217,7 @@ set "_suit2="
 )
 
 set "_products=%_suite%.16_%CTRlng%_x-none"
-echo %_suite%| findstr /i "O365" 1>nul && set _O365=1
+echo %_suite%| findstr /i "O365" 1>nul && set _Of365=1
 
 if defined _suit2 (
 set "_licenses=%_suit2%"
@@ -200,6 +227,7 @@ if not defined _skus goto :MenuFinal
 :sku
 set _O2016=1
 echo %_skus%| findstr /i "2019" 1>nul && set _O2016=0
+echo %_skus%| findstr /i "2021" 1>nul && set _O2016=0
 
 set _base=0
 set /a kk=0
@@ -210,6 +238,15 @@ if /i "!_tmp:~-10!"=="2019Retail" if %winbuild% lss 10240 (
   if defined _licenses (set "_licenses=!_licenses!,%%J") else (set "_licenses=%%J")
   )
 if /i "!_tmp:~-10!"=="2019Retail" if %winbuild% geq 10240 (
+  if defined _show (set "_show=!_show!,%%J") else (set "_show=%%J")
+  if defined _products (set "_products=!_products!^|%%J.16_%CTRlng%_x-none") else (set "_products=%%J.16_%CTRlng%_x-none")
+  if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! %%J.excludedapps.16=onedrive") else (set "_exclude1d=%%J.excludedapps.16=onedrive"))
+  )
+if /i "!_tmp:~-10!"=="2021Retail" if %winbuild% lss 10240 (
+  if defined _show (set "_show=!_show!,%%J") else (set "_show=%%J")
+  if defined _licenses (set "_licenses=!_licenses!,%%J") else (set "_licenses=%%J")
+  )
+if /i "!_tmp:~-10!"=="2021Retail" if %winbuild% geq 10240 (
   if defined _show (set "_show=!_show!,%%J") else (set "_show=%%J")
   if defined _products (set "_products=!_products!^|%%J.16_%CTRlng%_x-none") else (set "_products=%%J.16_%CTRlng%_x-none")
   if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! %%J.excludedapps.16=onedrive") else (set "_exclude1d=%%J.excludedapps.16=onedrive"))
@@ -231,12 +268,17 @@ for %%A in (ProjectPro,ProjectStd,VisioPro,VisioStd) do if /i "!_tmp!"=="%%AReta
 if %winbuild% lss 10240 if %_base% equ 0 if %_O2016%==0 for %%J in (%_skus%) do (
 set _tmp=%%J
 if /i "!_tmp:~-10!"=="2019Retail" call set _tmp=!_tmp:~0,-10!Retail
+if /i "!_tmp:~-10!"=="2021Retail" call set _tmp=!_tmp:~0,-10!Retail
   if defined _products (set "_products=!_products!^|!_tmp!.16_%CTRlng%_x-none") else (set "_products=!_tmp!.16_%CTRlng%_x-none")
   if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! !_tmp!.excludedapps.16=onedrive") else (set "_exclude1d=!_tmp!.excludedapps.16=onedrive"))
 )
 
 :MenuFinal
 if %_unattend%==True goto :MenuInstall
+if %_silent% EQU 1 (
+set _disp=False
+goto :MenuInstall
+)
 cls
 echo %line%
 echo Source  : "!CTRsource!"
@@ -250,6 +292,7 @@ if defined _skus echo SKUs    : %_show%
 if defined _excluded echo Excluded: %_excluded%
 echo Updates : %_updt% / AcceptEULA : %_eula% / Display : %_disp%
 echo PinIcons: %_icon% / AppShutdown: %_shut% / Activate: %_actv%
+echo Disable Telemetry: %_tele%
 echo %line%
 echo.
 echo. 1. Install Now
@@ -264,7 +307,7 @@ goto :MenuFinal
 :MenuInstall
 cls
 echo %line%
-echo Preparing... 
+echo Preparing...
 echo %line%
 echo.
 if defined _excluded (
@@ -283,6 +326,7 @@ echo reg.exe delete %_Config% /f /v UpdateToVersion 1^>nul 2^>nul
 echo reg.exe delete %_CTR%\Updates /f /v UpdateToVersion 1^>nul 2^>nul
 echo reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\OfficeUpdate /f 1^>nul 2^>nul
 echo reg.exe add HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\OfficeUpdate /f /v PreventBingInstall /t REG_DWORD /d 1 1^>nul 2^>nul
+echo reg.exe add HKCU\software\Policies\Microsoft\Office\16.0\Teams /f /v PreventFirstLaunchAfterInstall /t REG_DWORD /d 1 1^>nul 2^>nul
 echo start "" /WAIT "%%CommonProgramFiles%%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" ^^
 echo deliverymechanism=%CTRffn% platform=%CTRarc% culture=%CTRstp% b= displaylevel=%_disp% ^^
 echo forceappshutdown=%_shut% piniconstotaskbar=%_icon% acceptalleulas.16=%_eula% ^^
@@ -314,7 +358,7 @@ expand -f:* "!CTRsource!\Office\Data\%CTRver%\%CTRicabr%" "!_target!" 1>nul 2>nu
 )
 echo.
 echo %line%
-echo Running installation... 
+echo Running installation...
 echo %line%
 echo.
 del /f /q "%SystemRoot%\temp\*.log" 1>nul 2>nul
@@ -326,25 +370,27 @@ echo.
 echo %line%
 echo Installation failed.
 echo %line%
+if %_unattend%==True goto :eof
 goto :TheEnd
 )
 if defined _licenses (
 echo.
 echo %line%
-echo Installing Office 2019 Licenses... 
+echo Installing Office 2019/2021 Licenses...
 echo %line%
 echo.
 call :Licenses 1>nul 2>nul
 )
-if %_tele%==True if %_O365%==0 (
+if %_tele%==True if %_Of365%==0 (
 call :Telemetry 1>nul 2>nul
 )
-if %_unattend%==True goto :eof
 echo.
 echo %line%
 echo Done.
 echo %line%
 echo.
+if %_unattend%==True goto :eof
+if %_silent% EQU 1 goto :eof
 echo Press any key to exit.
 pause >nul
 taskkill /t /f /IM OfficeC2RClient.exe 1>nul 2>nul
@@ -420,6 +466,7 @@ echo %_err%
 echo Windows 7 SP1 is the minimum supported OS.
 
 :TheEnd
+if %_silent% EQU 1 goto :eof
 echo.
 echo Press any key to exit.
 pause >nul

@@ -7,15 +7,14 @@
 * Office C2R source files are universal, and contain all possible products, any SKU can be installed from the same source  
 https://docs.microsoft.com/office365/troubleshoot/installation/product-ids-supported-office-deployment-click-to-run
 
-* To install Office C2R, you can use third-party tools like YAOCTRI and OfficeRTool  
-https://forums.mydigitallife.net/posts/1479890/  
-https://forums.mydigitallife.net/posts/1125229/
+* To install Office C2R, you can use third-party tools like YAOCTRI, OfficeRTool or Office Tool Plus
 
 or you can use the official Office Deployment Tool, which has some limitations  
 for more info:  
 https://docs.microsoft.com/deployoffice/overview-of-the-office-customization-tool-for-click-to-run  
 https://docs.microsoft.com/deployoffice/overview-office-deployment-tool  
-https://docs.microsoft.com/deployoffice/office2019/deploy
+https://docs.microsoft.com/deployoffice/office2019/deploy  
+https://docs.microsoft.com/deployoffice/office2021
 
 * The most recommended choices for download:  
 Channel: 3. Current / Monthly  
@@ -49,7 +48,7 @@ https://eternallybored.org/misc/wget/
 https://skanthak.homepage.t-online.de/curl.html
 https://curl.haxx.se/windows/
 
-Windows 10 version 1803 or later already contain curl.exe by default
+Windows 11 and Windows 10 version 1803 or later already contain curl.exe by default
 
 4. Text file  
 plain text file with links, to be used with any Download Manager program, or through the browser
@@ -100,7 +99,7 @@ it receives multiple builds per month
 3. Current / Monthly
 
 gets new features and quality fixes as soon as they are ready for production  
-it can receive more than one build per month, as needed
+it receives two or more builds per month, as needed
 
 * Business stable channels:
 
@@ -114,7 +113,7 @@ it receives only one build a month, on the second Tuesday of the month (Patch Tu
 5. Semi-Annual Preview
 
 formerly known as Semi-Annual Targeted / First Release for Business  
-provides the same new features four months before Semi-Annual channel
+provides the same new features 4 months before Semi-Annual channel
 
 gets new features updates twice a year (in March and September), in addition to quality/security updates once a month  
 it receives only one build a month, on the second Tuesday of the month (Patch Tuesday)
@@ -126,27 +125,38 @@ formerly known as Broad / Deferred / Business
 gets new features updates twice a year (in January and July), in addition to quality/security updates once a month  
 it receives only one build a month, on the second Tuesday of the month (Patch Tuesday)
 
-* Office 2019 Volume channels:
-
-7. Perpetual2019 VL
-
-the official update channel for volume licensed products of Office 2019 (although, it can work from any other channel)  
-it only gets security and quality fixes once a month (Patch Tuesday)
-
-8. Microsoft Perpetual
-
-internal preview channel for Perpetual2019 VL channel
-
 * Testing channels:
 
-9. Microsoft Elite
+7. DevMain Channel
+
+the most frequent channel for Office builds as soon as they are compiled, providing new features/improvements/fixes and new bugs or issues
+
+8. Microsoft Elite
 
 the second most frequent channel for Office builds as soon as they are tested  
 it mostly aligns with Beta channel and works as an internal preview for it
 
-10. DevMain Channel
+* Office 2019 Volume channels:
 
-the most frequent channel for Office builds as soon as they are compiled, providing new features/improvements/fixes or even new bugs and issues
+9. Perpetual2019 VL
+
+the official update channel for volume licensed products of Office 2019  
+it only gets security and quality fixes once a month (Patch Tuesday)
+
+10. Microsoft LTSC VL
+
+internal preview channel for Perpetual2019 VL channel
+
+* Office 2019 Volume channels:
+
+11. Perpetual2021 VL
+
+the official update channel for volume licensed products of Office 2021  
+it only gets security and quality fixes once a month (Patch Tuesday)
+
+12. Microsoft LTSC2021 VL
+
+internal preview channel for Perpetual2021 VL channel
 
 ______________________________
 
@@ -156,7 +166,7 @@ ______________________________
 
 * Because of that, almost all Office channels will offer a specific build targeted for Windows 7
 
-* You cannot choose a build targeted for Windows 8.1 and 10, to be installed on Windows 7
+* You cannot choose a build targeted for Windows 11/10/8.1 to be installed on Windows 7
 
 * For more information:  
 https://docs.microsoft.com/DeployOffice/windows-7-support
@@ -205,16 +215,18 @@ fi-FI         nb-NO         sv-SE         vi-VN
 if not specified, "Monthly" will be used
 
 supported values:  
-InsiderFast  
-MonthlyPreview  
-Monthly  
-MonthlyEnterprise  
-SemiAnnualPreview  
-SemiAnnual  
-Perpetual2019  
-MicrosoftLTSC  
-MicrosoftElite  
+InsiderFast
+MonthlyPreview
+Monthly
+MonthlyEnterprise
+SemiAnnualPreview
+SemiAnnual
 DogfoodDevMain
+MicrosoftElite
+PerpetualVL2019
+MicrosoftLTSC
+PerpetualVL2021
+MicrosoftLTSC2021
 
 - uLevel
 
@@ -232,6 +244,8 @@ supported values:
 x86  
 x64  
 x86x64
+x86arm64
+x64arm64
 
 - uType
 

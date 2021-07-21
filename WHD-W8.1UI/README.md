@@ -185,6 +185,9 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 6.7:  
+new hyper-v integration services package KB5001088
+
 * 6.6:  
 imporoved and fixed detection for Baseline RTM updates
 

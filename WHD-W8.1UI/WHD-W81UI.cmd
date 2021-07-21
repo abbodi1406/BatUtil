@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.6
+@set uiv=v6.7
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -73,7 +73,7 @@ set ssu1=KB3021910
 set baselinelist=KB2919355,KB3000850,KB2932046,KB2934018,KB2937592,KB2938439,KB2938772,KB3003057,KB3014442
 set gdrlist=KB3023219,KB3037576,KB3074545,KB3097992,KB3127222
 set hv_integ_kb=hypervintegrationservices
-set hv_integ_vr=9600.19456
+set hv_integ_vr=9600.19984
 
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")

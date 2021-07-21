@@ -1,19 +1,19 @@
 @setlocal DisableDelayedExpansion
 @echo off
+set "_cmdf=%~f0"
+if exist "%SystemRoot%\Sysnative\cmd.exe" (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" "
+exit /b
+)
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" "
+exit /b
+)
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-set "xOS=x64"
-set "_Common=%CommonProgramFiles%"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
-  set "_Common=%CommonProgramW6432%"
-  ) else (
-  set "xOS=x86"
-  )
-)
-set "_target=%_Common%\Microsoft Shared\ClickToRun"
-set "_file=%_target%\OfficeClickToRun.exe"
-set "_work=%~dp0bin"
 reg query HKU\S-1-5-19 >nul 2>&1 || (
 set "msg=ERROR: right click on the script and 'Run as administrator'"
 goto :end
@@ -23,8 +23,19 @@ if %winbuild% LSS 7601 (
 set "msg=ERROR: Windows 7 SP1 is the minimum supported OS"
 goto :end
 )
+set "_Common=%CommonProgramFiles%"
+if defined PROCESSOR_ARCHITEW6432 set "_Common=%CommonProgramW6432%"
+if /i "%PROCESSOR_ARCHITECTURE%"=="amd64" set "xBit=x64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xBit=x86"
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xBit=x86"
+if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xBit=x64"
+if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xBit=x86"
+set "_file=%_Common%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe"
+set "_fil2=%CommonProgramFiles(x86)%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe"
+set "_work=%~dp0bin"
 setlocal EnableDelayedExpansion
-if not exist "!_work!\!xOS!\cleanospp.exe" (
+pushd "!_work!"
+if not exist "%xBit%\cleanospp.exe" (
 set "msg=ERROR: required file cleanospp.exe is missing"
 goto :end
 )
@@ -40,13 +51,22 @@ sc query OfficeSvc %_Nul3% && set OfficeC2R=1
 reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds %_Nul3% && (
 set OfficeC2R=1
 )
-reg query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds %_Nul3% && set OfficeC2R=1
+reg query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds %_Nul3% && (
+set OfficeC2R=1
+)
 if exist "!_file!" set OfficeC2R=1
+if exist "!_fil2!" if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set OfficeC2R=1
 set OfficeMSI=0
 for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\16.0\Common\InstallRoot /v Path" %_Nul6%') do if exist "%%b\OSPP.VBS" set OfficeMSI=1
 for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Wow6432Node\Microsoft\Office\16.0\Common\InstallRoot /v Path" %_Nul6%') do if exist "%%b\OSPP.VBS" set OfficeMSI=1
+set OfficeUWP=0
+if %winbuild% GEQ 10240 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msoxmled.exe" %_Nul3% && (
+dir /b "%ProgramFiles%\WindowsApps\Microsoft.Office.Desktop*" %_Nul3% && set OfficeUWP=1
+dir /b "%ProgramW6432%\WindowsApps\Microsoft.Office.Desktop*" %_Nul3% && set OfficeUWP=1
+dir /b "%ProgramFiles(x86)%\WindowsApps\Microsoft.Office.Desktop*" %_Nul3% && set OfficeUWP=1
+)
 
-if %OfficeC2R% equ 0 if %OfficeMSI% equ 0 (
+if %OfficeC2R% equ 0 if %OfficeMSI% equ 0 if %OfficeUWP% equ 0 (
 echo.
 echo ============================================================
 echo No installed Office ClickToRun or Office 2016 MSI detected
@@ -60,6 +80,7 @@ echo.
 echo ============================================================
 if %OfficeC2R% equ 1 echo Detected Office C2R
 if %OfficeMSI% equ 1 echo Detected Office 2016 MSI
+if %OfficeUWP% equ 1 echo Detected Office UWP Apps
 echo.
 echo.
 choice /C YN /N /M "Continue with removing detected Office licenses? [y/n]: "
@@ -73,8 +94,7 @@ echo ============================================================
 echo Cleaning Office Licenses...
 echo ============================================================
 echo.
-pushd "!_work!\!xOS!"
-cleanospp.exe -Licenses %_Nul3%
+%xBit%\cleanospp.exe -Licenses %_Nul3%
 if exist "%SysPath%\spp\store_test\2.0\tokens.dat" (
 echo.
 echo ============================================================

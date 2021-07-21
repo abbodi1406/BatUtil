@@ -1,5 +1,16 @@
 @setlocal DisableDelayedExpansion
 @echo off
+set "_cmdf=%~f0"
+if exist "%SystemRoot%\Sysnative\cmd.exe" (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" "
+exit /b
+)
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" "
+exit /b
+)
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
@@ -50,10 +61,12 @@ for %%# in (
 55336b82-a18d-4dd6-b5f6-9e5095c314a6
 b8f9b850-328d-4355-9145-c59439a0c4cf
 7ffbc6bf-bc32-4f92-8982-f9dd17fd3114
-f2e724c1-748f-4b47-8fb8-8e0d210e9208
-1d2d2ea6-1680-4c56-ac58-a441c8c24ff9
 ea4a4090-de26-49d7-93c1-91bff9e53fc3
 b61285dd-d9f7-41f2-9757-8f61cba4e9c8
+f2e724c1-748f-4b47-8fb8-8e0d210e9208
+1d2d2ea6-1680-4c56-ac58-a441c8c24ff9
+5030841d-c919-4594-8d2d-84ae4f96e58e
+86752282-5841-4120-ac80-db03ae6b5fdb
 ) do (
 set /a cc+=1
 set ffn!cc!=%%#
@@ -66,10 +79,12 @@ Monthly
 MonthlyEnterprise
 SemiAnnualPreview
 SemiAnnual
-Perpetual2019
-MicrosoftLTSC
 DogfoodDevMain
 MicrosoftElite
+PerpetualVL2019
+MicrosoftLTSC
+PerpetualVL2021
+MicrosoftLTSC2021
 ) do (
 set /a cc+=1
 set chn!cc!=%%#
@@ -332,7 +347,7 @@ if %win64%==1 (
 set CTRlng=%lng64%&set CTRcul=%cul64%&set CTRvcab=v64_%CTRver%.cab&set CTRicab=i640.cab&set CTRicabr=i64%cul64%.cab
 )
 set CTRstp=%CTRlng%
-goto :MenuInitial
+goto :XmlCheck
 
 :MenuLangM
 cls
@@ -380,15 +395,33 @@ if %win64%==1 (
 set CTRvcab=v64_%CTRver%.cab&set CTRicab=i640.cab&set CTRicabr=i64%CTRprm%.cab
 )
 
-:MenuInitial
+:XmlCheck
 set _O2019=1
+set _O2021=1
+if %verchk% lss 14026 set _O2021=0
 expand.exe -f:*.xml "!CTRsource!\Office\Data\%CTRvcab%" "!_temp!." >nul
 find /i "Word2019Volume" "!_temp!\VersionDescriptor.xml" 1>nul 2>nul || set _O2019=0
+for /f "tokens=3 delims=<= " %%# in ('find /i "DeliveryMechanism" "!_temp!\VersionDescriptor.xml" 2^>nul') do set "FFNRoot=%%~#"
 del /f /q "!_temp!\*.xml" 1>nul 2>nul
+set _SAC=1
+if not "!FFNRoot!"=="" for %%J in (1,2,3,4,5,7,8) do (
+  if /i "!FFNRoot!"=="!ffn%%J!" set _SAC=0
+)
+set _C19=0
+if not "!FFNRoot!"=="" for %%J in (9,10) do (
+  if /i "!FFNRoot!"=="!ffn%%J!" set _C19=1
+)
+set _C21=0
+if not "!FFNRoot!"=="" for %%J in (11,12) do (
+  if /i "!FFNRoot!"=="!ffn%%J!" set _C21=1
+)
+
+:MenuInitial
+set "_return=MenuSuite"
+set _OneDrive=OFF
 set _Access=ON
 set _Excel=ON
 set _Lync=ON
-set _OneDrive=OFF
 set _OneNote=ON
 set _Outlook=ON
 set _PowerPoint=ON
@@ -397,43 +430,60 @@ set _SkypeForBusiness=ON
 set _Word=ON
 set _Project=ON
 set _Visio=ON
+set _O21Access=ON
+set _O21Excel=ON
+set _O21Lync=ON
+set _O21Outlook=ON
+set _O21PowerPoint=ON
+set _O21Publisher=ON
+set _O21SkypeForBusiness=ON
+set _O21Word=ON
 set _Mondo=OFF
 set _O365PP=ON
-set _Pro=OFF
-set _Std=OFF
-set _PrjPro=OFF
-set _PrjStd=OFF
-set _VisPro=OFF
-set _VisStd=OFF
+set _O19Pro=OFF
+set _O19Std=OFF
+set _O19PrjPro=OFF
+set _O19PrjStd=OFF
+set _O19VisPro=OFF
+set _O19VisStd=OFF
+set _O21Pro=OFF
+set _O21Std=OFF
+set _O21PrjPro=OFF
+set _O21PrjStd=OFF
+set _O21VisPro=OFF
+set _O21VisStd=OFF
 set _updt=True
 set _eula=True
 set _icon=False
 set _shut=True
 set _disp=True
 set _actv=False
-set _tele=True
+set _tele=False
 set _Teams=OFF
-if %verchk:~0,2% equ 11 if %verchk% lss 11328 set _Teams=0
+if %verchk:~0,2% geq 11 if %verchk% lss 11328 set _Teams=0
 if %verchk:~0,2% equ 10 if %verchk% lss 10336 set _Teams=0
-if %_O2019%==0 goto :MenuSuite
+if %_O2019%==0 if %_O2021%==0 goto :MenuSuite
 cls
 echo %line%
 echo Source  : "!CTRsource!"
 echo Version : %CTRver% / Arch: %CTRarc% / Lang: %CTRlng%
 echo %line%
 echo.
-echo. 1. Install Product Suite
-echo. 2. Install Single Apps
+echo. 1. Install Microsoft Office Suite
+if %_O2021%==1 echo. 2. Install Office 2021 Single Apps
+if %_O2019%==1 echo. 3. Install Office 2019 Single Apps
 echo.
 echo %line%
-choice /c 12X /n /m "Choose a menu option to proceed, or press X to exit: "
-if errorlevel 3 goto :eof
-if errorlevel 2 goto :MenuApps
+choice /c 123X /n /m "Choose a menu option to proceed, or press X to exit: "
+if errorlevel 4 goto :eof
+if errorlevel 3 goto :MenuApps
+if errorlevel 2 goto :Menu21Apps
 if errorlevel 1 goto :MenuSuite
 goto :MenuInitial
 
 :MenuSuite
-if %_O365PP%==OFF if %_Pro%==OFF if %_Std%==OFF if %_Mondo%==OFF if %_PrjPro%==OFF if %_PrjStd%==OFF if %_VisPro%==OFF if %_VisStd%==OFF set _O365PP=ON
+if %_Mondo%==OFF if %_O365PP%==OFF if %_O19Pro%==OFF if %_O19Std%==OFF if %_O19PrjPro%==OFF if %_O19PrjStd%==OFF if %_O19VisPro%==OFF if %_O19VisStd%==OFF if %_O21Pro%==OFF if %_O21Std%==OFF if %_O21PrjPro%==OFF if %_O21PrjStd%==OFF if %_O21VisPro%==OFF if %_O21VisStd%==OFF set _O365PP=ON
+set errortmp=
 cls
 echo %line%
 echo Source  : "!CTRsource!"
@@ -443,32 +493,48 @@ echo Select Products to Install:
 echo.
 echo. 1. Microsoft 365 Enterprise : %_O365PP%
 echo. 2. Office Mondo 2016        : %_Mondo%
-if %_O2019%==1 (
-echo. 3. Office ProPlus 2019      : %_Pro%
-echo. 4. Office Standard 2019     : %_Std%
+if %_O2021%==1 (
 echo.
-echo. 5. Project Pro 2019         : %_PrjPro%
-echo. 6. Project Standard 2019    : %_PrjStd%
-echo. 7. Visio Pro 2019           : %_VisPro%
-echo. 8. Visio Standard 2019      : %_VisStd%
+echo. 3. Office ProPlus 2021      : %_O21Pro%
+echo. 4. Office Standard 2021     : %_O21Std%
+echo. 5. Project Pro 2021         : %_O21PrjPro%
+echo. 6. Project Standard 2021    : %_O21PrjStd%
+echo. 7. Visio Pro 2021           : %_O21VisPro%
+echo. 8. Visio Standard 2021      : %_O21VisStd%
+)
+if %_O2019%==1 (
+echo.
+echo. F. Office ProPlus 2019      : %_O19Pro%
+echo. D. Office Standard 2019     : %_O19Std%
+echo. P. Project Pro 2019         : %_O19PrjPro%
+echo. R. Project Standard 2019    : %_O19PrjStd%
+echo. V. Visio Pro 2019           : %_O19VisPro%
+echo. S. Visio Standard 2019      : %_O19VisStd%
 )
 echo %line%
-choice /c 1234567890X /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
-if errorlevel 11 goto :eof
-if errorlevel 10 goto :MenuSuite2
-if errorlevel 9 goto :MenuInitial
-if errorlevel 8 (if %_O2019%==1 (if %_VisStd%==ON (set _VisStd=OFF) else if %_Mondo%==OFF (set _VisPro=OFF&set _VisStd=ON)))&goto :MenuSuite
-if errorlevel 7 (if %_O2019%==1 (if %_VisPro%==ON (set _VisPro=OFF) else if %_Mondo%==OFF (set _VisPro=ON&set _VisStd=OFF)))&goto :MenuSuite
-if errorlevel 6 (if %_O2019%==1 (if %_PrjStd%==ON (set _PrjStd=OFF) else if %_Mondo%==OFF (set _PrjPro=OFF&set _PrjStd=ON)))&goto :MenuSuite
-if errorlevel 5 (if %_O2019%==1 (if %_PrjPro%==ON (set _PrjPro=OFF) else if %_Mondo%==OFF (set _PrjPro=ON&set _PrjStd=OFF)))&goto :MenuSuite
-if errorlevel 4 (if %_O2019%==1 (if %_Std%==ON (set _Std=OFF) else (set _Std=ON&set _Mondo=OFF&set _O365PP=OFF&set _Pro=OFF)))&goto :MenuSuite
-if errorlevel 3 (if %_O2019%==1 (if %_Pro%==ON (set _Pro=OFF) else (set _Pro=ON&set _Mondo=OFF&set _O365PP=OFF&set _Std=OFF)))&goto :MenuSuite
-if errorlevel 2 (if %_Mondo%==ON (set _Mondo=OFF) else (set _Mondo=ON&set _O365PP=OFF&set _Pro=OFF&set _Std=OFF&set _PrjPro=OFF&set _PrjStd=OFF&set _VisPro=OFF&set _VisStd=OFF))&goto :MenuSuite
-if errorlevel 1 (if %_O365PP%==ON (set _O365PP=OFF) else (set _O365PP=ON&set _Mondo=OFF&set _Pro=OFF&set _Std=OFF))&goto :MenuSuite
+choice /c 123456789FDPRVS0X /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
+set errortmp=%errorlevel%
+if %errortmp%==17 goto :eof
+if %errortmp%==16 goto :MenuSuit2
+if %errortmp%==15 if %_O2019%==1 (if %_O19VisStd%==ON (set _O19VisStd=OFF) else if %_Mondo%==OFF (set _O19VisStd=ON&set _O19VisPro=OFF&set _O21VisPro=OFF&set _O21VisStd=OFF)&goto :MenuSuite)
+if %errortmp%==14 if %_O2019%==1 (if %_O19VisPro%==ON (set _O19VisPro=OFF) else if %_Mondo%==OFF (set _O19VisPro=ON&set _O19VisStd=OFF&set _O21VisPro=OFF&set _O21VisStd=OFF)&goto :MenuSuite)
+if %errortmp%==13 if %_O2019%==1 (if %_O19PrjStd%==ON (set _O19PrjStd=OFF) else if %_Mondo%==OFF (set _O19PrjStd=ON&set _O19PrjPro=OFF&set _O21PrjPro=OFF&set _O21PrjStd=OFF)&goto :MenuSuite)
+if %errortmp%==12 if %_O2019%==1 (if %_O19PrjPro%==ON (set _O19PrjPro=OFF) else if %_Mondo%==OFF (set _O19PrjPro=ON&set _O19PrjStd=OFF&set _O21PrjPro=OFF&set _O21PrjStd=OFF)&goto :MenuSuite)
+if %errortmp%==11 if %_O2019%==1 (if %_O19Std%==ON (set _O19Std=OFF) else (set _O19Std=ON&set _Mondo=OFF&set _O365PP=OFF&set _O19Pro=OFF&set _O21Pro=OFF&set _O21Std=OFF)&goto :MenuSuite)
+if %errortmp%==10 if %_O2019%==1 (if %_O19Pro%==ON (set _O19Pro=OFF) else (set _O19Pro=ON&set _Mondo=OFF&set _O365PP=OFF&set _O19Std=OFF&set _O21Pro=OFF&set _O21Std=OFF)&goto :MenuSuite)
+if %errortmp%==9 goto :MenuInitial
+if %errortmp%==8 if %_O2021%==1 (if %_O21VisStd%==ON (set _O21VisStd=OFF) else if %_Mondo%==OFF (set _O21VisStd=ON&set _O21VisPro=OFF&set _O19VisPro=OFF&set _O19VisStd=OFF)&goto :MenuSuite)
+if %errortmp%==7 if %_O2021%==1 (if %_O21VisPro%==ON (set _O21VisPro=OFF) else if %_Mondo%==OFF (set _O21VisPro=ON&set _O21VisStd=OFF&set _O19VisPro=OFF&set _O19VisStd=OFF)&goto :MenuSuite)
+if %errortmp%==6 if %_O2021%==1 (if %_O21PrjStd%==ON (set _O21PrjStd=OFF) else if %_Mondo%==OFF (set _O21PrjStd=ON&set _O21PrjPro=OFF&set _O19PrjPro=OFF&set _O19PrjStd=OFF)&goto :MenuSuite)
+if %errortmp%==5 if %_O2021%==1 (if %_O21PrjPro%==ON (set _O21PrjPro=OFF) else if %_Mondo%==OFF (set _O21PrjPro=ON&set _O21PrjStd=OFF&set _O19PrjPro=OFF&set _O19PrjStd=OFF)&goto :MenuSuite)
+if %errortmp%==4 if %_O2021%==1 (if %_O21Std%==ON (set _O21Std=OFF) else (set _O21Std=ON&set _Mondo=OFF&set _O365PP=OFF&set _O21Pro=OFF&set _O19Pro=OFF&set _O19Std=OFF)&goto :MenuSuite)
+if %errortmp%==3 if %_O2021%==1 (if %_O21Pro%==ON (set _O21Pro=OFF) else (set _O21Pro=ON&set _Mondo=OFF&set _O365PP=OFF&set _O21Std=OFF&set _O19Pro=OFF&set _O19Std=OFF)&goto :MenuSuite)
+if %errortmp%==2 (if %_Mondo%==ON (set _Mondo=OFF) else (set _Mondo=ON&set _O365PP=OFF&set _O19Pro=OFF&set _O19Std=OFF&set _O19PrjPro=OFF&set _O19PrjStd=OFF&set _O19VisPro=OFF&set _O19VisStd=OFF&set _O21Pro=OFF&set _O21Std=OFF&set _O21PrjPro=OFF&set _O21PrjStd=OFF&set _O21VisPro=OFF&set _O21VisStd=OFF))&goto :MenuSuite
+if %errortmp%==1 (if %_O365PP%==ON (set _O365PP=OFF) else (set _O365PP=ON&set _Mondo=OFF&set _O19Pro=OFF&set _O19Std=OFF&set _O21Pro=OFF&set _O21Std=OFF))&goto :MenuSuite
 goto :MenuSuite
 
 :MenuApps
-if %_Access%==OFF if %_Excel%==OFF if %_OneNote%==OFF if %_Outlook%==OFF if %_PowerPoint%==OFF if %_Publisher%==OFF if %_SkypeForBusiness%==OFF if %_Word%==OFF if %_PrjPro%==OFF if %_PrjStd%==OFF if %_VisPro%==OFF if %_VisStd%==OFF set _Word=ON
+if %_Access%==OFF if %_Excel%==OFF if %_OneNote%==OFF if %_Outlook%==OFF if %_PowerPoint%==OFF if %_Publisher%==OFF if %_SkypeForBusiness%==OFF if %_Word%==OFF if %_O19PrjPro%==OFF if %_O19PrjStd%==OFF if %_O19VisPro%==OFF if %_O19VisStd%==OFF set _Word=ON
 cls
 echo %line%
 echo Source  : "!CTRsource!"
@@ -485,10 +551,10 @@ echo. R. Publisher 2019        : %_Publisher%
 echo. S. SkypeForBusiness 2019 : %_SkypeForBusiness%
 echo. W. Word 2019             : %_Word%
 echo.
-echo. 5. Project Pro 2019      : %_PrjPro%
-echo. 6. Project Standard 2019 : %_PrjStd%
-echo. 7. Visio Pro 2019        : %_VisPro%
-echo. 8. Visio Standard 2019   : %_VisStd%
+echo. 5. Project Pro 2019      : %_O19PrjPro%
+echo. 6. Project Standard 2019 : %_O19PrjStd%
+echo. 7. Visio Pro 2019        : %_O19VisPro%
+echo. 8. Visio Standard 2019   : %_O19VisStd%
 echo.
 echo. D. OneDrive Desktop      : %_OneDrive%
 if not %_Teams%==0 echo. T. Microsoft Teams       : %_Teams%
@@ -496,12 +562,12 @@ echo %line%
 choice /c AENOPRSWD567890TX /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
 if errorlevel 17 goto :eof
 if errorlevel 16 (if not %_Teams%==0 (if %_Teams%==ON (set _Teams=OFF) else (set _Teams=ON)))&goto :MenuApps
-if errorlevel 15 goto :MenuApps2
+if errorlevel 15 goto :MenuApp2
 if errorlevel 14 goto :MenuInitial
-if errorlevel 13 (if %_VisStd%==ON (set _VisStd=OFF) else (set _VisPro=OFF&set _VisStd=ON))&goto :MenuApps
-if errorlevel 12 (if %_VisPro%==ON (set _VisPro=OFF) else (set _VisPro=ON&set _VisStd=OFF))&goto :MenuApps
-if errorlevel 11 (if %_PrjStd%==ON (set _PrjStd=OFF) else (set _PrjPro=OFF&set _PrjStd=ON))&goto :MenuApps
-if errorlevel 10 (if %_PrjPro%==ON (set _PrjPro=OFF) else (set _PrjPro=ON&set _PrjStd=OFF))&goto :MenuApps
+if errorlevel 13 (if %_O19VisStd%==ON (set _O19VisStd=OFF) else (set _O19VisPro=OFF&set _O19VisStd=ON))&goto :MenuApps
+if errorlevel 12 (if %_O19VisPro%==ON (set _O19VisPro=OFF) else (set _O19VisPro=ON&set _O19VisStd=OFF))&goto :MenuApps
+if errorlevel 11 (if %_O19PrjStd%==ON (set _O19PrjStd=OFF) else (set _O19PrjPro=OFF&set _O19PrjStd=ON))&goto :MenuApps
+if errorlevel 10 (if %_O19PrjPro%==ON (set _O19PrjPro=OFF) else (set _O19PrjPro=ON&set _O19PrjStd=OFF))&goto :MenuApps
 if errorlevel 9 (if %_OneDrive%==ON (set _OneDrive=OFF) else (set _OneDrive=ON))&goto :MenuApps
 if errorlevel 8 (if %_Word%==ON (set _Word=OFF) else (set _Word=ON))&goto :MenuApps
 if errorlevel 7 (if %_SkypeForBusiness%==ON (set _SkypeForBusiness=OFF) else (set _SkypeForBusiness=ON))&goto :MenuApps
@@ -513,15 +579,61 @@ if errorlevel 2 (if %_Excel%==ON (set _Excel=OFF) else (set _Excel=ON))&goto :Me
 if errorlevel 1 (if %_Access%==ON (set _Access=OFF) else (set _Access=ON))&goto :MenuApps
 goto :MenuApps
 
-:MenuSuite2
-set "_retsuite="
+:Menu21Apps
+if %_O21Access%==OFF if %_O21Excel%==OFF if %_OneNote%==OFF if %_O21Outlook%==OFF if %_O21PowerPoint%==OFF if %_O21Publisher%==OFF if %_O21SkypeForBusiness%==OFF if %_O21Word%==OFF if %_O21PrjPro%==OFF if %_O21PrjStd%==OFF if %_O21VisPro%==OFF if %_O21VisStd%==OFF set _O21Word=ON
+cls
+echo %line%
+echo Source  : "!CTRsource!"
+echo Version : %CTRver% / Arch: %CTRarc% / Lang: %CTRlng%
+echo %line%
+echo Select Apps to install:
+echo.
+echo. A. Access 2021           : %_O21Access%
+echo. E. Excel 2021            : %_O21Excel%
+echo. N. OneNote 2016          : %_OneNote%
+echo. O. Outlook 2021          : %_O21Outlook%
+echo. P. PowerPoint 2021       : %_O21PowerPoint%
+echo. R. Publisher 2021        : %_O21Publisher%
+echo. S. SkypeForBusiness 2021 : %_O21SkypeForBusiness%
+echo. W. Word 2021             : %_O21Word%
+echo.
+echo. 5. Project Pro 2021      : %_O21PrjPro%
+echo. 6. Project Standard 2021 : %_O21PrjStd%
+echo. 7. Visio Pro 2021        : %_O21VisPro%
+echo. 8. Visio Standard 2021   : %_O21VisStd%
+echo.
+echo. D. OneDrive Desktop      : %_OneDrive%
+if not %_Teams%==0 echo. T. Microsoft Teams       : %_Teams%
+echo %line%
+choice /c AENOPRSWD567890TX /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
+if errorlevel 17 goto :eof
+if errorlevel 16 (if not %_Teams%==0 (if %_Teams%==ON (set _Teams=OFF) else (set _Teams=ON)))&goto :Menu21Apps
+if errorlevel 15 goto :Menu21App2
+if errorlevel 14 goto :MenuInitial
+if errorlevel 13 (if %_O21VisStd%==ON (set _O21VisStd=OFF) else (set _O21VisPro=OFF&set _O21VisStd=ON))&goto :Menu21Apps
+if errorlevel 12 (if %_O21VisPro%==ON (set _O21VisPro=OFF) else (set _O21VisPro=ON&set _O21VisStd=OFF))&goto :Menu21Apps
+if errorlevel 11 (if %_O21PrjStd%==ON (set _O21PrjStd=OFF) else (set _O21PrjPro=OFF&set _O21PrjStd=ON))&goto :Menu21Apps
+if errorlevel 10 (if %_O21PrjPro%==ON (set _O21PrjPro=OFF) else (set _O21PrjPro=ON&set _O21PrjStd=OFF))&goto :Menu21Apps
+if errorlevel 9 (if %_OneDrive%==ON (set _OneDrive=OFF) else (set _OneDrive=ON))&goto :Menu21Apps
+if errorlevel 8 (if %_O21Word%==ON (set _O21Word=OFF) else (set _O21Word=ON))&goto :Menu21Apps
+if errorlevel 7 (if %_O21SkypeForBusiness%==ON (set _O21SkypeForBusiness=OFF) else (set _O21SkypeForBusiness=ON))&goto :Menu21Apps
+if errorlevel 6 (if %_O21Publisher%==ON (set _O21Publisher=OFF) else (set _O21Publisher=ON))&goto :Menu21Apps
+if errorlevel 5 (if %_O21PowerPoint%==ON (set _O21PowerPoint=OFF) else (set _O21PowerPoint=ON))&goto :Menu21Apps
+if errorlevel 4 (if %_O21Outlook%==ON (set _O21Outlook=OFF) else (set _O21Outlook=ON))&goto :Menu21Apps
+if errorlevel 3 (if %_OneNote%==ON (set _OneNote=OFF) else (set _OneNote=ON))&goto :Menu21Apps
+if errorlevel 2 (if %_O21Excel%==ON (set _O21Excel=OFF) else (set _O21Excel=ON))&goto :Menu21Apps
+if errorlevel 1 (if %_O21Access%==ON (set _O21Access=OFF) else (set _O21Access=ON))&goto :Menu21Apps
+goto :Menu21Apps
+
+:MenuSuit2
+set "_return=MenuSuite"
 set "_suite="
 set "_suit2="
-for /l %%J in (1,1,15) do (
+for /l %%J in (1,1,20) do (
 set "_sku%%J="
 )
 set "_pkey0="
-for /l %%J in (1,1,15) do (
+for /l %%J in (1,1,20) do (
 set "_pkey%%J="
 )
 set /a cc=0
@@ -529,50 +641,75 @@ set /a kk=0
 if %_O365PP%==ON (
 set _suite=O365ProPlusRetail&set _suit2=MondoVolume
 set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
-) else if %_Pro%==ON (
+) else if %_O21Pro%==ON (
+if %winbuild% lss 10240 (set _suite=O365ProPlusRetail&set _suit2=ProPlus2021Volume) else (set _suite=ProPlus2021Volume)
+set _pkey0=FXYTK-NJJ8C-GB6DW-3DYQT-6F7TH
+) else if %_O21Std%==ON (
+if %winbuild% lss 10240 (set _suite=StandardRetail&set _suit2=Standard2021Volume) else (set _suite=Standard2021Volume)
+set _pkey0=KDX7X-BNVR8-TXXGX-4Q7Y8-78VT3
+) else if %_O19Pro%==ON (
 if %winbuild% lss 10240 (set _suite=O365ProPlusRetail&set _suit2=ProPlus2019Volume) else (set _suite=ProPlus2019Volume)
 set _pkey0=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP
-) else if %_Std%==ON (
+) else if %_O19Std%==ON (
 if %winbuild% lss 10240 (set _suite=StandardRetail&set _suit2=Standard2019Volume) else (set _suite=Standard2019Volume)
 set _pkey0=6NWWJ-YQWMR-QKGCB-6TMB3-9D9HK
 ) else if %_Mondo%==ON (
 set _suite=MondoVolume
 set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
 )
-if %_PrjPro%==ON (
+if %_O21PrjPro%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=ProjectProRetail&set /a cc+=1&set _sku!cc!=ProjectPro2021Volume) else (set _sku!cc!=ProjectPro2021Volume)
+set /a kk+=1
+set _pkey!kk!=FTNWT-C6WBT-8HMGF-K9PRX-QV9H8
+) else if %_O21PrjStd%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=ProjectStdRetail&set /a cc+=1&set _sku!cc!=ProjectStd2021Volume) else (set _sku!cc!=ProjectStd2021Volume)
+set /a kk+=1
+set _pkey!kk!=J2JDC-NJCYY-9RGQ4-YXWMH-T3D4T
+) else if %_O19PrjPro%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=ProjectProRetail&set /a cc+=1&set _sku!cc!=ProjectPro2019Volume) else (set _sku!cc!=ProjectPro2019Volume)
 set /a kk+=1
 set _pkey!kk!=B4NPR-3FKK7-T2MBV-FRQ4W-PKD2B
-) else if %_PrjStd%==ON (
+) else if %_O19PrjStd%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=ProjectStdRetail&set /a cc+=1&set _sku!cc!=ProjectStd2019Volume) else (set _sku!cc!=ProjectStd2019Volume)
 set /a kk+=1
 set _pkey!kk!=C4F7P-NCP8C-6CQPT-MQHV9-JXD2M
 )
-if %_VisPro%==ON (
+if %_O21VisPro%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=VisioProRetail&set /a cc+=1&set _sku!cc!=VisioPro2021Volume) else (set _sku!cc!=VisioPro2021Volume)
+set /a kk+=1
+set _pkey!kk!=KNH8D-FGHT4-T8RK3-CTDYJ-K2HT4
+) else if %_O21VisStd%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=VisioStdRetail&set /a cc+=1&set _sku!cc!=VisioStd2021Volume) else (set _sku!cc!=VisioStd2021Volume)
+set /a kk+=1
+set _pkey!kk!=MJVNY-BYWPY-CWV6J-2RKRT-4M8QG
+) else if %_O19VisPro%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=VisioProRetail&set /a cc+=1&set _sku!cc!=VisioPro2019Volume) else (set _sku!cc!=VisioPro2019Volume)
 set /a kk+=1
 set _pkey!kk!=9BGNQ-K37YR-RQHF2-38RQ3-7VCBB
-) else if %_VisStd%==ON (
+) else if %_O19VisStd%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=VisioStdRetail&set /a cc+=1&set _sku!cc!=VisioStd2019Volume) else (set _sku!cc!=VisioStd2019Volume)
 set /a kk+=1
 set _pkey!kk!=7TQNQ-K3YQQ-3PFH7-CCPPM-X4VQ2
 )
-set "_retsuite=1"
 if defined _suite goto :MenuExclude
 goto :MenuChannel
 
-:MenuApps2
-set "_retsuite="
-for /l %%J in (1,1,15) do (
+:MenuApp2
+set "_return=MenuApps"
+for /l %%J in (1,1,20) do (
 set "_sku%%J="
 )
 set "_keys="
 set "_pkey0="
-for /l %%J in (1,1,15) do (
+for /l %%J in (1,1,20) do (
 set "_pkey%%J="
 )
 set /a cc=0
@@ -625,23 +762,23 @@ if %winbuild% lss 10240 (set _sku!cc!=OneNoteRetail&set /a cc+=1&set _sku!cc!=On
 set /a kk+=1
 set _pkey!kk!=DR92N-9HTF2-97XKM-XW2WJ-XW3J6
 )
-if %_PrjPro%==ON (
+if %_O19PrjPro%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=ProjectProRetail&set /a cc+=1&set _sku!cc!=ProjectPro2019Volume) else (set _sku!cc!=ProjectPro2019Volume)
 set /a kk+=1
 set _pkey!kk!=B4NPR-3FKK7-T2MBV-FRQ4W-PKD2B
-) else if %_PrjStd%==ON (
+) else if %_O19PrjStd%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=ProjectStdRetail&set /a cc+=1&set _sku!cc!=ProjectStd2019Volume) else (set _sku!cc!=ProjectStd2019Volume)
 set /a kk+=1
 set _pkey!kk!=C4F7P-NCP8C-6CQPT-MQHV9-JXD2M
 )
-if %_VisPro%==ON (
+if %_O19VisPro%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=VisioProRetail&set /a cc+=1&set _sku!cc!=VisioPro2019Volume) else (set _sku!cc!=VisioPro2019Volume)
 set /a kk+=1
 set _pkey!kk!=9BGNQ-K37YR-RQHF2-38RQ3-7VCBB
-) else if %_VisStd%==ON (
+) else if %_O19VisStd%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=VisioStdRetail&set /a cc+=1&set _sku!cc!=VisioStd2019Volume) else (set _sku!cc!=VisioStd2019Volume)
 set /a kk+=1
@@ -649,7 +786,102 @@ set _pkey!kk!=7TQNQ-K3YQQ-3PFH7-CCPPM-X4VQ2
 )
 goto :MenuChannel
 
+:Menu21App2
+set "_return=Menu21Apps"
+for /l %%J in (1,1,20) do (
+set "_sku%%J="
+)
+set "_keys="
+set "_pkey0="
+for /l %%J in (1,1,20) do (
+set "_pkey%%J="
+)
+set /a cc=0
+set /a kk=0
+if %_O21Access%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=AccessRetail&set /a cc+=1&set _sku!cc!=Access2021Volume) else (set _sku!cc!=Access2021Volume)
+set /a kk+=1
+set _pkey!kk!=WM8YG-YNGDD-4JHDC-PG3F4-FC4T4
+)
+if %_O21Excel%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=ExcelRetail&set /a cc+=1&set _sku!cc!=Excel2021Volume) else (set _sku!cc!=Excel2021Volume)
+set /a kk+=1
+set _pkey!kk!=NWG3X-87C9K-TC7YY-BC2G7-G6RVC
+)
+if %_O21Outlook%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=OutlookRetail&set /a cc+=1&set _sku!cc!=Outlook2021Volume) else (set _sku!cc!=Outlook2021Volume)
+set /a kk+=1
+set _pkey!kk!=C9FM6-3N72F-HFJXB-TM3V9-T86R9
+)
+if %_O21PowerPoint%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=PowerPointRetail&set /a cc+=1&set _sku!cc!=PowerPoint2021Volume) else (set _sku!cc!=PowerPoint2021Volume)
+set /a kk+=1
+set _pkey!kk!=TY7XF-NFRBR-KJ44C-G83KF-GX27K
+)
+if %_O21Publisher%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=PublisherRetail&set /a cc+=1&set _sku!cc!=Publisher2021Volume) else (set _sku!cc!=Publisher2021Volume)
+set /a kk+=1
+set _pkey!kk!=2MW9D-N4BXM-9VBPG-Q7W6M-KFBGQ
+)
+if %_O21SkypeForBusiness%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=SkypeForBusinessRetail&set /a cc+=1&set _sku!cc!=SkypeForBusiness2021Volume) else (set _sku!cc!=SkypeForBusiness2021Volume)
+set /a kk+=1
+set _pkey!kk!=HWCXN-K3WBT-WJBKY-R8BD9-XK29P
+)
+if %_O21Word%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=WordRetail&set /a cc+=1&set _sku!cc!=Word2021Volume) else (set _sku!cc!=Word2021Volume)
+set /a kk+=1
+set _pkey!kk!=TN8H9-M34D3-Y64V9-TR72V-X79KV
+)
+if %_OneNote%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=OneNoteRetail&set /a cc+=1&set _sku!cc!=OneNoteVolume) else (set _sku!cc!=OneNoteVolume)
+set /a kk+=1
+set _pkey!kk!=DR92N-9HTF2-97XKM-XW2WJ-XW3J6
+)
+if %_O21PrjPro%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=ProjectProRetail&set /a cc+=1&set _sku!cc!=ProjectPro2021Volume) else (set _sku!cc!=ProjectPro2021Volume)
+set /a kk+=1
+set _pkey!kk!=FTNWT-C6WBT-8HMGF-K9PRX-QV9H8
+) else if %_O21PrjStd%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=ProjectStdRetail&set /a cc+=1&set _sku!cc!=ProjectStd2021Volume) else (set _sku!cc!=ProjectStd2021Volume)
+set /a kk+=1
+set _pkey!kk!=J2JDC-NJCYY-9RGQ4-YXWMH-T3D4T
+)
+if %_O21VisPro%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=VisioProRetail&set /a cc+=1&set _sku!cc!=VisioPro2021Volume) else (set _sku!cc!=VisioPro2021Volume)
+set /a kk+=1
+set _pkey!kk!=KNH8D-FGHT4-T8RK3-CTDYJ-K2HT4
+) else if %_O21VisStd%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=VisioStdRetail&set /a cc+=1&set _sku!cc!=VisioStd2021Volume) else (set _sku!cc!=VisioStd2021Volume)
+set /a kk+=1
+set _pkey!kk!=MJVNY-BYWPY-CWV6J-2RKRT-4M8QG
+)
+goto :MenuChannel
+
 :MenuExclude
+if %_O21Std%==ON (
+set _Access=OFF
+set _Lync=OFF
+) else if %_O19Std%==ON (
+set _Access=OFF
+set _Lync=OFF
+)
+if %_Mondo%==OFF (
+set _Project=OFF
+set _Visio=OFF
+)
 cls
 echo %line%
 echo Source  : "!CTRsource!"
@@ -662,13 +894,21 @@ if defined _suit2 (
 echo %line%
 echo Select Apps to include ^(OFF ^= exclude^):
 echo.
-if %_Std%==OFF echo. A. Access           : %_Access%
+if %_O21Std%==OFF (
+echo. A. Access           : %_Access%
+) else if %_O19Std%==OFF (
+echo. A. Access           : %_Access%
+)
 echo. E. Excel            : %_Excel%
 echo. N. OneNote          : %_OneNote%
 echo. O. Outlook          : %_Outlook%
 echo. P. PowerPoint       : %_PowerPoint%
 echo. R. Publisher        : %_Publisher%
-if %_Std%==OFF echo. S. SkypeForBusiness : %_Lync%
+if %_O21Std%==OFF (
+echo. S. SkypeForBusiness : %_Lync%
+) else if %_O19Std%==OFF (
+echo. S. SkypeForBusiness : %_Lync%
+)
 echo. W. Word             : %_Word%
 if %_Mondo%==ON (
 echo. J. Project          : %_Project%
@@ -680,29 +920,34 @@ echo %line%
 choice /c AENOPRSWJVD90TX /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
 if errorlevel 15 goto :eof
 if errorlevel 14 (if not %_Teams%==0 (if %_Teams%==ON (set _Teams=OFF) else (set _Teams=ON)))&goto :MenuExclude
-if errorlevel 13 goto :MenuExclude2
+if errorlevel 13 goto :MenuExcluded
 if errorlevel 12 goto :MenuSuite
 if errorlevel 11 (if %_OneDrive%==ON (set _OneDrive=OFF) else (set _OneDrive=ON))&goto :MenuExclude
-if errorlevel 10 if %_Mondo%==ON (if %_Visio%==ON (set _Visio=OFF) else (set _Visio=ON))&goto :MenuExclude
-if errorlevel 9 if %_Mondo%==ON (if %_Project%==ON (set _Project=OFF) else (set _Project=ON))&goto :MenuExclude
+if errorlevel 10 (if %_Mondo%==ON (if %_Visio%==ON (set _Visio=OFF) else (set _Visio=ON)))&goto :MenuExclude
+if errorlevel 9 (if %_Mondo%==ON (if %_Project%==ON (set _Project=OFF) else (set _Project=ON)))&goto :MenuExclude
 if errorlevel 8 (if %_Word%==ON (set _Word=OFF) else (set _Word=ON))&goto :MenuExclude
-if errorlevel 7 if %_Std%==OFF (if %_Lync%==ON (set _Lync=OFF) else (set _Lync=ON))&goto :MenuExclude
+if errorlevel 7 (if %_O21Std%==OFF if %_O19Std%==OFF (if %_Lync%==ON (set _Lync=OFF) else (set _Lync=ON)))&goto :MenuExclude
 if errorlevel 6 (if %_Publisher%==ON (set _Publisher=OFF) else (set _Publisher=ON))&goto :MenuExclude
 if errorlevel 5 (if %_PowerPoint%==ON (set _PowerPoint=OFF) else (set _PowerPoint=ON))&goto :MenuExclude
 if errorlevel 4 (if %_Outlook%==ON (set _Outlook=OFF) else (set _Outlook=ON))&goto :MenuExclude
 if errorlevel 3 (if %_OneNote%==ON (set _OneNote=OFF) else (set _OneNote=ON))&goto :MenuExclude
 if errorlevel 2 (if %_Excel%==ON (set _Excel=OFF) else (set _Excel=ON))&goto :MenuExclude
-if errorlevel 1 if %_Std%==OFF (if %_Access%==ON (set _Access=OFF) else (set _Access=ON))&goto :MenuExclude
+if errorlevel 1 (if %_O21Std%==OFF if %_O19Std%==OFF (if %_Access%==ON (set _Access=OFF) else (set _Access=ON)))&goto :MenuExclude
 goto :MenuExclude
 
-:MenuExclude2
+:MenuExcluded
 set "_excluded=Groove"
-for %%J in (Access,Excel,Lync,OneDrive,OneNote,Outlook,PowerPoint,Project,Publisher,Teams,Visio,Word) do (
+for %%J in (Access,Excel,Lync,OneDrive,OneNote,Outlook,PowerPoint,Publisher,Teams,Word) do (
+if !_%%J!==OFF set "_excluded=!_excluded!,%%J"
+)
+if %_Mondo%==ON for %%J in (Project,Visio) do (
 if !_%%J!==OFF set "_excluded=!_excluded!,%%J"
 )
 goto :MenuChannel
 
 :MenuChannel
+if %_C19%==1 goto :Chn19
+if %_C21%==1 goto :Chn21
 set "inpt="
 set "CTRffn="
 set "CTRchn="
@@ -722,37 +967,77 @@ echo. 4. Monthly Enterprise                  ^| Production::MEC
 echo. 5. Semi-Annual Preview                 ^|   Insiders::FRDC
 echo. 6. Semi-Annual                         ^| Production::DC
 echo.
-echo. 7. Perpetual2019 VL                    ^| Production::LTSC
-echo. 8. Microsoft Perpetual                 ^|  Microsoft::LTSC
-echo.
-echo. D. DevMain Channel                     ^|    Dogfood::DevMain
-echo. E. Microsoft Elite                     ^|  Microsoft::DevMain
+echo. 7. DevMain Channel                     ^|    Dogfood::DevMain
+echo. 8. Microsoft Elite                     ^|  Microsoft::DevMain
 echo %line%
-choice /c 12345678DE09X /n /m "Choose a menu option to proceed, press 9 to go back, or X to exit: "
-if errorlevel 13 goto :eof
-if errorlevel 12 (if defined _retsuite (goto :MenuSuite) else (goto :MenuApps))
-if errorlevel 11 (set inpt=0&goto :MenuChannel2)
-if errorlevel 10 (set inpt=10&goto :MenuChannel2)
-if errorlevel 9 (set inpt=9&goto :MenuChannel2)
-if errorlevel 8 (set inpt=8&goto :MenuChannel2)
-if errorlevel 7 (set inpt=7&goto :MenuChannel2)
-if errorlevel 6 (set inpt=6&goto :MenuChannel2)
-if errorlevel 5 (set inpt=5&goto :MenuChannel2)
-if errorlevel 4 (set inpt=4&goto :MenuChannel2)
-if errorlevel 3 (set inpt=3&goto :MenuChannel2)
-if errorlevel 2 (set inpt=2&goto :MenuChannel2)
-if errorlevel 1 (set inpt=1&goto :MenuChannel2)
+choice /c 1234567809X /n /m "Choose a menu option to proceed, press 9 to go back, or X to exit: "
+if errorlevel 11 goto :eof
+if errorlevel 10 goto :%_return%
+if errorlevel 9 (set inpt=0&goto :MenuChn)
+if errorlevel 8 (set inpt=8&goto :MenuChn)
+if errorlevel 7 (set inpt=7&goto :MenuChn)
+if errorlevel 6 (set inpt=6&goto :MenuChn)
+if errorlevel 5 (set inpt=5&goto :MenuChn)
+if errorlevel 4 (set inpt=4&goto :MenuChn)
+if errorlevel 3 (set inpt=3&goto :MenuChn)
+if errorlevel 2 (set inpt=2&goto :MenuChn)
+if errorlevel 1 (set inpt=1&goto :MenuChn)
 goto :MenuChannel
 
-:MenuChannel2
+:Chn19
+set "inpt="
+set "CTRffn="
+set "CTRchn="
+cls
+echo %line%
+echo Source  : "!CTRsource!"
+echo Version : %CTRver% / Arch: %CTRarc% / Lang: %CTRlng%
+echo %line%
+echo Select Update Channel:
+echo.
+echo. 0. Default
+echo. 1. Perpetual2019 VL                    ^| Production::LTSC
+echo. 2. Microsoft 2019 VL                   ^|  Microsoft::LTSC
+echo.
+echo %line%
+choice /c 1209X /n /m "Choose a menu option to proceed, press 9 to go back, or X to exit: "
+if errorlevel 5 goto :eof
+if errorlevel 4 goto :%_return%
+if errorlevel 3 (set inpt=0&goto :MenuChn)
+if errorlevel 2 (set inpt=10&goto :MenuChn)
+if errorlevel 1 (set inpt=9&goto :MenuChn)
+goto :MenuChannel
+
+:Chn21
+set "inpt="
+set "CTRffn="
+set "CTRchn="
+cls
+echo %line%
+echo Source  : "!CTRsource!"
+echo Version : %CTRver% / Arch: %CTRarc% / Lang: %CTRlng%
+echo %line%
+echo Select Update Channel:
+echo.
+echo. 0. Default
+echo. 1. Perpetual2021 VL                    ^| Production::LTSC2021
+echo. 2. Microsoft 2021 VL                   ^|  Microsoft::LTSC2021
+echo.
+echo %line%
+choice /c 1209X /n /m "Choose a menu option to proceed, press 9 to go back, or X to exit: "
+if errorlevel 5 goto :eof
+if errorlevel 4 goto :%_return%
+if errorlevel 3 (set inpt=0&goto :MenuChn)
+if errorlevel 2 (set inpt=12&goto :MenuChn)
+if errorlevel 1 (set inpt=11&goto :MenuChn)
+goto :MenuChannel
+
+:MenuChn
 if %inpt%==0 (
-expand.exe -f:*.xml "!CTRsource!\Office\Data\%CTRvcab%" "!_temp!." >nul
-for /f "tokens=3 delims=<= " %%# in ('find /i "DeliveryMechanism" "!_temp!\VersionDescriptor.xml" 2^>nul') do set "FFNRoot=%%~#"
-if "!FFNRoot!" neq "" for /l %%J in (1,1,9) do (
-  if /i !FFNRoot! equ !ffn%%J! set inpt=%%J
+set inpt=3
+if not "!FFNRoot!"=="" for /l %%J in (1,1,12) do (
+  if /i "!FFNRoot!"=="!ffn%%J!" set inpt=%%J
   )
-if "!FFNRoot!" equ "" set inpt=3
-del /f /q "!_temp!\*.xml" 1>nul 2>nul
 )
 set "CTRffn=!ffn%inpt%!"
 set "CTRchn=!chn%inpt%!"
@@ -812,10 +1097,10 @@ echo. 5. Display Level       : %_disp%
 echo. 6. Auto Activate       : %_actv%
 echo. 7. Disable Telemetry   : %_tele%
 echo %line%
-choice /c 123456790X /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
+choice /c 123456709X /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
 if errorlevel 10 goto :eof
-if errorlevel 9 goto :MenuFinal
-if errorlevel 8 goto :MenuChannel
+if errorlevel 9 goto :MenuChannel
+if errorlevel 8 goto :MenuFinal
 if errorlevel 7 (if %_tele%==True (set _tele=False) else (set _tele=True))&goto :MenuMisc
 if errorlevel 6 (if %_actv%==True (set _actv=False) else (set _actv=True))&goto :MenuMisc
 if errorlevel 5 (if %_disp%==True (set _disp=False) else (set _disp=True))&goto :MenuMisc
@@ -845,6 +1130,7 @@ if defined _skus echo SKUs    : %_show%
 if defined _excluded echo Excluded: %_excluded%
 echo Updates : %_updt% / AcceptEULA : %_eula% / Display : %_disp%
 echo PinIcons: %_icon% / AppShutdown: %_shut% / Activate: %_actv%
+echo Disable Telemetry: %_tele%
 echo %line%
 echo.
 echo. 1. Install Now
@@ -908,7 +1194,7 @@ goto :TheEnd
 
 :MenuInstall
 echo %line%
-echo Preparing... 
+echo Preparing...
 echo %line%
 echo.
 if defined _suite (
@@ -927,6 +1213,7 @@ echo reg.exe delete %_Config% /f /v UpdateToVersion 1^>nul 2^>nul
 echo reg.exe delete %_CTR%\Updates /f /v UpdateToVersion 1^>nul 2^>nul
 echo reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\OfficeUpdate /f 1^>nul 2^>nul
 echo reg.exe add HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\OfficeUpdate /f /v PreventBingInstall /t REG_DWORD /d 1 1^>nul 2^>nul
+echo reg.exe add HKCU\software\Policies\Microsoft\Office\16.0\Teams /f /v PreventFirstLaunchAfterInstall /t REG_DWORD /d 1 1^>nul 2^>nul
 echo start "" /WAIT "%%CommonProgramFiles%%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" ^^
 echo deliverymechanism=%CTRffn% platform=%CTRarc% culture=%CTRstp% b= displaylevel=%_disp% ^^
 echo forceappshutdown=%_shut% piniconstotaskbar=%_icon% acceptalleulas.16=%_eula% ^^
@@ -959,7 +1246,7 @@ expand -f:* "!CTRsource!\Office\Data\%CTRver%\%CTRicabr%" "!_target!" 1>nul 2>nu
 )
 echo.
 echo %line%
-echo Running installation... 
+echo Running installation...
 echo %line%
 echo.
 del /f /q "%SystemRoot%\temp\*.log" 1>nul 2>nul
@@ -980,7 +1267,7 @@ set "_keys=DRNV7-VGMM2-B3G9T-4BF84-VMFTK"
 if defined _licenses (
 echo.
 echo %line%
-echo Installing Volume Licenses... 
+echo Installing Volume Licenses...
 echo %line%
 echo.
 call :Licenses 1>nul 2>nul

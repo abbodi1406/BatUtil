@@ -1,19 +1,19 @@
 @setlocal DisableDelayedExpansion
 @echo off
+set "_cmdf=%~f0"
+if exist "%SystemRoot%\Sysnative\cmd.exe" (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" "
+exit /b
+)
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" "
+exit /b
+)
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-set "xOS=x64"
-set "_Common=%CommonProgramFiles%"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
-  set "_Common=%CommonProgramW6432%"
-  ) else (
-  set "xOS=x86"
-  )
-)
-set "_target=%_Common%\Microsoft Shared\ClickToRun"
-set "_file=%_target%\OfficeClickToRun.exe"
-set "_work=%~dp0bin"
 reg query HKU\S-1-5-19 >nul 2>&1 || (
 set "msg=ERROR: right click on the script and 'Run as administrator'"
 goto :end
@@ -23,8 +23,19 @@ if %winbuild% LSS 7601 (
 set "msg=ERROR: Windows 7 SP1 is the minimum supported OS"
 goto :end
 )
+set "_Common=%CommonProgramFiles%"
+if defined PROCESSOR_ARCHITEW6432 set "_Common=%CommonProgramW6432%"
+if /i "%PROCESSOR_ARCHITECTURE%"=="amd64" set "xBit=x64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xBit=x86"
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xBit=x86"
+if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xBit=x64"
+if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xBit=x86"
+set "_file=%_Common%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe"
+set "_fil2=%CommonProgramFiles(x86)%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe"
+set "_work=%~dp0bin"
 setlocal EnableDelayedExpansion
-if not exist "!_work!\!xOS!\cleanospp.exe" (
+pushd "!_work!"
+if not exist "%xBit%\cleanospp.exe" (
 set "msg=ERROR: required file cleanospp.exe is missing"
 goto :end
 )
@@ -35,10 +46,10 @@ set "_Nul3=1>nul 2>nul"
 
 title Reset Office C2R Licenses
 set OfficeC2R=0
-sc query ClickToRunSvc %_Nul3% && set OfficeC2R=1
-sc query OfficeSvc %_Nul3% && set OfficeC2R=1
 for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun /v InstallPath" %_Nul6%') do if exist "%%b\root\Licenses16\ProPlus*.xrm-ms" set OfficeC2R=1
+if %OfficeC2R% equ 0 for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun /v InstallPath" %_Nul6%') do if exist "%%b\root\Licenses16\ProPlus*.xrm-ms" set OfficeC2R=1
 if exist "!_file!" set OfficeC2R=1
+if exist "!_fil2!" if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set OfficeC2R=1
 if %OfficeC2R% equ 0 (
 set "msg=No installed Office ClickToRun detected"
 goto :end
@@ -47,12 +58,18 @@ goto :end
 :main
 set "_InstallRoot="
 set "_ProductIds="
-for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun /v InstallPath" %_Nul6%') do if not errorlevel 1 (set "_InstallRoot=%%b\root")
+for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun /v InstallPath" %_Nul6%') do (set "_InstallRoot=%%b\root")
 if not "%_InstallRoot%"=="" (
-  for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun /v PackageGUID" %_Nul6%') do if not errorlevel 1 (set "_GUID=%%b")
-  for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds" %_Nul6%') do if not errorlevel 1 (set "_ProductIds=%%b")
+  for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun /v PackageGUID" %_Nul6%') do (set "_GUID=%%b")
+  for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds" %_Nul6%') do (set "_ProductIds=%%b")
   set "_Config=HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
   set "_PRIDs=HKLM\SOFTWARE\Microsoft\Office\ClickToRun\ProductReleaseIDs"
+) else (
+  for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun /v InstallPath" %_Nul6%') do (set "_InstallRoot=%%b\root")
+  for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun /v PackageGUID" %_Nul6%') do (set "_GUID=%%b")
+  for /f "skip=2 tokens=2*" %%a in ('"reg query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds" %_Nul6%') do (set "_ProductIds=%%b")
+  set "_Config=HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration"
+  set "_PRIDs=HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\ProductReleaseIDs"
 )
 set "_Integrator=%_InstallRoot%\integration\integrator.exe"
 for /f "skip=2 tokens=2*" %%a in ('"reg query %_PRIDs% /v ActiveConfiguration" %_Nul6%') do set "_PRIDs=%_PRIDs%\%%b"
@@ -73,8 +90,7 @@ echo ============================================================
 echo Cleaning Office Licenses...
 echo ============================================================
 echo.
-pushd "!_work!\!xOS!"
-cleanospp.exe -Licenses %_Nul3%
+%xBit%\cleanospp.exe -Licenses %_Nul3%
 if exist "%SysPath%\spp\store_test\2.0\tokens.dat" (
 echo.
 echo ============================================================
@@ -89,7 +105,7 @@ echo Installing Office C2R Licenses...
 echo ============================================================
 echo.
 for %%a in (%_SKUs%) do (
-"!_Integrator!" /R /License PRIDName=%%a PackageGUID="%_GUID%" PackageRoot="!_InstallRoot!" %_Nul1%
+"!_Integrator!" /R /License PRIDName=%%a.16 PackageGUID="%_GUID%" PackageRoot="!_InstallRoot!" %_Nul1%
 )
 set "msg=Finished."
 goto :end

@@ -9,16 +9,17 @@ set "uLanguage="
 :: channel
 :: InsiderFast, MonthlyPreview, Monthly
 :: MonthlyEnterprise, SemiAnnualPreview, SemiAnnual
-:: Perpetual2019, MicrosoftLTSC
 :: DogfoodDevMain, MicrosoftElite
+:: PerpetualVL2019, MicrosoftLTSC
+:: PerpetualVL2021, MicrosoftLTSC2021
 set "uChannel="
 
 :: level
-:: Win7, Default (Win 8.1/10)
+:: Win7, Default (Win 11/10/8.1)
 set "uLevel="
 
 :: bitness
-:: x86, x64, x86x64
+:: x86, x64, x86x64, x86arm64, x64arm64
 set "uBitness="
 
 :: type
@@ -33,19 +34,25 @@ set "uOutput="
 :: # NORMALLY THERE IS NO NEED TO CHANGE ANYTHING BELOW THIS COMMENT #
 :: ###################################################################
 
+set "_cmdf=%~f0"
+if exist "%SystemRoot%\Sysnative\cmd.exe" (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" "
+exit /b
+)
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" "
+exit /b
+)
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-set "xOS=amd64"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (if not defined PROCESSOR_ARCHITEW6432 (
-  set "xOS=x86"
-  )
-)
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 set "_psc=$Tls12 = [Enum]::ToObject([System.Net.SecurityProtocolType], 3072); [System.Net.ServicePointManager]::SecurityProtocol = $Tls12;"
 set "_temp=%temp%"
 set "_work=%~dp0"
-if "%_work:~-1%"=="\" set "_work=%_work:~0,-1%"
+set "_work=%_work:~0,-1%"
 setlocal EnableDelayedExpansion
 pushd "!_work!"
 set /a cc=0
@@ -75,10 +82,12 @@ for %%A in (
 55336b82-a18d-4dd6-b5f6-9e5095c314a6
 b8f9b850-328d-4355-9145-c59439a0c4cf
 7ffbc6bf-bc32-4f92-8982-f9dd17fd3114
+ea4a4090-de26-49d7-93c1-91bff9e53fc3
+b61285dd-d9f7-41f2-9757-8f61cba4e9c8
 f2e724c1-748f-4b47-8fb8-8e0d210e9208
 1d2d2ea6-1680-4c56-ac58-a441c8c24ff9
-b61285dd-d9f7-41f2-9757-8f61cba4e9c8
-ea4a4090-de26-49d7-93c1-91bff9e53fc3
+5030841d-c919-4594-8d2d-84ae4f96e58e
+86752282-5841-4120-ac80-db03ae6b5fdb
 ) do (
 set /a cc+=1
 set ffn!cc!=%%A
@@ -91,22 +100,24 @@ Monthly
 MonthlyEnterprise
 SemiAnnualPreview
 SemiAnnual
-Perpetual2019
-MicrosoftLTSC
-MicrosoftElite
 DogfoodDevMain
+MicrosoftElite
+PerpetualVL2019
+MicrosoftLTSC
+PerpetualVL2021
+MicrosoftLTSC2021
 ) do (
 set /a cc+=1
 set chn!cc!=%%A
 )
 
 set /a cc=0
-for %%A in (x86,x64,x86x64) do (
+for %%A in (x86,x64,x86x64,x86arm64,x64arm64) do (
 set /a cc+=1
 set arc!cc!=%%A
 )
 set /a cc=0
-for %%A in (32,64,00) do (
+for %%A in (32,64,00,32) do (
 set /a cc+=1
 set bit!cc!=%%A
 )
@@ -116,6 +127,8 @@ set /a cc+=1
 set ott!cc!=%%A
 )
 
+set _a86=1
+set _a64=1
 set full=1
 set proof=0
 set "line=============================================================="
@@ -154,12 +167,12 @@ for /L %%# in (10,1,40) do if /i "!uLanguage!"=="!lang%%#!" (set "lang=!lang%%#!
 
 set "chn=!chn3!"&set "ffn=!ffn3!"
 if defined uChannel (
-for /L %%# in (1,1,10) do if /i "!uChannel!"=="!chn%%#!" (set "chn=!chn%%#!"&set "ffn=!ffn%%#!")
+for /L %%# in (1,1,12) do if /i "!uChannel!"=="!chn%%#!" (set "chn=!chn%%#!"&set "ffn=!ffn%%#!")
 )
 
 set "arc=!arc3!"&set "bit=!bit3!"
 if defined uBitness (
-for /L %%# in (1,1,3) do if /i "!uBitness!"=="!arc%%#!" (set "arc=!arc%%#!"&set "bit=!bit%%#!")
+for /L %%# in (1,1,5) do if /i "!uBitness!"=="!arc%%#!" (set "arc=!arc%%#!"&set "bit=!bit%%#!")
 )
 
 if not defined uLevel set "uLevel=Default"
@@ -190,17 +203,20 @@ echo. 4. Monthly Enterprise                  ^| Production::MEC
 echo. 5. Semi-Annual Preview                 ^|   Insiders::FRDC
 echo. 6. Semi-Annual                         ^| Production::DC
 echo.
-echo. 7. Perpetual2019 VL                    ^| Production::LTSC
-echo. 8. Microsoft Perpetual                 ^|  Microsoft::LTSC
+echo. 7. DevMain Channel                     ^|    Dogfood::DevMain
+echo. 8. Microsoft Elite                     ^|  Microsoft::DevMain
 echo.
-echo. 9. Microsoft Elite                     ^|  Microsoft::DevMain
-echo 10. DevMain Channel                     ^|    Dogfood::DevMain
+echo. 9. Perpetual2019 VL                    ^| Production::LTSC
+echo 10. Microsoft 2019 VL                   ^|  Microsoft::LTSC
+echo.
+echo 11. Perpetual2021 VL                    ^| Production::LTSC2021
+echo 12. Microsoft 2021 VL                   ^|  Microsoft::LTSC2021
 echo.
 echo %line%
 echo.
 set /p inpt= ^> Enter Channel option number, and press "Enter": 
 if "%inpt%"=="" goto :eof
-for /l %%i in (1,1,10) do (if %inpt%==%%i set verified=1)
+for /l %%i in (1,1,12) do (if %inpt%==%%i set verified=1)
 if %verified%==0 goto :CHANNEL
 set "ffn=!ffn%inpt%!"
 set "chn=!chn%inpt%!"
@@ -256,6 +272,8 @@ goto :eof
 )
 if exist "C2R*.json" del /f /q "C2R*.json"
 popd
+for /L %%# in (9,1,10) do if /i "!chn!"=="!chn%%#!" set _a86=0
+if %vvv0:~5,5% lss 13901 set _a64=0
 if defined uLevel set "vvv=%vvv0%"&set "utc=%utc0%"&set "inpt=%otpt%"&goto :POSTout
 if not defined vvv7 set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
 if %vvv7:~5,5% gtr %vvv0:~5,5% set "vvv0=%vvv7%"&set "utc0=%utc7%"
@@ -272,7 +290,7 @@ echo %line%
 echo.
 echo Selected channel offer different builds per OS level:
 echo.
-echo. 1. build: %vvv0% [Windows 8.1 and 10]
+echo. 1. build: %vvv0% [Windows 11/10/8.1]
 echo. 2. build: %vvv7% [Windows 7]
 echo %line%
 echo.
@@ -293,14 +311,19 @@ echo Version : %vvv%
 if defined utc echo Updated : %utc%
 echo %line%
 echo.
-echo. 1. x86 [32-bit]
-echo. 2. x64 [64-bit]
-echo. 3. Both
+echo. 1. 32-bit [x86]
+echo. 2. 64-bit [x64]
+echo. 3. Dual   [x64 and x86]
+echo.
+if %_a86%==1 echo. 4. Windows 11/10 ARM64 [x86 Emulation]
+if %_a64%==1 echo. 5. Windows 11/10 ARM64 [x64 Emulation] - Experimental
 echo %line%
 echo.
 set /p inpt= ^> Enter Bitness option number, and press "Enter": 
 if "%inpt%"=="" goto :eof
 for /l %%i in (1,1,3) do (if %inpt%==%%i set verified=1)
+if %_a86%==1 if %inpt%==4 set verified=1
+if %_a64%==1 if %inpt%==5 set verified=1
 if %verified%==0 goto :BITNESS
 set "arc=!arc%inpt%!"
 set "bit=!bit%inpt%!"
@@ -389,6 +412,17 @@ for /l %%i in (1,1,4) do (if %inpt%==%%i set verified=1)
 if %verified%==0 goto :OUTPUT
 
 :POSTout
+if /i %arc%==x64arm64 if %_a64%==0 if %_a86%==1 set "arc=x86arm64"
+if /i %arc%==x64arm64 if %_a64%==0 if %_a86%==0 (
+echo.
+echo %line%
+echo ERROR: selected channel and version do not support ARM64
+echo %line%
+echo.
+echo Press any key to exit.
+pause >nul
+goto :eof
+)
 set "url=http://officecdn.microsoft.com/pr/%ffn%/Office/Data"
 set "stp=http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/Office/Data"
 set oar=%arc%
@@ -397,6 +431,10 @@ if %full%==0 set "tag=%vvv%_%oar%_%lang%_LangPack_%chn%"
 if %proof%==1 set "tag=%vvv%_%oar%_%lang%_Proofing_%chn%"
 set dual=0
 if /i %arc%==x86x64 (set "arc=x86"&set "bit=32"&set dual=1)
+set chpe=0
+if /i %arc%==x86arm64 (set "arc=x86"&set "bit=32"&set chpe=1)
+set xarm=0
+if /i %arc%==x64arm64 (set "arc=x64"&set "bit=64"&set xarm=1)
 goto :OUTPUT%inpt%
 
 :uProof
@@ -408,7 +446,7 @@ stream.%arc%.%lang%.proof.dat
 ) do (
 call :EC1HO%inpt% %%a
 )
-if %dual%==0 if %arc%==x86 for %%a in (
+if %xarm%==0 if %chpe%==0 if %dual%==0 if %arc%==x86 for %%a in (
 i640.cab
 ) do (
 call :EC1HO%inpt% %%a
@@ -460,7 +498,19 @@ stream.%arc%.%lang%.dat
 ) do (
 call :EC1HO%inpt% %%a
 )
-if %dual%==0 if %arc%==x86 for %%a in (
+if %chpe%==1 for %%a in (
+sc320.cab
+stream.x86.x-none.chpe.dat
+) do (
+call :EC1HO%inpt% %%a
+)
+if %xarm%==1 for %%a in (
+sa640.cab
+stream.x64.x-none.arm64x.dat
+) do (
+call :EC1HO%inpt% %%a
+)
+if %xarm%==0 if %chpe%==0 if %dual%==0 if %arc%==x86 for %%a in (
 i64%lcid%.cab
 i640.cab
 ) do (

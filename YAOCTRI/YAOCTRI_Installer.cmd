@@ -1,5 +1,27 @@
 @setlocal DisableDelayedExpansion
 @echo off
+set "_cmdf=%~f0"
+if exist "%SystemRoot%\Sysnative\cmd.exe" (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" %*"
+exit /b
+)
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" %*"
+exit /b
+)
+set _silent=0
+set "_args=%*"
+if not defined _args goto :NoProgArgs
+if "%~1"=="" set "_args="&goto :NoProgArgs
+set _args=%_args:"=%
+for %%A in (%_args%) do (
+if /i "%%A"=="/s" (set _silent=1
+) else if /i "%%A"=="-s" (set _silent=1
+)
+
+:NoProgArgs
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
@@ -167,7 +189,7 @@ stream.%CTRarc%.%CTRstp%.dat
 if not exist "!CTRsource!\Office\Data\%CTRver%\%%#" set "ERRFILE=%%#"&goto :E_FILE
 )
 
-set _O365=0
+set _Of365=0
 set _OneDrive=ON
 if defined _excluded (
 echo %_excluded%| findstr /i "OneDrive" 1>nul && set _OneDrive=OFF
@@ -177,6 +199,8 @@ if not defined _suite goto :sku
 
 if %winbuild% lss 10240 (
 if /i "%_suite%"=="O365ProPlusRetail" set _suit2=MondoVolume
+if /i "%_suite%"=="ProPlus2021Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2021Volume)
+if /i "%_suite%"=="Standard2021Volume" (set _suite=StandardRetail&set _suit2=Standard2021Volume)
 if /i "%_suite%"=="ProPlus2019Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2019Volume)
 if /i "%_suite%"=="Standard2019Volume" (set _suite=StandardRetail&set _suit2=Standard2019Volume)
 )
@@ -185,15 +209,19 @@ if /i "%_suite%"=="O365ProPlusRetail" set _suit2=MondoVolume
 )
 
 set "_products=%_suite%.16_%CTRlng%_x-none"
+if /i "%_suite%"=="ProPlus2021Volume" set _pkey0=FXYTK-NJJ8C-GB6DW-3DYQT-6F7TH
+if /i "%_suite%"=="Standard2021Volume" set _pkey0=KDX7X-BNVR8-TXXGX-4Q7Y8-78VT3
 if /i "%_suite%"=="ProPlus2019Volume" set _pkey0=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP
 if /i "%_suite%"=="Standard2019Volume" set _pkey0=6NWWJ-YQWMR-QKGCB-6TMB3-9D9HK
 if /i "%_suite%"=="MondoVolume" set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
 
 if defined _suit2 (
 set "_licenses=%_suit2%"
+if /i "%_suit2%"=="ProPlus2021Volume" set _pkey0=FXYTK-NJJ8C-GB6DW-3DYQT-6F7TH
+if /i "%_suit2%"=="Standard2021Volume" set _pkey0=KDX7X-BNVR8-TXXGX-4Q7Y8-78VT3
 if /i "%_suit2%"=="ProPlus2019Volume" set _pkey0=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP
 if /i "%_suit2%"=="Standard2019Volume" set _pkey0=6NWWJ-YQWMR-QKGCB-6TMB3-9D9HK
-if /i "%_suit2%"=="MondoVolume" set "_pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2,DRNV7-VGMM2-B3G9T-4BF84-VMFTK"&set _O365=1
+if /i "%_suit2%"=="MondoVolume" set "_pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2,DRNV7-VGMM2-B3G9T-4BF84-VMFTK"&set _Of365=1
 )
 if defined _pkey0 set "_keys=%_pkey0%"
 
@@ -218,6 +246,7 @@ if /i "!_tmp:~-6!"=="Retail" if %winbuild% lss 10240 (
   if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! %%J.excludedapps.16=onedrive") else (set "_exclude1d=%%J.excludedapps.16=onedrive"))
   set _base=1
   )
+if /i "%%J"=="OneNoteVolume" (set /a kk+=1&set _pkey!kk!=DR92N-9HTF2-97XKM-XW2WJ-XW3J6)
 if /i "%%J"=="Access2019Volume" (set /a kk+=1&set _pkey!kk!=9N9PT-27V4Y-VJ2PD-YXFMF-YTFQT)
 if /i "%%J"=="Excel2019Volume" (set /a kk+=1&set _pkey!kk!=TMJWT-YYNMB-3BKTF-644FC-RVXBD)
 if /i "%%J"=="Outlook2019Volume" (set /a kk+=1&set _pkey!kk!=7HD7K-N4PVK-BHBCQ-YWQRW-XW4VK)
@@ -225,16 +254,26 @@ if /i "%%J"=="PowerPoint2019Volume" (set /a kk+=1&set _pkey!kk!=RRNCX-C64HY-W2MM
 if /i "%%J"=="Publisher2019Volume" (set /a kk+=1&set _pkey!kk!=G2KWX-3NW6P-PY93R-JXK2T-C9Y9V)
 if /i "%%J"=="SkypeForBusiness2019Volume" (set /a kk+=1&set _pkey!kk!=NCJ33-JHBBY-HTK98-MYCV8-HMKHJ)
 if /i "%%J"=="Word2019Volume" (set /a kk+=1&set _pkey!kk!=PBX3G-NWMT6-Q7XBW-PYJGG-WXD33)
-if /i "%%J"=="OneNoteVolume" (set /a kk+=1&set _pkey!kk!=DR92N-9HTF2-97XKM-XW2WJ-XW3J6)
 if /i "%%J"=="ProjectPro2019Volume" (set /a kk+=1&set _pkey!kk!=B4NPR-3FKK7-T2MBV-FRQ4W-PKD2B)
 if /i "%%J"=="ProjectStd2019Volume" (set /a kk+=1&set _pkey!kk!=C4F7P-NCP8C-6CQPT-MQHV9-JXD2M)
 if /i "%%J"=="VisioPro2019Volume" (set /a kk+=1&set _pkey!kk!=9BGNQ-K37YR-RQHF2-38RQ3-7VCBB)
 if /i "%%J"=="VisioStd2019Volume" (set /a kk+=1&set _pkey!kk!=7TQNQ-K3YQQ-3PFH7-CCPPM-X4VQ2)
+if /i "%%J"=="Access2021Volume" (set /a kk+=1&set _pkey!kk!=WM8YG-YNGDD-4JHDC-PG3F4-FC4T4)
+if /i "%%J"=="Excel2021Volume" (set /a kk+=1&set _pkey!kk!=NWG3X-87C9K-TC7YY-BC2G7-G6RVC)
+if /i "%%J"=="Outlook2021Volume" (set /a kk+=1&set _pkey!kk!=C9FM6-3N72F-HFJXB-TM3V9-T86R9)
+if /i "%%J"=="PowerPoint2021Volume" (set /a kk+=1&set _pkey!kk!=TY7XF-NFRBR-KJ44C-G83KF-GX27K)
+if /i "%%J"=="Publisher2021Volume" (set /a kk+=1&set _pkey!kk!=2MW9D-N4BXM-9VBPG-Q7W6M-KFBGQ)
+if /i "%%J"=="SkypeForBusiness2021Volume" (set /a kk+=1&set _pkey!kk!=HWCXN-K3WBT-WJBKY-R8BD9-XK29P)
+if /i "%%J"=="Word2021Volume" (set /a kk+=1&set _pkey!kk!=TN8H9-M34D3-Y64V9-TR72V-X79KV)
+if /i "%%J"=="ProjectPro2021Volume" (set /a kk+=1&set _pkey!kk!=FTNWT-C6WBT-8HMGF-K9PRX-QV9H8)
+if /i "%%J"=="ProjectStd2021Volume" (set /a kk+=1&set _pkey!kk!=J2JDC-NJCYY-9RGQ4-YXWMH-T3D4T)
+if /i "%%J"=="VisioPro2021Volume" (set /a kk+=1&set _pkey!kk!=KNH8D-FGHT4-T8RK3-CTDYJ-K2HT4)
+if /i "%%J"=="VisioStd2021Volume" (set /a kk+=1&set _pkey!kk!=MJVNY-BYWPY-CWV6J-2RKRT-4M8QG)
 )
 
 if %winbuild% lss 10240 if %_base% equ 0 for %%J in (%_skus%) do (
 set _tmp=%%J
-if /i "!_tmp:~-10!"=="2019Volume" (call set _tmp=!_tmp:~0,-10!Retail) else (call set _tmp=!_tmp:~0,-6!Retail)
+if /i "!_tmp:~-10!"=="2019Volume" (call set _tmp=!_tmp:~0,-10!Retail) else if /i "!_tmp:~-10!"=="2021Volume" (call set _tmp=!_tmp:~0,-10!Retail) else (call set _tmp=!_tmp:~0,-6!Retail)
   if defined _products (set "_products=!_products!^|!_tmp!.16_%CTRlng%_x-none") else (set "_products=!_tmp!.16_%CTRlng%_x-none")
   if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! !_tmp!.excludedapps.16=onedrive") else (set "_exclude1d=!_tmp!.excludedapps.16=onedrive"))
 )
@@ -245,6 +284,10 @@ if defined _keys (set "_keys=!_keys!,!_pkey%%J!") else (set "_keys=!_pkey%%J!")
 
 :MenuFinal
 if %_unattend%==True goto :MenuInstall
+if %_silent% EQU 1 (
+set _disp=False
+goto :MenuInstall
+)
 cls
 echo %line%
 echo Source  : "!CTRsource!"
@@ -262,6 +305,7 @@ if defined _skus echo SKUs    : %_show%
 if defined _excluded echo Excluded: %_excluded%
 echo Updates : %_updt% / AcceptEULA : %_eula% / Display : %_disp%
 echo PinIcons: %_icon% / AppShutdown: %_shut% / Activate: %_actv%
+echo Disable Telemetry: %_tele%
 echo %line%
 echo.
 echo. 1. Install Now
@@ -276,7 +320,7 @@ goto :MenuFinal
 :MenuInstall
 cls
 echo %line%
-echo Preparing... 
+echo Preparing...
 echo %line%
 echo.
 if defined _excluded (
@@ -295,6 +339,7 @@ echo reg.exe delete %_Config% /f /v UpdateToVersion 1^>nul 2^>nul
 echo reg.exe delete %_CTR%\Updates /f /v UpdateToVersion 1^>nul 2^>nul
 echo reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\OfficeUpdate /f 1^>nul 2^>nul
 echo reg.exe add HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\OfficeUpdate /f /v PreventBingInstall /t REG_DWORD /d 1 1^>nul 2^>nul
+echo reg.exe add HKCU\software\Policies\Microsoft\Office\16.0\Teams /f /v PreventFirstLaunchAfterInstall /t REG_DWORD /d 1 1^>nul 2^>nul
 echo start "" /WAIT "%%CommonProgramFiles%%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe" ^^
 echo deliverymechanism=%CTRffn% platform=%CTRarc% culture=%CTRstp% b= displaylevel=%_disp% ^^
 echo forceappshutdown=%_shut% piniconstotaskbar=%_icon% acceptalleulas.16=%_eula% ^^
@@ -328,7 +373,7 @@ expand -f:* "!CTRsource!\Office\Data\%CTRver%\%CTRicabr%" "!_target!" 1>nul 2>nu
 )
 echo.
 echo %line%
-echo Running installation... 
+echo Running installation...
 echo %line%
 echo.
 del /f /q "%SystemRoot%\temp\*.log" 1>nul 2>nul
@@ -340,25 +385,27 @@ echo.
 echo %line%
 echo Installation failed.
 echo %line%
+if %_unattend%==True goto :eof
 goto :TheEnd
 )
 if defined _licenses (
 echo.
 echo %line%
-echo Installing Volume Licenses... 
+echo Installing Volume Licenses...
 echo %line%
 echo.
 call :Licenses 1>nul 2>nul
 )
-if %_tele%==True if %_O365%==0 (
+if %_tele%==True if %_Of365%==0 (
 call :Telemetry 1>nul 2>nul
 )
-if %_unattend%==True goto :eof
 echo.
 echo %line%
 echo Done.
 echo %line%
 echo.
+if %_unattend%==True goto :eof
+if %_silent% EQU 1 goto :eof
 echo Press any key to exit.
 pause >nul
 taskkill /t /f /IM OfficeC2RClient.exe 1>nul 2>nul
@@ -434,6 +481,7 @@ echo %_err%
 echo Windows 7 SP1 is the minimum supported OS.
 
 :TheEnd
+if %_silent% EQU 1 goto :eof
 echo.
 echo Press any key to exit.
 pause >nul
