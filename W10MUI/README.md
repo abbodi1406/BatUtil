@@ -1,12 +1,12 @@
-# Windows 10 Multilingual Distribution Creator
+# Windows 11/10 Multilingual Distribution Creator
 
-* A mostly automated script to add language packs to Windows 10 distribution, resulting a multilingual ISO, including:  
+* A mostly automated script to add language packs to Windows 11/10 distribution, resulting a multilingual ISO, including:  
 - Choice of language at setup
 - Languages packs preinstalled so that you can switch between them in the system
 - Multilingual Windows Recovery Environment with a choice of language at boot (if standard WinPE localization is on)
 - Preinstalled/Reinstalled latest updates
 
-* Supports any Windows 10 build starting 10240
+* Supports any Windows 11/10 build starting 10240
 
 * Supports the normal language packs (cab) files, or the new language packs (esd) files (available from UUP source since build 15063)
 
@@ -60,17 +60,42 @@ ______________________________
 
 * Working Environment: Windows 8.1 or later with at least 15 GB of free space.
 
-* Windows 10 distribution (ISO file, DVD/USB, ISO extracted to folder).
+* Windows 11/10 distribution (ISO file, DVD/USB, ISO extracted to folder).
 
-* Windows 10 Language Packs, matching the distribution build version
+* Windows 11/10 Language Packs, matching the distribution build version
 
-* Windows 10 OnDemand Packs if available (Optional, recommended).
+* Windows 11/10 OnDemand Packs if available (Optional, recommended).
 
-* Windows 10 Updates msu/cab files (Optional, recommended).
+* Windows 11/10 Updates msu/cab files (Optional, recommended).
 
-* If you want the Standard WinPE localization: Windows 10 ADK (Deployment Tools & Preinstallation Environment).
+* If you want the Standard WinPE localization:
 
-- Build 19041 - Windows 10 version 2004 / 20H2 / 21H1:  
+Windows 11/10 ADK (Deployment Tools & Preinstallation Environment).
+
+<details><summary>ADK Links</summary>
+
+
+- Build 22000 - Windows 11:
+```
+http://download.microsoft.com/download/1/f/d/1fd2291e-c0e9-4ae0-beae-fbbe0fe41a5a/adk/adksetup.exe
+http://download.microsoft.com/download/5/5/e/55e3e34a-5708-46cd-a90d-92044c29336b/adkwinpeaddons/adkwinpesetup.exe
+
+full ISO  
+http://software-download.microsoft.com/download/sg/22000.1.210604-1628.co_release_amd64fre_ADK.iso
+http://software-download.microsoft.com/download/sg/22000.1.210604-1628.co_release_amd64fre_adkwinpeaddons.iso
+```
+
+- Build 20348 - Windows Server 2022:
+```
+http://download.microsoft.com/download/b/9/8/b98fd877-f00f-49e3-8abb-77784cdae268/adk/adksetup.exe
+http://download.microsoft.com/download/8/3/8/838d6e29-eaac-498b-82ad-5fbac20136f8/adkwinpeaddons/adkwinpesetup.exe
+
+full ISO  
+http://software-download.microsoft.com/download/sg/20348.1.210507-1500.fe_release_amd64fre_ADK.iso
+http://software-download.microsoft.com/download/sg/20348.1.210507-1500.fe_release_amd64fre_adkwinpeaddons.iso
+```
+
+- Build 19041 - Windows 10 version 2004 / 20H2 / 21H1 / 21H2:  
 ```
 http://download.microsoft.com/download/8/6/c/86c218f3-4349-4aa5-beba-d05e48bbc286/adk/adksetup.exe
 http://download.microsoft.com/download/3/c/2/3c2b23b2-96a0-452c-b9fd-6df72266e335/adkwinpeaddons/adkwinpesetup.exe
@@ -128,16 +153,7 @@ http://download.microsoft.com/download/5/D/9/5D915042-FCAA-4859-A1C3-29E19869049
 ```
 http://download.microsoft.com/download/9/A/E/9AE69DD5-BA93-44E0-864E-180F5E700AB4/adk/adksetup.exe
 ```
-
-- Build 10586 - Windows 10 version 1511:  
-```
-http://download.microsoft.com/download/3/8/B/38BBCA6A-ADC9-4245-BCD8-DAA136F63C8B/adk/adksetup.exe
-```
-
-- Build 10240 - Windows 10 version 1507:  
-```
-http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe
-```
+</details>
 
 ______________________________
 
@@ -159,7 +175,7 @@ edit Updates\W10UI.ini to change the updates options, but don't change Target or
 
 **DVDPATH**
 
-Path for Windows 10 distribution (without quotation marks)
+Path for Windows 11/10 distribution (without quotation marks)
 
 you can use the iso file path directly, or path to custom extracted folder, or DVD/USB dive letter.
 

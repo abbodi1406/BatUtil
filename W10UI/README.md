@@ -170,6 +170,13 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
+10.5:  
+- Changed updated ISO file name scheme  
+example old:  
+Win10_22000.71_x64_2021-07-16.iso  
+example new:  
+22000.71.210709-1028.CO_RELEASE_SVC_PROD1_CLIENT_X64FRE.iso
+
 10.4:  
 - Rebrand to Windows NT 10.0 Updates Installer
 - Improved PSF files processing, and updated PSFExtractor.exe

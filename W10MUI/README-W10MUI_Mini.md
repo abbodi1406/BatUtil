@@ -1,4 +1,4 @@
-# Windows 10 Multilingual Distribution Creator
+# Windows 11/10 Multilingual Distribution Creator
 
 * This is a mini version that process install.wim file only
 
@@ -22,7 +22,7 @@ edit Updates\W10UI.ini to change the updates options, but don't change Target or
 
 **WIMPATH**
 
-Path for Windows 10 install.wim file (without quotation marks)
+Path for Windows 11/10 install.wim file (without quotation marks)
 
 leave it blank if you want to use install.wim placed next to the script, or prompted to enter path.
 

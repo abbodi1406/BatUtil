@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.4
+@set uiv=v10.5
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -272,8 +272,9 @@ set _init=1
 
 :checktarget
 set tmpssu=
-set _fixEP=
+set _fixEP=0
 set _actEP=0
+set _SrvEdt=0
 set _DNF=0
 set directcab=0
 set dvd=0
@@ -626,10 +627,19 @@ goto :eof
 )
 expand.exe -f:*.psf.cix.xml "!repo!\!package!" "checker" %_Null%
 if exist "checker\*.psf.cix.xml" (
-findstr /i /m "PSFXVersion" "checker\update.mum" %_Nul3% || (rmdir /s /q "checker\" %_Nul3%&goto :eof)
+findstr /i /m "PSFX" "checker\update.mum" %_Nul3% || (rmdir /s /q "checker\" %_Nul3%&goto :eof)
 if not exist "!repo!\%package:~0,-4%.psf" (rmdir /s /q "checker\" %_Nul3%&goto :eof)
 if %psfsup% equ 0 (rmdir /s /q "checker\" %_Nul3%&goto :eof)
 set psf_%package%=1
+)
+if not defined isodate findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% && (
+if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
+copy /y "checker\update.mum" %SystemRoot%\temp\ %_Nul1%
+set "mumfile=%SystemRoot%\temp\update.mum"
+for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
+del /f /q %SystemRoot%\temp\*.mum
+set "isodate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
+set "isotime=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
 )
 expand.exe -f:toc.xml "!repo!\!package!" "checker" %_Null%
 if exist "checker\toc.xml" (
@@ -678,6 +688,7 @@ if exist "checker\microsoft-windows-*enablement-package~*.mum" set "_type=[Enabl
 if exist "checker\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "checker\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "checker\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
+if exist "checker\Microsoft-Windows-22H1Enablement-Package~*.mum" set "_fixEP=19045"
 )
 if %_build% geq 18362 if exist "checker\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "checker" %_Null%
@@ -1030,8 +1041,10 @@ findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
 if %_build% geq 19041 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 findstr /i /m "Package_for_WindowsExperienceFeaturePack" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\Microsoft-Windows-UserExperience-Desktop*.mum" set /a _sum-=1&goto :eof)
 )
-if exist "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest" if not defined vermajor (
-for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set updtver=%%I.%%K&set vermajor=%%I
+if exist "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest" if not defined uupmaj (
+for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set uupver=%%I.%%K&set uupmaj=%%I
+for /f "tokens=8 delims== " %%# in ('findstr /i Branch "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set uuplab=%%~#
+for /f "tokens=8 delims== " %%# in ('findstr /i Branch "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set isolab=%%~#
 )
 for %%# in (
 Package_for_%kb%~
@@ -1535,8 +1548,10 @@ cd /d "!_cabdir!"
 call :doupdate
 if %net35%==1 call :enablenet35
 if %dvd%==1 (
-if not defined isomajor for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do set isover=%%i.%%j&set isomajor=%%i
+if not defined isomaj for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do set isover=%%i.%%j&set isomaj=%%i
+if not defined isolab if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (if %_build% geq 15063 (call :detectLab isolab) else (call :legacyLab isolab))
 if %_actEP% equ 0 if exist "!mountdir!\Windows\Servicing\Packages\microsoft-windows-*enablement-package~*.mum" if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" call :detectEP
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
 if exist "!mountdir!\sources\setup.exe" call :boots
 )
 if %wim%==1 if exist "!_wimpath!\setup.exe" (
@@ -1593,15 +1608,42 @@ cd /d "!_cabdir!"
 goto :eof
 
 :detectEP
-set vermajor=
-set _fixEP=
+set uupmaj=
+set _fixEP=0
 set _actEP=1
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-22H1Enablement-Package~*.mum" set "_fixEP=19045"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest" (
-for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set updtver=%%I.%%K&set vermajor=%%I
+for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set uupver=%%I.%%K&set uupmaj=%%I
 )
+if not defined uupmaj goto :eof
+if not defined uuplab call :detectLab uuplab
+if %uupmaj%==18363 set uuplab=19h2%uuplab:~4%
+if %uupmaj%==19041 set uuplab=20h1%uuplab:~2%
+if %uupmaj%==19042 set uuplab=20h2%uuplab:~2%
+if %uupmaj%==19043 set uuplab=21h1%uuplab:~2%
+if %uupmaj%==19044 set uuplab=21h2%uuplab:~2%
+if %uupmaj%==19045 set uuplab=22h1%uuplab:~2%
+goto :eof
+
+:detectLab
+set "_tikey=HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
+reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
+for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r ".*\.OS"') do set "_oskey=%%#"
+for /f "skip=2 tokens=2*" %%A in ('reg.exe query "%_oskey%" /v Branch') do set "%1=%%B"
+reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" %_Nul1%
+reg.exe unload HKLM\uiSOFTWARE %_Nul1%
+move /y "!mountdir!\Windows\System32\Config\SOFTWARE2" "!mountdir!\Windows\System32\Config\SOFTWARE" %_Nul1%
+goto :eof
+
+:legacyLab
+reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
+for /f "skip=2 tokens=6 delims=. " %%# in ('"reg.exe query "HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLabEx" %_Nul6%') do set "%1=%%#"
+reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" %_Nul1%
+reg.exe unload HKLM\uiSOFTWARE %_Nul1%
+move /y "!mountdir!\Windows\System32\Config\SOFTWARE2" "!mountdir!\Windows\System32\Config\SOFTWARE" %_Nul1%
 goto :eof
 
 :boots
@@ -1626,9 +1668,11 @@ if defined isoupdate if not exist "!mountdir!\Windows\Servicing\Packages\WinPE-S
   xcopy /CRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
   rmdir /s /q "!_cabdir!\du\" %_Nul3%
 )
-if not defined vermajor goto :eof
+if not defined uupmaj goto :eof
 if %_actEP% equ 0 goto :eof
-if %vermajor% gtr %isomajor% set isover=%updtver%
+if %isomaj% geq %uupmaj% goto :eof
+set isover=%uupver%
+set isolab=%uuplab%
 goto :eof
 
 :winre
@@ -2037,8 +2081,17 @@ goto :mainmenu
 if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\cdimage.exe" if not exist "!_work!\bin\cdimage.exe" goto :eof
 if "!isodir!"=="" set "isodir=!_work!"
 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
-set "isodate=%_date:~0,4%-%_date:~4,2%-%_date:~6,2%"
-set "isofile=Win10_%isover%_%arch%_%isodate%.iso"
+:: set "isodate=%_date:~0,4%-%_date:~4,2%-%_date:~6,2%"
+if not defined isodate set "isodate=%_date:~2,6%-%_date:~8,4%"
+for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
+set isolab=!isolab:%%#=%%#!
+)
+set _label=%isover%.%isodate%.%isolab%
+if %_SrvEdt% equ 1 (set _label=%_label%_SERVER) else (set _label=%_label%_CLIENT)
+if /i %arch%==x86 set archl=X86
+if /i %arch%==x64 set archl=X64
+if /i %arch%==arm64 set archl=A64
+set "isofile=%_label%_%archl%FRE.iso"
 set /a rnd=%random%
 if exist "!isodir!\%isofile%" ren "!isodir!\%isofile%" "%rnd%_%isofile%"
 echo.

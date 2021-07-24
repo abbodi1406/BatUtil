@@ -16,11 +16,23 @@ set MOUNTDIR=
 :: # NORMALY THERE IS NO NEED TO CHANGE ANYTHING BELOW THIS COMMENT #
 :: ##################################################################
 
-title Windows 10 LangPacks Integrator
+set "_cmdf=%~f0"
+if exist "%SystemRoot%\Sysnative\cmd.exe" (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" "
+exit /b
+)
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" "
+exit /b
+)
+
+title Windows NT 10.0 LangPacks Integrator
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-set "xOS=amd64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="amd64" set "xOS=amd64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xOS=arm64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xOS=x86"
 if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
@@ -295,6 +307,8 @@ for /f "tokens=4 delims=:. " %%i in ('dism\dism.exe /english /get-wiminfo /wimfi
 if %build% equ 18363 set build=18362
 if %build% equ 19042 set build=19041
 if %build% equ 19043 set build=19041
+if %build% equ 19044 set build=19041
+if %build% equ 19045 set build=19041
 for /L %%j in (1, 1, %LANGUAGES%) do (
 if not !LPBUILD%%j!==%build% set "ERRFILE=!LPFILE%%j!"&goto :E_VER
 )
@@ -851,7 +865,7 @@ goto :END
 
 :E_LP
 call :remove
-set MESSAGE=ERROR: %ERRFILE% is not a valid Windows 10 LangPack
+set MESSAGE=ERROR: %ERRFILE% is not a valid Windows NT 10.0 LangPack
 goto :END
 
 :E_VER
