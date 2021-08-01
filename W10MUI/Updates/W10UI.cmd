@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.5
+@set uiv=v10.6
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -112,6 +112,8 @@ set "_oscdimg=%SysPath%\oscdimg.exe"
 set "_sbs=Microsoft\Windows\CurrentVersion\SideBySide\Configuration"
 set "_SxS=HKLM\SOFTWARE\%_sbs%"
 set "_CBS=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing"
+set "_batf=%~f0"
+set "_batp=%_batf:'=''%"
 set "_log=%~dpn0"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
@@ -151,6 +153,7 @@ set "_dLog=%SystemRoot%\Logs\DISM"
 set psfnet=0
 if exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set psfnet=1
 if exist "%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set psfnet=1
+if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set psfnet=0
 set /a _cdr=0
 for %%# in (E F G H I J K L M N O P Q R S T U V W X Y Z) do (
 set /a _cdr+=1
@@ -174,9 +177,6 @@ for /L %%# in (1,1,22) do (
   if not defined _sdr (if defined _adr%%# set "_sdr=!_adr%%#!:")
 )
 if not defined _sdr set psfnet=0
-set psfsup=0
-if exist "bin\PSFExtractor.exe" if exist "bin\SxSExpand.exe" set psfsup=1
-if %psfnet% equ 0 set psfsup=0
 if not exist "W10UI.ini" goto :proceed
 find /i "[W10UI-Configuration]" W10UI.ini %_Nul1% || goto :proceed
 setlocal DisableDelayedExpansion
@@ -628,8 +628,16 @@ goto :eof
 expand.exe -f:*.psf.cix.xml "!repo!\!package!" "checker" %_Null%
 if exist "checker\*.psf.cix.xml" (
 findstr /i /m "PSFX" "checker\update.mum" %_Nul3% || (rmdir /s /q "checker\" %_Nul3%&goto :eof)
-if not exist "!repo!\%package:~0,-4%.psf" (rmdir /s /q "checker\" %_Nul3%&goto :eof)
-if %psfsup% equ 0 (rmdir /s /q "checker\" %_Nul3%&goto :eof)
+if not exist "!repo!\%package:~0,-4%.psf" (
+  echo echo %count%/%_sum%: %package% / PSF file is missing
+  rmdir /s /q "checker\" %_Nul3%
+  goto :eof
+  )
+if %psfnet% equ 0 (
+  echo echo %count%/%_sum%: %package% / PSFExtractor is not available
+  rmdir /s /q "checker\" %_Nul3%
+  goto :eof
+  )
 set psf_%package%=1
 )
 if not defined isodate findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% && (
@@ -722,8 +730,7 @@ subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
 if !_sbst! equ 1 pushd %_sdr%
 copy /y "!repo!\%package:~0,-4%.*" . %_Nul3%
 if not exist "PSFExtractor.exe" (
-  copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
-  copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
+  %_Nul3% powershell -nop -c "$d='!cd!';$f=[IO.File]::ReadAllText('!_batp!') -split ':embdbin\:.*';iex ($f[1]);X 1"
   )
 PSFExtractor.exe %package% %_Null%
 if !errorlevel! neq 0 (
@@ -983,8 +990,7 @@ if not exist "%lcupkg%" (
   copy /y "!repo!\%lcupkg:~0,-4%.*" . %_Nul3%
   )
 if not exist "PSFExtractor.exe" (
-  copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
-  copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
+  %_Nul3% powershell -nop -c "$d='!cd!';$f=[IO.File]::ReadAllText('!_batp!') -split ':embdbin\:.*';iex ($f[1]);X 1"
   )
 PSFExtractor.exe %lcupkg% %_Null%
 if !_sbst! equ 1 popd
@@ -2097,7 +2103,8 @@ if %_SrvEdt% equ 1 (set _label=%_label%_SERVER) else (set _label=%_label%_CLIENT
 if /i %arch%==x86 set archl=X86
 if /i %arch%==x64 set archl=X64
 if /i %arch%==arm64 set archl=A64
-set "isofile=%_label%_%archl%FRE.iso"
+if exist "!target!\sources\lang.ini" call :LANG
+if defined _mui (set "isofile=%_label%_%archl%FRE_%_mui%.iso") else (set "isofile=%_label%_%archl%FRE.iso")
 set /a rnd=%random%
 if exist "!isodir!\%isofile%" ren "!isodir!\%isofile%" "%rnd%_%isofile%"
 echo.
@@ -2119,6 +2126,19 @@ if %errcode% equ 0 move /y "%isofile%" "!isodir!\" %_Nul3%
 cd /d "!_work!"
 if %errcode% equ 0 if %delete_source% equ 1 rmdir /s /q "!target!\" %_Nul1%
 if %errcode% equ 0 if exist "!_work!\DVD10UI\" rmdir /s /q "!_work!\DVD10UI\" %_Nul1%
+goto :eof
+
+:LANG
+cd /d "!target!"
+for %%a in (3 2 1) do (for /f "tokens=1 delims== " %%b in ('findstr %%a "sources\lang.ini"') do echo %%b>>"isolang.txt")
+if exist "isolang.txt" for /f "usebackq tokens=1" %%a in ("isolang.txt") do (
+if defined _mui (set "_mui=!_mui!_%%a") else (set "_mui=%%a")
+)
+if defined _mui for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
+set _mui=!_mui:%%#=%%#!
+)
+del /f /q "isolang.txt" %_Nul3%
+cd /d "!_work!"
 goto :eof
 
 :fin
@@ -2150,6 +2170,70 @@ echo.
 echo Press 9 to exit.
 choice /c 9 /n
 if errorlevel 1 (goto :eof) else (rem.)
+
+:embdbin:
+Add-Type -Language CSharp -TypeDefinition @"
+ using System.IO; public class BAT85{ public static void Decode(string tmp, string s) { MemoryStream ms=new MemoryStream(); n=0;
+ byte[] b85=new byte[255]; string a85="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$&()+,-./;=?@[]^_{|}~";
+ int[] p85={52200625,614125,7225,85,1}; for(byte i=0;i<85;i++){b85[(byte)a85[i]]=i;} bool k=false;int p=0; foreach(char c in s){
+ switch(c){ case'\0':case'\n':case'\r':case'\b':case'\t':case'\xA0':case' ':case':': k=false;break; default: k=true;break; }
+ if(k){ n+= b85[(byte)c] * p85[p++]; if(p == 5){ ms.Write(n4b(), 0, 4); n=0; p=0; } } }         if(p>0){ for(int i=0;i<5-p;i++){
+ n += 84 * p85[p+i]; } ms.Write(n4b(), 0, p-1); } File.WriteAllBytes(tmp, ms.ToArray()); ms.SetLength(0); }
+ private static byte[] n4b(){ return new byte[4]{(byte)(n>>24),(byte)(n>>16),(byte)(n>>8),(byte)n}; } private static long n=0; }
+"@; function X([int]$r=1){ $tmp="$r._"; [BAT85]::Decode($tmp, $f[$r+1]); expand.exe -R $d\$tmp -F:* . 1>$nul; del $tmp -force }
+
+:embdbin:
+::O/bZg000006B7Uc00000EC2ui000000|5a50ssI200000bpQYW0RRIP04e|g00000008)?S,9QWP,X.lcyw}MV{~tFE[gOS0J/DG001fg0002zQui|/08mp#MR/]^
+::VPkY}axP^fWiDfHZf0p_07u$kq@Qu8DqDbnjRFv+s{jBaGgdPI0B.=jy=)irrEE+,wn;8aq@RR&OO~x8ODFwg?ntp)mXWNljMsx)Z#Hq$.rC,|lZSw92r((HrnE]P
+::)qb]8Psv[0G1#VJlMX{kVo5&ia3C=aXHNpAxlQ=pos-/AasdDtnE/~$0Cy/D-jToj)h^!10xVEZ5-.4ApDi{K,X^Rch9d0iUR[||uHs)z-D2;,uXZ)6(o(OX9VcqH
+::l~xGtIKfScMrji=0Ya!qjJ9!2lJbw=PyP2P{{RpG0FeS9nxF#hZkF7);cLBfct8LL[jd@U[dfjb=W]VG9stxTFg_11(U-PnKwy0H6;C@|Zkx/F2Yb5Ts|vJxGAJK|
+::h=--x8WM3p98[AFqar!MDJ9g4IK/4[#,jE7WOki3c51yH(8ie2Fx0_mWCbT${ekEOd@@7d75T/Ao/Y)-pw^DN=SnfU.nG)t$vR~]8_k1Zm+gg&.IUk0&@TQujx)[W
+::+2YL^F#DV{=/z=5HFNw{EUo&Z9bqm!Ip]iuOR5B3tmp^1;Q0HyuP#3Mvi(o)?vT3TDqEUvt-)1~KTxe,{Y.hrR8srTtzXXt-feC-M2D?6Ujp&GSNc2LIr[3/XMqEr
+::q7$9h/r(tb54Wd}[~nP$)RJqq]yDfte+/3Fccb@^qcalz&wXhhe&-gON&S.H3y[WQ7[~R?=48+)[6Qb#doJW&?=C.u!1$XwQy8JoE@AAEJ1O4BTKEvmyK30WR4p|4
+::Gu6rr^@ek{pE#}bR=.oa4&t7!0?IB5C^(|Ub0f3d=/WR(sK2ZSE]tr5tIpGO&~l$eyxx8h8_&F8|2|Nl87P(8SJ]4JrR89.je8}6NlPrB{orB]]rAE^!Wh.y=J|bV
+::-$FiZ#-PV1-cUHTu9m[eDc.dnNx&}XLEt3wy@P1RC1cQ!lVK(_eQ-Dss3EpvJv[PTmYyux[!jQ,&cl-Iy9|?XF~/}4epAu$Ia_Tfx,c6L.FdU#Sti$XtS,dAmTD5x
+::U~KMaMSItitH_~TaaM//Asu@)n5/.rZ}_Srd-x4qCponvvj=1^Y4(U4,!{tr@B-YHb6+5Ln6nQzx1M{&2y5]w_#/c]u_EmA)a8Otko(Cyi@KD&!{z;/TN$Hg_E90$
+::kZsNIh5ZC~F#YF(6AZP2{WMq.1y4G[4{}+zcm@{jbZ;Qb/r?Xm(H1fVZof5pPd~]H2~i,pSzNNB@/hLwtk_V3d|yS{9bG8p/F,j+,C#TFw&T+/81],LY9TxWC._l9
+::6Vx#tg!m}DXe$ICKCGDTnh_d7lixa.-scb1t7UcUx{pXV@!6_{2)tE^&@W)(v9v+lgAnXk3{+1em$k4;S!(Qg#U~bkjexaJ?#y$3e}x9fss)svYYk^7Zm8{tTTv)E
+::jHi{nVKwm@3iKnTtZd.gMgY[LKcXJ,DY}DQw[h2Z0/rZ1ykVIHTQ8xV,y1KGiH!N#_Y|GWdvh0KW5GKN4f)j?yXw&F&LFkKjbhnkw0[4GtZ8Gt3voJ9yRYD5(t/[L
+::IpFinb9~@py)V[+@k]MBc&H$JzR;;a_]3!T+wzFumTSkp3q{Ob,;+RX@5#Qm^vWT6Hy0dN#Sow1[E[kPAN&DY^yD=DbunS1E8c|qN#(G9nYzP1$voxpOuXdylk_ec
+::^Yyr(v=fxU|72LLKkGhyr~4GH,OTv4k2]0fkFZ-Js$.$/MM9Ct^HCcf5Bu2+q^Oev]9rVCOQaPjn?oJTg7Fv!f7e1oA6dp,vNdGQpMiz#36X!qBys]~BUd;c_1ts(
+::aM,n.HFgB.1P(w&7DWr_8si#Tn+_y!!)u!k2ro?hj}jd-S(205D8W1nX@!Mw9FWH?n_Fo0/(N73j1=V]Cej!pJ1p3Os#llqOoi@T1^!^8,=~lL3oeny;ZhC./k65e
+::ztjWI+3ArV0H~nL]4Lq;a#!&zQYSE}El8oW)w1H=Ut})CIYV;9e95;fe;c+qN4N;(Dl3d8nx.^{cfEyGm[J$+_?dpe=s;9iRFPlJFEo}R4A]|XY7!8y!(j,,zIrX@
+::o2P-7hl5QmpKW#1Z=a)Mpq}tKkki.P61mKtk9GkrhZG(l=#$13_#-$am#E[uXMU1T?Q)9#Aav8Ea=B$~4a,[G]j(S+toT}GwJLSAU@5&Q9.h!SbR2#yxmKvtZ;tGr
+::-CpZ)nwXZ{F;NfSWIW(1TPz2oYT?T1dxDnwg{S0/p^Z56{NVlVRF}zu=sAuh.vY/1_Us[xCegh|4-Xr[Ssq7Yb&ftWt5~)EIlaHD2c_@c2;f+-ap(=XFaqi]VBHsb
+::F6#2DjV]9q!HxS$Xy|IZt,BW_;SZ^l2s9};u!W]fR#^Gdq$SuYvP_U?qFQ#Ef{]_YDy+B}xKJ$1RMMCY;?v4eT@.cJYqhL!-Az@#1ot?$XyK,erT,n#-LwQq5F)(,
+::?QDVm5,,y7W;VV;IP|Yy0JaDY2qJ/?45#M]4]B[ITa@~($_{}Vhf,taT)#fKnLh+7_JnsGNe)FbS~@QsjwZ_.UzA1j1Jgm^6}Wan,-u,vg.#I{D7dh_)7fWuCE6M[
+::-+a]~1L_mDLB(B_gprKwFF?mUZgRo@!DC$m!?]kzn7[3k=gJ]tqu{qqm63jYS^^5]i&A_(e!-j3JGQ[FB@B5Z;GEz}fF#JD4@uEuFGe3AxV9hM-DdpYs0-iKrW[k7
+::?fUdOasaPg7yxHg16cmF&,FKrUKUa}EGnQ2=W@nrLL{E#CdNiWd_0(.#VcLjMrRu5MnomABXCh&[;F}edM(T#pcKV_]^OrL7}[q~$$v$J[sMBWP+si20?0(5mY]Jc
+::SrG(fIFm##2Z84&kGLcATb7QOA3ERwlnLSk&TY8rsvy^/0bQZjr&ZyofCN&&bN4/o/P_]$VYvbbg9WG{b9h{iyur9KZ_UKC[D$hCmDRB6&Y0C[xZtU$/Fxe@Fat7B
+::AzX|jP~)rYV#f(r5r=VoIy5raN$|?$lvJEzhe6|-3{!@G65=#KWrUF33_m-9gUL9kF[~BFJ#s;NX]2zfsiy?}OhN55NMUN]QW1qC2&iQa!&3cwvwa6GXF21B-a9JO
+::o,E]$v)hxfA&jAs(yh#y@3B1BM1dGvB+-#;uU1e)ozyc7q)._rnnYxxNsNzlpwI#k[$JxeE-14zlE1U#$#s?ZRmHf7008N]#,a@8R|oMvV?p9xaGPwSDI#$[Y;?b}
+::&P}fi5?~bzpE0HDC|b+CY)=cdtD0k@nnl}=p0T(Dc^K9mrXdkdhJv0[kz~Zm)m/zM$sMwrWR;zKE|Zg~WM(pJiP),-i]OoEHxWjAOz2.-[P!EBZnm6ljx3U-ppdn6
+::$+9He70Qaol)bUYjk8T@+5ei&k{(Ez)|BA4LNyhxH?Q3nZ][Ll3Q+{ygySdLhalqfPtcxqy.dV~rIeH6)O9=siOc9H$!klv2iQqlRPBHZFnn|LoTL2Fg=WP-ETLo1
+::+KGUVhzBeU)n]bghLVk=-eKt2W)V!.cq7?R#vlx-4;eDOgjazruxNvE1vNESum]4797_GDd39L2@QO?j-ASBdxxMew(.;hYj^wqfEW_;gI)w;yv/r=T+(gOXh_zte
+::)}3/+8RHu_Qvu+ivL$jBYIE2[hIK~SbCRYGYenAI#]IFIl=wG|Dg#~|i^wd+k;a@v8tRTqb;T2aNSSOdwMI|4KOtS9dr9rX0itd4B2gmXY[~=1szwW/tRPZOcPAU[
+::$JLHWq8g;{fq/N+WR+.=7n?]~qq_#vKkIa_eT+PAm{s.,pRlIi-x}9(@0Uv+!)?v$SRVBnIpQO-,W0Lp_rL6V{.7?)MEgQV9z}PHkga2v9XpB?/=NrnG-0,QXwfE9
+::&/(.naS(//5gj~uLeXbZvN&mq8Cnq@C8wo3|5LPSTMqD7TRnhKJdDiFNa^nfd}YJ[Z/P0M(1;cu{3UMD=GC{x;P&nh{zh}FK9JHJH!3hkbpMJ^jW@YKVM,87d_ZlH
+::QDu^/jO{G+uWqgzq40z!wN4#$=TaI0[k=FEWo!AALF;pt{gn.ae{kj05g4FF)CT;^!T}C}05Wvo[IWMJrAox}00;SROo9?-2,Y4pvSKI5I@+QCgkh=?7|5|v8Uvt{
+::7YqTLq]UG]O{nZxAzI./B!MB)4#A@,7=M8zine+e!n$G9r4f-8RX|ca?D]3ajMOg?U7=BN-9)Y{W;L!iF6/F~RjMMpktc|da}e26+d5q17-FcaMoNmrdn903EZ$8,
+::?([4JWGEAScD9j$fjQSqe^IK3McV-h2dvMPNR3#Bc)G-q@8;,39JVMi2Nz1aiLgP99zi+mtO3HWDdi(7jgOe}1JqVQNfR#&vJ[KOO57d}VD.lwHaiGYrUh2RjypIb
+::LV#?G#Hoe5O(+/1a/Mm$grapdPX]0DAOQ1$5980gtu@atSkkH_9xXw($uHpQlak;=o],k=ES9yZ8X4(kDtZnD_5SRjY/IMH@P}o&ukA=Aso+&OFYQ,QTiqd^g+U6.
+::xlNQKp(0NSTU{B=b;=i@v/z5xr95|xR,EljuJ8a,btgx6jL3nCwsx;-dE.|mVH!{-BZF6Y)^?X)BWJXU$Rk#czk|omeftCLTTId/u0T7{IG@mY?&|BgX&H.].0U3=
+::S|4.=f(74FU.uKV.xZTz)q69x-yqXL5!l)6Mec4y]kv]hDJ8KL&-[z58Da_h3RKI|49VQUlCUT!z07!~[ssyQ7ebFF[GFER!b8G|W-UwxFL.)d1&^5]!60g7FUCZY
+::zPxX#[jBDK)M7V(E?CF;irR,zF5UXG;nRQnr2!iGmfH-j[3c]~sFn5ruD/.,MCowKui_MUcFcE|=8Z;?Dh5[lWpf.9I6}cfnhmh-X(6mLZ)Xgt,FM?_,~MENV_1ct
+::g4OWP.jIb|&6-gI7xkG!hyBd(z6_K/cYNC&!FK;En)eqgF(S+^)1keD2.wq;xU.^f!JkJ^j.MmHL8c09Jgl&s@u82x5-)&p5DywG1}-Tf8S,GYmt]]}Nm!ot_I{i2
+::M?#!j5Sp.MRQJgKjpM-KDlDAUs0,Ro6#;|oS8i@pg^]Xt[)t|wWN)$)#HkjD.9B1zP)rwA0wqP(.R@R{-qwouraIM(Ls8_r7GNRDZ,Gpf$C-~-(4GdiJv{-Df=qJ(
+::qk5|@JV$#4q41@BaFB2~7&VIXEDRe2c^aiVBsG$u^98+mAZBl1c$+P}xT,}huGY[4+v_YL5&rl@?HJ9lNpFJd5u$ILdZl.ecjJ+guG7U;yg)l5[dyPtBt95}{td{&
+::BYDVxMi8QgEdK3~NrTAwud)V[K#n~,ivKZb-pDgKfhh8Pp&b!;Z[wsXS;axEUm2VBvOS.m=$;ZI5&A7)Osnhtr|4xIUD~OrKT5gZD.EZpS2V_{Ac{^t!2y)@{lsN5
+::P{?Oezmct@Vi@!;+!T#V6[GIxaJVdN@G0T8=e}.eB5bn)2/2YK{CvrfW^#02+wD-$0U83H5R6I[Gke#)0!HDu#y$;IyH=~8a.cnYf7B~nk)YHcdks.087-h.K}W06
+::T6~TE@WMH&HA7qonzeOlz)V#sicszF-I,sMmum(9N!O{6nLz8K/Yc-@,=k2Zjlkp0I+T5f3AwX&F,Luo;+D!pSI#^b3Xlf_+y4=;A^!80i@gaS#.UP40iilmvnuEh
+::!yqn5DDfqh&|8z;fH!ktg&k]#kSz/GVaLm[,!?$tZZ_6gCH@n[Jr?$zj/jWZf[~vOP(/r=2EC&nY.)E/N}/78nlBdlNFg(v(1V!JaQE-zNc]Q]o{JGA&yLHHR=yk0
+::c/P!z!5N]H4={~5Ic+qZ1VRQ9aS[@28.,1qQp]_AUf0/fVD;]+b(8FOl&QI/bP#edO0Lu,0RtpJj7icO/3m0+9d=0bRMJ)b#D&0BYr3Xvl85t&6-X28R-/0@wU}=N
+::Y9yi$tfwF)&?)z,[hd3#;|3.pasLrw2+esnP&7^?Fb0KDjm5#J&c!g|RI1bxRb)-b==iRfgQ}|3zN{iJ)+L?O-}TH6jgC(0GS?0y!BF2BiUtB!dm&Zv5yehfeaiPx
+::@Ss.?EnxmYb_)2oz~XDyfe,xD{&S6Dm6d;p{d;2/s7[qoFN22Z{w@eX,;SO6QlQ(Fdl/syef/k^(xxZOT;?gdn,VE4$OY6szM8nMf;S=
+:embdbin:
+:: ============
 
 :EndDebug
 cmd /u /c type "!_log!_tmp.log">"!_log!_Debug.log"

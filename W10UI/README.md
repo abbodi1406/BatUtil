@@ -23,7 +23,13 @@ Automated script to install or integrate updates for:
 * Enable .NET Framework 3.5 if available source detected, and reinstall Cumulative updates afterwards.  
 valid locations: mounted iso, inserted dvd/usb, sxs folder for distribution target, custom specified folder path
 
-* Detect Windows NT 10.0 ADK [Deployment Tools](https://docs.microsoft.com/windows-hardware/get-started/adk-install) for offline integration
+* Detect Windows ADK [Deployment Tools](https://docs.microsoft.com/windows-hardware/get-started/adk-install) for offline integration
+
+## Updated ISO Requirement:
+
+* Creating updated iso file for a distribution target require either of:  
+- install Windows ADK
+- place oscdimg.exe or cdimage.exe in the same folder next to W10UI.cmd
 
 ## Limitations:
 
@@ -33,7 +39,7 @@ be sure to specify the correct updates files
 
 * These extra updates are not processed correctly
 
-[RSAT - KB2693643](https://support.microsoft.com/en-us/help/2693643/)  
+[Remote Server Administration Tools (RSAT)](https://support.microsoft.com/en-us/help/2693643/)  
 [Media Feature Pack for Windows N editions](https://support.microsoft.com/en-us/help/3145500/)
 
 the script will try to install them whether applicable, already installed or not  
@@ -131,7 +137,6 @@ note: if both wim2esd/wim2swm are 1, install.esd takes precedence over split ins
 
 * ISO  
 create new iso file, if the target is a distribution folder  
-require Windows ADK, or place oscdimg.exe or cdimage.exe next to the script
 
 * ISODir  
 folder path for iso file, leave it blank to create in the script current directory
@@ -163,12 +168,18 @@ start the process automatically once you execute the script
 [Creator](https://forums.mydigitallife.net/members/abbodi1406.204274/)  
 [Concept](https://forums.mydigitallife.net/members/burfadel.84828/)  
 [WHDownloader](https://forums.mydigitallife.net/threads/44645)  
+[PSFExtractor / th1r5bvn23](https://www.betaworld.org/)  
 [SxSExpand](https://forums.mydigitallife.net/members/superbubble.250156/)  
-[PSFExtractor / th1r5bvn23](https://www.betaworld.org/)
+[Compressed2TXT](https://github.com/AveYo/Compressed2TXT)
 
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.6:  
+- Updated PSFExtractor to remove SxSExpand dependency
+- Embedded PSFExtractor using Compressed2TXT v5.3
+- Include detected language(s) in ISO file name
 
 10.5:  
 - Changed updated ISO file name scheme  
@@ -179,7 +190,7 @@ example new:
 
 10.4:  
 - Rebrand to Windows NT 10.0 Updates Installer
-- Improved PSF files processing, and updated PSFExtractor.exe
+- Improved PSF files processing, and updated PSFExtractor
 
 10.3:  
 - Added workaround for long path issue when extracting PSF updates
