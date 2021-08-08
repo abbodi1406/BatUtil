@@ -176,6 +176,10 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
+10.7:  
+- Implemented DIR2ISO by AveYo as a last resort to create updated iso
+- Improved updated iso label accuracy
+
 10.6:  
 - Updated PSFExtractor to remove SxSExpand dependency
 - Embedded PSFExtractor using Compressed2TXT v5.3

@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v67
+@set uivr=v68
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -48,7 +48,6 @@ set _Debug=0
 :: script:	     abbodi1406, @rgadguard
 :: wimlib:	     synchronicity
 :: PSFExtractor: th1r5bvn23 - www.betaworld.cn
-:: SxSExpand:    SuperBubble - Melinda Bellemore
 :: offlinereg:   erwan.l
 :: Thanks to:    whatever127, Windows_Addict, @Ratiborus58, @NecrosoftCore, @DiamondMonday, @WzorNET
 
@@ -266,7 +265,7 @@ if defined _args echo "!_args!"
 echo "!_work!"
 )
 pushd "!_work!"
-set _file=(7z.dll,7z.exe,bcdedit.exe,bfi.exe,bootmui.txt,bootwim.txt,cdimage.exe,imagex.exe,libwim-15.dll,offlinereg.exe,offreg.dll,wimlib-imagex.exe,PSFExtractor.exe,SxSExpand.exe,cabarc.exe)
+set _file=(7z.dll,7z.exe,bcdedit.exe,bfi.exe,bootmui.txt,bootwim.txt,cdimage.exe,imagex.exe,libwim-15.dll,offlinereg.exe,offreg.dll,wimlib-imagex.exe,PSFExtractor.exe,cabarc.exe)
 for %%# in %_file% do (
 if not exist ".\bin\%%#" (set _bin=%%#&goto :E_Bin)
 )
@@ -916,6 +915,7 @@ if %revmaj%==18363 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
 if %revmaj%==19042 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 if %revmaj%==19043 if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
 if %revmaj%==19044 if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
+if %revmaj%==19045 if /i "%branch:~0,2%"=="vb" set branch=22h1%branch:~2%
 if %uupmin% lss %revmin% (
 set uupver=%revver%
 set uupmin=%revmin%
@@ -1176,8 +1176,11 @@ if defined isoupdate (
   rmdir /s /q "%_cabdir%\du\" %_Nul3%
   echo.
 )
+if exist "ISOFOLDER\sources\updateagent.dll" (
+mkdir bin\temp %_Nul3%
+copy /y ISOFOLDER\sources\updateagent.dll bin\temp\ %_Nul3%
+)
 call :setuphostprep
-7z.exe l "ISOFOLDER\sources\%_setup%" >.\bin\version.txt 2>&1
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set xduver=%%i.%%j&set xdumaj=%%i&set xdumin=%%j&set xdubranch=%%k&set xdudate=%%l)
 del /f /q .\bin\version.txt %_Nul3%
 if %uupmin% neq %xdumin% exit /b
@@ -1197,6 +1200,10 @@ if %xduver:~0,5%==19041 set xduver=19043%xduver:~5%
 if %uupmaj%==19044 (
 if /i "%xdubranch:~0,2%"=="vb" set xdubranch=21h2%xdubranch:~2%
 if %xduver:~0,5%==19041 set xduver=19044%xduver:~5%
+)
+if %uupmaj%==19045 (
+if /i "%xdubranch:~0,2%"=="vb" set xdubranch=22h1%xdubranch:~2%
+if %xduver:~0,5%==19041 set xduver=19045%xduver:~5%
 )
 set _label=%xduver%.%xdudate%.%xdubranch%
 call :setlabel
@@ -1219,6 +1226,7 @@ if exist "!_cabdir!\microsoft-windows-*enablement-package~*.mum" set _actEP=1
 if exist "!_cabdir!\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!_cabdir!\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!_cabdir!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
+if exist "!_cabdir!\Microsoft-Windows-22H1Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
 )
 set tmpcmp=
 if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\SSU-*-*.cab"') do (set "pack=%%#"&call :external_cab)
@@ -1252,17 +1260,24 @@ if %imgcount% gtr 1 if %WIMFILE%==install.wim wimlib-imagex.exe optimize ISOFOLD
 exit /b
 
 :external_cab
-del /f /q "!_cabdir!\*.manifest" %_Nul3%
-del /f /q "!_cabdir!\*.mum" %_Nul3%
-del /f /q "!_cabdir!\*.xml" %_Nul3%
+if exist "!_cabdir!\*.manifest" del /f /q "!_cabdir!\*.manifest" %_Nul3%
+if exist "!_cabdir!\*.mum" del /f /q "!_cabdir!\*.mum" %_Nul3%
+if exist "!_cabdir!\*.xml" del /f /q "!_cabdir!\*.xml" %_Nul3%
 :: expand.exe -f:update.mum "!_UUP!\%pack%" "!_cabdir!" %_Null%
 7z.exe e "!_UUP!\%pack%" -o"!_cabdir!" update.mum %_Null%
 if not exist "!_cabdir!\update.mum" exit /b
 expand.exe -f:*.psf.cix.xml "!_UUP!\%pack%" "!_cabdir!" %_Null%
 if exist "!_cabdir!\*.psf.cix.xml" (
-findstr /i /m "PSFX" "!_cabdir!\update.mum" %_Nul3% || exit /b
-if not exist "!_UUP!\%pack:~0,-4%.psf" exit /b
-if %psfnet% equ 0 exit /b
+rem findstr /i /m "PSFX" "!_cabdir!\update.mum" %_Nul3% || exit /b
+if not exist "!_UUP!\%pack:~0,-4%.psf" (
+  echo PSFX: %pack% / PSF file is missing
+  exit /b
+  )
+if %psfnet% equ 0 (
+  echo PSFX: %pack% / PSFExtractor is not available
+  exit /b
+  )
+set psf_%pack%=1
 )
 findstr /i /m "Package_for_OasisAsset" "!_cabdir!\update.mum" %_Nul3% && (
 wimlib-imagex.exe extract ISOFOLDER\sources\%WIMFILE% 1 Windows\Servicing\Packages\*OasisAssets-Package*.mum --dest-dir="!_cabdir!" --no-acls --no-attributes %_Null%
@@ -1290,8 +1305,13 @@ exit /b
 )
 set lculabel=1
 findstr /i /m "Package_for_RollupFix" "!_cabdir!\update.mum" %_Nul3% && (
-echo LCU: %pack%
-if exist "!_cabdir!\*.psf.cix.xml" (call :external_psf) else (copy /y "!_UUP!\%pack%" "!_dest!\3%pack%" %_Nul3%)
+if defined psf_%pack% (
+  echo LCU: %pack% / Repacking PSF update
+  call :external_psf
+  ) else (
+  echo LCU: %pack%
+  copy /y "!_UUP!\%pack%" "!_dest!\3%pack%" %_Nul3%
+  )
 if !lculabel! equ 1 call :external_label
 exit /b
 )
@@ -1340,6 +1360,7 @@ if %uupmaj%==18363 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
 if %uupmaj%==19042 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 if %uupmaj%==19043 if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
 if %uupmaj%==19044 if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
+if %uupmaj%==19045 if /i "%branch:~0,2%"=="vb" set branch=22h1%branch:~2%
 
 set _label=%uupver%.%isodate%.%branch%
 call :setlabel
@@ -1351,23 +1372,22 @@ subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
 if !_sbst! equ 1 pushd %_sdr%
 copy /y "!_UUP!\%pack:~0,-4%.*" . %_Nul3%
 if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
-if not exist "SxSExpand.exe" copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
 if not exist "cabarc.exe" copy /y "!_work!\bin\cabarc.exe" . %_Nul3%
 PSFExtractor.exe %pack% %_Null%
-if !errorlevel! neq 0 (
+if %errorlevel% neq 0 (
   set lculabel=0
-  echo Error: failed to extract PSF update
+  echo Error: failed to extract PSF file
   rmdir /s /q %pack:~0,-4% %_Nul3%
   if !_sbst! equ 1 popd
   if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
   exit /b
   )
 cd %pack:~0,-4%
-rem del /f /q *.psf.cix.xml %_Nul3%
+del /f /q *.psf.cix.xml %_Nul3%
 ..\cabarc.exe -m LZX:21 -r -p N ..\3psf.cab *.* %_Null%
-if !errorlevel! neq 0 (
+if %errorlevel% neq 0 (
   set lculabel=0
-  echo Error: failed to repack PSF update
+  echo Error: failed to create CAB file
   cd..
   rmdir /s /q %pack:~0,-4% %_Nul3%
   if !_sbst! equ 1 popd
@@ -1445,8 +1465,8 @@ if defined isoupdate (
   rmdir /s /q "%_cabdir%\du\" %_Nul3%
 )
 if not defined isover exit /b
+wimlib-imagex.exe extract "%_target%\sources\install.wim" 1 Windows\system32\UpdateAgent.dll --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
 call :setuphostprep
-7z.exe l "ISOFOLDER\sources\%_setup%" >.\bin\version.txt 2>&1
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set iduver=%%i.%%j&set idumaj=%%i&set idumin=%%j&set branch=%%k&set idudate=%%l)
 del /f /q .\bin\version.txt %_Nul3%
 if /i not "%branch%"=="WinBuild" (set _label=%iduver%.%idudate%.%branch%)
@@ -1469,6 +1489,11 @@ if %isomaj%==19044 (
 if /i "%isobranch:~0,2%"=="vb" set isobranch=21h2%isobranch:~2%
 if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
 if %iduver:~0,5%==19041 set iduver=19044%iduver:~5%
+)
+if %isomaj%==19045 (
+if /i "%isobranch:~0,2%"=="vb" set isobranch=22h1%isobranch:~2%
+if /i "%branch:~0,2%"=="vb" set branch=22h1%branch:~2%
+if %iduver:~0,5%==19041 set iduver=19045%iduver:~5%
 )
 set _label=%iduver%.%idudate%.%branch%
 if %isomin% neq %idumin% (set _label=%isover%.%isodate%.%isobranch%)
@@ -1510,9 +1535,15 @@ goto :eof
 )
 expand.exe -f:*.psf.cix.xml "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*.psf.cix.xml" (
-findstr /i /m "PSFX" "!dest!\update.mum" %_Nul3% || goto :eof
-if not exist "!_UUP!\%package:~0,-4%.psf" goto :eof
-if %psfnet% equ 0 goto :eof
+rem findstr /i /m "PSFX" "!dest!\update.mum" %_Nul3% || goto :eof
+if not exist "!_UUP!\%package:~0,-4%.psf" (
+  echo %count%/%_cab%: %package% / PSF file is missing
+  goto :eof
+  )
+if %psfnet% equ 0 (
+  echo %count%/%_cab%: %package% / PSFExtractor is not available
+  goto :eof
+  )
 set psf_%package%=1
 )
 if not defined isodate findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% && (
@@ -1580,6 +1611,7 @@ if exist "!dest!\microsoft-windows-*enablement-package~*.mum" set "_type=[Enable
 if exist "!dest!\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!dest!\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!dest!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
+if exist "!dest!\Microsoft-Windows-22H1Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
 )
 if %_build% geq 18362 if exist "!dest!\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
@@ -1616,10 +1648,7 @@ if defined psf_%package% (
 subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
 if !_sbst! equ 1 pushd %_sdr%
 copy /y "!_UUP!\%package:~0,-4%.*" . %_Nul3%
-if not exist "PSFExtractor.exe" (
-  copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
-  copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
-  )
+if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
 PSFExtractor.exe %package% %_Null%
 if !errorlevel! neq 0 (
   echo Error: failed to extract PSF update
@@ -1799,7 +1828,7 @@ if defined lcupkg call :ReLCU
 if defined callclean call :cleanup
 if defined mpamfe (
 echo.
-echo Adding Defender update...
+echo Adding Defender update . . .
 call :defender_update
 )
 if not defined edge goto :eof
@@ -1833,10 +1862,7 @@ if !_sbst! equ 1 pushd %_sdr%
 if not exist "%lcupkg%" (
   copy /y "!_UUP!\%lcupkg:~0,-4%.*" . %_Nul3%
   )
-if not exist "PSFExtractor.exe" (
-  copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
-  copy /y "!_work!\bin\SxSExpand.exe" . %_Nul3%
-  )
+if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
 PSFExtractor.exe %lcupkg% %_Null%
 if !_sbst! equ 1 popd
 if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
@@ -2301,6 +2327,12 @@ xcopy /CIDRY "%_mount%\Windows\Boot\EFI\memtest.efi" "%_target%\efi\microsoft\bo
 xcopy /CIDRY "%_mount%\Windows\Boot\EFI\bootmgfw.efi" "%_target%\efi\boot\!efifile!" %_Nul3%
 xcopy /CIDRY "%_mount%\Windows\Boot\EFI\bootmgr.efi" "%_target%\" %_Nul3%
 )
+if exist "%_mount%\Windows\Boot\EFI\winsipolicy.p7b" if exist "%_target%\efi\microsoft\boot\winsipolicy.p7b" (
+xcopy /CEDRY "%_mount%\Windows\Boot\EFI\winsipolicy.p7b" "%_target%\efi\microsoft\boot\winsipolicy.p7b" %_Nul3%
+)
+if exist "%_mount%\Windows\Boot\EFI\CIPolicies\" if exist "%_target%\efi\microsoft\boot\cipolicies\" (
+xcopy /CEDRY "%_mount%\Windows\Boot\EFI\CIPolicies\*" "%_target%\efi\microsoft\boot\cipolicies\" %_Nul3%
+)
 if !handle2! equ 0 if %dvd% equ 1 if not exist "%_mount%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if exist "%_mount%\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
 set handle2=1
 for /f "tokens=%tok% delims=_." %%i in ('dir /b /a:-d /od "%_mount%\Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
@@ -2401,17 +2433,26 @@ if defined lcupkg call :ReLCU
 call :cleanmanual&goto :eof
 
 :setuphostprep
-set _setup=setuphost.exe
 set "_WSH=SOFTWARE\Microsoft\Windows Script Host\Settings"
 reg.exe query "HKCU\%_WSH%" /v Enabled %_Nul2% | find /i "0x0" %_Nul1% && (set _vbscu=1&reg.exe delete "HKCU\%_WSH%" /v Enabled /f %_Nul3%)
 reg.exe query "HKLM\%_WSH%" /v Enabled %_Nul2% | find /i "0x0" %_Nul1% && (set _vbslm=1&reg.exe delete "HKLM\%_WSH%" /v Enabled /f %_Nul3%)
  echo>bin\filever.vbs Set objFSO = CreateObject^("Scripting.FileSystemObject"^)
 echo>>bin\filever.vbs Wscript.Echo objFSO.GetFileVersion^(WScript.arguments^(0^)^)
-for /f "tokens=4 delims=." %%i in ('cscript //nologo bin\filever.vbs ISOFOLDER\sources\setuphost.exe') do (
-for /f "tokens=4 delims=." %%a in ('cscript //nologo bin\filever.vbs ISOFOLDER\sources\setupprep.exe') do (
-  if %%a gtr %%i set _setup=setupprep.exe
-  )
+set _svr1=0&set _svr2=0&set _svr3=0
+for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs ISOFOLDER\sources\setuphost.exe') do set _svr1=%%#
+for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs ISOFOLDER\sources\setupprep.exe') do set _svr2=%%#
+if exist "bin\temp\updateagent.dll" for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs bin\temp\updateagent.dll') do set _svr3=%%#
+set _setup=ISOFOLDER\sources\setuphost.exe
+if %_svr2% gtr %_svr1% (
+if %_svr2% gtr %_svr3% set _setup=ISOFOLDER\sources\setupprep.exe
+if %_svr3% gtr %_svr2% set _setup=bin\temp\updateagent.dll
 )
+if %_svr3% gtr %_svr1% (
+if %_svr2% gtr %_svr3% set _setup=ISOFOLDER\sources\setupprep.exe
+if %_svr3% gtr %_svr2% set _setup=bin\temp\updateagent.dll
+)
+7z.exe l "%_setup%" >.\bin\version.txt 2>&1
+if exist "bin\temp\updateagent.dll" rmdir /s /q bin\temp\
 del /f /q .\bin\filever.vbs %_Nul3%
 if defined _vbscu reg.exe add "HKCU\%_WSH%" /v Enabled /t REG_DWORD /d 0 /f %_Nul3%
 if defined _vbslm reg.exe add "HKLM\%_WSH%" /v Enabled /t REG_DWORD /d 0 /f %_Nul3%

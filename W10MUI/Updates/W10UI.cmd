@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.6
+@set uiv=v10.7
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -450,6 +450,7 @@ if /i not "%targetname%"=="winre.wim" (if exist "!_work!\winre.wim" del /f /q "!
 goto :fin
 )
 if %dvd%==0 goto :fin
+if exist "%SystemRoot%\temp\UpdateAgent.dll" del f /q "%SystemRoot%\temp\UpdateAgent.dll" %_Nul3%
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\install.wim
 if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%
@@ -627,14 +628,14 @@ goto :eof
 )
 expand.exe -f:*.psf.cix.xml "!repo!\!package!" "checker" %_Null%
 if exist "checker\*.psf.cix.xml" (
-findstr /i /m "PSFX" "checker\update.mum" %_Nul3% || (rmdir /s /q "checker\" %_Nul3%&goto :eof)
+rem findstr /i /m "PSFX" "checker\update.mum" %_Nul3% || (rmdir /s /q "checker\" %_Nul3%&goto :eof)
 if not exist "!repo!\%package:~0,-4%.psf" (
-  echo echo %count%/%_sum%: %package% / PSF file is missing
+  echo %count%/%_sum%: %package% / PSF file is missing
   rmdir /s /q "checker\" %_Nul3%
   goto :eof
   )
 if %psfnet% equ 0 (
-  echo echo %count%/%_sum%: %package% / PSFExtractor is not available
+  echo %count%/%_sum%: %package% / PSFExtractor is not available
   rmdir /s /q "checker\" %_Nul3%
   goto :eof
   )
@@ -696,7 +697,7 @@ if exist "checker\microsoft-windows-*enablement-package~*.mum" set "_type=[Enabl
 if exist "checker\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "checker\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "checker\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "checker\Microsoft-Windows-22H1Enablement-Package~*.mum" set "_fixEP=19045"
+if exist "checker\Microsoft-Windows-22H1Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
 )
 if %_build% geq 18362 if exist "checker\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "checker" %_Null%
@@ -1048,7 +1049,8 @@ if %_build% geq 19041 if exist "%dest%\update.mum" if not exist "!mumtarget!\Win
 findstr /i /m "Package_for_WindowsExperienceFeaturePack" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\Microsoft-Windows-UserExperience-Desktop*.mum" set /a _sum-=1&goto :eof)
 )
 if exist "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest" if not defined uupmaj (
-for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set uupver=%%I.%%K&set uupmaj=%%I
+for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
+if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
 for /f "tokens=8 delims== " %%# in ('findstr /i Branch "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set uuplab=%%~#
 for /f "tokens=8 delims== " %%# in ('findstr /i Branch "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set isolab=%%~#
 )
@@ -1554,11 +1556,12 @@ cd /d "!_cabdir!"
 call :doupdate
 if %net35%==1 call :enablenet35
 if %dvd%==1 (
-if not defined isomaj for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do set isover=%%i.%%j&set isomaj=%%i
+if not defined isomaj for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
 if not defined isolab if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (if %_build% geq 15063 (call :detectLab isolab) else (call :legacyLab isolab))
 if %_actEP% equ 0 if exist "!mountdir!\Windows\Servicing\Packages\microsoft-windows-*enablement-package~*.mum" if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" call :detectEP
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
 if exist "!mountdir!\sources\setup.exe" call :boots
+if exist "!mountdir!\Windows\system32\UpdateAgent.dll" if not exist "%SystemRoot%\temp\UpdateAgent.dll" copy /y "!mountdir!\Windows\system32\UpdateAgent.dll" %SystemRoot%\temp\ %_Nul1%
 )
 if %wim%==1 if exist "!_wimpath!\setup.exe" (
 if exist "!mountdir!\sources\setup.exe" copy /y "!mountdir!\sources\setup.exe" "!_wimpath!" %_Nul3%
@@ -1620,12 +1623,13 @@ set _actEP=1
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-22H1Enablement-Package~*.mum" set "_fixEP=19045"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-22H1Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest" (
-for /f "tokens=5,6,7 delims=_." %%I in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do set uupver=%%I.%%K&set uupmaj=%%I
+for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
+if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
 )
 if not defined uupmaj goto :eof
-if not defined uuplab call :detectLab uuplab
+if not defined uuplab (if defined isolab (set "uuplab=%isolab%") else (call :detectLab uuplab))
 if %uupmaj%==18363 if /i "%uuplab:~0,4%"=="19h1" set uuplab=19h2%uuplab:~4%
 if %uupmaj%==19041 if /i "%uuplab:~0,2%"=="vb" set uuplab=20h1%uuplab:~2%
 if %uupmaj%==19042 if /i "%uuplab:~0,2%"=="vb" set uuplab=20h2%uuplab:~2%
@@ -2090,8 +2094,11 @@ if errorlevel 1 goto :targetmenu
 goto :mainmenu
 
 :ISO
-if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\cdimage.exe" if not exist "!_work!\bin\cdimage.exe" goto :eof
+set imapi=0
+if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\cdimage.exe" if not exist "!_work!\bin\cdimage.exe" set imapi=1
+if %imapi%==1 if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" goto :eof
 if "!isodir!"=="" set "isodir=!_work!"
+call :DATEISO
 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
 :: set "isodate=%_date:~0,4%-%_date:~4,2%-%_date:~6,2%"
 if not defined isodate set "isodate=%_date:~2,6%-%_date:~8,4%"
@@ -2103,7 +2110,7 @@ if %_SrvEdt% equ 1 (set _label=%_label%_SERVER) else (set _label=%_label%_CLIENT
 if /i %arch%==x86 set archl=X86
 if /i %arch%==x64 set archl=X64
 if /i %arch%==arm64 set archl=A64
-if exist "!target!\sources\lang.ini" call :LANG
+if exist "!target!\sources\lang.ini" call :LANGISO
 if defined _mui (set "isofile=%_label%_%archl%FRE_%_mui%.iso") else (set "isofile=%_label%_%archl%FRE.iso")
 set /a rnd=%random%
 if exist "!isodir!\%isofile%" ren "!isodir!\%isofile%" "%rnd%_%isofile%"
@@ -2116,19 +2123,30 @@ echo ISO Location:
 echo "!isodir!"
 if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else if exist "!_work!\cdimage.exe" (set _ff="!_work!\cdimage.exe") else (set _ff="!_work!\bin\cdimage.exe")
 cd /d "!target!"
-if /i not %arch%==arm64 (
+if %imapi%==0 if /i not %arch%==arm64 (
 !_ff! -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
-) else (
-!_ff! -bootdata:1#pEF,e,b".\efi\microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
+call set errcode=!errorlevel!
 )
-set errcode=%errorlevel%
+if %imapi%==0 if /i %arch%==arm64 (
+!_ff! -bootdata:1#pEF,e,b".\efi\microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
+call set errcode=!errorlevel!
+)
+if %imapi%==1 if /i not %arch%==arm64 (
+call :DIR2ISO . "%isofile%" 0 "%isover%"
+call set errcode=!errorlevel!
+)
+if %imapi%==1 if /i %arch%==arm64 (
+call :DIR2ISO . "%isofile%" 1 "%isover%"
+call set errcode=!errorlevel!
+)
+if not exist "%isofile%" set errcode=1
 if %errcode% equ 0 move /y "%isofile%" "!isodir!\" %_Nul3%
 cd /d "!_work!"
 if %errcode% equ 0 if %delete_source% equ 1 rmdir /s /q "!target!\" %_Nul1%
 if %errcode% equ 0 if exist "!_work!\DVD10UI\" rmdir /s /q "!_work!\DVD10UI\" %_Nul1%
 goto :eof
 
-:LANG
+:LANGISO
 cd /d "!target!"
 for %%a in (3 2 1) do (for /f "tokens=1 delims== " %%b in ('findstr %%a "sources\lang.ini"') do echo %%b>>"isolang.txt")
 if exist "isolang.txt" for /f "usebackq tokens=1" %%a in ("isolang.txt") do (
@@ -2139,6 +2157,25 @@ set _mui=!_mui:%%#=%%#!
 )
 del /f /q "isolang.txt" %_Nul3%
 cd /d "!_work!"
+goto :eof
+
+:DATEISO
+if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" goto :eof
+copy /y "!target!\sources\setuphost.exe" %SystemRoot%\temp\ %_Nul1%
+copy /y "!target!\sources\setupprep.exe" %SystemRoot%\temp\ %_Nul1%
+set _svr1=0&set _svr2=0&set _svr3=0
+set "_fvr1=%SystemRoot%\temp\setuphost.exe"
+set "_fvr2=%SystemRoot%\temp\setupprep.exe"
+set "_fvr3=%SystemRoot%\temp\UpdateAgent.dll"
+for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr1:\=\\!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
+for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr2:\=\\!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr3:\=\\!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
+if %isomin% neq %_svr1% if %isomin% neq %_svr2% if %isomin% neq %_svr3% goto :eof
+if %isomin% equ %_svr1% set "_chk=!_fvr1!"
+if %isomin% equ %_svr2% set "_chk=!_fvr2!"
+if %isomin% equ %_svr3% set "_chk=!_fvr3!"
+for /f "tokens=6 delims=.) " %%# in ('powershell -nop -c "(gi '!_chk!').VersionInfo.FileVersion" %_Nul6%') do "set _ddd=%%#"
+if defined _ddd set "isodate=%_ddd%"
 goto :eof
 
 :fin
@@ -2170,6 +2207,31 @@ echo.
 echo Press 9 to exit.
 choice /c 9 /n
 if errorlevel 1 (goto :eof) else (rem.)
+
+$:DIR2ISO: #,# [PARAMS] directory file.iso
+set ^ #=& set 1=%*& powershell -nop -c "$f0=[io.file]::ReadAllText('!_batp!');$0=($f0-split'\$%0:.*')[1];$1=$env:1-replace'([`@$])','`$1';iex(\"$0 `r`n %0 $1\")"& exit /b !errorlevel!
+[Environment]::CurrentDirectory = (Get-Location -PSProvider FileSystem).ProviderPath
+function :DIR2ISO ($dir, $iso, $efi=0, $vol='DVD_ROM') { if (!(test-path -Path $dir -pathtype Container)) {"[ERR] $dir\ :DIR2ISO";exit 1}; $dir2iso=@"
+ using System; using System.IO; using System.Runtime.Interop`Services; using System.Runtime.Interop`Services.ComTypes;
+ public class dir2iso {public int AveYo=2021; [Dll`Import("shlwapi",CharSet=CharSet.Unicode,PreserveSig=false)]
+ internal static extern void SHCreateStreamOnFileEx(string f,uint m,uint d,bool b,IStream r,out IStream s);
+ public static void Create(string file, ref object obj, int bs, int tb) { IStream dir=(IStream)obj, iso;
+ try {SHCreateStreamOnFileEx(file,0x1001,0x80,true,null,out iso);} catch(Exception e) {Console.WriteLine(e.Message); return;}
+ int d=tb>1024 ? 1024 : 1, pad=tb%d, block=bs*d, total=(tb-pad)/d, c=total>100 ? total/100 : total, i=1, MB=(bs/1024)*tb/1024;
+ Console.Write("{0,3}%  {1}MB {2}",0,MB,file); if (pad > 0) dir.CopyTo(iso, pad * block, Int`Ptr.Zero, Int`Ptr.Zero);
+ while (total-- > 0) {dir.CopyTo(iso, block, Int`Ptr.Zero, Int`Ptr.Zero); if (total % c == 0) {Console.Write("\r{0,3}%",i++);}}
+ iso.Commit(0); Console.WriteLine("\r{0,3}%  {1}MB {2}", 100, MB, file); } }
+"@; & { $cs=new-object CodeDom.Compiler.CompilerParameters; $cs.GenerateInMemory=1 #,# no`warnings
+ $compile=(new-object Microsoft.CSharp.CSharpCodeProvider).CompileAssemblyFromSource($cs, $dir2iso)
+ $BOOT=@(); $bootable=0; if ($efi) {$idx=0; $mbr_efi=@(0xEF); $images=@('efi\microsoft\boot\efisys.bin')} else {$idx=0,1; $mbr_efi=@(0,0xEF); $images=@('boot\etfsboot.com','efi\microsoft\boot\efisys.bin')}
+ $idx|% { $bootimage=join-path $dir -child $images[$_]; if (test-path -Path $bootimage -pathtype Leaf) {
+ $bin=new-object -ComObject ADODB.Stream; $bin.Open(); $bin.Type=1; $bin.LoadFromFile($bootimage)
+ $opt=new-object -ComObject IMAPI2FS.BootOptions; $opt.AssignBootImage($bin.psobject.BaseObject); $opt.Manufacturer='Microsoft'
+ $opt.PlatformId=$mbr_efi[$_]; $opt.Emulation=0; $bootable=1; $BOOT += $opt.psobject.BaseObject } }
+ $fsi=new-object -ComObject IMAPI2FS.MsftFileSystemImage; $fsi.FileSystemsToCreate=4; $fsi.FreeMediaBlocks=0; $fsi.UDFRevision=0x102
+ if ($bootable) {$fsi.BootImageOptionsArray=$BOOT}; $CONTENT=$fsi.Root; $CONTENT.AddTree($dir,$false); $fsi.VolumeName=$vol
+ $obj=$fsi.CreateResultImage(); [dir2iso]::Create($iso,[ref]$obj.ImageStream,$obj.BlockSize,$obj.TotalBlocks) };[GC]::Collect()
+} $:DIR2ISO: #,# export directory as (bootable) udf iso - lean and mean snippet by AveYo, 2021
 
 :embdbin:
 Add-Type -Language CSharp -TypeDefinition @"

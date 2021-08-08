@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v67
+@set uivr=v68
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -272,7 +272,7 @@ if /i %%#==ProfessionalWorkstationN if %EditionProN% equ 1 (set ProfessionalWork
 if /i %%#==CoreSingleLanguage if %EditionHome% equ 1 (set CoreSingleLanguage=1)
 if /i %%#==ServerRdsh if %EditionProf% equ 1 (set ServerRdsh=1)
 if /i %%#==IoTEnterprise if %EditionProf% equ 1 if %_build% geq 18277 (set IoTEnterprise=1)
-if /i %%#==IoTEnterpriseS if %EditionLTSC% equ 1 if %_build% geq 18298 (set IoTEnterpriseS=1)
+if /i %%#==IoTEnterpriseS if %EditionLTSC% equ 1 if %_build% geq 19041 (set IoTEnterpriseS=1)
 if /i %%#==CloudEdition if %EditionProf% equ 1 if %_build% geq 21364 (set CloudEdition=1)
 if /i %%#==CloudEditionN if %EditionProN% equ 1 if %_build% geq 21364 (set CloudEditionN=1)
 )
@@ -305,7 +305,7 @@ if %ServerRdsh% equ 0 echo 10. Enterprise multi-session
 if %IoTEnterprise% equ 0 if %_build% geq 18277 echo 11. IoT Enterprise {OEM}
 )
 if %EditionLTSC% equ 1 (
-if %IoTEnterpriseS% equ 0 if %_build% geq 18298 echo 12. IoT Enterprise LTSC {OEM}
+if %IoTEnterpriseS% equ 0 if %_build% geq 19041 echo 12. IoT Enterprise LTSC {OEM}
 )
 if %EditionProf% equ 1 (
 if %CloudEdition% equ 0 if %_build% geq 21364 echo 13. SE {Cloud}
@@ -344,7 +344,7 @@ if %EditionProN% equ 1 set %%#=1
 )
 if %EditionHome% equ 1 set CoreSingleLanguage=1
 if %EditionProf% equ 1 if %_build% geq 18277 set IoTEnterprise=1
-if %EditionLTSC% equ 1 if %_build% geq 18298 set IoTEnterpriseS=1
+if %EditionLTSC% equ 1 if %_build% geq 19041 set IoTEnterpriseS=1
 if %EditionProf% equ 1 if %_build% geq 21364 set CloudEdition=1
 if %EditionProN% equ 1 if %_build% geq 21364 set CloudEditionN=1
 goto :CREATEMENU
@@ -373,7 +373,7 @@ if %_single% equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (s
 if %_single% equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
 if %_single% equ 10 if %EditionProf% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
 if %_single% equ 11 if %EditionProf% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
-if %_single% equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
+if %_single% equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 19041 (set IoTEnterpriseS=1&set verify=1)
 if %_single% equ 13 if %EditionProf% equ 1 if %CloudEdition% equ 0 if %_build% geq 21364 (set CloudEdition=1&set verify=1)
 if %_single% equ 14 if %EditionProN% equ 1 if %CloudEditionN% equ 0 if %_build% geq 21364 (set CloudEditionN=1&set verify=1)
 if %verify% equ 1 goto :CREATEMENU
@@ -408,7 +408,7 @@ if %%# equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (set Pro
 if %%# equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
 if %%# equ 10 if %EditionProf% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
 if %%# equ 11 if %EditionProf% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
-if %%# equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 18298 (set IoTEnterpriseS=1&set verify=1)
+if %%# equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 19041 (set IoTEnterpriseS=1&set verify=1)
 if %%# equ 13 if %EditionProf% equ 1 if %CloudEdition% equ 0 if %_build% geq 21364 (set CloudEdition=1&set verify=1)
 if %%# equ 14 if %EditionProN% equ 1 if %CloudEditionN% equ 0 if %_build% geq 21364 (set CloudEditionN=1&set verify=1)
 )
@@ -507,14 +507,20 @@ for %%# in (OSProductContentId,OSProductPfn) do (
 %_Nul3% reg add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\DefaultProductKey2" /f /v %%# /t REG_SZ /d !%%#!
 %_Nul3% reg add "HKLM\SYS\ControlSet001\Control\ProductOptions" /f /v %%# /t REG_SZ /d !%%#!
 )
+if /i %EditionID%==CoreSingleLanguage (
 %_Nul3% reg add "HKLM\SYS\ControlSet001\Services\LanmanWorkstation\Parameters" /f /v AllowInsecureGuestAuth /t REG_DWORD /d !Insecure!
+) else if %_build% lss 18362 (
+%_Nul3% reg add "HKLM\SYS\ControlSet001\Services\LanmanWorkstation\Parameters" /f /v AllowInsecureGuestAuth /t REG_DWORD /d !Insecure!
+)
 %_Nul3% reg add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\Print" /f /v DoNotInstallCompatibleDriverFromWindowsUpdate /t REG_DWORD /d !Print!
 %_Nul3% reg add "HKLM\SOF\Microsoft\Windows\CurrentVersion\Setup\OOBE" /f /v SetupDisplayedProductKey /t REG_DWORD /d 1
 if /i %EditionID%==ServerRdsh (
 %_Nul3% reg add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c WMIC /NAMESPACE:\\ROOT\CIMV2 PATH Win32_UserAccount WHERE \"SID like 'S-1-5-21-%%-500'\" SET Disabled=FALSE &exit /b 0 "
 )
-%_Nul3% reg unload HKLM\SOF
 %_Nul3% reg unload HKLM\SYS
+%_Nul3% reg save HKLM\SOF .\bin\temp\SOFTWARE2
+%_Nul3% reg unload HKLM\SOF
+%_Nul3% move /y .\bin\temp\SOFTWARE2 .\bin\temp\SOFTWARE
 type nul>bin\temp\virtual.txt
 >>bin\temp\virtual.txt echo add 'bin^\temp^\SOFTWARE' '^\Windows^\System32^\config^\SOFTWARE'
 >>bin\temp\virtual.txt echo add 'bin^\temp^\SYSTEM' '^\Windows^\System32^\config^\SYSTEM'
@@ -597,7 +603,7 @@ set EditionLTSC=0
 find /i "Core</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionHome=1)
 find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionProf=1)
 find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionProN=1)
-if %_build% geq 18298 (
+if %_build% geq 19041 (
 find /i "EnterpriseS</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionLTSC=1)
 )
 for /L %%# in (1,1,%images%) do (
@@ -612,19 +618,15 @@ set "wtxProN=Windows 10"
 set "wtxLTSC=Windows 10"
 if %EditionHome% equ 1 (
 find /i "<NAME>" bin\info%IndexHome%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxHome=Windows 11")
-find /i "<NAME>" bin\info%IndexHome%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxHome=Windows 12")
 )
 if %EditionProf% equ 1 (
 find /i "<NAME>" bin\info%IndexProf%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxProf=Windows 11")
-find /i "<NAME>" bin\info%IndexProf%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxProf=Windows 12")
 )
 if %EditionProN% equ 1 (
 find /i "<NAME>" bin\info%IndexProN%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxProN=Windows 11")
-find /i "<NAME>" bin\info%IndexProN%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxProN=Windows 12")
 )
 if %EditionLTSC% equ 1 (
 find /i "<NAME>" bin\info%IndexLTSC%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxLTSC=Windows 11")
-find /i "<NAME>" bin\info%IndexLTSC%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxLTSC=Windows 12")
 )
 for /l %%# in (1,1,%images%) do del /f /q bin\info%%#.txt %_Nul3%
 if %_build% lss 17063 (
@@ -640,69 +642,76 @@ goto :E_MSG
 if %EditionProf% equ 1 set /a _sum+=5
 if %EditionProN% equ 1 set /a _sum+=4
 if %EditionHome% equ 1 set /a _sum+=1
-if %EditionLTSC% equ 1 if %_build% geq 18298 set /a _sum+=1
+if %EditionLTSC% equ 1 if %_build% geq 19041 set /a _sum+=1
 if %EditionProf% equ 1 if %_build% geq 18277 set /a _sum+=1
 if %EditionProf% equ 1 if %_build% geq 21364 set /a _sum+=1
 if %EditionProN% equ 1 if %_build% geq 21364 set /a _sum+=1
-wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-7z.exe l .\bin\temp\setuphost.exe >.\bin\temp\version.txt 2>&1
-for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set version=%%i.%%j&set vermajor=%%i&set verminor=%%j&set branch=%%k&set labeldate=%%l)
-set revision=%version%&set revmajor=%vermajor%&set revminor=%verminor%
+call :setuphostprep
+for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l)
+del /f /q .\bin\version.txt %_Nul3%
+set revver=%uupver%&set revmaj=%uupmaj%&set revmin=%uupmin%
 set "tok=6,7"&set "toe=5,6,7"
-set "isotime=!labeldate:~2,2!/!labeldate:~4,2!/20!labeldate:~0,2!,!labeldate:~7,2!:!labeldate:~9,2!:10"
+set "isotime=!uupdate:~2,2!/!uupdate:~4,2!/20!uupdate:~0,2!,!uupdate:~7,2!:!uupdate:~9,2!:10"
 if /i %arch%==x86 (set _ss=x86) else if /i %arch%==x64 (set _ss=amd64) else (set _ss=arm64)
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision*.manifest --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-if exist "bin\temp\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens=%tok% delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*_microsoft-windows-coreos-revision*.manifest') do set revision=%%A.%%B&set revmajor=%%A&set revminor=%%B
+if exist "bin\temp\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens=%tok% delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*_microsoft-windows-coreos-revision*.manifest') do set revver=%%A.%%B&set revmaj=%%A&set revmin=%%B
 if %_build% geq 15063 (
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 set "isokey=Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
-for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% ^| find /i "Client.OS""') do if not errorlevel 1 (
-  for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Branch %_Nul6%"') do set "isobranch=%%~A"
-  for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Version %_Nul6%"') do if %%A gtr !revmajor! (
-    set "revision=%%~A.%%B
-    set revmajor=%%~A
-    set "revminor=%%B
+for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% ^| findstr /i /r ".*\.OS""') do if not errorlevel 1 (
+  for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Branch %_Nul6%"') do set "revbranch=%%~A"
+  for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Version %_Nul6%"') do if %%A gtr !revmaj! (
+    set "revver=%%~A.%%B
+    set revmaj=%%~A
+    set "revmin=%%B
     )
   )
 )
-if defined isobranch set branch=%isobranch%
-if %revmajor%==18363 (
+if defined revbranch set branch=%revbranch%
+if %revmaj%==18363 (
 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
-if %version:~0,5%==18362 set version=18363%version:~5%
+if %uupver:~0,5%==18362 set uupver=18363%uupver:~5%
 )
-if %revmajor%==19042 (
+if %revmaj%==19042 (
 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
-if %version:~0,5%==19041 set version=19042%version:~5%
+if %uupver:~0,5%==19041 set uupver=19042%uupver:~5%
 )
-if %revmajor%==19043 (
+if %revmaj%==19043 (
 if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
-if %version:~0,5%==19041 set version=19043%version:~5%
+if %uupver:~0,5%==19041 set uupver=19043%uupver:~5%
 )
-if %revmajor%==19044 (
+if %revmaj%==19044 (
 if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
-if %version:~0,5%==19041 set version=19044%version:~5%
+if %uupver:~0,5%==19041 set uupver=19044%uupver:~5%
 )
-if %verminor% lss %revminor% (
-set version=%revision%
-set verminor=%revminor%
+if %revmaj%==19045 (
+if /i "%branch:~0,2%"=="vb" set branch=22h1%branch:~2%
+if %uupver:~0,5%==19041 set uupver=19045%uupver:~5%
+)
+if %uupmin% lss %revmin% (
+set uupver=%revver%
+set uupmin=%revmin%
+if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
 for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
-set "labeldate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
+set "uupdate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 set "isotime=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
 )
-if %verminor% gtr %revminor% (
+if %uupmin% gtr %revmin% (
+if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
 if not exist "%SystemRoot%\temp\Package_for_RollupFix*.mum" set branch=WinBuild
 )
-set _label2=
+set _legacy=
 if /i "%branch%"=="WinBuild" (
-wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 \Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
-for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l_CLIENT&set branch=%%l)
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
+for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _legacy=%%i.%%j.%%m.%%l&set branch=%%l)
 )
-if defined _label2 (set _label=%_label2%) else (set _label=%version%.%labeldate%.%branch%_CLIENT)
+if defined _legacy (set _label=%_legacy%) else (set _label=%uupver%.%uupdate%.%branch%)
 rmdir /s /q bin\temp\
+set _label=%_label%_CLIENT
 if /i %arch%==x86 set archl=X86
 if /i %arch%==x64 set archl=X64
 if /i %arch%==arm64 set archl=A64
@@ -735,10 +744,12 @@ if /i %editionid%==ProfessionalWorkstationN set DVDLABEL=CPRWNA_%archl%FRE_%lang
 if /i %editionid%==ProfessionalEducation set DVDLABEL=CPREA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATION_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==ProfessionalEducationN set DVDLABEL=CPRENA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATIONN_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==ServerRdsh set DVDLABEL=CEV_%archl%FREV_%langid%_DV5&set DVDISO=%_label%MULTISESSION_VOL_%archl%FRE_%langid%&set _VL=1
-if /i %editionid%==IoTEnterprise set DVDLABEL=IOTE_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISE_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==IoTEnterpriseS set DVDLABEL=IOTS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISES_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==CloudEdition set DVDLABEL=CWCA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUD_OEMRET_%archl%FRE_%langid%
 if /i %editionid%==CloudEditionN set DVDLABEL=CWCNNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUDN_OEMRET_%archl%FRE_%langid%
+if /i %editionid%==IoTEnterprise set DVDLABEL=IOTE_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISE_OEMRET_%archl%FRE_%langid%
+if /i %editionid%==IoTEnterpriseS set DVDLABEL=IOTS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISES_OEMRET_%archl%FRE_%langid%
+if /i %editionid%==EnterpriseS set DVDLABEL=CES_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISES_VOL_%archl%FRE_%langid%&set _VL=1
+if /i %editionid%==EnterpriseSN set DVDLABEL=CESN_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISESN_VOL_%archl%FRE_%langid%&set _VL=1
 if %_VL% equ 0 exit /b
 (
 echo [EditionID]
@@ -752,11 +763,45 @@ echo 1
 )>ISOFOLDER\sources\EI.CFG
 exit /b
 
-:IoTEnterpriseS
-rem placebo for now
+:setuphostprep
+wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setupprep.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\system32\UpdateAgent.dll --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+set "_WSH=SOFTWARE\Microsoft\Windows Script Host\Settings"
+reg.exe query "HKCU\%_WSH%" /v Enabled %_Nul2% | find /i "0x0" %_Nul1% && (set _vbscu=1&reg.exe delete "HKCU\%_WSH%" /v Enabled /f %_Nul3%)
+reg.exe query "HKLM\%_WSH%" /v Enabled %_Nul2% | find /i "0x0" %_Nul1% && (set _vbslm=1&reg.exe delete "HKLM\%_WSH%" /v Enabled /f %_Nul3%)
+ echo>bin\filever.vbs Set objFSO = CreateObject^("Scripting.FileSystemObject"^)
+echo>>bin\filever.vbs Wscript.Echo objFSO.GetFileVersion^(WScript.arguments^(0^)^)
+set _svr1=0&set _svr2=0&set _svr3=0
+for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs bin\temp\setuphost.exe') do set _svr1=%%#
+for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs bin\temp\setupprep.exe') do set _svr2=%%#
+if exist "bin\temp\updateagent.dll" for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs bin\temp\updateagent.dll') do set _svr3=%%#
+set _setup=bin\temp\setuphost.exe
+if %_svr2% gtr %_svr1% (
+if %_svr2% gtr %_svr3% set _setup=bin\temp\setupprep.exe
+if %_svr3% gtr %_svr2% set _setup=bin\temp\updateagent.dll
+)
+if %_svr3% gtr %_svr1% (
+if %_svr2% gtr %_svr3% set _setup=bin\temp\setupprep.exe
+if %_svr3% gtr %_svr2% set _setup=bin\temp\updateagent.dll
+)
+7z.exe l "%_setup%" >.\bin\version.txt 2>&1
+rmdir /s /q bin\temp\
+del /f /q .\bin\filever.vbs %_Nul3%
+if defined _vbscu reg.exe add "HKCU\%_WSH%" /v Enabled /t REG_DWORD /d 0 /f %_Nul3%
+if defined _vbslm reg.exe add "HKLM\%_WSH%" /v Enabled /t REG_DWORD /d 0 /f %_Nul3%
 exit /b
-if %_build% lss 18298 exit /b
+
+:IoTEnterpriseS
+if %_build% lss 19041 exit /b
 set "EditionID=%1"
+set "ProductId=00436-40000-00000-AAOEM"
+set "OSProductContentId=d5914fe3-3021-a30f-7bb7-e1714e56ecc0"
+set "OSProductPfn=Microsoft.Windows.191.X21-99672_8wekyb3d8bbwe"
+set "DigitalProductId=A40000000300000030303433362D34303030302D30303030302D41414F454D000C1100005B56625D5832312D39393637320000000C1100000000D499A3B1A9035BEF09000000000011D0F8602F6CACBA020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000064A7CB60"
+set "DigitalProductId4=F804000004000000350035003000340031002D00300034003300360034002D003000300030002D003000300030003000300030002D00300032002D0031003000320035002D0039003200300030002E0030003000300030002D0032003000330032003000320031000000000000000000000000000000000000000000000000000000000000000000360033003200660066006100310030002D0033006200370035002D0034003100380030002D0061006500640039002D0034006500370039003900610034003400350036003300620000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000049006F00540045006E0074006500720070007200690073006500530000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C1100000000D499A3B1A9035BEF0900D9192A0A78E8DB9B0EE018D04C1B385D85744DB979455D09C648004501E7EEB2A6088C16424B42B1A7C7367D07C223CDAEFD0C1AD8F0EB240E7AD5FB4B3295AD5B00560062005D005800320031002D00390039003600370032000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004F0045004D003A0044004D0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004F0045004D000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+set "Print=1"
+set "Insecure=0"
 set "desc=IoT Enterprise LTSC"
 set "source=%IndexLTSC%"
 set "winver=%wtxLTSC%"
@@ -791,6 +836,14 @@ set "Insecure=0"
 set "desc=Enterprise multi-session"
 set "source=%IndexProf%"
 set "winver=%wtxProf%"
+if %_build% lss 17763 (
+set "ProductId=00389-50000-00001-AA267"
+set "OSProductContentId=8bcd2f4f-8b45-3e55-522d-c3875c18832e"
+set "OSProductPfn=Microsoft.Windows.175.X21-41298_8wekyb3d8bbwe"
+set "DigitalProductId=A40000000300000030303338392D35303030302D30303030312D414132363700370F00005B5253335D5832312D34313239380000370F10000000BCF257653B915B7B08000000000033CEF96093E107C603000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004CF96235"
+set "DigitalProductId4=F804000004000000350035003000340031002D00300033003800390035002D003000300030002D003000300030003000300031002D00300033002D0031003000320035002D0039003200300030002E0030003000300030002D0032003000330032003000320031000000000000000000000000000000000000000000000000000000000000000000650034006400620035003000650061002D0062006400610031002D0034003500360036002D0062003000340037002D00300063006100350030006100620063003600660030003700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000530065007200760065007200520064007300680000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000370F10000000BCF257653B915B7B08007632A0BB31567060B7BAA12133B532B4C584703400AE491DCB35FA2AB047DA9400B57AED3AD9CC7CB073C821FB8EF6E459CCCB5E7DB66FFC118BE0AD70D105E15B005200530033005D005800320031002D00340031003200390038000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065003A00470056004C004B000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+set "desc=Enterprise Remote Server"
+)
 call :WIM
 exit /b
 
