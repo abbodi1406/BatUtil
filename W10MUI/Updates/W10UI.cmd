@@ -2174,7 +2174,7 @@ if %isomin% neq %_svr1% if %isomin% neq %_svr2% if %isomin% neq %_svr3% goto :eo
 if %isomin% equ %_svr1% set "_chk=!_fvr1!"
 if %isomin% equ %_svr2% set "_chk=!_fvr2!"
 if %isomin% equ %_svr3% set "_chk=!_fvr3!"
-for /f "tokens=6 delims=.) " %%# in ('powershell -nop -c "(gi '!_chk!').VersionInfo.FileVersion" %_Nul6%') do "set _ddd=%%#"
+for /f "tokens=6 delims=.) " %%# in ('powershell -nop -c "(gi '!_chk!').VersionInfo.FileVersion" %_Nul6%') do set "_ddd=%%#"
 if defined _ddd set "isodate=%_ddd%"
 goto :eof
 
