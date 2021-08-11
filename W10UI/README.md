@@ -176,6 +176,9 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
+10.8:  
+- Fix updated iso label for Windows 10 1909
+
 10.7:  
 - Implemented DIR2ISO by AveYo as a last resort to create updated iso
 - Improved updated iso label accuracy
