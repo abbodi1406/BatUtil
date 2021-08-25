@@ -10,9 +10,12 @@ set WINPEPATH=
 set DEFAULTLANGUAGE=
 set MOUNTDIR=
 
-:: ##################################################################
-:: # NORMALY THERE IS NO NEED TO CHANGE ANYTHING BELOW THIS COMMENT #
-:: ##################################################################
+:: enable debug mode
+set _Debug=0
+
+:: ###################################################################
+:: # NORMALLY THERE IS NO NEED TO CHANGE ANYTHING BELOW THIS COMMENT #
+:: ###################################################################
 
 set "_cmdf=%~f0"
 if exist "%SystemRoot%\Sysnative\cmd.exe" (
@@ -26,22 +29,56 @@ start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" "
 exit /b
 )
 
-title Windows NT 10.0 LangPacks Integrator
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-if /i "%PROCESSOR_ARCHITECTURE%"=="amd64" set "xOS=amd64"
+set "xOS=amd64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xOS=arm64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xOS=x86"
 if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
 if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
-reg query HKU\S-1-5-19 1>nul 2>nul || goto :E_ADMIN
+reg.exe query HKU\S-1-5-19 %_Null% || goto :E_ADMIN
+set "_log=%~dpn0"
 set "WORKDIR=%~dp0"
 set "WORKDIR=%WORKDIR:~0,-1%"
-set "TEMPDIR=%WORKDIR%\TEMP"
+set "TEMPDIR=%~d0\W10MUITEMP"
 set "TMPDISM=%TEMPDIR%\scratch"
 set "EXTRACTDIR=%TEMPDIR%\extract"
 set "TMPUPDT=%TEMPDIR%\updtemp"
+set "_7z=%WORKDIR%\dism\7z.exe"
+for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
+if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
+setlocal EnableDelayedExpansion
+
+if %_Debug% equ 0 (
+  set "_Nul1=1>nul"
+  set "_Nul2=2>nul"
+  set "_Nul6=2^>nul"
+  set "_Nul3=1>nul 2>nul"
+  goto :Begin
+)
+  set "_Nul1="
+  set "_Nul2="
+  set "_Nul6="
+  set "_Nul3="
+copy /y nul "!WORKDIR!\#.rw" %_Null% && (if exist "!WORKDIR!\#.rw" del /f /q "!WORKDIR!\#.rw") || (set "_log=!_dsk!\%~n0")
+if exist "!_log!_Debug.log" (
+  call set "_suf="
+  for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
+  set "_suf=_!_date:~8,6!"
+)
+echo.
+echo Running in Debug Mode...
+echo The window will be closed when finished
+@echo on
+@prompt $G
+@call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug!_suf!.log"&del "!_log!_tmp.log"
+@title %ComSpec%
+@exit /b
+
+:Begin
+title Windows NT 10.0 Multilingual Creator
+set "_dLog=%SystemRoot%\Logs\DISM"
 set _drv=%~d0
 set _ntf=NTFS
 if /i not "%_drv%"=="%SystemDrive%" for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
@@ -51,55 +88,58 @@ set "INSTALLMOUNTDIR=%MOUNTDIR%\install"
 set "WINREMOUNTDIR=%MOUNTDIR%\winre"
 set EAlang=(ja-jp,ko-kr,zh-cn,zh-hk,zh-tw)
 
-:adk
-SET regKeyPathFound=1
-SET wowRegKeyPathFound=1
-REG QUERY "HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 1>NUL 2>NUL || SET wowRegKeyPathFound=0
-REG QUERY "HKLM\Software\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 1>NUL 2>NUL || SET regKeyPathFound=0
-if %wowRegKeyPathFound% EQU 0 (
-  if %regKeyPathFound% EQU 0 (
+:adkcheck
+set regKeyPathFound=1
+set wowRegKeyPathFound=1
+reg.exe query "HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 %_Nul3% || set wowRegKeyPathFound=0
+reg.exe query "HKLM\Software\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 %_Nul3% || set regKeyPathFound=0
+if %wowRegKeyPathFound% equ 0 (
+  if %regKeyPathFound% equ 0 (
     goto :skipadk
   ) else (
-    SET regKeyPath=HKLM\Software\Microsoft\Windows Kits\Installed Roots
+    set regKeyPath=HKLM\Software\Microsoft\Windows Kits\Installed Roots
   )
 ) else (
-    SET regKeyPath=HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots
+    set regKeyPath=HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots
 )
-FOR /F "skip=2 tokens=2*" %%i IN ('REG QUERY "%regKeyPath%" /v KitsRoot10') DO (SET "KitsRoot=%%j")
-SET "WinPERoot=%KitsRoot%Assessment and Deployment Kit\Windows Preinstallation Environment"
+for /f "skip=2 tokens=2*" %%i in ('reg.exe query "%regKeyPath%" /v KitsRoot10') do set "KitsRoot=%%j"
+set "WinPERoot=%KitsRoot%Assessment and Deployment Kit\Windows Preinstallation Environment"
 set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
 if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
-SET "DISMRoot=%DandIRoot%\%xOS%\DISM\dism.exe"
-goto :prepare
+set "DISMRoot=%DandIRoot%\%xOS%\DISM\dism.exe"
+goto :check
 )
 if /i %xOS%==arm64 if exist "%DandIRoot%\x86\DISM\dism.exe" (
-SET "DISMRoot=%DandIRoot%\x86\DISM\dism.exe"
-goto :prepare
+set "DISMRoot=%DandIRoot%\x86\DISM\dism.exe"
+goto :check
 )
 
 :skipadk
-set "DISMRoot=%WORKDIR%\dism\dism.exe"
-if /i %xOS%==amd64 set "DISMRoot=%WORKDIR%\dism\dism64\dism.exe"
+set "DISMRoot=!WORKDIR!\dism\dism.exe"
+if /i %xOS%==amd64 set "DISMRoot=!WORKDIR!\dism\dism64\dism.exe"
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
-if %winbuild% GEQ 10240 SET "DISMRoot=%SystemRoot%\system32\dism.exe"
+if %winbuild% geq 10240 set "DISMRoot=%SystemRoot%\System32\dism.exe"
 
-:prepare
-if not "%WINPEPATH%"=="" set "WinPERoot=%WINPEPATH%"
-set "_7z=%WORKDIR%\dism\7z.exe"
-setlocal EnableDelayedExpansion
-pushd "!WORKDIR!"
+:check
+if not "!WINPEPATH!"=="" set "WinPERoot=!WINPEPATH!"
+if not exist "!WinPERoot!\amd64\WinPE_OCs\*" if not exist "!WinPERoot!\x86\WinPE_OCs\*" set WINPE=0
+cd /d "!WORKDIR!"
 if not exist "!_7z!" goto :E_BIN
 if not exist "!DISMRoot!" goto :E_BIN
-if not exist "!WinPERoot!\amd64\WinPE_OCs\*" if not exist "!WinPERoot!\x86\WinPE_OCs\*" set WINPE=0
+set _dism2="!DISMRoot!" /English /ScratchDir
 
 if not "!WIMPATH!"=="" goto :begin
 set _wim=0
-if exist "*.wim" (for /f "delims=" %%i in ('dir /b *.wim') do (call set /a _wim+=1))
-if not %_wim%==1 goto :prompt
-for /f "delims=" %%i in ('dir /b *.wim') do set "WIMPATH=%%i"
-goto :begin
+if exist "*.wim" (for /f "delims=" %%i in ('dir /b /a:-d *.wim') do (call set /a _wim+=1))
+if %_wim% neq 1 goto :prompt
+for /f "delims=" %%i in ('dir /b /a:-d *.wim') do set "WIMPATH=%%i"
+goto :prepare
 
 :prompt
+if %_Debug% neq 0 (
+set MESSAGE=ERROR: You must auto set WIMPATH in Debug mode
+goto :END
+)
 @cls
 set WIMPATH=
 echo.
@@ -108,33 +148,25 @@ echo Enter the install.wim path ^(without quotes marks ""^)
 echo ============================================================
 echo.
 set /p WIMPATH=
-if not defined WIMPATH goto :prompt
+if not defined WIMPATH exit /b
 set "WIMPATH=%WIMPATH:"=%"
 if "%WIMPATH:~-1%"=="\" set "WIMPATH=!WIMPATH:~0,-1!"
 
-:begin
+:prepare
 if not exist "!WIMPATH!" goto :E_DVD
 echo.
 echo ============================================================
 echo Prepare work directories
 echo ============================================================
 echo.
-if exist "!TEMPDIR!\" (rmdir /s /q "!TEMPDIR!\" 1>nul 2>nul || goto :E_DELDIR)
-if exist "!MOUNTDIR!\" (rmdir /s /q "!MOUNTDIR!\" 1>nul 2>nul || goto :E_DELDIR)
+if exist "!TEMPDIR!\" rmdir /s /q "!TEMPDIR!\" %_Nul3%
+if exist "!MOUNTDIR!\" rmdir /s /q "!MOUNTDIR!\" %_Nul3%
 mkdir "!TEMPDIR!" || goto :E_MKDIR
 mkdir "!TMPDISM!" || goto :E_MKDIR
 mkdir "!EXTRACTDIR!" || goto :E_MKDIR
 mkdir "%MOUNTDIR%" || goto :E_MKDIR
 mkdir "%INSTALLMOUNTDIR%" || goto :E_MKDIR
 mkdir "%WINREMOUNTDIR%" || goto :E_MKDIR
-goto :start
-
-:setarch
-set /a count+=1
-for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!WIMPATH!" /index:%1 ^| find /i "Architecture"') do set "WIMARCH%count%=%%i"
-goto :eof
-
-:start
 echo.
 echo ============================================================
 echo Detect language packs details
@@ -176,21 +208,21 @@ if exist ".\Updates\*Windows10*KB*.cab" set foundupdates=1
 if exist ".\Updates\*Windows10*KB*.msu" set foundupdates=1
 )
 
-for /L %%j in (1, 1, %LANGUAGES%) do (
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!" langcfg.ini >nul
+for /L %%j in (1,1,%LANGUAGES%) do (
+"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!" langcfg.ini %_Nul1%
 for /f "tokens=2 delims==" %%i in ('type "!EXTRACTDIR!\langcfg.ini" ^| findstr /i "Language"') do set "LANGUAGE%%j=%%i"
 del /f /q "!EXTRACTDIR!\langcfg.ini"
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!" Microsoft-Windows-Common-Foundation-Package*10.*.mum 1>nul 2>nul
+"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!" Microsoft-Windows-Common-Foundation-Package*10.*.mum %_Nul3%
 if not exist "!EXTRACTDIR!\*.mum" set "ERRFILE=!LPFILE%%j!"&goto :E_LP
-for /f "tokens=7 delims=~." %%g in ('"dir "!EXTRACTDIR!\*.mum" /b" 2^>nul') do set "LPBUILD%%j=%%g"
-for /f "tokens=3 delims=~" %%V in ('"dir "!EXTRACTDIR!\*.mum" /b" 2^>nul') do set "LPARCH%%j=%%V"
-del /f /q "!EXTRACTDIR!\*.mum" 1>nul 2>nul
+for /f "tokens=7 delims=~." %%g in ('"dir "!EXTRACTDIR!\*.mum" /b" %_Nul6%') do set "LPBUILD%%j=%%g"
+for /f "tokens=3 delims=~" %%V in ('"dir "!EXTRACTDIR!\*.mum" /b" %_Nul6%') do set "LPARCH%%j=%%V"
+del /f /q "!EXTRACTDIR!\*.mum" %_Nul3%
 )
-for /L %%j in (1, 1, %LANGUAGES%) do (
+for /L %%j in (1,1,%LANGUAGES%) do (
 if /i !LPARCH%%j!==amd64 (echo !LANGUAGE%%j!: 64-bit {x64} - !LPBUILD%%j!) else (echo !LANGUAGE%%j!: 32-bit {x86} - !LPBUILD%%j!)
 set "WinpeOC%%j=!WinPERoot!\!LPARCH%%j!\WinPE_OCs"
 )
-for /L %%j in (1, 1, %LANGUAGES%) do (
+for /L %%j in (1,1,%LANGUAGES%) do (
 if not exist "!WinpeOC%%j!\!LANGUAGE%%j!\lp.cab" set WINPE=0
 )
 set _lpver=%LPBUILD1%
@@ -212,27 +244,27 @@ set _ODpwsf86=
 set _ODword86=
 set _ODsnip86=
 set _ODnots86=
-if %_oa% neq 0 for /L %%j in (1, 1, %_oa%) do (
-"!_7z!" x ".\ondemand\x86\!OAFILE%%j!" -o"!TEMPDIR!\FOD86\OAFILE%%j" * -r >nul
+if %_oa% neq 0 for /L %%j in (1,1,%_oa%) do (
+"!_7z!" x ".\ondemand\x86\!OAFILE%%j!" -o"!TEMPDIR!\FOD86\OAFILE%%j" * -r %_Null%
 pushd "!TEMPDIR!\FOD86\OAFILE%%j"
-findstr /i /m Microsoft-Windows-LanguageFeatures-Basic update.mum 1>nul 2>nul && call set _ODbasic86=!_ODbasic86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Fonts update.mum 1>nul 2>nul && call set _ODfont86=!_ODfont86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Handwriting update.mum 1>nul 2>nul && call set _ODhand86=!_ODhand86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-OCR update.mum 1>nul 2>nul && call set _ODocr86=!_ODocr86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Speech update.mum 1>nul 2>nul && call set _ODspeech86=!_ODspeech86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-TextToSpeech update.mum 1>nul 2>nul && call set _ODtts86=!_ODtts86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-InternationalFeatures update.mum 1>nul 2>nul && call set _ODintl86=!_ODintl86! /PackagePath:OAFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-Basic update.mum %_Nul3% && call set _ODbasic86=!_ODbasic86! /PackagePath:OAFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-Fonts update.mum %_Nul3% && call set _ODfont86=!_ODfont86! /PackagePath:OAFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-Handwriting update.mum %_Nul3% && call set _ODhand86=!_ODhand86! /PackagePath:OAFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-OCR update.mum %_Nul3% && call set _ODocr86=!_ODocr86! /PackagePath:OAFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-Speech update.mum %_Nul3% && call set _ODspeech86=!_ODspeech86! /PackagePath:OAFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-TextToSpeech update.mum %_Nul3% && call set _ODtts86=!_ODtts86! /PackagePath:OAFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-InternationalFeatures update.mum %_Nul3% && call set _ODintl86=!_ODintl86! /PackagePath:OAFILE%%j\update.mum
 if %_lpver% GEQ 19041 (
-findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum 1>nul 2>nul && (set _ODext86=1&call set _ODpaint86=!_ODpaint86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Notepad-FoD update.mum 1>nul 2>nul && (set _ODext86=1&call set _ODnote86=!_ODnote86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum 1>nul 2>nul && (set _ODext86=1&call set _ODpower86=!_ODpower86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum 1>nul 2>nul && (set _ODtra86=1&call set _ODpmcppc86=!_ODpmcppc86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum 1>nul 2>nul && (set _ODtra86=1&call set _ODpwsf86=!_ODpwsf86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-WordPad-FoD update.mum 1>nul 2>nul && (set _ODtra86=1&call set _ODword86=!_ODword86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum %_Nul3% && (set _ODext86=1&call set _ODpaint86=!_ODpaint86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Notepad-FoD update.mum %_Nul3% && (set _ODext86=1&call set _ODnote86=!_ODnote86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum %_Nul3% && (set _ODext86=1&call set _ODpower86=!_ODpower86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODpmcppc86=!_ODpmcppc86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODpwsf86=!_ODpwsf86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-WordPad-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODword86=!_ODword86! /PackagePath:OAFILE%%j\update.mum)
   )
 if %_lpver% GEQ 21277 (
-findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum 1>nul 2>nul && (set _ODtra86=1&call set _ODsnip86=!_ODsnip86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum 1>nul 2>nul && (set _ODtra86=1&call set _ODnots86=!_ODnots86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODsnip86=!_ODsnip86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODnots86=!_ODnots86! /PackagePath:OAFILE%%j\update.mum)
   )
 popd
 )
@@ -253,43 +285,43 @@ set _ODpwsf64=
 set _ODword64=
 set _ODsnip64=
 set _ODnots64=
-if %_ob% neq 0 for /L %%j in (1, 1, %_ob%) do (
-"!_7z!" x ".\ondemand\x64\!OBFILE%%j!" -o"!TEMPDIR!\FOD64\OBFILE%%j" * -r >nul
+if %_ob% neq 0 for /L %%j in (1,1,%_ob%) do (
+"!_7z!" x ".\ondemand\x64\!OBFILE%%j!" -o"!TEMPDIR!\FOD64\OBFILE%%j" * -r %_Null%
 pushd "!TEMPDIR!\FOD64\OBFILE%%j"
-findstr /i /m Microsoft-Windows-LanguageFeatures-Basic update.mum 1>nul 2>nul && call set _ODbasic64=!_ODbasic64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Fonts update.mum 1>nul 2>nul && call set _ODfont64=!_ODfont64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Handwriting update.mum 1>nul 2>nul && call set _ODhand64=!_ODhand64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-OCR update.mum 1>nul 2>nul && call set _ODocr64=!_ODocr64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Speech update.mum 1>nul 2>nul && call set _ODspeech64=!_ODspeech64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-TextToSpeech update.mum 1>nul 2>nul && call set _ODtts64=!_ODtts64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-InternationalFeatures update.mum 1>nul 2>nul && call set _ODintl64=!_ODintl64! /PackagePath:OBFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-Basic update.mum %_Nul3% && call set _ODbasic64=!_ODbasic64! /PackagePath:OBFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-Fonts update.mum %_Nul3% && call set _ODfont64=!_ODfont64! /PackagePath:OBFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-Handwriting update.mum %_Nul3% && call set _ODhand64=!_ODhand64! /PackagePath:OBFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-OCR update.mum %_Nul3% && call set _ODocr64=!_ODocr64! /PackagePath:OBFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-Speech update.mum %_Nul3% && call set _ODspeech64=!_ODspeech64! /PackagePath:OBFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-LanguageFeatures-TextToSpeech update.mum %_Nul3% && call set _ODtts64=!_ODtts64! /PackagePath:OBFILE%%j\update.mum
+findstr /i /m Microsoft-Windows-InternationalFeatures update.mum %_Nul3% && call set _ODintl64=!_ODintl64! /PackagePath:OBFILE%%j\update.mum
 if %_lpver% GEQ 19041 (
-findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum 1>nul 2>nul && (set _ODext64=1&call set _ODpaint64=!_ODpaint64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Notepad-FoD update.mum 1>nul 2>nul && (set _ODext64=1&call set _ODnote64=!_ODnote64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum 1>nul 2>nul && (set _ODext64=1&call set _ODpower64=!_ODpower64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum 1>nul 2>nul && (set _ODtra64=1&call set _ODpmcppc64=!_ODpmcppc64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum 1>nul 2>nul && (set _ODtra64=1&call set _ODpwsf64=!_ODpwsf64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-WordPad-FoD update.mum 1>nul 2>nul && (set _ODtra64=1&call set _ODword64=!_ODword64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum %_Nul3% && (set _ODext64=1&call set _ODpaint64=!_ODpaint64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Notepad-FoD update.mum %_Nul3% && (set _ODext64=1&call set _ODnote64=!_ODnote64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum %_Nul3% && (set _ODext64=1&call set _ODpower64=!_ODpower64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODpmcppc64=!_ODpmcppc64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODpwsf64=!_ODpwsf64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-WordPad-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODword64=!_ODword64! /PackagePath:OBFILE%%j\update.mum)
   )
 if %_lpver% GEQ 21277 (
-findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum 1>nul 2>nul && (set _ODtra64=1&call set _ODsnip64=!_ODsnip64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum 1>nul 2>nul && (set _ODtra64=1&call set _ODnots64=!_ODnots64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODsnip64=!_ODsnip64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODnots64=!_ODnots64! /PackagePath:OBFILE%%j\update.mum)
   )
 popd
 )
-dism\imagex.exe /info "!WIMPATH!" | findstr /c:"LZMS" >nul && goto :E_ESD
-for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!WIMPATH!" ^| findstr "Index"') do set VERSIONS=%%i
-for /f "tokens=4 delims=:. " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!WIMPATH!" /index:1 ^| find /i "Version :"') do set build=%%i
-if %build% equ 18363 set build=18362
-if %build% equ 19042 set build=19041
-if %build% equ 19043 set build=19041
-if %build% equ 19044 set build=19041
-if %build% equ 19045 set build=19041
-for /L %%j in (1, 1, %LANGUAGES%) do (
-if not !LPBUILD%%j!==%build% set "ERRFILE=!LPFILE%%j!"&goto :E_VER
+dism\imagex.exe /info "!WIMPATH!" | findstr /c:"LZMS" %_Nul1% && goto :E_ESD
+for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!WIMPATH!" ^| findstr "Index"') do set imgcount=%%i
+for /f "tokens=4 delims=:. " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!WIMPATH!" /index:1 ^| find /i "Version :"') do set _build=%%i
+if %_build% equ 18363 set _build=18362
+if %_build% equ 19042 set _build=19041
+if %_build% equ 19043 set _build=19041
+if %_build% equ 19044 set _build=19041
+if %_build% equ 19045 set _build=19041
+for /L %%j in (1,1,%LANGUAGES%) do (
+if not !LPBUILD%%j!==%_build% set "ERRFILE=!LPFILE%%j!"&goto :E_VER
 )
-if %WINPE%==1 for /L %%j in (1, 1, %LANGUAGES%) do (
-"!_7z!" e "!WinpeOC%%j!\!LANGUAGE%%j!\lp.cab" -o"!EXTRACTDIR!" Microsoft-Windows-Common-Foundation-Package*%build%*.mum 1>nul 2>nul
+if %WINPE%==1 for /L %%j in (1,1,%LANGUAGES%) do (
+"!_7z!" e "!WinpeOC%%j!\!LANGUAGE%%j!\lp.cab" -o"!EXTRACTDIR!" Microsoft-Windows-Common-Foundation-Package*%_build%*.mum %_Nul3%
 if not exist "!EXTRACTDIR!\*.mum" set WINPE=0
 )
 if "%DEFAULTLANGUAGE%"=="" (
@@ -300,24 +332,25 @@ echo ============================================================
 echo Detect install.wim details
 echo ============================================================
 echo.
-set count=0
-for /L %%i in (1, 1, %VERSIONS%) do call :setarch %%i
-for /L %%i in (1, 1, %VERSIONS%) do (
+for /L %%i in (1,1,%imgcount%) do (
+for /f "tokens=2 delims=: " %%# in ('dism\dism.exe /english /get-wiminfo /wimfile:"!WIMPATH!" /index:%%i ^| find /i "Architecture"') do set "WIMARCH%%i=%%#"
+)
+for /L %%i in (1,1,%imgcount%) do (
 if /i !WIMARCH%%i!==x64 (call set WIMARCH%%i=amd64)
 )
-for /L %%i in (1, 1, %VERSIONS%) do (
-echo !WIMARCH%%i!>>"%TEMPDIR%\WIMARCH.txt"
+for /L %%i in (1,1,%imgcount%) do (
+echo !WIMARCH%%i!>>"!TEMPDIR!\WIMARCH.txt"
 )
 set _label86=0
-findstr /i /v "amd64" "%TEMPDIR%\WIMARCH.txt" >nul
+findstr /i /v "amd64" "!TEMPDIR!\WIMARCH.txt" %_Nul1%
 if %errorlevel%==0 (set wimbit=32&set _label86=1)
 
-findstr /i /v "x86" "%TEMPDIR%\WIMARCH.txt" >nul
+findstr /i /v "x86" "!TEMPDIR!\WIMARCH.txt" %_Nul1%
 if %errorlevel%==0 (
 if %_label86%==1 (set wimbit=dual) else (set wimbit=64)
 )
-echo Build: %build%
-echo Count: %VERSIONS% Image^(s^)
+echo Build: %_build%
+echo Count: %imgcount% Image^(s^)
 if %wimbit%==dual (echo Arch : Multi) else (echo Arch : %wimbit%-bit)
 
 if %WINPE% NEQ 1 goto :extract
@@ -336,7 +369,7 @@ echo ============================================================
 echo Set WinPE language packs paths
 echo ============================================================
 echo.
-if %wimbit%==32 for /L %%j in (1, 1, %LANGUAGES%) do (
+if %wimbit%==32 for /L %%j in (1,1,%LANGUAGES%) do (
 if /i !LPARCH%%j!==x86 (
 echo !LANGUAGE%%j! / 32-bit
 call set _PEM86=!_PEM86! /PackagePath:!LANGUAGE%%j!\lp.cab /PackagePath:!LANGUAGE%%j!\WinPE-SRT_!LANGUAGE%%j!.cab
@@ -348,7 +381,7 @@ call set _PEX86=!_PEX86! /PackagePath:!LANGUAGE%%j!\WinPE-EnhancedStorage_!LANGU
  )
 )
 )
-if %wimbit%==64 for /L %%j in (1, 1, %LANGUAGES%) do (
+if %wimbit%==64 for /L %%j in (1,1,%LANGUAGES%) do (
 if /i !LPARCH%%j!==amd64 (
 echo !LANGUAGE%%j! / 64-bit
 call set _PEM64=!_PEM64! /PackagePath:!LANGUAGE%%j!\lp.cab /PackagePath:!LANGUAGE%%j!\WinPE-SRT_!LANGUAGE%%j!.cab
@@ -360,7 +393,7 @@ call set _PEX64=!_PEX64! /PackagePath:!LANGUAGE%%j!\WinPE-EnhancedStorage_!LANGU
  )
 )
 )
-if %wimbit%==dual for /L %%j in (1, 1, %LANGUAGES%) do (
+if %wimbit%==dual for /L %%j in (1,1,%LANGUAGES%) do (
 if /i !LPARCH%%j!==x86 (
 echo !LANGUAGE%%j! / 32-bit
 call set _PEM86=!_PEM86! /PackagePath:!LANGUAGE%%j!\lp.cab /PackagePath:!LANGUAGE%%j!\WinPE-SRT_!LANGUAGE%%j!.cab
@@ -390,71 +423,71 @@ echo ============================================================
 echo Extract language packs
 echo ============================================================
 echo.
-if %wimbit%==32 for /L %%j in (1, 1, %LANGUAGES%) do (
+if %wimbit%==32 for /L %%j in (1,1,%LANGUAGES%) do (
 if /i !LPARCH%%j!==x86 (
 echo !LANGUAGE%%j! / 32-bit
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos >nul
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r >nul
+"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos %_Null%
+"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r %_Null%
 call set _PP86=!_PP86! /PackagePath:!LANGUAGE%%j!\update.mum
 )
 )
-if %wimbit%==64 for /L %%j in (1, 1, %LANGUAGES%) do (
+if %wimbit%==64 for /L %%j in (1,1,%LANGUAGES%) do (
 if /i !LPARCH%%j!==amd64 (
 echo !LANGUAGE%%j! / 64-bit
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos >nul
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r >nul
+"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos %_Null%
+"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r %_Null%
 call set _PP64=!_PP64! /PackagePath:!LANGUAGE%%j!\update.mum
 )
 )
-if %wimbit%==dual for /L %%j in (1, 1, %LANGUAGES%) do (
+if %wimbit%==dual for /L %%j in (1,1,%LANGUAGES%) do (
 if /i !LPARCH%%j!==x86 (
 echo !LANGUAGE%%j! / 32-bit
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos >nul
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r >nul
+"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos %_Null%
+"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r %_Null%
 call set _PP86=!_PP86! /PackagePath:!LANGUAGE%%j!\update.mum
 ) else (
 echo !LANGUAGE%%j! / 64-bit
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos >nul
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r >nul
+"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos %_Null%
+"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r %_Null%
 call set _PP64=!_PP64! /PackagePath:!LANGUAGE%%j!\update.mum
 )
 )
 if %wimbit%==32 if not defined _PP86 goto :E_ARCH
 if %wimbit%==64 if not defined _PP64 goto :E_ARCH
 
-for /L %%i in (1, 1, %VERSIONS%) do (
+for /L %%i in (1,1,%imgcount%) do (
 echo.
 echo ============================================================
-echo Mount install.wim - index %%i/%VERSIONS%
+echo Mount install.wim - index %%i/%imgcount%
 echo ============================================================
-"%DISMRoot%" /ScratchDir:"!TMPDISM!" /Mount-Wim /Wimfile:"!WIMPATH!" /Index:%%i /MountDir:"%INSTALLMOUNTDIR%"
+!_dism2!:"!TMPDISM!" /Mount-Wim /Wimfile:"!WIMPATH!" /Index:%%i /MountDir:"%INSTALLMOUNTDIR%"
 if errorlevel 1 goto :E_MOUNT
 echo.
 echo ============================================================
-echo Add LPs to install.wim - index %%i/%VERSIONS%
+echo Add LPs to install.wim - index %%i/%imgcount%
 echo ============================================================
 pushd "!TEMPDIR!\!WIMARCH%%i!"
 if defined _PP64 if /i !WIMARCH%%i!==amd64 (
-"%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_PP64!
+!_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallLP64.log" /Add-Package !_PP64!
 )
 if defined _PP86 if /i !WIMARCH%%i!==x86 (
-"%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_PP86!
+!_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallLP86.log" /Add-Package !_PP86!
 )
 popd
 if /i !WIMARCH%%i!==amd64 if exist "!TEMPDIR!\FOD64\OBFILE1\update.mum" (
 pushd "!TEMPDIR!\FOD64"
-if defined _ODbasic64 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic64!
-if defined _ODbasic64 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
-if defined _ODext64 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODpaint64! !_ODnote64! !_ODpower64!
-if defined _ODtra64 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODpmcppc64! !_ODpwsf64! !_ODword64! !_ODsnip64! !_ODnots64!
+if defined _ODbasic64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODbasic64!
+if defined _ODbasic64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
+if defined _ODext64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODpaint64! !_ODnote64! !_ODpower64!
+if defined _ODtra64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODpmcppc64! !_ODpwsf64! !_ODword64! !_ODsnip64! !_ODnots64!
 popd
 )
 if /i !WIMARCH%%i!==x86 if exist "!TEMPDIR!\FOD86\OAFILE1\update.mum" (
 pushd "!TEMPDIR!\FOD86"
-if defined _ODbasic86 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODbasic86!
-if defined _ODbasic86 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
-if defined _ODext86 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODpaint86! !_ODnote86! !_ODpower86!
-if defined _ODtra86 "%DISMRoot%" /ScratchDir:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Add-Package !_ODpmcppc86! !_ODpwsf86! !_ODword86! !_ODsnip86! !_ODnots86!
+if defined _ODbasic86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODbasic86!
+if defined _ODbasic86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
+if defined _ODext86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODpaint86! !_ODnote86! !_ODpower86!
+if defined _ODtra86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODpmcppc86! !_ODpwsf86! !_ODword86! !_ODsnip86! !_ODnots86!
 popd
 )
 echo.
@@ -462,10 +495,13 @@ echo ============================================================
 echo Update language settings
 echo ============================================================
 echo.
-"%DISMRoot%" /Quiet /Image:"%INSTALLMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE%
-"%DISMRoot%" /Quiet /Image:"%INSTALLMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE%
+!_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE% /Quiet
+!_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE% /Quiet
 if %foundupdates%==1 call Updates\W10UI.cmd 1 "%INSTALLMOUNTDIR%" "!TMPUPDT!"
-attrib -S -H -I "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" 1>nul 2>nul
+if %foundupdates%==1 call Updates\W10UI.cmd 1 "%INSTALLMOUNTDIR%" "!TMPUPDT!"
+if %_Debug% neq 0 @echo on
+cd /d "!WORKDIR!"
+attrib -S -H -I "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" %_Nul3%
 if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" if not exist "!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" (
   echo.
   echo ============================================================
@@ -478,26 +514,23 @@ if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" i
   echo ============================================================
   echo Mount winre.wim
   echo ============================================================
-  "!DISMRoot!" /ScratchDir:"!TMPDISM!" /Mount-Wim /Wimfile:"!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" /Index:1 /MountDir:"!WINREMOUNTDIR!"
-  if errorlevel 1 goto :E_MOUNT
+  !_dism2!:"!TMPDISM!" /Mount-Wim /Wimfile:"!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" /Index:1 /MountDir:"%WINREMOUNTDIR%"
+  if !errorlevel! neq 0 goto :E_MOUNT
   echo.
   echo ============================================================
   echo Add LPs to winre.wim
   echo ============================================================
-  reg load HKLM\TEMPWIM "!WINREMOUNTDIR!\Windows\System32\Config\SOFTWARE" 1>nul 2>nul
-  reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v DisableComponentBackups /t REG_DWORD /d 1 /f 1>nul 2>nul
-  reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d 1 /f 1>nul 2>nul
-  reg unload HKLM\TEMPWIM 1>nul 2>nul
+  call :SbS "%WINREMOUNTDIR%"
   pushd "!WinPERoot!\!WIMARCH%%i!\WinPE_OCs"
   if defined _PEM64 if /i !WIMARCH%%i!==amd64 (
-    "!DISMRoot!" /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEM64! !_PEF64!
-    "!DISMRoot!" /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PER64!
-    if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEX64!
+    !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP64.log" /Add-Package !_PEM64! !_PEF64!
+    !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP64.log" /Add-Package !_PER64!
+    if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP64.log" /Add-Package !_PEX64!
   )
   if defined _PEM86 if /i !WIMARCH%%i!==x86 (
-    "!DISMRoot!" /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEM86! !_PEF86!
-    "!DISMRoot!" /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PER86!
-    if !SLIM! NEQ 1 "!DISMRoot!" /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Add-Package !_PEX86!
+    !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP86.log" /Add-Package !_PEM86! !_PEF86!
+    !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP86.log" /Add-Package !_PER86!
+    if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP86.log" /Add-Package !_PEX86!
   )
   popd
   echo.
@@ -505,47 +538,51 @@ if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" i
   echo Update language settings
   echo ============================================================
   echo.
-  "!DISMRoot!" /Quiet /Image:"!WINREMOUNTDIR!" /Set-AllIntl:!DEFAULTLANGUAGE!
-  "!DISMRoot!" /Quiet /Image:"!WINREMOUNTDIR!" /Set-SKUIntlDefaults:!DEFAULTLANGUAGE!
-  "!DISMRoot!" /Quiet /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Cleanup-Image /StartComponentCleanup
-  "!DISMRoot!" /Quiet /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Cleanup-Image /StartComponentCleanup /ResetBase
-  if %foundupdates%==1 call Updates\W10UI.cmd 1 "!WINREMOUNTDIR!" "!TMPUPDT!"
-  call :cleanup "!WINREMOUNTDIR!"
+  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE% /Quiet
+  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE% /Quiet
+  if %foundupdates%==0 (
+  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup
+  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup /ResetBase
+  )
+  if %foundupdates%==1 call Updates\W10UI.cmd 1 "%WINREMOUNTDIR%" "!TMPUPDT!"
+  if %_Debug% neq 0 @echo on
+  cd /d "!WORKDIR!"
+  call :cleanmanual "!WINREMOUNTDIR!"
   echo.
   echo ============================================================
   echo Unmount winre.wim
   echo ============================================================
-  "!DISMRoot!" /ScratchDir:"!TMPDISM!" /Unmount-Wim /MountDir:"!WINREMOUNTDIR!" /Commit
-  if errorlevel 1 goto :E_UNMOUNT
+  !_dism2!:"!TMPDISM!" /Unmount-Wim /MountDir:"%WINREMOUNTDIR%" /Commit
+  if !errorlevel! neq 0 goto :E_UNMOUNT
   echo.
   echo ============================================================
   echo Rebuild winre.wim
   echo ============================================================
-  "!DISMRoot!" /ScratchDir:"!TMPDISM!" /Export-Image /SourceImageFile:"!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" /All /DestinationImageFile:"!EXTRACTDIR!\winre.wim"
-  if exist "!EXTRACTDIR!\winre.wim" move /y "!EXTRACTDIR!\winre.wim" "!TEMPDIR!\WR\!WIMARCH%%i!" >nul
+  !_dism2!:"!TMPDISM!" /Export-Image /SourceImageFile:"!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" /All /DestinationImageFile:"!EXTRACTDIR!\winre.wim"
+  if exist "!EXTRACTDIR!\winre.wim" move /y "!EXTRACTDIR!\winre.wim" "!TEMPDIR!\WR\!WIMARCH%%i!" %_Nul1%
 )
 if %WINPE%==1 if exist "!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" (
   echo.
   echo ============================================================
-  echo Add updated winre.wim to install.wim - index %%i/%VERSIONS%
+  echo Add updated winre.wim to install.wim - index %%i/%imgcount%
   echo ============================================================
   echo.
   copy /y "!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" "%INSTALLMOUNTDIR%\Windows\System32\Recovery"
 )
-call :cleanup "%INSTALLMOUNTDIR%"
+call :cleanmanual "%INSTALLMOUNTDIR%"
 echo.
 echo ============================================================
-echo Unmount install.wim - index %%i/%VERSIONS%
+echo Unmount install.wim - index %%i/%imgcount%
 echo ============================================================
-"%DISMRoot%" /ScratchDir:"!TMPDISM!" /Unmount-Wim /MountDir:"%INSTALLMOUNTDIR%" /Commit
-if errorlevel 1 goto :E_UNMOUNT
+!_dism2!:"!TMPDISM!" /Unmount-Wim /MountDir:"%INSTALLMOUNTDIR%" /Commit
+if !errorlevel! neq 0 goto :E_UNMOUNT
 )
 echo.
 echo ============================================================
 echo Rebuild install.wim
 echo ============================================================
-"%DISMRoot%" /ScratchDir:"!TMPDISM!" /Export-Image /SourceImageFile:"!WIMPATH!" /All /DestinationImageFile:"!TEMPDIR!\install.wim"
-if exist "!TEMPDIR!\install.wim" move /y "!TEMPDIR!\install.wim" "!WIMPATH!" >nul
+!_dism2!:"!TMPDISM!" /Export-Image /SourceImageFile:"!WIMPATH!" /All /DestinationImageFile:"!TEMPDIR!\install.wim"
+if exist "!TEMPDIR!\install.wim" move /y "!TEMPDIR!\install.wim" "!WIMPATH!" %_Nul1%
 echo.
 echo ============================================================
 echo Remove temporary directories
@@ -562,7 +599,7 @@ goto :END
 
 :E_DVD
 call :remove
-set MESSAGE=ERROR: Could not find the specified install.wim
+set MESSAGE=ERROR: Could not find the specified install.wim path
 goto :END
 
 :E_ESD
@@ -587,11 +624,7 @@ goto :END
 
 :E_VER
 call :remove
-set MESSAGE=ERROR: %ERRFILE% version does not match WIM version %build%
-goto :END
-
-:E_DELDIR
-set MESSAGE=ERROR: Could not delete temporary directory
+set MESSAGE=ERROR: %ERRFILE% version does not match WIM version %_build%
 goto :END
 
 :E_MKDIR
@@ -611,36 +644,47 @@ set MESSAGE=ERROR: Run the script as administrator
 goto :END
 
 :remove
-if exist "!TEMPDIR!" (rmdir /s /q "!TEMPDIR!" 1>nul 2>nul || goto :E_DELDIR)
-if exist "!MOUNTDIR!" (rmdir /s /q "!MOUNTDIR!" 1>nul 2>nul || goto :E_DELDIR)
+if exist "!TEMPDIR!\" rmdir /s /q "!TEMPDIR!\" %_Nul3%
+if exist "!MOUNTDIR!\" rmdir /s /q "!MOUNTDIR!\" %_Nul3%
 if exist "Updates\msucab.txt" (
   for /f %%# in (Updates\msucab.txt) do (
-  if exist "Updates\*%%~#*x86*.msu" if exist "Updates\*%%~#*x86*.cab" del /f /q "Updates\*%%~#*x86*.cab" 1>nul 2>nul
-  if exist "Updates\*%%~#*x64*.msu" if exist "Updates\*%%~#*x64*.cab" del /f /q "Updates\*%%~#*x64*.cab" 1>nul 2>nul
+  if exist "Updates\*%%~#*x86*.msu" if exist "Updates\*%%~#*x86*.cab" del /f /q "Updates\*%%~#*x86*.cab" %_Nul3%
+  if exist "Updates\*%%~#*x64*.msu" if exist "Updates\*%%~#*x64*.cab" del /f /q "Updates\*%%~#*x64*.cab" %_Nul3%
   )
   del /f /q Updates\msucab.txt
 )
 goto :eof
 
-:cleanup
+:cleanmanual
 if exist "%~1\Windows\WinSxS\ManifestCache\*.bin" (
-takeown /f "%~1\Windows\WinSxS\ManifestCache\*.bin" /A >nul 2>&1
-icacls "%~1\Windows\WinSxS\ManifestCache\*.bin" /grant *S-1-5-32-544:F >nul 2>&1
-del /f /q "%~1\Windows\WinSxS\ManifestCache\*.bin" >nul 2>&1
+takeown /f "%~1\Windows\WinSxS\ManifestCache\*.bin" /A %_Nul3%
+icacls "%~1\Windows\WinSxS\ManifestCache\*.bin" /grant *S-1-5-32-544:F %_Nul3%
+del /f /q "%~1\Windows\WinSxS\ManifestCache\*.bin" %_Nul3%
 )
 if exist "%~1\Windows\WinSxS\Temp\PendingDeletes\*" (
-takeown /f "%~1\Windows\WinSxS\Temp\PendingDeletes\*" /A >nul 2>&1
-icacls "%~1\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F >nul 2>&1
-del /f /q "%~1\Windows\WinSxS\Temp\PendingDeletes\*" >nul 2>&1
+takeown /f "%~1\Windows\WinSxS\Temp\PendingDeletes\*" /A %_Nul3%
+icacls "%~1\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F %_Nul3%
+del /f /q "%~1\Windows\WinSxS\Temp\PendingDeletes\*" %_Nul3%
 )
 if exist "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" (
-takeown /f "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" /R /A >nul 2>&1
-icacls "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" /grant *S-1-5-32-544:F /T >nul 2>&1
-del /s /f /q "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" >nul 2>&1
+takeown /f "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" /R /A %_Nul3%
+icacls "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" /grant *S-1-5-32-544:F /T %_Nul3%
+del /s /f /q "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" %_Nul3%
 )
 if exist "%~1\Windows\inf\*.log" (
-del /f /q "%~1\Windows\inf\*.log" >nul 2>&1
+del /f /q "%~1\Windows\inf\*.log" %_Nul3%
 )
+for /f "tokens=* delims=" %%# in ('dir /b /ad "%~1\Windows\CbsTemp\" %_Nul6%') do rmdir /s /q "%~1\Windows\CbsTemp\%%#\" %_Nul3%
+del /s /f /q "%~1\Windows\CbsTemp\*" %_Nul3%
+goto :eof
+
+:SbS
+set savr=1
+if %_build% geq 18362 set savr=3
+reg.exe load HKLM\TEMPWIM "%~1\Windows\System32\Config\SOFTWARE" %_Nul3%
+reg.exe add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v DisableComponentBackups /t REG_DWORD /d 1 /f %_Nul3%
+reg.exe add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d %savr% /f %_Nul3%
+reg.exe unload HKLM\TEMPWIM %_Nul3%
 goto :eof
 
 :END
@@ -649,6 +693,6 @@ echo ============================================================
 echo %MESSAGE%
 echo ============================================================
 echo.
-echo Press any Key to Exit.
-pause >nul
-exit
+if %_Debug% neq 0 (exit /b) else (echo Press 0 to exit.)
+choice /c 0 /n
+if errorlevel 1 (exit /b) else (rem.)
