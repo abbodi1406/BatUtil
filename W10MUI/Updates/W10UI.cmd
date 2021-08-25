@@ -450,7 +450,8 @@ if /i not "%targetname%"=="winre.wim" (if exist "!_work!\winre.wim" del /f /q "!
 goto :fin
 )
 if %dvd%==0 goto :fin
-if exist "%SystemRoot%\temp\UpdateAgent.dll" del f /q "%SystemRoot%\temp\UpdateAgent.dll" %_Nul3%
+if exist "%SystemRoot%\temp\UpdateAgent.dll" del /f /q "%SystemRoot%\temp\UpdateAgent.dll" %_Nul3%
+if exist "%SystemRoot%\temp\Facilitator.dll" del /f /q "%SystemRoot%\temp\Facilitator.dll" %_Nul3%
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\install.wim
 if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%
@@ -1562,7 +1563,8 @@ if not defined isolab if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE
 if %_actEP% equ 0 if exist "!mountdir!\Windows\Servicing\Packages\microsoft-windows-*enablement-package~*.mum" if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" call :detectEP
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
 if exist "!mountdir!\sources\setup.exe" call :boots
-if exist "!mountdir!\Windows\system32\UpdateAgent.dll" if not exist "%SystemRoot%\temp\UpdateAgent.dll" copy /y "!mountdir!\Windows\system32\UpdateAgent.dll" %SystemRoot%\temp\ %_Nul1%
+if exist "!mountdir!\Windows\system32\UpdateAgent.dll" if not exist "%SystemRoot%\temp\UpdateAgent.dll" copy /y "!mountdir!\Windows\system32\UpdateAgent.dll" %SystemRoot%\temp\ %_Nul3%
+if exist "!mountdir!\Windows\system32\Facilitator.dll" if not exist "%SystemRoot%\temp\Facilitator.dll" copy /y "!mountdir!\Windows\system32\Facilitator.dll" %SystemRoot%\temp\ %_Nul3%
 )
 if %wim%==1 if exist "!_wimpath!\setup.exe" (
 if exist "!mountdir!\sources\setup.exe" copy /y "!mountdir!\sources\setup.exe" "!_wimpath!" %_Nul3%
@@ -2163,21 +2165,25 @@ goto :eof
 
 :DATEISO
 if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" goto :eof
-copy /y "!target!\sources\setuphost.exe" %SystemRoot%\temp\ %_Nul1%
-copy /y "!target!\sources\setupprep.exe" %SystemRoot%\temp\ %_Nul1%
-set _svr1=0&set _svr2=0&set _svr3=0
+copy /y "!target!\sources\setuphost.exe" %SystemRoot%\temp\ %_Nul3%
+copy /y "!target!\sources\setupprep.exe" %SystemRoot%\temp\ %_Nul3%
+set _svr1=0&set _svr2=0&set _svr3=0&set _svr4=0
 set "_fvr1=%SystemRoot%\temp\setuphost.exe"
 set "_fvr2=%SystemRoot%\temp\setupprep.exe"
 set "_fvr3=%SystemRoot%\temp\UpdateAgent.dll"
-for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr1:\=\\!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
-for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr2:\=\\!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
+set "_fvr4=%SystemRoot%\temp\Facilitator.dll"
+if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr1:\=\\!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr2:\=\\!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
 if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr3:\=\\!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
-if %isomin% neq %_svr1% if %isomin% neq %_svr2% if %isomin% neq %_svr3% goto :eof
+if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr4:\=\\!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
+if %isomin% neq %_svr1% if %isomin% neq %_svr2% if %isomin% neq %_svr3% if %isomin% neq %_svr4% goto :eof
 if %isomin% equ %_svr1% set "_chk=!_fvr1!"
 if %isomin% equ %_svr2% set "_chk=!_fvr2!"
 if %isomin% equ %_svr3% set "_chk=!_fvr3!"
+if %isomin% equ %_svr4% set "_chk=!_fvr4!"
 for /f "tokens=6 delims=.) " %%# in ('powershell -nop -c "(gi '!_chk!').VersionInfo.FileVersion" %_Nul6%') do set "_ddd=%%#"
 if defined _ddd set "isodate=%_ddd%"
+del /f /q "!_fvr1!" "!_fvr2!" "!_fvr3!" "!_fvr4!" %_Nul3%
 goto :eof
 
 :fin

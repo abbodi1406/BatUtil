@@ -560,7 +560,7 @@ if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" i
   echo ============================================================
   reg load HKLM\TEMPWIM "!WINREMOUNTDIR!\Windows\System32\Config\SOFTWARE" 1>nul 2>nul
   reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v DisableComponentBackups /t REG_DWORD /d 1 /f 1>nul 2>nul
-  reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d 1 /f 1>nul 2>nul
+  reg add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d 3 /f 1>nul 2>nul
   reg unload HKLM\TEMPWIM 1>nul 2>nul
   pushd "!WinPERoot!\!WIMARCH%%i!\WinPE_OCs"
   if defined _PEM64 if /i !WIMARCH%%i!==amd64 (
@@ -581,8 +581,8 @@ if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" i
   echo.
   "!DISMRoot!" /Quiet /Image:"!WINREMOUNTDIR!" /Set-AllIntl:!DEFAULTLANGUAGE!
   "!DISMRoot!" /Quiet /Image:"!WINREMOUNTDIR!" /Set-SKUIntlDefaults:!DEFAULTLANGUAGE!
-  "!DISMRoot!" /Quiet /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Cleanup-Image /StartComponentCleanup
-  "!DISMRoot!" /Quiet /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Cleanup-Image /StartComponentCleanup /ResetBase
+rem  "!DISMRoot!" /Quiet /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Cleanup-Image /StartComponentCleanup
+rem  "!DISMRoot!" /Quiet /ScratchDir:"!TMPDISM!" /Image:"!WINREMOUNTDIR!" /Cleanup-Image /StartComponentCleanup /ResetBase
   if %foundupdates%==1 call Updates\W10UI.cmd 1 "!WINREMOUNTDIR!" "!TMPUPDT!"
   call :cleanup "!WINREMOUNTDIR!"
   echo.
@@ -651,8 +651,8 @@ if %WINPE%==1 (
   echo.
   "%DISMRoot%" /Quiet /Image:"%BOOTMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE%
   "%DISMRoot%" /Quiet /Image:"%BOOTMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE%
-  "%DISMRoot%" /Quiet /ScratchDir:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Cleanup-Image /StartComponentCleanup
-  "%DISMRoot%" /Quiet /ScratchDir:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Cleanup-Image /StartComponentCleanup /ResetBase
+rem  "%DISMRoot%" /Quiet /ScratchDir:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Cleanup-Image /StartComponentCleanup
+rem  "%DISMRoot%" /Quiet /ScratchDir:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Cleanup-Image /StartComponentCleanup /ResetBase
 ) else (
   for /L %%j in (1, 1, %LANGUAGES%) do (
    if /i !LPARCH%%j!==!BOOTARCH! (
@@ -723,8 +723,8 @@ if %WINPE%==1 (
   "%DISMRoot%" /Quiet /Image:"%BOOTMOUNTDIR%" /Gen-LangINI /Distribution:"%BOOTMOUNTDIR%"
   "%DISMRoot%" /Quiet /Image:"%BOOTMOUNTDIR%" /Set-SetupUILang:%DEFAULTLANGUAGE% /Distribution:"%BOOTMOUNTDIR%"
   )
-  "%DISMRoot%" /Quiet /ScratchDir:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Cleanup-Image /StartComponentCleanup
-  "%DISMRoot%" /Quiet /ScratchDir:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Cleanup-Image /StartComponentCleanup /ResetBase
+rem  "%DISMRoot%" /Quiet /ScratchDir:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Cleanup-Image /StartComponentCleanup
+rem  "%DISMRoot%" /Quiet /ScratchDir:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Cleanup-Image /StartComponentCleanup /ResetBase
 ) else (
   call :WIMman 1
 )

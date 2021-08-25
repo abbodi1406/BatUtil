@@ -26,7 +26,7 @@ http://download.windowsupdate.com/c/msdownload/update/software/updt/2015/07/lp_f
 et-ee / Estonian
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/lp_8a65390d989c2c645046f5037a5d5c9cef81f7ed.cab
 fi-fi / Finnish
-http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/lp_80fa697f051a3a949258797a0635a4313a448c29.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/lp_8fb5eb271ece470dd23db8cf5f7aff4072b60180.cab
 fr-ca / French (Canada)
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2015/07/lp_ba3a3d99beb8da8fb63bfecd2dd04907f36d6d73.cab
 fr-fr / French (France)

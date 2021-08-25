@@ -120,7 +120,10 @@ MountDir
 or set extra manual options below:
 
 * Net35Source  
-specify custom "folder" path for microsoft-windows-netfx3-ondemand-package.cab
+specify custom "folder" path which contain microsoft-windows-netfx3-ondemand-package.cab
+
+* LCUwinre  
+force updating winre.wim with Cumulative Update even if SafeOS update detected
 
 * SkipEdge  
 1 = do not install EdgeChromium with Enablement Package or Cumulative Update  
@@ -175,6 +178,10 @@ start the process automatically once you execute the script
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.9:  
+- Added manual option "LCUwinre" to force updating winre.wim with Cumulative Update
+- Fixed architecture detection for already mounted WinPE images
 
 10.8:  
 - Fix updated iso label for Windows 10 1909
