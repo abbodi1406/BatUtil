@@ -37,6 +37,7 @@ if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xOS=arm64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xOS=x86"
 if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
 if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
+set "_Null=1>nul 2>nul"
 reg.exe query HKU\S-1-5-19 %_Null% || goto :E_ADMIN
 set "_log=%~dpn0"
 set "WORKDIR=%~dp0"
