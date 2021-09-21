@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v68
+@set uivr=v70
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -445,7 +445,14 @@ echo "%ISOdir%"
 echo.
 robocopy "%ISOdir%" "ISOFOLDER" /E /A-:R %_Null%
 ) else (
-move "%ISOdir%" ISOFOLDER %_Null%
+move /y "%ISOdir%" ISOFOLDER %_Nul1%
+attrib -A -I -R "ISOFOLDER\*" /S /D %_Nul3%
+)
+if not exist "ISOFOLDER\sources\%WimFile%" (
+echo %_err%
+echo Failed to create ISOFOLDER\sources\%WimFile%
+echo.
+goto :E_None
 )
 for %%# in (%vEditions%) do (
 find /i "<EDITIONID>%%#</EDITIONID>" bin\infoall.txt %_Nul1% && set %%#=0
@@ -646,12 +653,11 @@ if %EditionLTSC% equ 1 if %_build% geq 19041 set /a _sum+=1
 if %EditionProf% equ 1 if %_build% geq 18277 set /a _sum+=1
 if %EditionProf% equ 1 if %_build% geq 21364 set /a _sum+=1
 if %EditionProN% equ 1 if %_build% geq 21364 set /a _sum+=1
-call :setuphostprep
-for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l)
-del /f /q .\bin\version.txt %_Nul3%
+wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+7z.exe l .\bin\temp\setuphost.exe >.\bin\temp\version.txt 2>&1
+for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l)
 set revver=%uupver%&set revmaj=%uupmaj%&set revmin=%uupmin%
 set "tok=6,7"&set "toe=5,6,7"
-set "isotime=!uupdate:~2,2!/!uupdate:~4,2!/20!uupdate:~0,2!,!uupdate:~7,2!:!uupdate:~9,2!:10"
 if /i %arch%==x86 (set _ss=x86) else if /i %arch%==x64 (set _ss=amd64) else (set _ss=arm64)
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision*.manifest --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
 if exist "bin\temp\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens=%tok% delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*_microsoft-windows-coreos-revision*.manifest') do set revver=%%A.%%B&set revmaj=%%A&set revmin=%%B
@@ -667,6 +673,11 @@ for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% 
     )
   )
 )
+set chkmin=%revmin%
+call :setuphostprep
+for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l)
+del /f /q .\bin\version.txt %_Nul3%
+set "isotime=!uupdate:~2,2!/!uupdate:~4,2!/20!uupdate:~0,2!,!uupdate:~7,2!:!uupdate:~9,2!:10"
 if defined revbranch set branch=%revbranch%
 if %revmaj%==18363 (
 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
@@ -712,14 +723,14 @@ for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Micros
 if defined _legacy (set _label=%_legacy%) else (set _label=%uupver%.%uupdate%.%branch%)
 rmdir /s /q bin\temp\
 set _label=%_label%_CLIENT
-if /i %arch%==x86 set archl=X86
-if /i %arch%==x64 set archl=X64
-if /i %arch%==arm64 set archl=A64
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set _label=!_label:%%#=%%#!
 set branch=!branch:%%#=%%#!
 set langid=!langid:%%#=%%#!
 )
+if /i %arch%==x86 set archl=X86
+if /i %arch%==x64 set archl=X64
+if /i %arch%==arm64 set archl=A64
 set "DVDLABEL=CCSA_%archl%FRE_%langid%_DV5"
 if defined eLabel set _label=%eLabel%
 set "DVDISO=%_label%MULTI_%archl%FRE_%langid%"
@@ -730,30 +741,30 @@ goto :AUTOMENU
 for /f "tokens=3 delims=: " %%# in ('imagex /info ISOFOLDER\sources\%WimFile% ^|findstr /i /b /c:"Image Count"') do set finalimages=%%#
 if %finalimages% gtr 1 exit /b
 set _VL=0
-for /f "tokens=3 delims=<>" %%# in ('imagex /info ISOFOLDER\sources\%WimFile% 1 ^| find /i "<EDITIONID>"') do set editionid=%%#
-if /i %editionid%==Professional set DVDLABEL=CPRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRO_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==ProfessionalN set DVDLABEL=CPRNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRON_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==Core set DVDLABEL=CCRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CORE_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==CoreSingleLanguage set DVDLABEL=CSLA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%SINGLELANGUAGE_OEM_%archl%FRE_%langid%
-if /i %editionid%==Enterprise set DVDLABEL=CENA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISE_VOL_%archl%FRE_%langid%&set _VL=1
-if /i %editionid%==EnterpriseN set DVDLABEL=CENNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISEN_VOL_%archl%FRE_%langid%&set _VL=1
-if /i %editionid%==Education set DVDLABEL=CEDA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%EDUCATION_RET_%archl%FRE_%langid%&set _VL=1
-if /i %editionid%==EducationN set DVDLABEL=CEDNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%EDUCATIONN_RET_%archl%FRE_%langid%&set _VL=1
-if /i %editionid%==ProfessionalWorkstation set DVDLABEL=CPRWA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATION_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==ProfessionalWorkstationN set DVDLABEL=CPRWNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==ProfessionalEducation set DVDLABEL=CPREA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATION_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==ProfessionalEducationN set DVDLABEL=CPRENA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATIONN_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==ServerRdsh set DVDLABEL=CEV_%archl%FREV_%langid%_DV5&set DVDISO=%_label%MULTISESSION_VOL_%archl%FRE_%langid%&set _VL=1
-if /i %editionid%==CloudEdition set DVDLABEL=CWCA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUD_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==CloudEditionN set DVDLABEL=CWCNNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUDN_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==IoTEnterprise set DVDLABEL=IOTE_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISE_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==IoTEnterpriseS set DVDLABEL=IOTS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISES_OEMRET_%archl%FRE_%langid%
-if /i %editionid%==EnterpriseS set DVDLABEL=CES_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISES_VOL_%archl%FRE_%langid%&set _VL=1
-if /i %editionid%==EnterpriseSN set DVDLABEL=CESN_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISESN_VOL_%archl%FRE_%langid%&set _VL=1
+for /f "tokens=3 delims=<>" %%# in ('imagex /info ISOFOLDER\sources\%WimFile% 1 ^| find /i "<EDITIONID>"') do set _edtn=%%#
+if /i %_edtn%==Professional set DVDLABEL=CPRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRO_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==ProfessionalN set DVDLABEL=CPRNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRON_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==Core set DVDLABEL=CCRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CORE_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==CoreSingleLanguage set DVDLABEL=CSLA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%SINGLELANGUAGE_OEM_%archl%FRE_%langid%
+if /i %_edtn%==Enterprise set DVDLABEL=CENA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISE_VOL_%archl%FRE_%langid%&set _VL=1
+if /i %_edtn%==EnterpriseN set DVDLABEL=CENNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISEN_VOL_%archl%FRE_%langid%&set _VL=1
+if /i %_edtn%==Education set DVDLABEL=CEDA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%EDUCATION_RET_%archl%FRE_%langid%&set _VL=1
+if /i %_edtn%==EducationN set DVDLABEL=CEDNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%EDUCATIONN_RET_%archl%FRE_%langid%&set _VL=1
+if /i %_edtn%==ProfessionalWorkstation set DVDLABEL=CPRWA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATION_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==ProfessionalWorkstationN set DVDLABEL=CPRWNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==ProfessionalEducation set DVDLABEL=CPREA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATION_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==ProfessionalEducationN set DVDLABEL=CPRENA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATIONN_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==ServerRdsh set DVDLABEL=CEV_%archl%FREV_%langid%_DV5&set DVDISO=%_label%MULTISESSION_VOL_%archl%FRE_%langid%&set _VL=1
+if /i %_edtn%==CloudEdition set DVDLABEL=CWCA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUD_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==CloudEditionN set DVDLABEL=CWCNNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUDN_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==IoTEnterprise set DVDLABEL=IOTE_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISE_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==IoTEnterpriseS set DVDLABEL=IOTS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISES_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==EnterpriseS set DVDLABEL=CES_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISES_VOL_%archl%FRE_%langid%&set _VL=1
+if /i %_edtn%==EnterpriseSN set DVDLABEL=CESN_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISESN_VOL_%archl%FRE_%langid%&set _VL=1
 if %_VL% equ 0 exit /b
 (
 echo [EditionID]
-echo %editionid%
+echo %_edtn%
 echo.
 echo [Channel]
 echo Volume
@@ -764,32 +775,43 @@ echo 1
 exit /b
 
 :setuphostprep
-wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setupprep.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\system32\UpdateAgent.dll --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-set "_WSH=SOFTWARE\Microsoft\Windows Script Host\Settings"
-reg.exe query "HKCU\%_WSH%" /v Enabled %_Nul2% | find /i "0x0" %_Nul1% && (set _vbscu=1&reg.exe delete "HKCU\%_WSH%" /v Enabled /f %_Nul3%)
-reg.exe query "HKLM\%_WSH%" /v Enabled %_Nul2% | find /i "0x0" %_Nul1% && (set _vbslm=1&reg.exe delete "HKLM\%_WSH%" /v Enabled /f %_Nul3%)
- echo>bin\filever.vbs Set objFSO = CreateObject^("Scripting.FileSystemObject"^)
-echo>>bin\filever.vbs Wscript.Echo objFSO.GetFileVersion^(WScript.arguments^(0^)^)
-set _svr1=0&set _svr2=0&set _svr3=0
-for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs bin\temp\setuphost.exe') do set _svr1=%%#
-for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs bin\temp\setupprep.exe') do set _svr2=%%#
-if exist "bin\temp\updateagent.dll" for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs bin\temp\updateagent.dll') do set _svr3=%%#
-set _setup=bin\temp\setuphost.exe
+wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
+wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setupprep.exe --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\system32\UpdateAgent.dll --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\system32\Facilitator.dll --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
+set _svr1=0&set _svr2=0&set _svr3=0&set _svr4=0
+set "_fvr1=%SystemRoot%\temp\setuphost.exe"
+set "_fvr2=%SystemRoot%\temp\setupprep.exe"
+set "_fvr3=%SystemRoot%\temp\UpdateAgent.dll"
+set "_fvr4=%SystemRoot%\temp\Facilitator.dll"
+if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr1:\=\\!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr2:\=\\!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr3:\=\\!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr4:\=\\!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
+set "_chk=!_fvr1!"
+if %chkmin% equ %_svr1% set "_chk=!_fvr1!"&goto :prephostsetup
+if %chkmin% equ %_svr2% set "_chk=!_fvr2!"&goto :prephostsetup
+if %chkmin% equ %_svr3% set "_chk=!_fvr3!"&goto :prephostsetup
+if %chkmin% equ %_svr4% set "_chk=!_fvr4!"&goto :prephostsetup
 if %_svr2% gtr %_svr1% (
-if %_svr2% gtr %_svr3% set _setup=bin\temp\setupprep.exe
-if %_svr3% gtr %_svr2% set _setup=bin\temp\updateagent.dll
+if %_svr2% gtr %_svr3% if %_svr2% gtr %_svr4% set "_chk=!_fvr2!"
+if %_svr3% gtr %_svr2% if %_svr3% gtr %_svr4% set "_chk=!_fvr3!"
+if %_svr4% gtr %_svr2% if %_svr4% gtr %_svr3% set "_chk=!_fvr4!"
 )
 if %_svr3% gtr %_svr1% (
-if %_svr2% gtr %_svr3% set _setup=bin\temp\setupprep.exe
-if %_svr3% gtr %_svr2% set _setup=bin\temp\updateagent.dll
+if %_svr2% gtr %_svr3% if %_svr2% gtr %_svr4% set "_chk=!_fvr2!"
+if %_svr3% gtr %_svr2% if %_svr3% gtr %_svr4% set "_chk=!_fvr3!"
+if %_svr4% gtr %_svr2% if %_svr4% gtr %_svr3% set "_chk=!_fvr4!"
 )
-7z.exe l "%_setup%" >.\bin\version.txt 2>&1
-rmdir /s /q bin\temp\
-del /f /q .\bin\filever.vbs %_Nul3%
-if defined _vbscu reg.exe add "HKCU\%_WSH%" /v Enabled /t REG_DWORD /d 0 /f %_Nul3%
-if defined _vbslm reg.exe add "HKLM\%_WSH%" /v Enabled /t REG_DWORD /d 0 /f %_Nul3%
+if %_svr4% gtr %_svr1% (
+if %_svr2% gtr %_svr3% if %_svr2% gtr %_svr4% set "_chk=!_fvr2!"
+if %_svr3% gtr %_svr2% if %_svr3% gtr %_svr4% set "_chk=!_fvr3!"
+if %_svr4% gtr %_svr2% if %_svr4% gtr %_svr3% set "_chk=!_fvr4!"
+)
+
+:prephostsetup
+7z.exe l "%_chk%" >.\bin\version.txt 2>&1
+del /f /q "!_fvr1!" "!_fvr2!" "!_fvr3!" "!_fvr4!" %_Nul3%
 exit /b
 
 :IoTEnterpriseS

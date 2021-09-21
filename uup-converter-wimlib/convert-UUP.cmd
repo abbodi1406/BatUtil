@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v68
+@set uivr=v72
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -315,7 +315,7 @@ Cloud,CloudN,CloudE,CloudEN,CloudEdition,CloudEditionN,CloudEditionL,CloudEditio
 Starter,StarterN,ProfessionalCountrySpecific,ProfessionalSingleLanguage
 ServerStandardCore,ServerStandard,ServerDatacenterCore,ServerDatacenter,ServerAzureStackHCICor,ServerTurbineCor,ServerTurbine,ServerStandardACor,ServerDatacenterACor,ServerStandardWSCor,ServerDatacenterWSCor
 ) do (
-if exist "!_UUP!\%%#_*.esd" dir /b /a:-d "!_UUP!\%%#_*.esd">>temp\uups_esd.txt %_Nul2%
+if exist "!_UUP!\%%#_*.esd" (dir /b /a:-d "!_UUP!\%%#_*.esd">>temp\uups_esd.txt %_Nul2%) else if exist "!_UUP!\MetadataESD_%%#_*.esd" (dir /b /a:-d "!_UUP!\MetadataESD_%%#_*.esd">>temp\uups_esd.txt %_Nul2%)
 )
 for /f "tokens=3 delims=: " %%# in ('find /v /c "" temp\uups_esd.txt %_Nul6%') do set uups_esd_num=%%#
 if %uups_esd_num% equ 0 goto :E_ESD
@@ -525,7 +525,7 @@ if %_count% gtr 1 del /f /q ISOFOLDER\sources\ei.cfg %_Nul3%
 )
 for /f "tokens=5-10 delims=: " %%G in ('wimlib-imagex.exe info "!MetadataESD!" 3 ^| find /i "Last Modification Time"') do (set mmm=%%G&set "isotime=%%H/%%L,%%I:%%J:%%K")
 for %%# in (Jan:01 Feb:02 Mar:03 Apr:04 May:05 Jun:06 Jul:07 Aug:08 Sep:09 Oct:10 Nov:11 Dec:12) do for /f "tokens=1,2 delims=:" %%A in ("%%#") do (
-if %mmm%==%%A set "isotime=%%B/%isotime%"
+if /i %mmm%==%%A set "isotime=%%B/%isotime%"
 )
 set _file=ISOFOLDER\sources\%WIMFILE%
 set _rtrn=RetISO
@@ -936,15 +936,15 @@ rmdir /s /q bin\temp\
 
 :setlabel
 if %_SrvESD% equ 1 (set _label=%_label%_SERVER) else (set _label=%_label%_CLIENT)
-if /i %arch%==x86 set archl=X86
-if /i %arch%==x64 set archl=X64
-if /i %arch%==arm64 set archl=A64
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set _label=!_label:%%#=%%#!
 set branch=!branch:%%#=%%#!
 set langid=!langid:%%#=%%#!
 set editionid=!editionid:%%#=%%#!
 )
+if /i %arch%==x86 set archl=X86
+if /i %arch%==x64 set archl=X64
+if /i %arch%==arm64 set archl=A64
 
 if %_SrvESD% equ 1 (
 if %AIO% equ 1 set DVDLABEL=SSS_%archl%FRE_%langid%_DV9&set DVDISO=%_label%_%archl%FRE_%langid%&exit /b
@@ -1016,11 +1016,11 @@ echo %~1| find /i "RetailDemo" %_Nul1% && exit /b
 echo %~1| find /i "Holographic-Desktop-FOD" %_Nul1% && exit /b
 echo %~1| find /i "Windows10.0-KB" %_Nul1% && exit /b
 echo %~1| find /i "SSU-" %_Nul1% && exit /b
-set pack=%~1
-if exist "!_work!\temp\%pack%.ESD" exit /b
-echo DIR-^>ESD: %pack%
+set cbsp=%~1
+if exist "!_work!\temp\%cbsp%.ESD" exit /b
+echo DIR-^>ESD: %cbsp%
 rmdir /s /q "!_UUP!\%~1\$dpx$.tmp\" %_Nul3%
-wimlib-imagex.exe capture "!_UUP!\%~1" "temp\%pack%.ESD" --compress=%_level% --check --no-acls --norpfix "Edition Package" "Edition Package" %_Null%
+wimlib-imagex.exe capture "!_UUP!\%~1" "temp\%cbsp%.ESD" --compress=%_level% --check --no-acls --norpfix "Edition Package" "Edition Package" %_Null%
 exit /b
 
 :uups_cab
@@ -1028,20 +1028,20 @@ echo %~1| find /i "RetailDemo" %_Nul1% && exit /b
 echo %~1| find /i "Holographic-Desktop-FOD" %_Nul1% && exit /b
 echo %~1| find /i "Windows10.0-KB" %_Nul1% && exit /b
 echo %~1| find /i "SSU-" %_Nul1% && exit /b
-set pack=%~n1
-if exist "!_work!\temp\%pack%.ESD" exit /b
-echo CAB-^>ESD: %pack%
+set cbsp=%~n1
+if exist "!_work!\temp\%cbsp%.ESD" exit /b
+echo %cbsp%
 set /a _ref+=1
 set /a _rnd=%random%
 set _dst=%_drv%\_tmp%_ref%
 if exist "%_dst%" (set _dst=%_drv%\_tmp%_rnd%)
 mkdir %_dst% %_Nul3%
-expand.exe -f:* "!_UUP!\%pack%.cab" %_dst%\ %_Null%
-wimlib-imagex.exe capture "%_dst%" "temp\%pack%.ESD" --compress=%_level% --check --no-acls --norpfix "Edition Package" "Edition Package" %_Null%
+expand.exe -f:* "!_UUP!\%cbsp%.cab" %_dst%\ %_Null%
+wimlib-imagex.exe capture "%_dst%" "temp\%cbsp%.ESD" --compress=%_level% --check --no-acls --norpfix "Edition Package" "Edition Package" %_Null%
 rmdir /s /q %_dst%\ %_Nul3%
 if exist "%_dst%\" (
 mkdir %_drv%\_del %_Null%
-robocopy %_drv%\_del %_dst% /MIR %_Null%
+robocopy %_drv%\_del %_dst% /MIR /R:1 /W:1 /NFL /NDL /NP /NJH /NJS %_Null%
 rmdir /s /q %_drv%\_del\ %_Null%
 rmdir /s /q %_dst%\ %_Null%
 )
@@ -1171,15 +1171,16 @@ if defined isoupdate (
   expand.exe -r -f:* "!_UUP!\%%~#" "%_cabdir%\du" %_Nul1%
   )
   xcopy /CDRUY "%_cabdir%\du" "ISOFOLDER\sources\" %_Nul3%
+  if exist "%_cabdir%\du\*.ini" xcopy /CDRY "%_cabdir%\du\*.ini" "ISOFOLDER\sources\" %_Nul3%
   for /f %%# in ('dir /b /ad "%_cabdir%\du\*-*" %_Nul6%') do if exist "ISOFOLDER\sources\%%#\*.mui" copy /y "%_cabdir%\du\%%#\*" "ISOFOLDER\sources\%%#\" %_Nul3%
   if exist "%_cabdir%\du\replacementmanifests\" xcopy /CERY "%_cabdir%\du\replacementmanifests" "ISOFOLDER\sources\replacementmanifests\" %_Nul3%
   rmdir /s /q "%_cabdir%\du\" %_Nul3%
   echo.
 )
-if exist "ISOFOLDER\sources\updateagent.dll" (
-mkdir bin\temp %_Nul3%
-copy /y ISOFOLDER\sources\updateagent.dll bin\temp\ %_Nul3%
-)
+if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
+copy /y ISOFOLDER\sources\UpdateAgent.dll %SystemRoot%\temp\ %_Nul1%
+copy /y ISOFOLDER\sources\Facilitator.dll %SystemRoot%\temp\ %_Nul1%
+set chkmin=%uupmin%
 call :setuphostprep
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set xduver=%%i.%%j&set xdumaj=%%i&set xdumin=%%j&set xdubranch=%%k&set xdudate=%%l)
 del /f /q .\bin\version.txt %_Nul3%
@@ -1223,15 +1224,16 @@ copy /y bin\Updates.bat "!_dest!\" %_Nul3%
 if %_build% geq 18362 for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\*Windows10*KB*.cab"') do (
 expand.exe -f:microsoft-windows-*enablement-package~*.mum "!_UUP!\%%#" "!_cabdir!" %_Nul3%
 if exist "!_cabdir!\microsoft-windows-*enablement-package~*.mum" set _actEP=1
+if exist "!_cabdir!\Microsoft-Windows-1909Enablement-Package~*.mum" set "_fixEP=18363"
 if exist "!_cabdir!\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!_cabdir!\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!_cabdir!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
 if exist "!_cabdir!\Microsoft-Windows-22H1Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
 )
 set tmpcmp=
-if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\SSU-*-*.cab"') do (set "pack=%%#"&call :external_cab)
-for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\*Windows10*KB*.cab"') do (set "pack=%%#"&call :external_cab)
-if defined tmpcmp if exist "!_UUP!\Windows10.0-*%arch%_inout.cab" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\Windows10.0-*%arch%_inout.cab"') do (set "pack=%%#"&call :external_cab)
+if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\SSU-*-*.cab"') do (set "packn=%%~n#"&set "packf=%%#"&call :external_cab)
+for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\*Windows10*KB*.cab"') do (set "packn=%%~n#"&set "packf=%%#"&call :external_cab)
+if defined tmpcmp if exist "!_UUP!\Windows10.0-*%arch%_inout.cab" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\Windows10.0-*%arch%_inout.cab"') do (set "packn=%%~n#"&set "packf=%%#"&call :external_cab)
 if not exist "!_dest!\*Windows10*KB*.cab" if not exist "!_dest!\*SSU-*-*.cab" (
 rmdir /s /q "ISOFOLDER\sources\$OEM$\"
 exit /b
@@ -1263,33 +1265,44 @@ exit /b
 if exist "!_cabdir!\*.manifest" del /f /q "!_cabdir!\*.manifest" %_Nul3%
 if exist "!_cabdir!\*.mum" del /f /q "!_cabdir!\*.mum" %_Nul3%
 if exist "!_cabdir!\*.xml" del /f /q "!_cabdir!\*.xml" %_Nul3%
-:: expand.exe -f:update.mum "!_UUP!\%pack%" "!_cabdir!" %_Null%
-7z.exe e "!_UUP!\%pack%" -o"!_cabdir!" update.mum %_Null%
+set uupcab=0
+expand.exe -d -f:*Windows*.psf "!_UUP!\%packf%" | findstr /i %arch%\.psf %_Nul3% && set uupcab=1
+if %uupcab% equ 1 (
+echo LCU: %packf% [Combined UUP]
+mkdir "!_cabdir!\lcu" %_Nul3%
+expand.exe -f:* "!_UUP!\%packf%" "!_cabdir!\lcu" %_Null%
+if exist "!_cabdir!\lcu\Windows10*KB*.cab" if exist "!_cabdir!\lcu\Windows10*KB*.psf" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\Windows10*KB*.cab"') do (set "compkg=%%#"&call :inrenpsf)
+if exist "!_cabdir!\lcu\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*.cab"') do (set "compkg=%%#"&call :inrenssu)
+rmdir /s /q "!_cabdir!\lcu\" %_Nul3%
+exit /b
+)
+:: expand.exe -f:update.mum "!_UUP!\%packf%" "!_cabdir!" %_Null%
+7z.exe e "!_UUP!\%packf%" -o"!_cabdir!" update.mum %_Null%
 if not exist "!_cabdir!\update.mum" exit /b
-expand.exe -f:*.psf.cix.xml "!_UUP!\%pack%" "!_cabdir!" %_Null%
+expand.exe -f:*.psf.cix.xml "!_UUP!\%packf%" "!_cabdir!" %_Null%
 if exist "!_cabdir!\*.psf.cix.xml" (
 rem findstr /i /m "PSFX" "!_cabdir!\update.mum" %_Nul3% || exit /b
-if not exist "!_UUP!\%pack:~0,-4%.psf" (
-  echo PSFX: %pack% / PSF file is missing
+if not exist "!_UUP!\%packn%.psf" if not exist "!_UUP!\%packn:~0,-8%*.psf" (
+  echo PSFX: %packf% / PSF file is missing
   exit /b
   )
 if %psfnet% equ 0 (
-  echo PSFX: %pack% / PSFExtractor is not available
+  echo PSFX: %packf% / PSFExtractor is not available
   exit /b
   )
-set psf_%pack%=1
+set psf_%packn%=1
 )
 findstr /i /m "Package_for_OasisAsset" "!_cabdir!\update.mum" %_Nul3% && (
 wimlib-imagex.exe extract ISOFOLDER\sources\%WIMFILE% 1 Windows\Servicing\Packages\*OasisAssets-Package*.mum --dest-dir="!_cabdir!" --no-acls --no-attributes %_Null%
 if not exist "!_cabdir!\*OasisAssets-Package*.mum" exit /b
 )
-expand.exe -f:toc.xml "!_UUP!\%pack%" "!_cabdir!" %_Null%
+expand.exe -f:toc.xml "!_UUP!\%packf%" "!_cabdir!" %_Null%
 if exist "!_cabdir!\toc.xml" (
-echo LCU: %pack% [Combined]
+echo LCU: %packf% [Combined]
 mkdir "!_cabdir!\lcu" %_Nul3%
-expand.exe -f:* "!_UUP!\%pack%" "!_cabdir!\lcu" %_Null%
+expand.exe -f:* "!_UUP!\%packf%" "!_cabdir!\lcu" %_Null%
 if exist "!_cabdir!\lcu\Windows10*KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\Windows10*KB*.cab"') do (set "compkg=%%#"&call :inrenupd)
-if exist "!_cabdir!\lcu\*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*.cab"') do (set "compkg=%%#"&call :inrenssu)
+if exist "!_cabdir!\lcu\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*.cab"') do (set "compkg=%%#"&call :inrenssu)
 rmdir /s /q "!_cabdir!\lcu\" %_Nul3%
 exit /b
 )
@@ -1297,32 +1310,32 @@ if %_build% geq 17763 findstr /i /m "WinPE" "!_cabdir!\update.mum" %_Nul3% && (
 %_Nul3% findstr /i /m "Edition\"" "!_cabdir!\update.mum"
 if errorlevel 1 exit /b
 )
-expand.exe -f:*_microsoft-windows-servicingstack_*.manifest "!_UUP!\%pack%" "!_cabdir!" %_Null%
+expand.exe -f:*_microsoft-windows-servicingstack_*.manifest "!_UUP!\%packf%" "!_cabdir!" %_Null%
 if exist "!_cabdir!\*servicingstack_*.manifest" (
-echo SSU: %pack%
-copy /y "!_UUP!\%pack%" "!_dest!\1%pack%" %_Nul3%
+echo SSU: %packf%
+copy /y "!_UUP!\%packf%" "!_dest!\1%packf%" %_Nul3%
 exit /b
 )
 set lculabel=1
 findstr /i /m "Package_for_RollupFix" "!_cabdir!\update.mum" %_Nul3% && (
-if defined psf_%pack% (
-  echo LCU: %pack% / Repacking PSF update
+if defined psf_%packn% (
+  echo LCU: %packf% / Repacking PSF update
   call :external_psf
   ) else (
-  echo LCU: %pack%
-  copy /y "!_UUP!\%pack%" "!_dest!\3%pack%" %_Nul3%
+  echo LCU: %packf%
+  copy /y "!_UUP!\%packf%" "!_dest!\3%packf%" %_Nul3%
   )
 if !lculabel! equ 1 call :external_label
 exit /b
 )
-echo UPD: %pack%
-copy /y "!_UUP!\%pack%" "!_dest!\2%pack%" %_Nul3%
+echo UPD: %packf%
+copy /y "!_UUP!\%packf%" "!_dest!\2%packf%" %_Nul3%
 exit /b
 
 :external_netfx
-for /f %%# in ('dir /b /os "ISOFOLDER\sources\sxs\*NetFx3*.cab"') do set "pack=%%#"
-echo DNF: %pack%
-copy /y "ISOFOLDER\sources\sxs\%pack%" "!_dest!\" %_Nul3%
+for /f %%# in ('dir /b /os "ISOFOLDER\sources\sxs\*NetFx3*.cab"') do set "ndp=%%#"
+echo DNF: %ndp%
+copy /y "ISOFOLDER\sources\sxs\%ndp%" "!_dest!\" %_Nul3%
 exit /b
 
 :external_label
@@ -1334,16 +1347,16 @@ del /f /q %SystemRoot%\temp\*.mum
 set "isodate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 set "isotime=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
 
-expand.exe -f:*cablist.ini "!_UUP!\%pack%" "!_cabdir!" %_Null%
+expand.exe -f:*cablist.ini "!_UUP!\%packf%" "!_cabdir!" %_Null%
 if exist "!_cabdir!\*cablist.ini" (
-expand.exe -f:*.cab "!_UUP!\%pack%" "!_cabdir!" %_Null%
+expand.exe -f:*.cab "!_UUP!\%packf%" "!_cabdir!" %_Null%
 expand.exe -f:%_ss%_microsoft-windows-coreos-revision*.manifest "!_cabdir!\Cab*.cab" "!_cabdir!" %_Null%
 ) else (
-expand.exe -f:%_ss%_microsoft-windows-coreos-revision*.manifest "!_UUP!\%pack%" "!_cabdir!" %_Null%
+expand.exe -f:%_ss%_microsoft-windows-coreos-revision*.manifest "!_UUP!\%packf%" "!_cabdir!" %_Null%
 )
 if exist "!_cabdir!\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens=%tok% delims=_." %%i in ('dir /b /a:-d /od "!_cabdir!\*_microsoft-windows-coreos-revision*.manifest"') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j)
 
-expand.exe -f:%_ss%_microsoft-updatetargeting-*os_*.manifest "!_UUP!\%pack%" "!_cabdir!" %_Null%
+expand.exe -f:%_ss%_microsoft-updatetargeting-*os_*.manifest "!_UUP!\%packf%" "!_cabdir!" %_Null%
 
 if exist "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest" for /f "tokens=8 delims== " %%# in ('findstr /i Branch "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest"') do if not defined regbranch set regbranch=%%~#
 if defined regbranch set branch=%regbranch%
@@ -1367,38 +1380,51 @@ call :setlabel
 exit /b
 
 :external_psf
+set "lcuext=!_cabdir!\%packn%"
+if not exist "!lcuext!\" mkdir "!lcuext!"
+expand.exe -f:* "!_UUP!\%packf%" "!lcuext!" %_Null%
+7z.exe e "!_UUP!\%packf%" -o"!lcuext!" update.mum -aoa %_Null%
+if exist "!lcuext!\*cablist.ini" (
+  expand.exe -f:* "!lcuext!\*.cab" "!lcuext!" %_Null%
+  del /f /q "!lcuext!\*cablist.ini" %_Nul3%
+  del /f /q "!lcuext!\*.cab" %_Nul3%
+)
+if not exist "!lcuext!\express.psf.cix.xml" for /f %%# in ('dir /b /a:-d "!lcuext!\*.psf.cix.xml"') do rename "!lcuext!\%%#" express.psf.cix.xml %_Nul3%
 set _sbst=0
 subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
 if !_sbst! equ 1 pushd %_sdr%
-copy /y "!_UUP!\%pack:~0,-4%.*" . %_Nul3%
+if not exist "%packf%" (
+copy /y "!_UUP!\%packn%.*" . %_Nul3%
+if not exist "%packn%.psf" for /f %%# in ('dir /b /a:-d "!_UUP!\%packn:~0,-8%*.psf"') do copy /y "!_UUP!\%%#" %packn%.psf %_Nul3%
+)
 if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
 if not exist "cabarc.exe" copy /y "!_work!\bin\cabarc.exe" . %_Nul3%
-PSFExtractor.exe %pack% %_Null%
+PSFExtractor.exe %packf% %_Null%
 if %errorlevel% neq 0 (
   set lculabel=0
   echo Error: failed to extract PSF file
-  rmdir /s /q %pack:~0,-4% %_Nul3%
+  rmdir /s /q %packn% %_Nul3%
   if !_sbst! equ 1 popd
   if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
   exit /b
   )
-cd %pack:~0,-4%
+cd %packn%
 del /f /q *.psf.cix.xml %_Nul3%
 ..\cabarc.exe -m LZX:21 -r -p N ..\3psf.cab *.* %_Null%
 if %errorlevel% neq 0 (
   set lculabel=0
   echo Error: failed to create CAB file
   cd..
-  rmdir /s /q %pack:~0,-4% %_Nul3%
+  rmdir /s /q %packn% %_Nul3%
   if !_sbst! equ 1 popd
   if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
   exit /b
   )
 cd..
-rmdir /s /q %pack:~0,-4% %_Nul3%
+rmdir /s /q %packn% %_Nul3%
 if !_sbst! equ 1 popd
 if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
-move /y "!_cabdir!\3psf.cab" "!_dest!\3%pack%" %_Nul3%
+move /y "!_cabdir!\3psf.cab" "!_dest!\3%packf%" %_Nul3%
 exit /b
 
 :uups_update
@@ -1432,9 +1458,16 @@ if %wim% equ 1 (
 call :mount "%_target%"
 )
 if %dvd% equ 1 (
+if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
+if exist "%SystemRoot%\temp\UpdateAgent.dll" del /f /q "%SystemRoot%\temp\UpdateAgent.dll" %_Nul3%
+if exist "%SystemRoot%\temp\Facilitator.dll" del /f /q "%SystemRoot%\temp\Facilitator.dll" %_Nul3%
 call :mount "%_target%\sources\install.wim"
 )
 if exist "%_mount%\" rmdir /s /q "%_mount%\"
+if %_build% geq 19041 if %winbuild% lss 17133 if exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+del /f /q %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
+if /i not %xOS%==x86 del /f /q %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
+)
 echo.
 if %wim% equ 1 (
 if /i %_target%==install.wim (if %wim2esd% equ 0 wimlib-imagex.exe optimize "%_target%" %_Supp%) else (if %relite% equ 0 wimlib-imagex.exe optimize "%_target%" %_Supp%)
@@ -1460,12 +1493,13 @@ if defined isoupdate (
   expand.exe -r -f:* "!_UUP!\%%~#" "%_cabdir%\du" %_Nul1%
   )
   xcopy /CDRUY "%_cabdir%\du" "ISOFOLDER\sources\" %_Nul3%
+  if exist "%_cabdir%\du\*.ini" xcopy /CDRY "%_cabdir%\du\*.ini" "ISOFOLDER\sources\" %_Nul3%
   for /f %%# in ('dir /b /ad "%_cabdir%\du\*-*" %_Nul6%') do if exist "ISOFOLDER\sources\%%#\*.mui" copy /y "%_cabdir%\du\%%#\*" "ISOFOLDER\sources\%%#\" %_Nul3%
   if exist "%_cabdir%\du\replacementmanifests\" xcopy /CERY "%_cabdir%\du\replacementmanifests" "ISOFOLDER\sources\replacementmanifests\" %_Nul3%
   rmdir /s /q "%_cabdir%\du\" %_Nul3%
 )
 if not defined isover exit /b
-wimlib-imagex.exe extract "%_target%\sources\install.wim" 1 Windows\system32\UpdateAgent.dll --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+set chkmin=%isomin%
 call :setuphostprep
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set iduver=%%i.%%j&set idumaj=%%i&set idumin=%%j&set branch=%%k&set idudate=%%l)
 del /f /q .\bin\version.txt %_Nul3%
@@ -1508,9 +1542,9 @@ if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_U
 for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\*Windows10*KB*.cab"') do (call set /a _cab+=1)
 set count=0&set isoupdate=&set tmpcmp=
 if exist "!_UUP!\*defender-dism*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "!_UUP!\*defender-dism*%arch%*.cab"') do (set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab2)
-if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\SSU-*-*.cab"') do (set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab2)
-for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\*Windows10*KB*.cab"') do (set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab2)
-if defined tmpcmp if exist "!_UUP!\Windows10.0-*%arch%_inout.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\Windows10.0-*%arch%_inout.cab"') do (set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab2)
+if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\SSU-*-*.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab2)
+for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\*Windows10*KB*.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab2)
+if defined tmpcmp if exist "!_UUP!\Windows10.0-*%arch%_inout.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\Windows10.0-*%arch%_inout.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab2)
 goto :eof
 
 :cab2
@@ -1518,6 +1552,18 @@ if defined %package% goto :eof
 if exist "!dest!\" rmdir /s /q "!dest!\"
 mkdir "!dest!"
 set /a count+=1
+set uupcab=0
+expand.exe -d -f:*Windows*.psf "!_UUP!\%package%" | findstr /i %arch%\.psf %_Nul3% && set uupcab=1
+if %uupcab% equ 1 (
+echo %count%/%_cab%: %package% [Combined UUP]
+mkdir "!_cabdir!\lcu" %_Nul3%
+expand.exe -f:* "!_UUP!\%package%" "!_cabdir!\lcu" %_Null%
+if exist "!_cabdir!\lcu\Windows10*KB*.cab" if exist "!_cabdir!\lcu\Windows10*KB*.psf" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\Windows10*KB*.cab"') do (set "compkg=%%#"&call :inrenpsf)
+if exist "!_cabdir!\lcu\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*.cab"') do (set "compkg=%%#"&call :inrenssu)
+rmdir /s /q "!_cabdir!\lcu\" %_Nul3%
+rmdir /s /q "!dest!\" %_Nul3%
+goto :eof
+)
 :: expand.exe -f:update.mum "!_UUP!\%package%" "!dest!" %_Null%
 7z.exe e "!_UUP!\%package%" -o"!dest!" update.mum %_Null%
 if not exist "!dest!\update.mum" (
@@ -1536,7 +1582,7 @@ goto :eof
 expand.exe -f:*.psf.cix.xml "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*.psf.cix.xml" (
 rem findstr /i /m "PSFX" "!dest!\update.mum" %_Nul3% || goto :eof
-if not exist "!_UUP!\%package:~0,-4%.psf" (
+if not exist "!_UUP!\%pkgn%.psf" if not exist "!_UUP!\%pkgn:~0,-8%*.psf" (
   echo %count%/%_cab%: %package% / PSF file is missing
   goto :eof
   )
@@ -1544,7 +1590,7 @@ if %psfnet% equ 0 (
   echo %count%/%_cab%: %package% / PSFExtractor is not available
   goto :eof
   )
-set psf_%package%=1
+set psf_%pkgn%=1
 )
 if not defined isodate findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% && (
 findstr /i /m /c:"Microsoft-Windows-CoreEdition" "!dest!\update.mum" %_Nul3% || set _eosC=1
@@ -1564,7 +1610,7 @@ echo %count%/%_cab%: %package% [Combined]
 mkdir "!_cabdir!\lcu" %_Nul3%
 expand.exe -f:* "!_UUP!\%package%" "!_cabdir!\lcu" %_Null%
 if exist "!_cabdir!\lcu\Windows10*KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\Windows10*KB*.cab"') do (set "compkg=%%#"&call :inrenupd)
-if exist "!_cabdir!\lcu\*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*.cab"') do (set "compkg=%%#"&call :inrenssu)
+if exist "!_cabdir!\lcu\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*.cab"') do (set "compkg=%%#"&call :inrenssu)
 rmdir /s /q "!_cabdir!\lcu\" %_Nul3%
 rmdir /s /q "!dest!\" %_Nul3%
 goto :eof
@@ -1608,6 +1654,7 @@ if exist "!dest!\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" set "_ty
 if not defined _type if %_build% geq 18362 (
 expand.exe -f:microsoft-windows-*enablement-package~*.mum "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\microsoft-windows-*enablement-package~*.mum" set "_type=[Enablement]"
+if exist "!dest!\Microsoft-Windows-1909Enablement-Package~*.mum" set "_fixEP=18363"
 if exist "!dest!\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!dest!\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!dest!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
@@ -1644,20 +1691,34 @@ if exist "!dest!\*cablist.ini" (
   del /f /q "!dest!\*.cab" %_Nul3%
 )
 set _sbst=0
-if defined psf_%package% (
+if defined psf_%pkgn% (
+if not exist "!dest!\express.psf.cix.xml" for /f %%# in ('dir /b /a:-d "!dest!\*.psf.cix.xml"') do rename "!dest!\%%#" express.psf.cix.xml %_Nul3%
 subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
 if !_sbst! equ 1 pushd %_sdr%
-copy /y "!_UUP!\%package:~0,-4%.*" . %_Nul3%
+if not exist "%package%" (
+copy /y "!_UUP!\%pkgn%.*" . %_Nul3%
+if not exist "%pkgn%.psf" for /f %%# in ('dir /b /a:-d "!_UUP!\%pkgn:~0,-8%*.psf"') do copy /y "!_UUP!\%%#" %pkgn%.psf %_Nul3%
+)
 if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
 PSFExtractor.exe %package% %_Null%
 if !errorlevel! neq 0 (
   echo Error: failed to extract PSF update
-  rmdir /s /q %package:~0,-4% %_Nul3%
-  set psf_%package%=
+  rmdir /s /q "%pkgn%\" %_Nul3%
+  set psf_%pkgn%=
   )
 if !_sbst! equ 1 popd
 if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
 )
+goto :eof
+
+:inrenpsf
+for /f "tokens=2 delims=-" %%V in ('echo %compkg%') do set kbupd=%%V
+call set /a _cab+=1
+set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
+set _pfn=Windows10.0-%kbupd%-%arch%_inout.psf
+set "tmpcmp=!tmpcmp! %_ufn% %_pfn%"
+move /y "!_cabdir!\lcu\%compkg%" "!_UUP!\%_ufn%" %_Nul3%
+move /y "!_cabdir!\lcu\%compkg:~0,-4%.psf" "!_UUP!\%_pfn%" %_Nul3%
 goto :eof
 
 :inrenupd
@@ -1741,6 +1802,10 @@ if exist "%mumtarget%\Windows\Servicing\Packages\Microsoft-Windows-Server*ACorEd
 if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\SSU-*-*.cab"') do (set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum)
 for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\*Windows10*KB*.cab"') do (set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum)
 if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if exist "!_UUP!\*defender-dism*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!_UUP!\*defender-dism*%arch%*.cab"') do (set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum))
+if %_build% geq 19041 if %winbuild% lss 17133 if not exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+copy /y %SysPath%\slc.dll %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
+if /i not %xOS%==x86 copy /y %SystemRoot%\SysWOW64\slc.dll %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
+)
 if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 reg.exe load HKLM\%SOFTWARE% "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 if %winbuild% lss 15063 if /i %arch%==arm64 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul1%
@@ -1788,7 +1853,7 @@ set "_SxsCmp=%_EdgCmp%"
 set "_SxsIdn=%_EdgIdn%"
 set "_SxsCF=256"
 set "_DsmLog=DismEdge.log"
-for %%# in (%fupdt%) do (set "pkgn=%%~n#"&set "dest=!_cabdir!\%%~n#"&call :pXML)
+for %%# in (%fupdt%) do (set "cbsn=%%~n#"&set "dest=!_cabdir!\%%~n#"&call :pXML)
 )
 if defined supdt (
 set "_SxsKey=%_EsuKey%"
@@ -1796,7 +1861,7 @@ set "_SxsCmp=%_EsuCmp%"
 set "_SxsIdn=%_EsuIdn%"
 set "_SxsCF=64"
 set "_DsmLog=DismLCUs.log"
-for %%# in (%supdt%) do (set "pkgn=%%~n#"&set "dest=!_cabdir!\%%~n#"&call :pXML)
+for %%# in (%supdt%) do (set "cbsn=%%~n#"&set "dest=!_cabdir!\%%~n#"&call :pXML)
 )
 if defined cupdt (
 set "_SxsKey=%_CedKey%"
@@ -1804,7 +1869,7 @@ set "_SxsCmp=%_CedCmp%"
 set "_SxsIdn=%_CedIdn%"
 set "_SxsCF=256"
 set "_DsmLog=DismLCUs.log"
-for %%# in (%cupdt%) do (set "pkgn=%%~n#"&set "dest=!_cabdir!\%%~n#"&call :pXML)
+for %%# in (%cupdt%) do (set "cbsn=%%~n#"&set "dest=!_cabdir!\%%~n#"&call :pXML)
 )
 set _dualSxS=
 if defined dupdt (
@@ -1814,7 +1879,7 @@ set "_SxsCmp=%_EsuCmp%"
 set "_SxsIdn=%_EsuIdn%"
 set "_SxsCF=64"
 set "_DsmLog=DismLCUs.log"
-for %%# in (%dupdt%) do (set "pkgn=%%~n#"&set "dest=!_cabdir!\%%~n#"&call :pXML)
+for %%# in (%dupdt%) do (set "cbsn=%%~n#"&set "dest=!_cabdir!\%%~n#"&call :pXML)
 )
 set "_DsmLog=DismLCU.log"
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" set "_DsmLog=DismLCU_winpe.log"
@@ -1854,20 +1919,6 @@ if exist "!lcudir!\update.mum" if exist "!lcudir!\*.manifest" goto :eof
 rem echo.
 rem echo 1/1: %lcupkg% [LCU]
 if not exist "!lcudir!\" mkdir "!lcudir!"
-expand.exe -f:*.psf.cix.xml "!_UUP!\%lcupkg%" "!lcudir!" %_Null%
-set _sbst=0
-if exist "!lcudir!\*.psf.cix.xml" (
-subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
-if !_sbst! equ 1 pushd %_sdr%
-if not exist "%lcupkg%" (
-  copy /y "!_UUP!\%lcupkg:~0,-4%.*" . %_Nul3%
-  )
-if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
-PSFExtractor.exe %lcupkg% %_Null%
-if !_sbst! equ 1 popd
-if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
-goto :eof
-)
 expand.exe -f:* "!_UUP!\%lcupkg%" "!lcudir!" %_Null%
 7z.exe e "!_UUP!\%lcupkg%" -o"!lcudir!" update.mum -aoa %_Null%
 if exist "!lcudir!\*cablist.ini" (
@@ -1875,10 +1926,24 @@ if exist "!lcudir!\*cablist.ini" (
   del /f /q "!lcudir!\*cablist.ini" %_Nul3%
   del /f /q "!lcudir!\*.cab" %_Nul3%
 )
+set _sbst=0
+if exist "!lcudir!\*.psf.cix.xml" (
+if not exist "!lcudir!\express.psf.cix.xml" for /f %%# in ('dir /b /a:-d "!lcudir!\*.psf.cix.xml"') do rename "!lcudir!\%%#" express.psf.cix.xml %_Nul3%
+subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
+if !_sbst! equ 1 pushd %_sdr%
+if not exist "%lcupkg%" (
+copy /y "!_UUP!\%lcupkg:~0,-4%.*" . %_Nul3%
+if not exist "%lcupkg:~0,-4%.psf" for /f %%# in ('dir /b /a:-d "!_UUP!\%lcupkg:~0,-12%*.psf"') do copy /y "!_UUP!\%%#" %lcupkg:~0,-4%.psf %_Nul3%
+)
+if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
+PSFExtractor.exe %lcupkg% %_Null%
+if !_sbst! equ 1 popd
+if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
+)
 goto :eof
 
 :procmum
-if exist "!dest!\*.psf.cix.xml" if not defined psf_%package% goto :eof
+if exist "!dest!\*.psf.cix.xml" if not defined psf_%pkgn% goto :eof
 if exist "!dest!\*defender*.xml" (
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
 call :defender_check
@@ -1988,7 +2053,7 @@ goto :eof
   type nul>"%mumtarget%\Program Files\Microsoft\Edge\Edge.dat" 2>&1
   type nul>"%mumtarget%\Program Files\Microsoft\Edge\Edge.LCU.dat" 2>&1
   type nul>"%mumtarget%\Program Files\Microsoft\EdgeUpdate\EdgeUpdate.dat" 2>&1
-  if exist "%mumtarget%\Windows\SysWOW64\cmd.exe" (
+  if exist "%mumtarget%\Windows\SysWOW64\*.dll" (
     mkdir "%mumtarget%\Program Files (x86)\Microsoft\Edge\Application" %_Nul3%
     mkdir "%mumtarget%\Program Files (x86)\Microsoft\EdgeUpdate" %_Nul3%
     type nul>"%mumtarget%\Program Files (x86)\Microsoft\Edge\Edge.dat" 2>&1
@@ -1998,49 +2063,53 @@ goto :eof
 goto :eof
 
 :defender_check
-if %_skpp% equ 1 if %_skpd% equ 1 goto :eof
-set "_WDP=ProgramData\Microsoft\Windows Defender"
-if not exist "%mumtarget%\%_WDP%\Definition Updates\Updates\*.vdm" (set "mpamfe=!dest!"&goto :eof)
-if %_skpp% equ 0 dir /b /ad "%mumtarget%\%_WDP%\Platform\*.*.*.*" %_Nul3% && (
+if %_skpp% equ 1 if %_skpd% equ 1 (set /a _sum-=1&goto :eof)
+set "_MWD=ProgramData\Microsoft\Windows Defender"
+if not exist "%mumtarget%\%_MWD%\Definition Updates\Updates\*.vdm" (set "mpamfe=!dest!"&goto :eof)
+if %_skpp% equ 0 dir /b /ad "%mumtarget%\%_MWD%\Platform\*.*.*.*" %_Nul3% && (
 if not exist "!_cabdir!\*defender*.xml" expand.exe -f:*defender*.xml "!_UUP!\%package%" "!_cabdir!" %_Null%
 for /f %%i in ('dir /b /a:-d "!_cabdir!\*defender*.xml"') do for /f "tokens=3 delims=<> " %%# in ('type "!_cabdir!\%%i" ^| find /i "platform"') do (
-  dir /b /ad "%mumtarget%\%_WDP%\Platform\%%#*" %_Nul3% && set _skpp=1
+  dir /b /ad "%mumtarget%\%_MWD%\Platform\%%#*" %_Nul3% && set _skpp=1
   )
 )
-set "_ver1j="&set "_ver1n="
-set "_ver2j="&set "_ver2n="
-if %_skpd% equ 0 if exist "%mumtarget%\%_WDP%\Definition Updates\Updates\mpavdlta.vdm" (
-set "_fil1=%mumtarget%\%_WDP%\Definition Updates\Updates\mpavdlta.vdm"
+set "_ver1j=0"&set "_ver1n=0"
+set "_ver2j=0"&set "_ver2n=0"
+set "_fil1=%mumtarget%\%_MWD%\Definition Updates\Updates\mpavdlta.vdm"
+set "_fil2=!_cabdir!\mpavdlta.vdm"
+if %_skpd% equ 0 if exist "!_fil1!" (
 for /f "tokens=3,4 delims==." %%a in ('wmic datafile where "name='!_fil1:\=\\!'" get Version /value ^| find "="') do set "_ver1j=%%a"&set "_ver1n=%%b"
 expand.exe -i -f:mpavdlta.vdm "!_UUP!\%package%" "!_cabdir!" %_Null%
 )
-if exist "!_cabdir!\mpavdlta.vdm" (
-set "_fil2=!_cabdir!\mpavdlta.vdm"
+if exist "!_fil2!" (
 for /f "tokens=3,4 delims==." %%a in ('wmic datafile where "name='!_fil2:\=\\!'" get Version /value ^| find "="') do set "_ver2j=%%a"&set "_ver2n=%%b"
 )
-if defined _ver1j if defined _ver2j (
 if %_ver1j% gtr %_ver2j% set _skpd=1
 if %_ver1j% equ %_ver2j% if %_ver1n% geq %_ver2n% set _skpd=1
-)
-if %_skpp% equ 1 if %_skpd% equ 1 goto :eof
+if %_skpp% equ 1 if %_skpd% equ 1 (set /a _sum-=1&goto :eof)
 set "mpamfe=!dest!"
 goto :eof
 
 :defender_update
-xcopy /CIRY "!mpamfe!\Definition Updates\Updates" "%mumtarget%\%_WDP%\Definition Updates\Updates\" %_Nul3%
-xcopy /ECIRY "!mpamfe!\Platform" "%mumtarget%\%_WDP%\Platform\" %_Nul3%
+xcopy /CIRY "!mpamfe!\Definition Updates\Updates" "%mumtarget%\%_MWD%\Definition Updates\Updates\" %_Nul3%
+if exist "%mumtarget%\%_MWD%\Definition Updates\Updates\MpSigStub.exe" del /f /q "%mumtarget%\%_MWD%\Definition Updates\Updates\MpSigStub.exe" %_Nul3%
+xcopy /ECIRY "!mpamfe!\Platform" "%mumtarget%\%_MWD%\Platform\" %_Nul3%
 for /f %%# in ('dir /b /ad "!mpamfe!\Platform\*.*.*.*"') do set "_wdplat=%%#"
-copy /y "%mumtarget%\Program Files\Windows Defender\ConfigSecurityPolicy.exe" "%mumtarget%\%_WDP%\Platform\%_wdplat%\" %_Nul3%
-copy /y "%mumtarget%\Program Files\Windows Defender\MpAsDesc.dll" "%mumtarget%\%_WDP%\Platform\%_wdplat%\" %_Nul3%
-for /f %%# in ('dir /b /ad "%mumtarget%\Program Files\Windows Defender\*-*"') do (
-mkdir "%mumtarget%\%_WDP%\Platform\%_wdplat%\%%#" %_Nul3%
-copy /y "%mumtarget%\Program Files\Windows Defender\%%#\MpAsDesc.dll.mui" "%mumtarget%\%_WDP%\Platform\%_wdplat%\%%#\" %_Nul3%
+if exist "%mumtarget%\%_MWD%\Platform\%_wdplat%\MpSigStub.exe" del /f /q "%mumtarget%\%_MWD%\Platform\%_wdplat%\MpSigStub.exe" %_Nul3%
+if not exist "!mpamfe!\Platform\%_wdplat%\ConfigSecurityPolicy.exe" copy /y "%mumtarget%\Program Files\Windows Defender\ConfigSecurityPolicy.exe" "%mumtarget%\%_MWD%\Platform\%_wdplat%\" %_Nul3%
+if not exist "!mpamfe!\Platform\%_wdplat%\MpAsDesc.dll" copy /y "%mumtarget%\Program Files\Windows Defender\MpAsDesc.dll" "%mumtarget%\%_MWD%\Platform\%_wdplat%\" %_Nul3%
+if not exist "!mpamfe!\Platform\%_wdplat%\MpEvMsg.dll" copy /y "%mumtarget%\Program Files\Windows Defender\MpEvMsg.dll" "%mumtarget%\%_MWD%\Platform\%_wdplat%\" %_Nul3%
+if not exist "!mpamfe!\Platform\%_wdplat%\ProtectionManagement.dll" copy /y "%mumtarget%\Program Files\Windows Defender\ProtectionManagement.dll" "%mumtarget%\%_MWD%\Platform\%_wdplat%\" %_Nul3%
+for /f %%A in ('dir /b /ad "%mumtarget%\Program Files\Windows Defender\*-*"') do (
+if not exist "%mumtarget%\%_MWD%\Platform\%_wdplat%\%%A\" mkdir "%mumtarget%\%_MWD%\Platform\%_wdplat%\%%A" %_Nul3%
+if not exist "!mpamfe!\Platform\%_wdplat%\%%A\MpAsDesc.dll.mui" copy /y "%mumtarget%\Program Files\Windows Defender\%%A\MpAsDesc.dll.mui" "%mumtarget%\%_MWD%\Platform\%_wdplat%\%%A\" %_Nul3%
+if not exist "!mpamfe!\Platform\%_wdplat%\%%A\MpEvMsg.dll.mui" copy /y "%mumtarget%\Program Files\Windows Defender\%%A\MpEvMsg.dll.mui" "%mumtarget%\%_MWD%\Platform\%_wdplat%\%%A\" %_Nul3%
+if not exist "!mpamfe!\Platform\%_wdplat%\%%A\ProtectionManagement.dll.mui" copy /y "%mumtarget%\Program Files\Windows Defender\%%A\ProtectionManagement.dll.mui" "%mumtarget%\%_MWD%\Platform\%_wdplat%\%%A\" %_Nul3%
 )
-if /i not %arch%==x64 goto :eof
-copy /y "%mumtarget%\Program Files (x86)\Windows Defender\MpAsDesc.dll" "%mumtarget%\%_WDP%\Platform\%_wdplat%\x86\" %_Nul3%
-for /f %%# in ('dir /b /ad "%mumtarget%\Program Files (x86)\Windows Defender\*-*"') do (
-mkdir "%mumtarget%\%_WDP%\Platform\%_wdplat%\x86\%%#" %_Nul3%
-copy /y "%mumtarget%\Program Files (x86)\Windows Defender\%%#\MpAsDesc.dll.mui" "%mumtarget%\%_WDP%\Platform\%_wdplat%\x86\%%#\" %_Nul3%
+if /i %arch%==x86 goto :eof
+if not exist "!mpamfe!\Platform\%_wdplat%\x86\MpAsDesc.dll" copy /y "%mumtarget%\Program Files (x86)\Windows Defender\MpAsDesc.dll" "%mumtarget%\%_MWD%\Platform\%_wdplat%\x86\" %_Nul3%
+for /f %%A in ('dir /b /ad "%mumtarget%\Program Files (x86)\Windows Defender\*-*"') do (
+if not exist "%mumtarget%\%_MWD%\Platform\%_wdplat%\x86\%%A\" mkdir "%mumtarget%\%_MWD%\Platform\%_wdplat%\x86\%%A" %_Nul3%
+if not exist "!mpamfe!\Platform\%_wdplat%\x86\%%A\MpAsDesc.dll.mui" copy /y "%mumtarget%\Program Files (x86)\Windows Defender\%%A\MpAsDesc.dll.mui" "%mumtarget%\%_MWD%\Platform\%_wdplat%\x86\%%A\" %_Nul3%
 )
 goto :eof
 
@@ -2048,7 +2117,7 @@ goto :eof
 if %_build% neq 18362 (
 call :cXML stage
 echo.
-echo Processing 1 of 1 - Staging %pkgn%
+echo Processing 1 of 1 - Staging %cbsn%
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\%_DsmLog%" /Apply-Unattend:"!_cabdir!\stage.xml"
 if !errorlevel! neq 0 if !errorlevel! neq 3010 goto :eof
 )
@@ -2326,12 +2395,8 @@ xcopy /CIDRY "%_mount%\Windows\Boot\EFI\memtest.efi" "%_target%\efi\microsoft\bo
 )
 xcopy /CIDRY "%_mount%\Windows\Boot\EFI\bootmgfw.efi" "%_target%\efi\boot\!efifile!" %_Nul3%
 xcopy /CIDRY "%_mount%\Windows\Boot\EFI\bootmgr.efi" "%_target%\" %_Nul3%
-)
-if exist "%_mount%\Windows\Boot\EFI\winsipolicy.p7b" if exist "%_target%\efi\microsoft\boot\winsipolicy.p7b" (
-xcopy /CEDRY "%_mount%\Windows\Boot\EFI\winsipolicy.p7b" "%_target%\efi\microsoft\boot\winsipolicy.p7b" %_Nul3%
-)
-if exist "%_mount%\Windows\Boot\EFI\CIPolicies\" if exist "%_target%\efi\microsoft\boot\cipolicies\" (
-xcopy /CEDRY "%_mount%\Windows\Boot\EFI\CIPolicies\*" "%_target%\efi\microsoft\boot\cipolicies\" %_Nul3%
+if exist "%_mount%\Windows\Boot\EFI\winsipolicy.p7b" if exist "%_target%\efi\microsoft\boot\winsipolicy.p7b" xcopy /CEDRY "%_mount%\Windows\Boot\EFI\winsipolicy.p7b" "%_target%\efi\microsoft\boot\winsipolicy.p7b" %_Nul3%
+if exist "%_mount%\Windows\Boot\EFI\CIPolicies\" if exist "%_target%\efi\microsoft\boot\cipolicies\" xcopy /CEDRY "%_mount%\Windows\Boot\EFI\CIPolicies\*" "%_target%\efi\microsoft\boot\cipolicies\" %_Nul3%
 )
 if !handle2! equ 0 if %dvd% equ 1 if not exist "%_mount%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if exist "%_mount%\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
 set handle2=1
@@ -2346,6 +2411,8 @@ for /f %%i in ('"offlinereg.exe "%_mount%\Windows\system32\config\SOFTWARE" "!is
     )
   )
 )
+if exist "%_mount%\Windows\system32\UpdateAgent.dll" if not exist "%SystemRoot%\temp\UpdateAgent.dll" copy /y "%_mount%\Windows\system32\UpdateAgent.dll" %SystemRoot%\temp\ %_Nul1%
+if exist "%_mount%\Windows\system32\Facilitator.dll" if not exist "%SystemRoot%\temp\Facilitator.dll" copy /y "%_mount%\Windows\system32\Facilitator.dll" %SystemRoot%\temp\ %_Nul1%
 %_dism2%:"!_cabdir!" /Unmount-Wim /MountDir:"%_mount%" /Commit
 if !errorlevel! neq 0 (
 %_dism1% /Image:"%_mount%" /Get-Packages %_Null%
@@ -2433,29 +2500,41 @@ if defined lcupkg call :ReLCU
 call :cleanmanual&goto :eof
 
 :setuphostprep
-set "_WSH=SOFTWARE\Microsoft\Windows Script Host\Settings"
-reg.exe query "HKCU\%_WSH%" /v Enabled %_Nul2% | find /i "0x0" %_Nul1% && (set _vbscu=1&reg.exe delete "HKCU\%_WSH%" /v Enabled /f %_Nul3%)
-reg.exe query "HKLM\%_WSH%" /v Enabled %_Nul2% | find /i "0x0" %_Nul1% && (set _vbslm=1&reg.exe delete "HKLM\%_WSH%" /v Enabled /f %_Nul3%)
- echo>bin\filever.vbs Set objFSO = CreateObject^("Scripting.FileSystemObject"^)
-echo>>bin\filever.vbs Wscript.Echo objFSO.GetFileVersion^(WScript.arguments^(0^)^)
-set _svr1=0&set _svr2=0&set _svr3=0
-for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs ISOFOLDER\sources\setuphost.exe') do set _svr1=%%#
-for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs ISOFOLDER\sources\setupprep.exe') do set _svr2=%%#
-if exist "bin\temp\updateagent.dll" for /f "tokens=4 delims=." %%# in ('cscript //nologo bin\filever.vbs bin\temp\updateagent.dll') do set _svr3=%%#
-set _setup=ISOFOLDER\sources\setuphost.exe
+copy /y ISOFOLDER\sources\setuphost.exe %SystemRoot%\temp\ %_Nul1%
+copy /y ISOFOLDER\sources\setupprep.exe %SystemRoot%\temp\ %_Nul1%
+set _svr1=0&set _svr2=0&set _svr3=0&set _svr4=0
+set "_fvr1=%SystemRoot%\temp\setuphost.exe"
+set "_fvr2=%SystemRoot%\temp\setupprep.exe"
+set "_fvr3=%SystemRoot%\temp\UpdateAgent.dll"
+set "_fvr4=%SystemRoot%\temp\Facilitator.dll"
+if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr1:\=\\!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr2:\=\\!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr3:\=\\!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr4:\=\\!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
+set "_chk=!_fvr1!"
+if %chkmin% equ %_svr1% set "_chk=!_fvr1!"&goto :prephostsetup
+if %chkmin% equ %_svr2% set "_chk=!_fvr2!"&goto :prephostsetup
+if %chkmin% equ %_svr3% set "_chk=!_fvr3!"&goto :prephostsetup
+if %chkmin% equ %_svr4% set "_chk=!_fvr4!"&goto :prephostsetup
 if %_svr2% gtr %_svr1% (
-if %_svr2% gtr %_svr3% set _setup=ISOFOLDER\sources\setupprep.exe
-if %_svr3% gtr %_svr2% set _setup=bin\temp\updateagent.dll
+if %_svr2% gtr %_svr3% if %_svr2% gtr %_svr4% set "_chk=!_fvr2!"
+if %_svr3% gtr %_svr2% if %_svr3% gtr %_svr4% set "_chk=!_fvr3!"
+if %_svr4% gtr %_svr2% if %_svr4% gtr %_svr3% set "_chk=!_fvr4!"
 )
 if %_svr3% gtr %_svr1% (
-if %_svr2% gtr %_svr3% set _setup=ISOFOLDER\sources\setupprep.exe
-if %_svr3% gtr %_svr2% set _setup=bin\temp\updateagent.dll
+if %_svr2% gtr %_svr3% if %_svr2% gtr %_svr4% set "_chk=!_fvr2!"
+if %_svr3% gtr %_svr2% if %_svr3% gtr %_svr4% set "_chk=!_fvr3!"
+if %_svr4% gtr %_svr2% if %_svr4% gtr %_svr3% set "_chk=!_fvr4!"
 )
-7z.exe l "%_setup%" >.\bin\version.txt 2>&1
-if exist "bin\temp\updateagent.dll" rmdir /s /q bin\temp\
-del /f /q .\bin\filever.vbs %_Nul3%
-if defined _vbscu reg.exe add "HKCU\%_WSH%" /v Enabled /t REG_DWORD /d 0 /f %_Nul3%
-if defined _vbslm reg.exe add "HKLM\%_WSH%" /v Enabled /t REG_DWORD /d 0 /f %_Nul3%
+if %_svr4% gtr %_svr1% (
+if %_svr2% gtr %_svr3% if %_svr2% gtr %_svr4% set "_chk=!_fvr2!"
+if %_svr3% gtr %_svr2% if %_svr3% gtr %_svr4% set "_chk=!_fvr3!"
+if %_svr4% gtr %_svr2% if %_svr4% gtr %_svr3% set "_chk=!_fvr4!"
+)
+
+:prephostsetup
+7z.exe l "%_chk%" >.\bin\version.txt 2>&1
+del /f /q "!_fvr1!" "!_fvr2!" "!_fvr3!" "!_fvr4!" %_Nul3%
 exit /b
 
 :V_Auto
@@ -2531,7 +2610,7 @@ rmdir /s /q "!_cabdir!\" %_Nul3%
 )
 if exist "!_cabdir!\" (
 mkdir %_drv%\_del286 %_Null%
-robocopy %_drv%\_del286 "!_cabdir!" /MIR %_Null%
+robocopy %_drv%\_del286 "!_cabdir!" /MIR /R:1 /W:1 /NFL /NDL /NP /NJH /NJS %_Null%
 rmdir /s /q %_drv%\_del286\ %_Null%
 rmdir /s /q "!_cabdir!\" %_Nul3%
 )

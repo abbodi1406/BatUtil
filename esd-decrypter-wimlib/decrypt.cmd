@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v60
+@set uivr=v61
 @echo off
 :: Change to 1 to get ISO name similar to ESD name (ESD name must be the original, with or without sha1 hash suffix)
 set ISOnameESD=0
@@ -66,7 +66,7 @@ if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
 
-%_Null% reg query HKU\S-1-5-19 && (
+%_Null% reg.exe query HKU\S-1-5-19 && (
   goto :Passed
   ) || (
   if defined _elev goto :E_Admin
@@ -130,7 +130,6 @@ set VOL=0
 set UnifyWinre=0
 set SINGLE=0
 set newkeys=0
-set uLang=0
 set "_ram={7619dcc8-fafe-11d9-b411-000476eba25f}"
 set "line============================================================="
 set "lin2=%line%================"
@@ -168,7 +167,7 @@ goto :check
 
 :prompt2
 if %_Debug% neq 0 exit /b
-cls
+@cls
 set ENCRYPTEDESD=
 echo %line%
 echo Found more than one ESD file in the current directory
@@ -194,26 +193,24 @@ if %ERRORTEMP% equ 74 set ENCRYPTED=1&goto :PRE_INFO
 if %ERRORTEMP% neq 0 goto :E_File
 
 :PRE_INFO
+set uLang=0
 set _SrvESD=0
 imagex /info "!ENCRYPTEDESD!">bin\infoall.txt 2>&1
-find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionida=1) || (set editionida=0)
-find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionidn=1) || (set editionidn=0)
-find /i "CoreSingleLanguage</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionids=1) || (set editionids=0)
-find /i "CoreCountrySpecific</EDITIONID>" bin\infoall.txt %_Nul1% && (set editionidc=1) || (set editionidc=0)
+find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set aedtn=1) || (set aedtn=0)
+find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set nedtn=1) || (set nedtn=0)
+find /i "CoreSingleLanguage</EDITIONID>" bin\infoall.txt %_Nul1% && (set sedtn=1) || (set sedtn=0)
+find /i "CoreCountrySpecific</EDITIONID>" bin\infoall.txt %_Nul1% && (set cedtn=1) || (set cedtn=0)
 find /i "<EDITIONID>Server" bin\infoall.txt %_Nul1% && (set _SrvESD=1)
 imagex /info "!ENCRYPTEDESD!" 4 >bin\info.txt 2>&1
-for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do set build=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<MAJOR>" bin\info.txt') do set ver1=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<MINOR>" bin\info.txt') do set ver2=%%#
+for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do set _build=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<DEFAULT>" bin\info.txt') do set langid=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<EDITIONID>" bin\info.txt') do set editionid=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<ARCH>" bin\info.txt') do (if %%# equ 0 (set arch=x86) else if %%# equ 9 (set arch=x64) else (set arch=arm64))
 for /f "tokens=3 delims=: " %%# in ('findstr /i /b /c:"Image Count" bin\infoall.txt') do (if %%# geq 5 set MULTI=%%#)
-if %build% leq 9600 goto :E_W81
-if /i %langid%==ru-ru set uLang=1
-if /i %langid%==zh-cn set uLang=1
-if /i %langid%==zh-tw set uLang=1
-if /i %langid%==zh-hk set uLang=1
+if %_build% leq 9600 goto :E_W81
+for %%# in (ru-ru,zh-cn,zh-tw,zh-hk) do if /i %langid%==%%# set uLang=1
 find /i "<DISPLAYNAME>" bin\info.txt %_Nul1% && (
 for /f "tokens=3 delims=<>" %%# in ('find /i "<DISPLAYNAME>" bin\info.txt') do set "_os=%%#"
 if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.txt') do set "_os=%%#"
@@ -221,11 +218,14 @@ if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.
 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.txt') do set "_os=%%#"
 )
 if %MULTI% neq 0 for /L %%A in (4,1,%MULTI%) do (
-imagex /info "!ENCRYPTEDESD!" %%A | find /i "<DISPLAYNAME>" %_Nul1% && (
-for /f "tokens=3 delims=<>" %%# in ('imagex /info "!ENCRYPTEDESD!" %%A ^| find /i "<DISPLAYNAME>"') do set "_os%%A=%%#"
-if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('imagex /info "!ENCRYPTEDESD!" %%A ^| find /i "<NAME>"') do set "_os%%A=%%#"
+imagex /info "!ENCRYPTEDESD!" %%A >bin\info%%A.txt 2>&1
+)
+if %MULTI% neq 0 for /L %%A in (4,1,%MULTI%) do (
+find /i "<DISPLAYNAME>" bin\info%%A.txt %_Nul1% && (
+for /f "tokens=3 delims=<>" %%# in ('find /i "<DISPLAYNAME>" bin\info%%A.txt') do set "_os%%A=%%#"
+if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info%%A.txt') do set "_os%%A=%%#"
 ) || (
-for /f "tokens=3 delims=<>" %%# in ('imagex /info "!ENCRYPTEDESD!" %%A ^| find /i "<NAME>"') do set "_os%%A=%%#"
+for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info%%A.txt') do set "_os%%A=%%#"
 )
 )
 del /f /q bin\info*.txt
@@ -234,7 +234,7 @@ if %MultiChoice% neq 1 goto :MAINMENU
 
 :MULTIMENU
 if %_Debug% neq 0 goto :MAINMENU
-cls
+@cls
 echo %line%
 echo                ESD file contains %images% editions:
 echo %line%
@@ -259,7 +259,7 @@ if errorlevel 1 goto :MAINMENU
 goto :MULTIMENU
 
 :SINGLEMENU
-cls
+@cls
 set _single=
 echo %line%
 for /L %%# in (4,1,%MULTI%) do (
@@ -276,7 +276,7 @@ if %_single% gtr %images% echo.&echo %_single% is higher than available editions
 set /a _single+=3&goto :MAINMENU
 
 :RANGEMENU
-cls
+@cls
 set _range=
 set _start=
 set _end=
@@ -301,7 +301,7 @@ if %_start% gtr %images% echo.&echo Range Start is higher than available edition
 set /a _start+=3&set /a _end+=3&goto :MAINMENU
 
 :RANDOMMENU
-cls
+@cls
 set _count=
 set _index=
 echo %line%
@@ -333,8 +333,8 @@ set _index%_count%=%1
 goto :eof
 
 :MAINMENU
-if %_Debug% neq 0 (set WIMFILE=install.wim&goto :ISO)
-cls
+if %_Debug% neq 0 (set WIMFILE=install.wim&goto :ESDISO)
+@cls
 echo %line%
 echo.       1 - Create ISO with Standard install.wim
 echo.       2 - Create ISO with Compressed install.esd
@@ -355,14 +355,14 @@ choice /c 1234590 /n /m "Choose a menu option, or press 0 to exit: "
 if errorlevel 7 (set _Debug=1&goto :QUIT)
 if errorlevel 6 (if /i %Backup%==OFF (set Backup=ON) else (set Backup=OFF))&goto :MAINMENU
 if errorlevel 5 (if %ENCRYPTED%==1 (goto :DDECRYPT) else (goto :INFO))
-if errorlevel 4 (set WIMFILE=install.esd&goto :WIM)
-if errorlevel 3 (set WIMFILE=install.wim&goto :WIM)
-if errorlevel 2 (set WIMFILE=install.esd&goto :ISO)
-if errorlevel 1 (set WIMFILE=install.wim&goto :ISO)
+if errorlevel 4 (set WIMFILE=install.esd&goto :ESDWIM)
+if errorlevel 3 (set WIMFILE=install.wim&goto :ESDWIM)
+if errorlevel 2 (set WIMFILE=install.esd&goto :ESDISO)
+if errorlevel 1 (set WIMFILE=install.wim&goto :ESDISO)
 goto :MAINMENU
 
-:ISO
-cls
+:ESDISO
+@cls
 echo.
 echo %line%
 echo Running ESD -^> ISO %uivr%
@@ -381,7 +381,7 @@ wimlib-imagex.exe apply "!ENCRYPTEDESD!" 1 ISOFOLDER\ --no-acls --no-attributes 
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Apply
 if exist ISOFOLDER\MediaMeta.xml del /f /q ISOFOLDER\MediaMeta.xml %_Nul3%
-rem rmdir /s /q ISOFOLDER\sources\uup\ %_Nul3%
+:: rmdir /s /q ISOFOLDER\sources\uup\ %_Nul3%
 echo.
 echo %line%
 echo Creating boot.wim . . .
@@ -395,22 +395,21 @@ wimlib-imagex.exe export "!ENCRYPTEDESD!" 3 ISOFOLDER\sources\boot.wim --boot %_
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
 wimlib-imagex.exe extract ISOFOLDER\sources\boot.wim 2 sources\dism.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-set ERRORTEMP=%ERRORLEVEL%
-if %ERRORTEMP% neq 0 (
+if not exist "bin\temp\dism.exe" (
 wimlib-imagex.exe update ISOFOLDER\sources\boot.wim 2 <bin\wim-update.txt %_Null%
 )
-rmdir /s /q .\bin\temp %_Nul3%
+if exist bin\temp\ rmdir /s /q bin\temp\
 echo.
 echo %line%
 echo Creating %WIMFILE% . . .
 echo %line%
 echo.
-set source=4
-if defined _single set source=%_single%
-if defined _start set source=%_start%&set /a _start+=1
-if defined _index set source=%_index1%
-if %WIMFILE%==install.wim set _rrr=--compress=LZX
-wimlib-imagex.exe export "!ENCRYPTEDESD!" %source% ISOFOLDER\sources\%WIMFILE% %_rrr% %_Supp%
+set _src=4
+if defined _single set _src=%_single%
+if defined _start set _src=%_start%&set /a _start+=1
+if defined _index set _src=%_index1%
+if /i %WIMFILE%==install.wim set _rrr=--compress=LZX
+wimlib-imagex.exe export "!ENCRYPTEDESD!" %_src% ISOFOLDER\sources\%WIMFILE% %_rrr% %_Supp%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
 if defined _single (
@@ -457,9 +456,9 @@ if %ERRORTEMP% neq 0 goto :E_ISO
 echo.
 goto :QUIT
 
-:WIM
-cls
-if %WIMFILE%==install.wim if exist "!_work!\install.wim" (
+:ESDWIM
+@cls
+if /i %WIMFILE%==install.wim if exist "!_work!\install.wim" (
 echo.
 echo %line%
 echo An install.wim file is already present in the current folder
@@ -475,12 +474,12 @@ echo %line%
 echo Creating %WIMFILE% . . .
 echo %line%
 echo.
-set source=4
-if defined _single set source=%_single%
-if defined _start set source=%_start%&set /a _start+=1
-if defined _index set source=%_index1%
-if %WIMFILE%==install.wim set _rrr=--compress=LZX
-wimlib-imagex.exe export "!ENCRYPTEDESD!" %source% %WIMFILE% %_rrr% %_Supp%
+set _src=4
+if defined _single set _src=%_single%
+if defined _start set _src=%_start%&set /a _start+=1
+if defined _index set _src=%_index1%
+if /i %WIMFILE%==install.wim set _rrr=--compress=LZX
+wimlib-imagex.exe export "!ENCRYPTEDESD!" %_src% %WIMFILE% %_rrr% %_Supp%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
 if defined _single goto :WIMproceed
@@ -505,15 +504,15 @@ echo.
 goto :QUIT
 
 :INFO
-cls
+@cls
 if %PREPARED% equ 0 call :PREPARE
-cls
+@cls
 echo %line%
 echo                     ESD Contents Info
 echo %line%
 echo     Arch: %arch%
 echo Language: %langid%
-echo  Version: %ver1%.%ver2%.%revision%
+echo  Version: %ver1%.%ver2%.%revver%
 if defined branch echo   Branch: %branch%
 if %MULTI% equ 0 echo       OS: %_os%
 if %MULTI% neq 0 (
@@ -539,112 +538,121 @@ if !CheckWinre! equ 1 for /f "tokens=2 delims== " %%# in ('wimlib-imagex.exe dir
 )
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 1 sources\ei.cfg --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
 if exist "bin\temp\ei.cfg" type .\bin\temp\ei.cfg %_Nul2% | find /i "Volume" %_Nul1% && set VOL=1
-if %MULTI% equ 0 (set sourcetime=4) else (set sourcetime=%MULTI%)
-for /f "tokens=5-10 delims=: " %%G in ('wimlib-imagex.exe info "!ENCRYPTEDESD!" %sourcetime% ^| find /i "Last Modification Time"') do (set mmm=%%G&set "isotime=%%H/%%L,%%I:%%J:%%K"&set _year=%%L&set _month=%%G&set _day=%%H&set _hour=%%I&set _mint=%%J)
-call :setdate %mmm%
-call :dateset %_month%
+if %MULTI% equ 0 (set _stm=4) else (set _stm=%MULTI%)
+call :setdate
 
 :setlabel
-if %build% geq 16299 (
+if %_build% geq 16299 (
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 1 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 7z.exe l .\bin\temp\setuphost.exe >.\bin\temp\version.txt 2>&1
 ) else (
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 3 Windows\System32\ntoskrnl.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 7z.exe l .\bin\temp\ntoskrnl.exe >.\bin\temp\version.txt 2>&1
 )
-for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set version=%%i.%%j&set vermajor=%%i&set verminor=%%j&set branch=%%k&set labeldate=%%l)
-set revision=%version%&set revmajor=%vermajor%&set revminor=%verminor%
+for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l)
+set revver=%uupver%&set revmaj=%uupmaj%&set revmin=%uupmin%
+set "tok=6,7"&set "toe=5,6,7"
 if /i %arch%==x86 (set _ss=x86) else if /i %arch%==x64 (set _ss=amd64) else (set _ss=arm64)
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 4 Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision*.manifest --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-if exist "bin\temp\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens=6,7 delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*_microsoft-windows-coreos-revision*.manifest') do set revision=%%A.%%B&set revmajor=%%A&set revminor=%%B
-if %build% geq 15063 (
+if exist "bin\temp\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens=%tok% delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*_microsoft-windows-coreos-revision*.manifest') do set revver=%%A.%%B&set revmaj=%%A&set revmin=%%B
+if %_build% geq 15063 (
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 4 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 set "isokey=Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
 for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% ^| findstr /i /r ".*\.OS""') do if not errorlevel 1 (
-  for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Branch %_Nul6%"') do set "isobranch=%%~A"
-  for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Version %_Nul6%"') do if %%A gtr !revmajor! (
-    set "revision=%%~A.%%B
-    set revmajor=%%~A
-    set "revminor=%%B
+  for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Branch %_Nul6%"') do set "revbranch=%%~A"
+  for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Version %_Nul6%"') do if %%A gtr !revmaj! (
+    set "revver=%%~A.%%B
+    set revmaj=%%~A
+    set "revmin=%%B
     )
   )
 )
-if defined isobranch set branch=%isobranch%
-if %revmajor%==18363 (
+if defined revbranch set branch=%revbranch%
+if %revmaj%==18363 (
 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
-if %version:~0,5%==18362 set version=18363%version:~5%
+if %uupver:~0,5%==18362 set uupver=18363%uupver:~5%
 )
-if %revmajor%==19042 (
+if %revmaj%==19042 (
 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
-if %version:~0,5%==19041 set version=19042%version:~5%
+if %uupver:~0,5%==19041 set uupver=19042%uupver:~5%
 )
-if %revmajor%==19043 (
+if %revmaj%==19043 (
 if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
-if %version:~0,5%==19041 set version=19043%version:~5%
+if %uupver:~0,5%==19041 set uupver=19043%uupver:~5%
 )
-if %revmajor%==19044 (
+if %revmaj%==19044 (
 if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
-if %version:~0,5%==19041 set version=19044%version:~5%
+if %uupver:~0,5%==19041 set uupver=19044%uupver:~5%
 )
-if %verminor% lss %revminor% (
-set version=%revision%
-set verminor=%revminor%
+if %revmaj%==19045 (
+if /i "%branch:~0,2%"=="vb" set branch=22h1%branch:~2%
+if %uupver:~0,5%==19041 set uupver=19045%uupver:~5%
+)
+if %uupmin% lss %revmin% (
+set uupver=%revver%
+set uupmin=%revmin%
+if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 4 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
 for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
-set "labeldate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
+set "uupdate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 )
-set _label2=
+set _legacy=
 if /i "%branch%"=="WinBuild" (
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 4 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
-for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l&set branch=%%l)
+for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _legacy=%%i.%%j.%%m.%%l&set branch=%%l)
 )
-if defined _label2 (set _label=%_label2%) else (set _label=%version%.%labeldate%.%branch%)
-rmdir /s /q .\bin\temp
+if defined _legacy (set _label=%_legacy%) else (set _label=%uupver%.%uupdate%.%branch%)
+rmdir /s /q bin\temp\
+
 set _rfr=refresh
 set _rsr=release_svc_%_rfr%
-if %revmajor%==19044 (set _label=%revision%.%_time%.21h2_%_rsr%&set branch=21h2_%_rsr%)
-if %revmajor%==19043 (set _label=%revision%.%_time%.21h1_%_rsr%&set branch=21h1_%_rsr%)
-if %revision%==19043.928 (set _label=19043.928.210409-1212.21h1_%_rsr%&set branch=21h1_%_rsr%)
-if %revision%==19043.867 (set _label=19043.867.210305-1751.21h1_%_rsr%&set branch=21h1_%_rsr%)
-if %revmajor%==19042 (set _label=%revision%.%_time%.20h2_%_rsr%&set branch=20h2_%_rsr%)
-if %revision%==19042.631 (set _label=19042.631.201119-0144.20h2_%_rsr%&set branch=20h2_%_rsr%)
-if %revision%==19042.630 (set _label=19042.630.201106-1636.20h2_%_rsr%&set branch=20h2_%_rsr%)
-if %revision%==19042.572 (set _label=19042.572.201009-1947.20h2_%_rsr%&set branch=20h2_%_rsr%)
-if %revision%==19042.508 (set _label=19042.508.200927-1902.20h2_%_rsr%&set branch=20h2_%_rsr%)
-if %revision%==19042.450 (set _label=19042.450.200814-0345.20h2_%_rsr%&set branch=20h2_%_rsr%)
-if %revision%==19041.572 (set _label=19041.572.201009-1946.vb_%_rsr%&set branch=vb_%_rsr%)
-if %revision%==19041.508 (set _label=19041.508.200907-0256.vb_%_rsr%&set branch=vb_%_rsr%)
-if %revision%==19041.450 (set _label=19041.450.200808-0726.vb_%_rsr%&set branch=vb_%_rsr%)
-if %revision%==19041.388 (set _label=19041.388.200710-1729.vb_%_rsr%&set branch=vb_%_rsr%)
-if %revision%==19041.264 (set _label=19041.264.200511-0456.vb_%_rsr%&set branch=vb_%_rsr%)
-if %revision%==19041.84  (set _label=19041.84.200218-1143.vb_%_rsr%&set branch=vb_%_rsr%)
-if %revmajor%==18363 (set _label=%revision%.%_time%.19h2_%_rsr%&set branch=19h2_%_rsr%)
-if %revision%==18363.1139 (set _label=18363.1139.201008-0514.19h2_%_rsr%&set branch=19h2_%_rsr%)
-if %revision%==18363.592 (set _label=18363.592.200109-2016.19h2_%_rsr%&set branch=19h2_%_rsr%)
-if %revision%==18363.418 (set _label=18363.418.191007-0143.19h2_%_rsr%&set branch=19h2_%_rsr%)
-if %revision%==18363.356 (set _label=18363.356.190918-2052.19h2_%_rsr%&set branch=19h2_%_rsr%)
-if %revision%==18362.356 (set _label=18362.356.190909-1636.19h1_%_rsr%&set branch=19h1_%_rsr%)
-if %revision%==18362.295 (set _label=18362.295.190809-2228.19h1_%_rsr%&set branch=19h1_%_rsr%)
-if %revision%==18362.239 (set _label=18362.239.190709-0052.19h1_%_rsr%&set branch=19h1_%_rsr%)
-if %revision%==18362.175 (set _label=18362.175.190612-0046.19h1_%_rsr%&set branch=19h1_%_rsr%)
-if %revision%==18362.30  (set _label=18362.30.190401-1528.19h1_%_rsr%&set branch=19h1_%_rsr%)
-if %revision%==17763.379 (set _label=17763.379.190312-0539.rs5_%_rsr%&set branch=rs5_%_rsr%)
-if %revision%==17763.253 (set _label=17763.253.190108-0006.rs5_%_rsr%&set branch=rs5_%_rsr%)
-if %revision%==17763.107 (set _label=17763.107.181029-1455.rs5_%_rsr%&set branch=rs5_%_rsr%)
-if %revision%==17134.112 (set _label=17134.112.180619-1212.rs4_%_rsr%&set branch=rs4_%_rsr%)
-if %revision%==16299.125 (set _label=16299.125.171213-1220.rs3_%_rsr%&set branch=rs3_%_rsr%)
-if %revision%==16299.64  (set _label=16299.15.171109-1522.rs3_%_rsr%&set branch=rs3_%_rsr%)
-if %revision%==15063.483 (set _label=15063.0.170710-1358.rs2_%_rsr%&set branch=rs2_%_rsr%)
-if %revision%==15063.413 (set _label=15063.0.170607-1447.rs2_%_rsr%&set branch=rs2_%_rsr%)
-if %revision%==14393.447 (set _label=14393.0.161119-1705.rs1_%_rfr%&set branch=rs1_%_rfr%)
-if %revision%==10586.164 (set _label=10586.0.160426-1409.th2_%_rfr%&set branch=th2_%_rfr%)
-if %revision%==10586.104 (set _label=10586.0.160212-2000.th2_%_rfr%&set branch=th2_%_rfr%)
-if %revision%==10240.16487 (set _label=10240.16393.150909-1450.th1_%_rfr%&set branch=th1_%_rfr%)
+if %revver%==22000.132 (set _label=22000.132.210809-2349.co_%_rsr%&set branch=co_%_rsr%&set ISOnameESD=0)
+if %revmaj%==19045 (set _label=%revver%.%_time%.22h1_%_rsr%&set branch=22h1_%_rsr%)
+if %revmaj%==19044 (set _label=%revver%.%_time%.21h2_%_rsr%&set branch=21h2_%_rsr%)
+if %revver%==19044.1165 (set _label=19044.1165.210806-1742.21h2_%_rsr%&set branch=21h2_%_rsr%&set ISOnameESD=0)
+if %revmaj%==19043 (set _label=%revver%.%_time%.21h1_%_rsr%&set branch=21h1_%_rsr%)
+if %revver%==19043.928 (set _label=19043.928.210409-1212.21h1_%_rsr%&set branch=21h1_%_rsr%&set ISOnameESD=0)
+if %revver%==19043.867 (set _label=19043.867.210305-1751.21h1_%_rsr%&set branch=21h1_%_rsr%&set ISOnameESD=0)
+if %revmaj%==19042 (set _label=%revver%.%_time%.20h2_%_rsr%&set branch=20h2_%_rsr%)
+if %revver%==19042.1052 (set _label=19042.1052.210606-1844.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
+if %revver%==19042.631 (set _label=19042.631.201119-0144.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
+if %revver%==19042.630 (set _label=19042.630.201106-1636.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
+if %revver%==19042.572 (set _label=19042.572.201009-1947.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
+if %revver%==19042.508 (set _label=19042.508.200927-1902.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
+if %revver%==19042.450 (set _label=19042.450.200814-0345.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
+if %revver%==19041.572 (set _label=19041.572.201009-1946.vb_%_rsr%&set branch=vb_%_rsr%&set ISOnameESD=0)
+if %revver%==19041.508 (set _label=19041.508.200907-0256.vb_%_rsr%&set branch=vb_%_rsr%&set ISOnameESD=0)
+if %revver%==19041.450 (set _label=19041.450.200808-0726.vb_%_rsr%&set branch=vb_%_rsr%&set ISOnameESD=0)
+if %revver%==19041.388 (set _label=19041.388.200710-1729.vb_%_rsr%&set branch=vb_%_rsr%&set ISOnameESD=0)
+if %revver%==19041.264 (set _label=19041.264.200511-0456.vb_%_rsr%&set branch=vb_%_rsr%&set ISOnameESD=0)
+if %revver%==19041.84  (set _label=19041.84.200218-1143.vb_%_rsr%&set branch=vb_%_rsr%&set ISOnameESD=0)
+if %revmaj%==18363 (set _label=%revver%.%_time%.19h2_%_rsr%&set branch=19h2_%_rsr%)
+if %revver%==18363.1139 (set _label=18363.1139.201008-0514.19h2_%_rsr%&set branch=19h2_%_rsr%&set ISOnameESD=0)
+if %revver%==18363.592 (set _label=18363.592.200109-2016.19h2_%_rsr%&set branch=19h2_%_rsr%&set ISOnameESD=0)
+if %revver%==18363.418 (set _label=18363.418.191007-0143.19h2_%_rsr%&set branch=19h2_%_rsr%&set ISOnameESD=0)
+if %revver%==18363.356 (set _label=18363.356.190918-2052.19h2_%_rsr%&set branch=19h2_%_rsr%&set ISOnameESD=0)
+if %revver%==18362.356 (set _label=18362.356.190909-1636.19h1_%_rsr%&set branch=19h1_%_rsr%&set ISOnameESD=0)
+if %revver%==18362.295 (set _label=18362.295.190809-2228.19h1_%_rsr%&set branch=19h1_%_rsr%&set ISOnameESD=0)
+if %revver%==18362.239 (set _label=18362.239.190709-0052.19h1_%_rsr%&set branch=19h1_%_rsr%&set ISOnameESD=0)
+if %revver%==18362.175 (set _label=18362.175.190612-0046.19h1_%_rsr%&set branch=19h1_%_rsr%&set ISOnameESD=0)
+if %revver%==18362.30  (set _label=18362.30.190401-1528.19h1_%_rsr%&set branch=19h1_%_rsr%&set ISOnameESD=0)
+if %revver%==17763.379 (set _label=17763.379.190312-0539.rs5_%_rsr%&set branch=rs5_%_rsr%&set ISOnameESD=0)
+if %revver%==17763.253 (set _label=17763.253.190108-0006.rs5_%_rsr%&set branch=rs5_%_rsr%&set ISOnameESD=0)
+if %revver%==17763.107 (set _label=17763.107.181029-1455.rs5_%_rsr%&set branch=rs5_%_rsr%&set ISOnameESD=0)
+if %revver%==17134.112 (set _label=17134.112.180619-1212.rs4_%_rsr%&set branch=rs4_%_rsr%&set ISOnameESD=0)
+if %revver%==16299.125 (set _label=16299.125.171213-1220.rs3_%_rsr%&set branch=rs3_%_rsr%&set ISOnameESD=0)
+if %revver%==16299.64  (set _label=16299.15.171109-1522.rs3_%_rsr%&set branch=rs3_%_rsr%&set ISOnameESD=0)
+if %revver%==15063.483 (set _label=15063.0.170710-1358.rs2_%_rsr%&set branch=rs2_%_rsr%&set ISOnameESD=0)
+if %revver%==15063.413 (set _label=15063.0.170607-1447.rs2_%_rsr%&set branch=rs2_%_rsr%&set ISOnameESD=0)
+if %revver%==14393.447 (set _label=14393.0.161119-1705.rs1_%_rfr%&set branch=rs1_%_rfr%&set ISOnameESD=0)
+if %revver%==10586.164 (set _label=10586.0.160426-1409.th2_%_rfr%&set branch=th2_%_rfr%&set ISOnameESD=0)
+if %revver%==10586.104 (set _label=10586.0.160212-2000.th2_%_rfr%&set branch=th2_%_rfr%&set ISOnameESD=0)
+if %revver%==10240.16487 (set _label=10240.16393.150909-1450.th1_%_rfr%&set branch=th1_%_rfr%&set ISOnameESD=0)
 
-if /i "%editionid%"=="PPIPro" if %revision%==19042.572 (set _label=19042.572.201012-1221.20h2_%_rsr%&set branch=20h2_%_rsr%)
-if /i "%ESDedition1%"=="PPIPro" if %revision%==19042.572 (set _label=19042.572.201012-1221.20h2_%_rsr%&set branch=20h2_%_rsr%)
+if /i "%editionid%"=="PPIPro" if %revver%==19042.572 (set _label=19042.572.201012-1221.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
+if /i "%ESDedition1%"=="PPIPro" if %revver%==19042.572 (set _label=19042.572.201012-1221.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
 
 if %ISOnameESD% neq 0 call :setloop "%ENCRYPTEDESDN%"
 if %_SrvESD% equ 1 (set _label=%_label%_SERVER) else (set _label=%_label%_CLIENT)
@@ -661,11 +669,11 @@ if /i %arch%==x64 set archl=X64
 if /i %arch%==arm64 set archl=A64
 
 if %MULTI% geq 5 (
-if %editionidn% equ 1 set DVDLABEL=CCSNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDN_OEMRET_%archl%FRE_%langid%
-if %editionida% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINED_OEMRET_%archl%FRE_%langid%
-if %editionids% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDSL_OEMRET_%archl%FRE_%langid%
-if %editionidc% equ 1 set DVDLABEL=CCCHA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDCHINA_OEMRET_%archl%FRE_%langid%
-if %build% geq 16299 (if %VOL% equ 1 (set DVDLABEL=CCSA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%BUSINESS_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CONSUMER_OEMRET_%archl%FRE_%langid%))
+if %nedtn% equ 1 set DVDLABEL=CCSNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDN_OEMRET_%archl%FRE_%langid%
+if %aedtn% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINED_OEMRET_%archl%FRE_%langid%
+if %sedtn% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDSL_OEMRET_%archl%FRE_%langid%
+if %cedtn% equ 1 set DVDLABEL=CCCHA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDCHINA_OEMRET_%archl%FRE_%langid%
+if %_build% geq 16299 (if %VOL% equ 1 (set DVDLABEL=CCSA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%BUSINESS_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CONSUMER_OEMRET_%archl%FRE_%langid%))
 if %_SrvESD% equ 1 (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV9&set DVDISO=%_label%_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV9&set DVDISO=%_label%_OEMRET_%archl%FRE_%langid%))
 if defined branch exit /b
 )
@@ -708,7 +716,7 @@ if /i %editionid%==ServerTurbineCor (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FR
 exit /b
 
 :setloop
-for /f "tokens=1-3 delims=." %%i in ("%~n1") do (set version=%%i.%%j&set vermajor=%%i&set verminor=%%j&set labeldate=%%k)
+for /f "tokens=1-3 delims=." %%i in ("%~n1") do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set uupdate=%%k)
 set _tn=4
 :startLoop
 for /f "tokens=%_tn% delims=._" %%A in ("%~n1") do (
@@ -725,37 +733,14 @@ for /l %%B in (4,1,%_tn%) do (
   if defined _esdb (set "_esdb=!_esdb!_!_tv%%B!") else (set "_esdb=!_tv%%B!")
 )
 set branch=%_esdb%
-set _label=%version%.%labeldate%.%branch%
+set _label=%uupver%.%uupdate%.%branch%
 exit /b
 
 :setdate
-if /i %1==Jan set "isotime=01/%isotime%"
-if /i %1==Feb set "isotime=02/%isotime%"
-if /i %1==Mar set "isotime=03/%isotime%"
-if /i %1==Apr set "isotime=04/%isotime%"
-if /i %1==May set "isotime=05/%isotime%"
-if /i %1==Jun set "isotime=06/%isotime%"
-if /i %1==Jul set "isotime=07/%isotime%"
-if /i %1==Aug set "isotime=08/%isotime%"
-if /i %1==Sep set "isotime=09/%isotime%"
-if /i %1==Oct set "isotime=10/%isotime%"
-if /i %1==Nov set "isotime=11/%isotime%"
-if /i %1==Dec set "isotime=12/%isotime%"
-exit /b
-
-:dateset
-if /i %1==Jan set _month=01
-if /i %1==Feb set _month=02
-if /i %1==Mar set _month=03
-if /i %1==Apr set _month=04
-if /i %1==May set _month=05
-if /i %1==Jun set _month=06
-if /i %1==Jul set _month=07
-if /i %1==Aug set _month=08
-if /i %1==Sep set _month=09
-if /i %1==Oct set _month=10
-if /i %1==Nov set _month=11
-if /i %1==Dec set _month=12
+for /f "tokens=5-10 delims=: " %%G in ('wimlib-imagex.exe info "!ENCRYPTEDESD!" %_stm% ^| find /i "Last Modification Time"') do (set mmm=%%G&set "isotime=%%H/%%L,%%I:%%J:%%K"&set _year=%%L&set _month=%%G&set _day=%%H&set _hour=%%I&set _mint=%%J)
+for %%# in (Jan:01 Feb:02 Mar:03 Apr:04 May:05 Jun:06 Jul:07 Aug:08 Sep:09 Oct:10 Nov:11 Dec:12) do for /f "tokens=1,2 delims=:" %%A in ("%%#") do (
+if /i %mmm%==%%A (set "isotime=%%B/%isotime%"&set "_month=%%B")
+)
 set "_time=%_year:~2,2% %_month% %_day% - %_hour% %_mint%"
 set "_time=%_time: =%
 exit /b
@@ -787,11 +772,11 @@ for /f "skip=1 delims=" %%# in ('wimlib-imagex.exe dir %1 1 --path=Windows\WinSx
 wimlib-imagex.exe info %1 1 --image-property LASTMODIFICATIONTIME/HIGHPART=%installhigh% --image-property LASTMODIFICATIONTIME/LOWPART=%installlow% %_Nul3%
 echo.
 wimlib-imagex.exe optimize %1 %_Supp%
-rmdir /s /q .\bin\temp
+rmdir /s /q bin\temp\
 exit /b
 
 :DDECRYPT
-cls
+@cls
 echo.
 call :DECRYPT
 ren "!ENCRYPTEDESD!" Decrypted-%ENCRYPTEDESDN%
@@ -820,8 +805,8 @@ echo.
 echo %line%
 echo Please wait . . .
 echo %line%
-set combine=0
-set custom=0
+set merge=0
+set _cust=0
 set count=0
 for /L %%# in (1,1,2) do (
 set ESDmulti%%#=0
@@ -840,9 +825,9 @@ if /i %ESDlang1% neq %ESDlang2% goto :prompt2
 if /i %ESDver1% neq %ESDver2% goto :prompt2
 
 :DUALMENU
-if %_Debug% neq 0 (set WIMFILE=install.esd&goto :Dual)
+if %_Debug% neq 0 (set WIMFILE=install.esd&goto :ESDDual)
 color 1F
-cls
+@cls
 echo %lin2%
 echo Detected 2 similar ESD files: ^(x64/x86^) / Build: %ESDver1% / Lang: %ESDlang1%
 echo create a multi-architecture ISO for both?
@@ -862,26 +847,26 @@ echo.
 choice /c 12309 /n /m "Choose a menu option: "
 if errorlevel 5 (if /i %Backup%==OFF (set Backup=ON) else (set Backup=OFF))&goto :DUALMENU
 if errorlevel 4 goto :prompt2
-if errorlevel 3 (set WIMFILE=install.wim&set combine=1&set custom=1&goto :Dual)
-if errorlevel 2 (set WIMFILE=install.wim&goto :Dual)
-if errorlevel 1 (set WIMFILE=install.esd&goto :Dual)
+if errorlevel 3 (set WIMFILE=install.wim&set merge=1&set _cust=1&goto :ESDDual)
+if errorlevel 2 (set WIMFILE=install.wim&goto :ESDDual)
+if errorlevel 1 (set WIMFILE=install.esd&goto :ESDDual)
 goto :DUALMENU
 
-:Dual
-cls
+:ESDDual
+@cls
 if exist ISOFOLDER\ rmdir /s /q ISOFOLDER\
 mkdir ISOFOLDER
 call :dISO 1
 call :dISO 2
 set archl=X86-X64
-if /i "%DVDLABEL1%" equ "%DVDLABEL2%" (
+if /i "%DVDLABEL1%"=="%DVDLABEL2%" (
 set "DVDLABEL=%DVDLABEL1%_%archl%FRE_%langid%_DV9"
 set "DVDISO=%_label%%DVDISO1%_%archl%FRE_%langid%"
 ) else (
 set "DVDLABEL=CCSA_%archl%FRE_%langid%_DV9"
 set "DVDISO=%_label%%DVDISO1%_%ESDarch1%FRE-%DVDISO2%_%ESDarch2%FRE_%langid%"
 )
-if %combine% equ 0 goto :BCD
+if %merge% equ 0 goto :BCD
 echo.
 echo %line%
 echo Unifying install.wim . . .
@@ -921,7 +906,7 @@ copy /y ISOFOLDER\x86\boot\bootsect.exe ISOFOLDER\boot\ %_Nul3%
 set "bcde=bin\bcdedit.exe"
 set "BCDBIOS=ISOFOLDER\boot\bcd"
 set "BCDUEFI=ISOFOLDER\efi\microsoft\boot\bcd"
-if %custom% equ 0 (
+if %_cust% equ 0 (
 copy /y ISOFOLDER\x86\setup.exe ISOFOLDER\ %_Nul3%
 set "entry64=[boot]\x64\sources\boot.wim,%_ram%"
 set "entry86=[boot]\x86\sources\boot.wim,%_ram%"
@@ -953,7 +938,7 @@ del /f /q "%BCDBIOS%.LOG*" %_Nul3%
 %bcde% /store %BCDUEFI% /set {default} isolatedcontext Yes %_Nul3%
 attrib -s -h -a "%BCDUEFI%.LOG*" %_Nul3%
 del /f /q "%BCDUEFI%.LOG*" %_Nul3%
-if %custom% equ 0 goto :CREATEISO
+if %_cust% equ 0 goto :CREATEISO
 echo.
 echo %line%
 echo Preparing Custom AIO settings . . .
@@ -988,7 +973,7 @@ copy /y ISOFOLDER\efi\boot\bootia32.efi bin\temp\EFI\Boot\BOOTIA32.EFI %_Nul3%
 bfi.exe -t=288 -l=EFISECTOR -f=bin\efisys.ima bin\temp %_Nul3%
 move /y bin\efisys.ima ISOFOLDER\efi\microsoft\boot\efisys.bin %_Nul3%
 del /f /q ISOFOLDER\efi\microsoft\boot\*noprompt.* %_Nul3%
-rmdir /s /q .\bin\temp
+rmdir /s /q bin\temp\
 goto :CREATEISO
 
 :dSETUP
@@ -1019,8 +1004,8 @@ echo.
 wimlib-imagex.exe apply "!ENCRYPTEDESD!" 1 ISOFOLDER\!ESDarch%1!\ %_Null%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Apply
-del /f /q ISOFOLDER\!ESDarch%1!\MediaMeta.xml %_Nul3%
-rmdir /s /q ISOFOLDER\!ESDarch%1!\sources\uup\ %_Nul3%
+if exist ISOFOLDER\!ESDarch%1!\MediaMeta.xml del /f /q ISOFOLDER\!ESDarch%1!\MediaMeta.xml %_Nul3%
+:: rmdir /s /q ISOFOLDER\!ESDarch%1!\sources\uup\ %_Nul3%
 echo.
 echo %line%
 echo Creating boot.wim ^(!ESDarch%1!^) . . .
@@ -1038,7 +1023,7 @@ echo %line%
 echo Creating %WIMFILE% ^(!ESDarch%1!^) . . .
 echo %line%
 echo.
-if %WIMFILE%==install.wim set _rrr=--compress=LZX
+if /i %WIMFILE%==install.wim set _rrr=--compress=LZX
 wimlib-imagex.exe export "!ENCRYPTEDESD!" 4 ISOFOLDER\!ESDarch%1!\sources\%WIMFILE% %_rrr% %_Supp%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
@@ -1066,7 +1051,7 @@ wimlib-imagex.exe update ISOFOLDER\!ESDarch%1!\sources\%WIMFILE% !inum! --comman
 for /f "skip=1 delims=" %%# in ('wimlib-imagex.exe dir ISOFOLDER\!ESDarch%1!\sources\%WIMFILE% 1 --path=Windows\WinSxS\ManifestCache') do wimlib-imagex.exe update ISOFOLDER\!ESDarch%1!\sources\%WIMFILE% 1 --command="delete '%%#'" %_Null%
 echo.
 wimlib-imagex.exe optimize ISOFOLDER\!ESDarch%1!\sources\%WIMFILE% %_Supp%
-rmdir /s /q .\bin\temp
+rmdir /s /q bin\temp\
 )
 if /i !ESDarch%1!==x86 (set ESDarch%1=X86) else (set ESDarch%1=X64)
 exit /b
@@ -1078,10 +1063,10 @@ exit /b
 
 :dInfo
 imagex /info "!ESDfile%1!">bin\infoall.txt 2>&1
-find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditiona%1=1) || (set ESDeditiona%1=0)
-find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditionn%1=1) || (set ESDeditionn%1=0)
-find /i "CoreSingleLanguage</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditions%1=1) || (set ESDeditions%1=0)
-find /i "CoreCountrySpecific</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDeditionc%1=1) || (set ESDeditionc%1=0)
+find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDedta%1=1) || (set ESDedta%1=0)
+find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDedtn%1=1) || (set ESDedtn%1=0)
+find /i "CoreSingleLanguage</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDedts%1=1) || (set ESDedts%1=0)
+find /i "CoreCountrySpecific</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDedtc%1=1) || (set ESDedtc%1=0)
 find /i "<EDITIONID>Server" bin\infoall.txt %_Nul1% && (set _SrvESD=1)
 imagex /info "!ESDfile%1!" 4 >bin\info.txt 2>&1
 for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do set ESDver%1=%%#
@@ -1132,21 +1117,19 @@ if /i !ESDedition%1!==ProfessionalCountrySpecific set DVDLABEL%1=CPRCHA&set DVDI
 if /i !ESDedition%1!==CloudEdition (if !ESDvol%1! equ 1 (set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_VOL) else (set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_OEMRET))
 if /i !ESDedition%1!==CloudEditionN (if !ESDvol%1! equ 1 (set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_VOL) else (set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_OEMRET))
 if !ESDmulti%1! geq 5 (
-if !ESDeditionn%1! equ 1 set DVDLABEL%1=CCSNA&set DVDISO%1=MULTIN_OEMRET
-if !ESDeditions%1! equ 1 set DVDLABEL%1=CCSA&set DVDISO%1=MULTISL_OEMRET
-if !ESDeditiona%1! equ 1 set DVDLABEL%1=CCSA&set DVDISO%1=MULTI_OEMRET
-if !ESDeditionc%1! equ 1 set DVDLABEL%1=CCCHA&set DVDISO%1=MULTICHINA_OEMRET
+if !ESDedtn%1! equ 1 set DVDLABEL%1=CCSNA&set DVDISO%1=MULTIN_OEMRET
+if !ESDedts%1! equ 1 set DVDLABEL%1=CCSA&set DVDISO%1=MULTISL_OEMRET
+if !ESDedta%1! equ 1 set DVDLABEL%1=CCSA&set DVDISO%1=MULTI_OEMRET
+if !ESDedtc%1! equ 1 set DVDLABEL%1=CCCHA&set DVDISO%1=MULTICHINA_OEMRET
 if !ESDver%1! geq 16299 (if !ESDvol%1! equ 1 (set DVDLABEL%1=CCSA&set DVDISO%1=BUSINESS_VOL) else (set DVDLABEL%1=CCSA&set DVDISO%1=CONSUMER_OEMRET))
 )
 if %1 equ 2 exit /b
 
-if !ESDmulti%1! equ 0 (set sourcetime=4) else (set sourcetime=!ESDmulti%1!)
-for /f "tokens=5-10 delims=: " %%G in ('wimlib-imagex.exe info "!ENCRYPTEDESD!" %sourcetime% ^| find /i "Last Modification Time"') do (set mmm=%%G&set "isotime=%%H/%%L,%%I:%%J:%%K"&set _year=%%L&set _month=%%G&set _day=%%H&set _hour=%%I&set _mint=%%J)
-call :setdate %mmm%
-call :dateset %_month%
+if !ESDmulti%1! equ 0 (set _stm=4) else (set _stm=!ESDmulti%1!)
+call :setdate
 
 set arch=!ESDarch%1!
-set build=!ESDver%1!
+set _build=!ESDver%1!
 set langid=!ESDlang%1!
 call :setlabel %1
 exit /b
@@ -1162,8 +1145,8 @@ exit /b
 :E_W81
 @cls
 echo %_err%
-echo This script supports Windows 10 ESDs only.
-echo you may use older version 8 to convert Windows 8.1 ESDs.
+echo This script supports Windows NT 10.0 ESDs only.
+echo you may use script version 8 to convert Windows 8.1 ESDs.
 echo.
 goto :QUIT
 

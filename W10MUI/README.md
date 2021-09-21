@@ -23,7 +23,7 @@ ______________________________
 
 ## Notes:
 
-* If the distribution already contain installed updates (e.g. refresjed ISO media), it's required/recommended to add the latest updates after language packs
+* If the distribution already contain installed updates (e.g. refreshed ISO media), it's required/recommended to add the latest updates after language packs
 
 * versions 20H2/21H2 share the same build number and files with version 2004
 

@@ -179,6 +179,17 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
+10.12:
+- Added support for the new UUP dump file name scheme (PSF updates)
+
+10.11:  
+- Added support for Windows 11 Combined UUP updates
+- Updated Windows Defender cab integration routine
+- If AutoStart option is active, the script will not clear initial screen, and will auto exit at the end
+
+10.10:  
+- Added workaround for updating 1904x images on Host OS below Windows 10 1803
+
 10.9:  
 - Added manual option "LCUwinre" to force updating winre.wim with Cumulative Update
 - Fixed architecture detection for already mounted WinPE images
