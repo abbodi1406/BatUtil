@@ -18,7 +18,7 @@ if "%~1"=="" set "_args="&goto :NoProgArgs
 set _args=%_args:"=%
 for %%A in (%_args%) do (
 if /i "%%A"=="/s" (set _silent=1
-) else if /i "%%A"=="-s" (set _silent=1
+) else if /i "%%A"=="-s" (set _silent=1)
 )
 
 :NoProgArgs
@@ -316,7 +316,7 @@ for %%# in (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z) do set _exclude
 set "_autoact="
 set "_CTR=HKLM\SOFTWARE\Microsoft\Office\ClickToRun"
 set "_Config=%_CTR%\Configuration"
-set "_url=http://officecdn.microsoft.com/pr"
+set "_url=http://officecdn.microsoft.com/db"
 
 (
 echo @echo off

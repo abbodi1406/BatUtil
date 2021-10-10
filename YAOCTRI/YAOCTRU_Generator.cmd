@@ -60,7 +60,7 @@ for %%A in (en-US,ar-SA,bg-BG,cs-CZ,da-DK,de-DE,el-GR,es-ES,et-EE) do (
 set /a cc+=1
 set lang0!cc!=%%A
 )
-for %%A in (fi-FI,fr-FR,he-IL,hr-HR,hu-HU,it-IT,ja-JP,ko-KR,lt-LT,lv-LV,nb-NO,nl-NL,pl-PL,pt-BR,pt-PT,ro-RO,ru-RU,sk-SK,sl-SI,sr-Latn-RS,sv-SE,th-TH,tr-TR,uk-UA,zh-CN,zh-TW,hi-IN,id-ID,kk-KZ,MS-MY,vi-VN) do (
+for %%A in (fi-FI,fr-FR,he-IL,hr-HR,hu-HU,it-IT,ja-JP,ko-KR,lt-LT,lv-LV,nb-NO,nl-NL,pl-PL,pt-BR,pt-PT,ro-RO,ru-RU,sk-SK,sl-SI,sr-Latn-RS,sv-SE,th-TH,tr-TR,uk-UA,zh-CN,zh-TW,hi-IN,id-ID,kk-KZ,MS-MY,vi-VN,en-GB,es-MX,fr-CA) do (
 set /a cc+=1
 set lang!cc!=%%A
 )
@@ -69,7 +69,7 @@ for %%A in (1033,1025,1026,1029,1030,1031,1032,3082,1061) do (
 set /a cc+=1
 set lcid0!cc!=%%A
 )
-for %%A in (1035,1036,1037,1050,1038,1040,1041,1042,1063,1062,1044,1043,1045,1046,2070,1048,1049,1051,1060,9242,1053,1054,1055,1058,2052,1028,1081,1057,1087,1086,1066) do (
+for %%A in (1035,1036,1037,1050,1038,1040,1041,1042,1063,1062,1044,1043,1045,1046,2070,1048,1049,1051,1060,9242,1053,1054,1055,1058,2052,1028,1081,1057,1087,1086,1066,2057,2058,3084) do (
 set /a cc+=1
 set lcid!cc!=%%A
 )
@@ -127,8 +127,9 @@ set /a cc+=1
 set ott!cc!=%%A
 )
 
-set _a86=1
+set _ext=1
 set _a64=1
+set _a86=1
 set full=1
 set proof=0
 set "line=============================================================="
@@ -163,7 +164,7 @@ goto :CHANNEL
 )
 
 for /L %%# in (1,1,9) do if /i "!uLanguage!"=="!lang0%%#!" (set "lang=!lang0%%#!"&set "lcid=!lcid0%%#!")
-for /L %%# in (10,1,40) do if /i "!uLanguage!"=="!lang%%#!" (set "lang=!lang%%#!"&set "lcid=!lcid%%#!")
+for /L %%# in (10,1,43) do if /i "!uLanguage!"=="!lang%%#!" (set "lang=!lang%%#!"&set "lcid=!lcid%%#!")
 
 set "chn=!chn3!"&set "ffn=!ffn3!"
 if defined uChannel (
@@ -207,10 +208,10 @@ echo. 7. DevMain Channel                     ^|    Dogfood::DevMain
 echo. 8. Microsoft Elite                     ^|  Microsoft::DevMain
 echo.
 echo. 9. Perpetual2019 VL                    ^| Production::LTSC
-echo 10. Microsoft 2019 VL                   ^|  Microsoft::LTSC
+echo 10. Microsoft2019 VL                    ^|  Microsoft::LTSC
 echo.
 echo 11. Perpetual2021 VL                    ^| Production::LTSC2021
-echo 12. Microsoft 2021 VL                   ^|  Microsoft::LTSC2021
+echo 12. Microsoft2021 VL                    ^|  Microsoft::LTSC2021
 echo.
 echo %line%
 echo.
@@ -241,13 +242,15 @@ if /i "!uLevel!"=="Win7" (
 1>nul 2>nul powershell -nop -c "%_psc% (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%','C2R0.json'); (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1.0','C2R7.json')"
 )
 if /i "!uLevel!"=="Default" if exist "C2R7.json" del /f /q "C2R7.json"
-if not exist "C2R*.json" (
+if not exist "C2R0.json" (
 echo.
 echo %line%
 echo ERROR:
-echo could not check available version online
-echo check internet connection and if powershell is disabled
-echo check that Windows OS is updated to support TLS 1.2 connection protocol
+echo could not check available version online, possible reasons:
+echo.
+echo - internet connection not working
+echo - Windows Powershell is disabled
+echo - .NET Framework is not updated to support TLS 1.2 connection protocol
 echo %line%
 echo.
 echo Press any key to exit.
@@ -273,7 +276,8 @@ goto :eof
 if exist "C2R*.json" del /f /q "C2R*.json"
 popd
 for /L %%# in (9,1,10) do if /i "!chn!"=="!chn%%#!" set _a86=0
-if %vvv0:~5,5% lss 13901 set _a64=0
+if %vvv0:~5,5% lss 14026 set _a64=0
+if %vvv0:~5,5% lss 14326 set _ext=0
 if defined uLevel set "vvv=%vvv0%"&set "utc=%utc0%"&set "inpt=%otpt%"&goto :POSTout
 if not defined vvv7 set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
 if %vvv7:~5,5% gtr %vvv0:~5,5% set "vvv0=%vvv7%"&set "utc0=%utc7%"
@@ -316,7 +320,7 @@ echo. 2. 64-bit [x64]
 echo. 3. Dual   [x64 and x86]
 echo.
 if %_a86%==1 echo. 4. Windows 11/10 ARM64 [x86 Emulation]
-if %_a64%==1 echo. 5. Windows 11/10 ARM64 [x64 Emulation] - Experimental
+if %_a64%==1 echo. 5. Windows 11/10 ARM64 [x64 Emulation]
 echo %line%
 echo.
 set /p inpt= ^> Enter Bitness option number, and press "Enter": 
@@ -350,6 +354,7 @@ echo. 07 el-GR         17 ko-KR         27 sk-SK         37 id-ID
 echo. 08 es-ES         18 lt-LT         28 sl-SI         38 kk-KZ
 echo. 09 et-EE         19 lv-LV         29 sr-Latn-RS    39 MS-MY
 echo. 10 fi-FI         20 nb-NO         30 sv-SE         40 vi-VN
+if %_ext%==1 echo. 41 en-GB         42 es-MX         43 fr-CA
 echo %line%
 echo.
 set /p inpt= ^> Enter Language option number, and press "Enter": 
@@ -357,6 +362,7 @@ if "%inpt%"=="" goto :eof
 for /l %%i in (1,1,9) do (if %inpt%==%%i set verified=1)
 for /l %%i in (1,1,9) do (if %inpt%==0%%i set verified=1)
 for /l %%i in (10,1,40) do (if %inpt%==%%i set verified=1)
+if %_ext%==1 for /l %%i in (41,1,43) do (if %inpt%==%%i set verified=1)
 if %verified%==0 goto :LANGUAGE
 for /l %%i in (1,1,9) do (if %inpt%==%%i set inpt=0%%i)
 set "lang=!lang%inpt%!"
@@ -387,7 +393,7 @@ if %verified%==0 goto :PRODUCT
 if %inpt%==2 set full=0
 if %inpt%==3 set proof=1
 
-:OUTPUT
+:PREout
 cls
 title ^>Choose Output Type^<
 set inpt=
@@ -409,7 +415,7 @@ echo.
 set /p inpt= ^> Enter Output option number, and press "Enter": 
 if "%inpt%"=="" goto :eof
 for /l %%i in (1,1,4) do (if %inpt%==%%i set verified=1)
-if %verified%==0 goto :OUTPUT
+if %verified%==0 goto :PREout
 
 :POSTout
 if /i %arc%==x64arm64 if %_a64%==0 if %_a86%==1 set "arc=x86arm64"
@@ -423,8 +429,8 @@ echo Press any key to exit.
 pause >nul
 goto :eof
 )
-set "url=http://officecdn.microsoft.com/pr/%ffn%/Office/Data"
-set "stp=http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/Office/Data"
+set "url=https://officecdn.microsoft.com/db/%ffn%/Office/Data"
+set "stp=https://officecdn.microsoft.com/db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/Office/Data"
 set oar=%arc%
 set "tag=%vvv%_%oar%_%lang%_%chn%"
 if %full%==0 set "tag=%vvv%_%oar%_%lang%_LangPack_%chn%"
@@ -462,7 +468,7 @@ stream.x64.%lang%.proof.dat
 ) do (
 call :EC1HO%inpt% %%a
 )
-set "stp=http://officecdn.microsoft.com/pr/wsus"
+set "stp=https://officecdn.microsoft.com/db/wsus"
 call :EC3HO%inpt% Setup.exe
 (
 echo.^<Configuration^>
@@ -784,6 +790,8 @@ echo s32*.cab
 echo s64*.cab
 echo sp32*.cab
 echo sp64*.cab
+echo sc32*.cab
+echo sa64*.cab
 echo stream*.dat
 echo ^) do ^(
 echo if exist "%%%%i" move /y %%%%i %%_uri%%\

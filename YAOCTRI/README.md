@@ -33,17 +33,22 @@ it also creates configuration ini files, with the ability to start the installat
 - Installer.cmd  
 the secondary script which is only used to execute the installation, depending on the already created the configuration ini file
 
+* Office LTSC is a branding for the volume licensing of Office 2021, both are the same product
+
+* Project and Visio products are not available for the following languages by design:  
+bg-BG, et-EE, hr-HR, lt-LT, lv-LV, sl-SI, sr-Latn-RS, th-TH, hi-IN, id-ID, kk-KZ, MS-MY, vi-VN, en-GB, es-MX, fr-CA
+
 * Office C2R source files are universal, and contain all possible products, any SKU can be installed from the same source  
 https://docs.microsoft.com/office365/troubleshoot/installation/product-ids-supported-office-deployment-click-to-run
 
 * Starting MAY 2020, Office 365 products are being renamed to Microsoft 365, keeping the same SKU names and included apps:  
-https://docs.microsoft.com/en-us/deployoffice/name-change
+https://docs.microsoft.com/deployoffice/name-change
 
 SKU ID                 | Old Name                  | New Name  
 ---------------------- | ------------------------- | -------------------------------  
 O365ProPlusRetail      | Office 365 ProPlus        | Microsoft 365 Enterprise  
 O365BusinessRetail     | Office 365 Business       | Microsoft 365 Business  
-O365SmallBusPremRetail | Office 365 Small Business | Microsoft 365 Business Standard  
+O365SmallBusPremRetail | Office 365 Small Business | Microsoft 365 Small Business  
 O365HomePremRetail     | Office 365 Home           | Microsoft 365 Family  
 O365EduCloudRetail     | Office 365 Education      | Microsoft 365 Education
 
@@ -226,7 +231,7 @@ it mostly aligns with Beta channel and works as an internal preview for it
 the official update channel for volume licensed products of Office 2021  
 it only gets security and quality fixes once a month (Patch Tuesday)
 
-2. Microsoft LTSC2021 VL
+2. Microsoft2021 VL
 
 internal preview channel for Perpetual2021 VL channel
 
@@ -237,7 +242,7 @@ internal preview channel for Perpetual2021 VL channel
 the official update channel for volume licensed products of Office 2019  
 it only gets security and quality fixes once a month (Patch Tuesday)
 
-8. Microsoft LTSC VL
+8. Microsoft2019 VL
 
 internal preview channel for Perpetual2019 VL channel
 

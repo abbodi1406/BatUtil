@@ -14,7 +14,7 @@ for more info:
 https://docs.microsoft.com/deployoffice/overview-of-the-office-customization-tool-for-click-to-run  
 https://docs.microsoft.com/deployoffice/overview-office-deployment-tool  
 https://docs.microsoft.com/deployoffice/office2019/deploy  
-https://docs.microsoft.com/deployoffice/office2021
+https://docs.microsoft.com/deployoffice/ltsc2021/deploy
 
 * The most recommended choices for download:  
 Channel: 3. Current / Monthly  
@@ -26,7 +26,7 @@ ______________________________
 
 * Run the script normally with a double-click
 
-* Choose Office source from the listed 10 channels
+* Choose Office source from the listed channels
 
 * If the selected channel offers different builds per Windows OS, you will be prompt to choose one
 
@@ -143,7 +143,7 @@ it mostly aligns with Beta channel and works as an internal preview for it
 the official update channel for volume licensed products of Office 2019  
 it only gets security and quality fixes once a month (Patch Tuesday)
 
-10. Microsoft LTSC VL
+10. Microsoft2019 VL
 
 internal preview channel for Perpetual2019 VL channel
 
@@ -154,7 +154,7 @@ internal preview channel for Perpetual2019 VL channel
 the official update channel for volume licensed products of Office 2021  
 it only gets security and quality fixes once a month (Patch Tuesday)
 
-12. Microsoft LTSC2021 VL
+12. Microsoft2021 VL
 
 internal preview channel for Perpetual2021 VL channel
 
@@ -209,6 +209,9 @@ el-GR         ko-KR         sk-SK         id-ID
 es-ES         lt-LT         sl-SI         kk-KZ  
 et-EE         lv-LV         sr-Latn-RS    MS-MY  
 fi-FI         nb-NO         sv-SE         vi-VN
+
+Office 365/2021 additionally support these languages since Version 2108 (Build 14326.20238):
+en-GB         es-MX         fr-CA
 
 - uChannel
 
