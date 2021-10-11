@@ -36,7 +36,7 @@ the secondary script which is only used to execute the installation, depending o
 * Office LTSC is a branding for the volume licensing of Office 2021, both are the same product
 
 * Project and Visio products are not available for the following languages by design:  
-bg-BG, et-EE, hr-HR, lt-LT, lv-LV, sl-SI, sr-Latn-RS, th-TH, hi-IN, id-ID, kk-KZ, MS-MY, vi-VN, en-GB, es-MX, fr-CA
+bg-BG, et-EE, hr-HR, lt-LT, lv-LV, sr-Latn-RS, th-TH, hi-IN, id-ID, kk-KZ, MS-MY, vi-VN, en-GB, es-MX, fr-CA
 
 * Office C2R source files are universal, and contain all possible products, any SKU can be installed from the same source  
 https://docs.microsoft.com/office365/troubleshoot/installation/product-ids-supported-office-deployment-click-to-run

@@ -81,7 +81,7 @@ MicrosoftElite
 set /a cc+=1
 set chn!cc!=%%#
 )
-set unpv=(bg-BG,et-EE,hr-HR,lt-LT,lv-LV,sl-SI,sr-Latn-RS,th-TH,hi-IN,id-ID,kk-KZ,MS-MY,vi-VN,en-GB,es-MX,fr-CA)
+set unpv=(bg-BG,et-EE,hr-HR,lt-LT,lv-LV,sr-Latn-RS,th-TH,hi-IN,id-ID,kk-KZ,MS-MY,vi-VN,en-GB,es-MX,fr-CA)
 set /a cc=0
 for %%# in %unpv% do (
 set /a cc+=1
