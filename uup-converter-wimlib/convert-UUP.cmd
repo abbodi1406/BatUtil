@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v72
+@set uivr=v73
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -892,6 +892,10 @@ wimlib-imagex.exe extract "!MetadataESD!" 1 sources\ei.cfg --dest-dir=.\bin\temp
 if exist "bin\temp\ei.cfg" type .\bin\temp\ei.cfg %_Nul2% | find /i "Volume" %_Nul1% && set VOL=1
 wimlib-imagex.exe extract "!MetadataESD!" 1 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
 7z.exe l .\bin\temp\setuphost.exe >.\bin\temp\version.txt 2>&1
+if %_build% geq 22478 (
+wimlib-imagex.exe extract "!MetadataESD!" 3 Windows\System32\UpdateAgent.dll --dest-dir=.\bin\temp --no-acls --no-attributes --ref="!_UUP!\*.esd" %_Nul3%
+if exist "bin\temp\UpdateAgent.dll" 7z.exe l .\bin\temp\UpdateAgent.dll >.\bin\temp\version.txt 2>&1
+)
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l)
 set revver=%uupver%&set revmaj=%uupmaj%&set revmin=%uupmin%
 set "tok=6,7"&set "toe=5,6,7"
@@ -927,7 +931,11 @@ del /f /q %SystemRoot%\temp\*.mum
 set "uupdate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 )
 set _legacy=
-if /i "%branch%"=="WinBuild" (
+set _useold=0
+if /i "%branch%"=="WinBuild" set _useold=1
+if /i "%branch%"=="GitEnlistment" set _useold=1
+if /i "%uupdate%"=="winpbld" set _useold=1
+if %_useold% equ 1 (
 wimlib-imagex.exe extract "!MetadataESD!" 3 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _legacy=%%i.%%j.%%m.%%l&set branch=%%l)
 )
@@ -1186,6 +1194,8 @@ for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\vers
 del /f /q .\bin\version.txt %_Nul3%
 if %uupmin% neq %xdumin% exit /b
 if /i "%xdubranch%"=="WinBuild" exit /b
+if /i "%xdubranch%"=="GitEnlistment" exit /b
+if /i "%xdudate%"=="winpbld" exit /b
 if %uupmaj%==18363 (
 if /i "%xdubranch:~0,4%"=="19h1" set xdubranch=19h2%xdubranch:~4%
 if %xduver:~0,5%==18362 set xduver=18363%xduver:~5%
@@ -1503,7 +1513,6 @@ set chkmin=%isomin%
 call :setuphostprep
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\version.txt" %_Nul6%') do (set iduver=%%i.%%j&set idumaj=%%i&set idumin=%%j&set branch=%%k&set idudate=%%l)
 del /f /q .\bin\version.txt %_Nul3%
-if /i not "%branch%"=="WinBuild" (set _label=%iduver%.%idudate%.%branch%)
 if %isomaj%==18363 (
 if /i "%isobranch:~0,4%"=="19h1" set isobranch=19h2%isobranch:~4%
 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
@@ -1529,7 +1538,8 @@ if /i "%isobranch:~0,2%"=="vb" set isobranch=22h1%isobranch:~2%
 if /i "%branch:~0,2%"=="vb" set branch=22h1%branch:~2%
 if %iduver:~0,5%==19041 set iduver=19045%iduver:~5%
 )
-set _label=%iduver%.%idudate%.%branch%
+set _label=%isover%.%isodate%.%isobranch%
+if /i not "%branch%"=="WinBuild" if /i not "%branch%"=="GitEnlistment" if /i not "%idudate%"=="winpbld" (set _label=%iduver%.%idudate%.%branch%)
 if %isomin% neq %idumin% (set _label=%isover%.%isodate%.%isobranch%)
 call :setlabel
 exit /b
@@ -1590,7 +1600,7 @@ if %psfnet% equ 0 (
   echo %count%/%_cab%: %package% / PSFExtractor is not available
   goto :eof
   )
-set psf_%pkgn%=1
+set psf_%package%=1
 )
 if not defined isodate findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% && (
 findstr /i /m /c:"Microsoft-Windows-CoreEdition" "!dest!\update.mum" %_Nul3% || set _eosC=1
@@ -1691,7 +1701,7 @@ if exist "!dest!\*cablist.ini" (
   del /f /q "!dest!\*.cab" %_Nul3%
 )
 set _sbst=0
-if defined psf_%pkgn% (
+if defined psf_%package% (
 if not exist "!dest!\express.psf.cix.xml" for /f %%# in ('dir /b /a:-d "!dest!\*.psf.cix.xml"') do rename "!dest!\%%#" express.psf.cix.xml %_Nul3%
 subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
 if !_sbst! equ 1 pushd %_sdr%
@@ -1704,7 +1714,7 @@ PSFExtractor.exe %package% %_Null%
 if !errorlevel! neq 0 (
   echo Error: failed to extract PSF update
   rmdir /s /q "%pkgn%\" %_Nul3%
-  set psf_%pkgn%=
+  set psf_%package%=
   )
 if !_sbst! equ 1 popd
 if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
@@ -1943,7 +1953,7 @@ if !_sbst! equ 1 subst %_sdr% /d %_Nul3%
 goto :eof
 
 :procmum
-if exist "!dest!\*.psf.cix.xml" if not defined psf_%pkgn% goto :eof
+if exist "!dest!\*.psf.cix.xml" if not defined psf_%package% goto :eof
 if exist "!dest!\*defender*.xml" (
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
 call :defender_check
@@ -2503,9 +2513,9 @@ call :cleanmanual&goto :eof
 copy /y ISOFOLDER\sources\setuphost.exe %SystemRoot%\temp\ %_Nul1%
 copy /y ISOFOLDER\sources\setupprep.exe %SystemRoot%\temp\ %_Nul1%
 set _svr1=0&set _svr2=0&set _svr3=0&set _svr4=0
-set "_fvr1=%SystemRoot%\temp\setuphost.exe"
-set "_fvr2=%SystemRoot%\temp\setupprep.exe"
-set "_fvr3=%SystemRoot%\temp\UpdateAgent.dll"
+set "_fvr1=%SystemRoot%\temp\UpdateAgent.dll"
+set "_fvr2=%SystemRoot%\temp\setuphost.exe"
+set "_fvr3=%SystemRoot%\temp\setupprep.exe"
 set "_fvr4=%SystemRoot%\temp\Facilitator.dll"
 if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr1:\=\\!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
 if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr2:\=\\!'" get Version /value ^| find "="') do set /a "_svr2=%%a"

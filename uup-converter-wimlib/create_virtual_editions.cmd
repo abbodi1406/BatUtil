@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v70
+@set uivr=v73
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -780,9 +780,9 @@ wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setupprep.exe --
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\system32\UpdateAgent.dll --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\system32\Facilitator.dll --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
 set _svr1=0&set _svr2=0&set _svr3=0&set _svr4=0
-set "_fvr1=%SystemRoot%\temp\setuphost.exe"
+set "_fvr1=%SystemRoot%\temp\UpdateAgent.dll"
 set "_fvr2=%SystemRoot%\temp\setupprep.exe"
-set "_fvr3=%SystemRoot%\temp\UpdateAgent.dll"
+set "_fvr3=%SystemRoot%\temp\setuphost.exe"
 set "_fvr4=%SystemRoot%\temp\Facilitator.dll"
 if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr1:\=\\!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
 if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr2:\=\\!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
