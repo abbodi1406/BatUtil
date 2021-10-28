@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v73
+@set uivr=v74
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -61,6 +61,10 @@ set "xDS=bin\bin64;bin"
 if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
+for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+set _pwsh=1
+if not exist "%SysPath%\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
+if %winbuild% geq 22483 if %_pwsh% EQU 0 goto :E_PS
 
 %_Null% reg query HKU\S-1-5-19 && (
   goto :Passed
@@ -76,7 +80,7 @@ set _PSarg=%_PSarg:'=''%
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Null% powershell -noprofile -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
+  %_Null% powershell -nop -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
@@ -522,7 +526,8 @@ if /i %EditionID%==CoreSingleLanguage (
 %_Nul3% reg add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\Print" /f /v DoNotInstallCompatibleDriverFromWindowsUpdate /t REG_DWORD /d !Print!
 %_Nul3% reg add "HKLM\SOF\Microsoft\Windows\CurrentVersion\Setup\OOBE" /f /v SetupDisplayedProductKey /t REG_DWORD /d 1
 if /i %EditionID%==ServerRdsh (
-%_Nul3% reg add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c WMIC /NAMESPACE:\\ROOT\CIMV2 PATH Win32_UserAccount WHERE \"SID like 'S-1-5-21-%%-500'\" SET Disabled=FALSE &exit /b 0 "
+if %_build% lss 22483 reg add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c WMIC /NAMESPACE:\\ROOT\CIMV2 PATH Win32_UserAccount WHERE \"SID like 'S-1-5-21-%%-500'\" SET Disabled=FALSE &exit /b 0 " %_Nul3%
+if %_build% geq 22483 reg add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c powershell -nop -c \"Set-CimInstance -Query 'Select * from Win32_UserAccount WHERE SID LIKE \\\"S-1-5-21-%%-500\\\"' -Property @{Disabled=0}\" &exit /b 0 " %_Nul3%
 )
 %_Nul3% reg unload HKLM\SYS
 %_Nul3% reg save HKLM\SOF .\bin\temp\SOFTWARE2
@@ -705,7 +710,9 @@ set uupmin=%revmin%
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
 for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
-for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
+set "chkfile=!mumfile:\=\\!"
+if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "uupdate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 set "isotime=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
@@ -716,7 +723,11 @@ wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\Packa
 if not exist "%SystemRoot%\temp\Package_for_RollupFix*.mum" set branch=WinBuild
 )
 set _legacy=
-if /i "%branch%"=="WinBuild" (
+set _useold=0
+if /i "%branch%"=="WinBuild" set _useold=1
+if /i "%branch%"=="GitEnlistment" set _useold=1
+if /i "%uupdate%"=="winpbld" set _useold=1
+if %_useold% equ 1 (
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _legacy=%%i.%%j.%%m.%%l&set branch=%%l)
 )
@@ -784,10 +795,22 @@ set "_fvr1=%SystemRoot%\temp\UpdateAgent.dll"
 set "_fvr2=%SystemRoot%\temp\setupprep.exe"
 set "_fvr3=%SystemRoot%\temp\setuphost.exe"
 set "_fvr4=%SystemRoot%\temp\Facilitator.dll"
-if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr1:\=\\!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
-if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr2:\=\\!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
-if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr3:\=\\!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
-if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr4:\=\\!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
+set "cfvr1=!_fvr1:\=\\!"
+set "cfvr2=!_fvr2:\=\\!"
+set "cfvr3=!_fvr3:\=\\!"
+set "cfvr4=!_fvr4:\=\\!"
+if %winbuild% lss 22483 (
+if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr1!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr2!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr3!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr4!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
+)
+if %winbuild% geq 22483 (
+if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr1!\"').Version"') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr2!\"').Version"') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr3!\"').Version"') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr4!\"').Version"') do set /a "_svr4=%%a"
+)
 set "_chk=!_fvr1!"
 if %chkmin% equ %_svr1% set "_chk=!_fvr1!"&goto :prephostsetup
 if %chkmin% equ %_svr2% set "_chk=!_fvr2!"&goto :prephostsetup
@@ -1041,7 +1064,18 @@ echo %_err%
 echo This script require administrator privileges.
 echo To do so, right click on this script and select 'Run as administrator'
 echo.
-%_Exit%&%_Pause%
+if %_Debug% neq 0 exit /b
+echo Press any key to exit.
+pause >nul
+exit /b
+
+:E_PS
+echo %_err%
+echo Windows PowerShell is required for this script to work.
+echo.
+if %_Debug% neq 0 exit /b
+echo Press any key to exit.
+pause >nul
 exit /b
 
 :E_Bin

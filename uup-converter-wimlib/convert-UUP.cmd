@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v73
+@set uivr=v74
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -79,6 +79,10 @@ set "xDS=bin\bin64;bin"
 if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
+for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+set _pwsh=1
+if not exist "%SysPath%\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
+if %winbuild% geq 22483 if %_pwsh% EQU 0 goto :E_PS
 
 %_Null% reg.exe query HKU\S-1-5-19 && (
   goto :Passed
@@ -94,7 +98,7 @@ set _PSarg=%_PSarg:'=''%
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Null% powershell -noprofile -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
+  %_Null% powershell -nop -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
@@ -146,31 +150,23 @@ echo The window will be closed when finished
 
 :Begin
 title UUP -^> ISO %uivr%
-:: checkadk
 set psfnet=0
 if exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set psfnet=1
 if exist "%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set psfnet=1
-set /a _cdr=0
 for %%# in (E F G H I J K L M N O P Q R S T U V W X Y Z) do (
-set /a _cdr+=1
-set "_adr!_cdr!=%%#"
+set "_adr%%#=%%#"
 )
-set /a _cdr=0
-for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_Volume where (DriveLetter is not NULL) get DriveLetter /value" ^| findstr ^=') do (
-set /a _cdr+=1
-set "_udr!_cdr!=%%#"
+if %winbuild% lss 22483 for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_Volume where (DriveLetter is not NULL) get DriveLetter /value" ^| findstr ^=') do (
+if defined _adr%%# set "_adr%%#="
 )
-for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_LogicalDisk where (DeviceID is not NULL) get DeviceID /value" ^| findstr ^=') do (
-set /a _cdr+=1
-set "_udr!_cdr!=%%#"
+if %winbuild% lss 22483 for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_LogicalDisk where (DeviceID is not NULL) get DeviceID /value" ^| findstr ^=') do (
+if defined _adr%%# set "_adr%%#="
 )
-for /L %%A in (1,1,%_cdr%) do (
-  for /L %%# in (1,1,22) do (
-  if defined _adr%%# (if /i "!_udr%%A!"=="!_adr%%#!" set "_adr%%#=")
-  )
+if %winbuild% geq 22483 for /f "tokens=1 delims=:" %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter is not NULL').Get()).DriveLetter; (([WMISEARCHER]'Select * from Win32_LogicalDisk where DeviceID is not NULL').Get()).DeviceID"') do (
+if defined _adr%%# set "_adr%%#="
 )
-for /L %%# in (1,1,22) do (
-  if not defined _sdr (if defined _adr%%# set "_sdr=!_adr%%#!:")
+for %%# in (E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+if not defined _sdr (if defined _adr%%# set "_sdr=%%#:")
 )
 if not defined _sdr set psfnet=0
 set "_dLog=%SystemRoot%\Logs\DISM"
@@ -198,7 +194,6 @@ set "Path=%xDS%;%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%Sy
 )
 
 :precheck
-for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 set W10UI=0
 if %winbuild% geq 10240 (
 set W10UI=1
@@ -229,7 +224,8 @@ set _Srvr=0
 set _initial=0
 set "_mount=%_drv%\MountUUP"
 set "_ntf=NTFS"
-if /i not "%_drv%"=="%SystemDrive%" for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" (
 set "_mount=%SystemDrive%\MountUUP"
 )
@@ -926,7 +922,9 @@ set uupmin=%revmin%
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 wimlib-imagex.exe extract "!MetadataESD!" 3 Windows\Servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
 for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
-for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
+set "chkfile=!mumfile:\=\\!"
+if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "uupdate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 )
@@ -1289,10 +1287,10 @@ exit /b
 :: expand.exe -f:update.mum "!_UUP!\%packf%" "!_cabdir!" %_Null%
 7z.exe e "!_UUP!\%packf%" -o"!_cabdir!" update.mum %_Null%
 if not exist "!_cabdir!\update.mum" exit /b
+for /f "tokens=2 delims=-" %%V in ('echo %packn%') do set packid=%%V
 expand.exe -f:*.psf.cix.xml "!_UUP!\%packf%" "!_cabdir!" %_Null%
 if exist "!_cabdir!\*.psf.cix.xml" (
-rem findstr /i /m "PSFX" "!_cabdir!\update.mum" %_Nul3% || exit /b
-if not exist "!_UUP!\%packn%.psf" if not exist "!_UUP!\%packn:~0,-8%*.psf" (
+if not exist "!_UUP!\%packn%.psf" if not exist "!_UUP!*%packid%*%arch%*.psf" (
   echo PSFX: %packf% / PSF file is missing
   exit /b
   )
@@ -1352,7 +1350,9 @@ exit /b
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 copy /y "!_cabdir!\update.mum" %SystemRoot%\temp\ %_Nul1%
 set "mumfile=%SystemRoot%\temp\update.mum"
-for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
+set "chkfile=!mumfile:\=\\!"
+if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "isodate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 set "isotime=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
@@ -1405,7 +1405,7 @@ subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
 if !_sbst! equ 1 pushd %_sdr%
 if not exist "%packf%" (
 copy /y "!_UUP!\%packn%.*" . %_Nul3%
-if not exist "%packn%.psf" for /f %%# in ('dir /b /a:-d "!_UUP!\%packn:~0,-8%*.psf"') do copy /y "!_UUP!\%%#" %packn%.psf %_Nul3%
+if not exist "%packn%.psf" for /f %%# in ('dir /b /a:-d "!_UUP!\*%packid%*%arch%*.psf"') do copy /y "!_UUP!\%%#" %packn%.psf %_Nul3%
 )
 if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
 if not exist "cabarc.exe" copy /y "!_work!\bin\cabarc.exe" . %_Nul3%
@@ -1589,10 +1589,10 @@ if exist "!dest!\*defender*.xml" (
   )
 goto :eof
 )
+for /f "tokens=2 delims=-" %%V in ('echo %pkgn%') do set pkgid=%%V
 expand.exe -f:*.psf.cix.xml "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*.psf.cix.xml" (
-rem findstr /i /m "PSFX" "!dest!\update.mum" %_Nul3% || goto :eof
-if not exist "!_UUP!\%pkgn%.psf" if not exist "!_UUP!\%pkgn:~0,-8%*.psf" (
+if not exist "!_UUP!\%pkgn%.psf" if not exist "!_UUP!\*%pkgid%*%arch%*.psf" (
   echo %count%/%_cab%: %package% / PSF file is missing
   goto :eof
   )
@@ -1609,7 +1609,9 @@ findstr /i /m /c:"Microsoft-Windows-PPIProEdition" "!dest!\update.mum" %_Nul3% |
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 copy /y "!dest!\update.mum" %SystemRoot%\temp\ %_Nul1%
 set "mumfile=%SystemRoot%\temp\update.mum"
-for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
+set "chkfile=!mumfile:\=\\!"
+if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "isodate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 set "isotime=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
@@ -1707,7 +1709,7 @@ subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
 if !_sbst! equ 1 pushd %_sdr%
 if not exist "%package%" (
 copy /y "!_UUP!\%pkgn%.*" . %_Nul3%
-if not exist "%pkgn%.psf" for /f %%# in ('dir /b /a:-d "!_UUP!\%pkgn:~0,-8%*.psf"') do copy /y "!_UUP!\%%#" %pkgn%.psf %_Nul3%
+if not exist "%pkgn%.psf" for /f %%# in ('dir /b /a:-d "!_UUP!\*%pkgid%*%arch%*.psf"') do copy /y "!_UUP!\%%#" %pkgn%.psf %_Nul3%
 )
 if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
 PSFExtractor.exe %package% %_Null%
@@ -1937,13 +1939,14 @@ if exist "!lcudir!\*cablist.ini" (
   del /f /q "!lcudir!\*.cab" %_Nul3%
 )
 set _sbst=0
+for /f "tokens=2 delims=-" %%V in ('echo %lcupkg%') do set lcuid=%%V
 if exist "!lcudir!\*.psf.cix.xml" (
 if not exist "!lcudir!\express.psf.cix.xml" for /f %%# in ('dir /b /a:-d "!lcudir!\*.psf.cix.xml"') do rename "!lcudir!\%%#" express.psf.cix.xml %_Nul3%
 subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
 if !_sbst! equ 1 pushd %_sdr%
 if not exist "%lcupkg%" (
 copy /y "!_UUP!\%lcupkg:~0,-4%.*" . %_Nul3%
-if not exist "%lcupkg:~0,-4%.psf" for /f %%# in ('dir /b /a:-d "!_UUP!\%lcupkg:~0,-12%*.psf"') do copy /y "!_UUP!\%%#" %lcupkg:~0,-4%.psf %_Nul3%
+if not exist "%lcupkg:~0,-4%.psf" for /f %%# in ('dir /b /a:-d "!_UUP!\*%lcuid%*%arch%*.psf"') do copy /y "!_UUP!\%%#" %lcupkg:~0,-4%.psf %_Nul3%
 )
 if not exist "PSFExtractor.exe" copy /y "!_work!\bin\PSFExtractor.*" . %_Nul3%
 PSFExtractor.exe %lcupkg% %_Null%
@@ -2086,12 +2089,16 @@ set "_ver1j=0"&set "_ver1n=0"
 set "_ver2j=0"&set "_ver2n=0"
 set "_fil1=%mumtarget%\%_MWD%\Definition Updates\Updates\mpavdlta.vdm"
 set "_fil2=!_cabdir!\mpavdlta.vdm"
+set "cfil1=!_fil1:\=\\!"
+set "cfil2=!_fil2:\=\\!"
 if %_skpd% equ 0 if exist "!_fil1!" (
-for /f "tokens=3,4 delims==." %%a in ('wmic datafile where "name='!_fil1:\=\\!'" get Version /value ^| find "="') do set "_ver1j=%%a"&set "_ver1n=%%b"
+if %winbuild% lss 22483 for /f "tokens=3,4 delims==." %%a in ('wmic datafile where "name='!cfil1!'" get Version /value ^| find "="') do set "_ver1j=%%a"&set "_ver1n=%%b"
+if %winbuild% geq 22483 for /f "tokens=2,3 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfil1!\"').Version"') do set "_ver1j=%%a"&set "_ver1n=%%b"
 expand.exe -i -f:mpavdlta.vdm "!_UUP!\%package%" "!_cabdir!" %_Null%
 )
 if exist "!_fil2!" (
-for /f "tokens=3,4 delims==." %%a in ('wmic datafile where "name='!_fil2:\=\\!'" get Version /value ^| find "="') do set "_ver2j=%%a"&set "_ver2n=%%b"
+if %winbuild% lss 22483 for /f "tokens=3,4 delims==." %%a in ('wmic datafile where "name='!cfil2!'" get Version /value ^| find "="') do set "_ver2j=%%a"&set "_ver2n=%%b"
+if %winbuild% geq 22483 for /f "tokens=2,3 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfil2!\"').Version"') do set "_ver2j=%%a"&set "_ver2n=%%b"
 )
 if %_ver1j% gtr %_ver2j% set _skpd=1
 if %_ver1j% equ %_ver2j% if %_ver1n% geq %_ver2n% set _skpd=1
@@ -2517,10 +2524,22 @@ set "_fvr1=%SystemRoot%\temp\UpdateAgent.dll"
 set "_fvr2=%SystemRoot%\temp\setuphost.exe"
 set "_fvr3=%SystemRoot%\temp\setupprep.exe"
 set "_fvr4=%SystemRoot%\temp\Facilitator.dll"
-if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr1:\=\\!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
-if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr2:\=\\!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
-if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr3:\=\\!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
-if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr4:\=\\!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
+set "cfvr1=!_fvr1:\=\\!"
+set "cfvr2=!_fvr2:\=\\!"
+set "cfvr3=!_fvr3:\=\\!"
+set "cfvr4=!_fvr4:\=\\!"
+if %winbuild% lss 22483 (
+if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr1!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr2!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr3!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr4!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
+)
+if %winbuild% geq 22483 (
+if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr1!\"').Version"') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr2!\"').Version"') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr3!\"').Version"') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr4!\"').Version"') do set /a "_svr4=%%a"
+)
 set "_chk=!_fvr1!"
 if %chkmin% equ %_svr1% set "_chk=!_fvr1!"&goto :prephostsetup
 if %chkmin% equ %_svr2% set "_chk=!_fvr2!"&goto :prephostsetup
@@ -2572,7 +2591,18 @@ echo %_err%
 echo This script require administrator privileges.
 echo To do so, right click on this script and select 'Run as administrator'
 echo.
-%_Exit%&%_Pause%
+if %_Debug% neq 0 exit /b
+echo Press any key to exit.
+pause >nul
+exit /b
+
+:E_PS
+echo %_err%
+echo Windows PowerShell is required for this script to work.
+echo.
+if %_Debug% neq 0 exit /b
+echo Press any key to exit.
+pause >nul
 exit /b
 
 :E_ESD

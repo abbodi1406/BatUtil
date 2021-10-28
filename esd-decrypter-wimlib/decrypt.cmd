@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v61
+@set uivr=v62
 @echo off
 :: Change to 1 to get ISO name similar to ESD name (ESD name must be the original, with or without sha1 hash suffix)
 set ISOnameESD=0
@@ -65,6 +65,10 @@ set "xDS=bin\bin64;bin"
 if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
+for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+set _pwsh=1
+if not exist "%SysPath%\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
+if %winbuild% geq 22483 if %_pwsh% EQU 0 goto :E_PS
 
 %_Null% reg.exe query HKU\S-1-5-19 && (
   goto :Passed
@@ -80,7 +84,7 @@ set _PSarg=%_PSarg:'=''%
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Null% powershell -noprofile -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
+  %_Null% powershell -nop -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
@@ -594,12 +598,18 @@ set uupmin=%revmin%
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 4 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
 for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
-for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
+set "chkfile=!mumfile:\=\\!"
+if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "uupdate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 )
 set _legacy=
-if /i "%branch%"=="WinBuild" (
+set _useold=0
+if /i "%branch%"=="WinBuild" set _useold=1
+if /i "%branch%"=="GitEnlistment" set _useold=1
+if /i "%uupdate%"=="winpbld" set _useold=1
+if %_useold% equ 1 (
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 4 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" %_Nul6%') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _legacy=%%i.%%j.%%m.%%l&set branch=%%l)
 )
@@ -1141,7 +1151,18 @@ echo %_err%
 echo This script require administrator privileges.
 echo To do so, right click on this script and select 'Run as administrator'
 echo.
-%_Exit%&%_Pause%
+if %_Debug% neq 0 exit /b
+echo Press any key to exit.
+pause >nul
+exit /b
+
+:E_PS
+echo %_err%
+echo Windows PowerShell is required for this script to work.
+echo.
+if %_Debug% neq 0 exit /b
+echo Press any key to exit.
+pause >nul
 exit /b
 
 :E_W81

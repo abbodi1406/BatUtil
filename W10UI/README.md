@@ -179,7 +179,11 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
-10.12:
+10.13:  
+- Added workaround for the missing wmic.exe in build 22483 (and later)
+- When running within W10MUI, W10UI will install detected updates, regardless if already installed
+
+10.12:  
 - Added support for the new UUP dump file name scheme (PSF updates)
 
 10.11:  

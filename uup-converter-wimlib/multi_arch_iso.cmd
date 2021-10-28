@@ -31,6 +31,10 @@ set "xDS=bin\bin64;bin"
 if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
+for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+set _pwsh=1
+if not exist "%SysPath%\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
+if %winbuild% geq 22483 if %_pwsh% EQU 0 goto :E_PS
 
 %_Nul3% reg query HKU\S-1-5-19 && (
   goto :Passed
@@ -45,7 +49,7 @@ set _PSarg=%_PSarg:'=''%
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Nul3% powershell -noprofile -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
+  %_Nul3% powershell -nop -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
@@ -308,7 +312,9 @@ set "entry64=[boot]\sources\bootx64.wim,%ramdiskoptions%"
 set "entry86=[boot]\sources\bootx86.wim,%ramdiskoptions%"
 )
 for /f "tokens=5-10 delims=: " %%G in ('wimlib-imagex.exe info ISOFOLDER\x64\sources\boot.wim 2 ^| find /i "Last Modification Time"') do (set mmm=%%G&set "isotime=%%H/%%L,%%I:%%J:%%K")
-call :setdate %mmm%
+for %%# in (Jan:01 Feb:02 Mar:03 Apr:04 May:05 Jun:06 Jul:07 Aug:08 Sep:09 Oct:10 Nov:11 Dec:12) do for /f "tokens=1,2 delims=:" %%A in ("%%#") do (
+if /i %mmm%==%%A set "isotime=%%B/%isotime%"
+)
 %_Nul3% bcdedit /store %BCDBIOS% /set {bootmgr} nointegritychecks Yes
 %_Nul3% bcdedit /store %BCDBIOS% /set {default} description "Windows Setup (64-bit) - BIOS"
 %_Nul3% bcdedit /store %BCDBIOS% /set {default} device ramdisk=%entry64%
@@ -460,9 +466,9 @@ if /i !ISOedition%1!==Education (IF !ISOvol%1!==1 (set DVDLABEL%1=CEDA&set DVDIS
 if /i !ISOedition%1!==EducationN (IF !ISOvol%1!==1 (set DVDLABEL%1=CEDNA&set DVDISO%1=EDUCATIONN_VOL) else (set DVDLABEL%1=CEDNA&set DVDISO%1=EDUCATIONN_RET))
 if /i !ISOedition%1!==Enterprise set DVDLABEL%1=CENA&set DVDISO%1=ENTERPRISE_VOL
 if /i !ISOedition%1!==EnterpriseN set DVDLABEL%1=CENNA&set DVDISO%1=ENTERPRISEN_VOL
-if /i !ISOedition%1!==PPIPro set DVDLABEL%1=CPPIA&set DVDISO%1=PPIPRO_OEM
 if /i !ISOedition%1!==Cloud set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_OEM
 if /i !ISOedition%1!==CloudN set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_OEM
+if /i !ISOedition%1!==PPIPro set DVDLABEL%1=CPPIA&set DVDISO%1=PPIPRO_OEM
 if /i !ISOedition%1!==EnterpriseG set DVDLABEL%1=CEGA&set DVDISO%1=ENTERPRISEG_VOL
 if /i !ISOedition%1!==EnterpriseGN set DVDLABEL%1=CEGNA&set DVDISO%1=ENTERPRISEGN_VOL
 if /i !ISOedition%1!==EnterpriseS set DVDLABEL%1=CES&set DVDISO%1=ENTERPRISES_VOL
@@ -473,7 +479,9 @@ if /i !ISOedition%1!==ProfessionalWorkstation (if !ISOvol%1!==1 (set DVDLABEL%1=
 if /i !ISOedition%1!==ProfessionalWorkstationN (if !ISOvol%1!==1 (set DVDLABEL%1=CPRWNA&set DVDISO%1=PROWORKSTATIONN_VOL) else (set DVDLABEL%1=CPRWNA&set DVDISO%1=PROWORKSTATIONN_OEMRET))
 if /i !ISOedition%1!==ProfessionalSingleLanguage set DVDLABEL%1=CPRSLA&set DVDISO%1=PROSINGLELANGUAGE_OEM
 if /i !ISOedition%1!==ProfessionalCountrySpecific set DVDLABEL%1=CPRCHA&set DVDISO%1=PROCHINA_OEM
-IF !ISOmulti%1! geq 2 (
+if /i !ISOedition%1!==CloudEdition (if !ISOvol%1!==1 (set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_VOL) else (set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_OEMRET))
+if /i !ISOedition%1!==CloudEditionN (if !ISOvol%1!==1 (set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_VOL) else (set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_OEMRET))
+if !ISOmulti%1! geq 2 (
 set DVDLABEL%1=CCSA&set DVDISO%1=MULTI_OEMRET
 if !ISOeditionc%1!==1 set DVDLABEL%1=CCCHA&set DVDISO%1=MULTICHINA_OEMRET
 )
@@ -482,47 +490,64 @@ if %1==2 exit /b
 
 wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 \Windows\System32\ntoskrnl.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
 7z.exe l .\bin\temp\ntoskrnl.exe >.\bin\temp\version.txt 2>&1
-for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" 2^>nul') do (set version=%%i.%%j&set vermajor=%%i&set verminor=%%j&set branch=%%k&set labeldate=%%l)
-set revision=%version%&set revmajor=%vermajor%&set revminor=%verminor%
+for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" 2^>nul') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l)
+set revver=%uupver%&set revmaj=%uupmaj%&set revmin=%uupmin%
 if /i !ISOarch%1!==x86 (set _ss=x86) else if /i !ISOarch%1!==x64 (set _ss=amd64)
-wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision* --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-if exist "bin\temp\*.manifest" for /f "tokens=6,7 delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*.manifest') do set revision=%%A.%%B&set revmajor=%%A&set revminor=%%B
+wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision*.manifest --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+if exist "bin\temp\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens=6,7 delims=_." %%A in ('dir /b /a:-d /od .\bin\temp\*_microsoft-windows-coreos-revision*.manifest') do set revver=%%A.%%B&set revmaj=%%A&set revmin=%%B
 if !ISOver%1! geq 15063 (
 wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
 set "isokey=Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
-for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys 2^>nul ^| find /i "Client.OS""') do if not errorlevel 1 (
+for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys 2^>nul ^| findstr /i /r ".*\.OS""') do if not errorlevel 1 (
   for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Branch 2^>nul"') do set "isobranch=%%~A"
-  for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Version 2^>nul"') do if %%A gtr !revmajor! (
-    set "revision=%%~A.%%B
-    set revmajor=%%~A
-    set "revminor=%%B
+  for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Version 2^>nul"') do if %%A gtr !revmaj! (
+    set "revver=%%~A.%%B
+    set revmaj=%%~A
+    set "revmin=%%B
     )
   )
 )
 del /f /q %SystemRoot%\temp\*.mum %_Nul3%
 wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
 if exist "%SystemRoot%\temp\Package_for_RollupFix*.mum" (
-set version=%revision%
+set uupver=%revver%
 for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
-for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
+set "chkfile=!mumfile:\=\\!"
+if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
-set "labeldate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
+set "uupdate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 )
 if defined isobranch set branch=%isobranch%
-if %revmajor%==18363 (
+if %revmaj%==18363 (
 if /i "%branch:~0,4%"=="19h1" set branch=19h2%branch:~4%
-if %version:~0,5%==18362 set version=18363%version:~5%
+if %uupver:~0,5%==18362 set uupver=18363%uupver:~5%
 )
-if %revmajor%==19042 (
+if %revmaj%==19042 (
 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
-if %version:~0,5%==19041 set version=19042%version:~5%
+if %uupver:~0,5%==19041 set uupver=19042%uupver:~5%
+)
+if %revmaj%==19043 (
+if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
+if %uupver:~0,5%==19041 set uupver=19043%uupver:~5%
+)
+if %revmaj%==19044 (
+if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
+if %uupver:~0,5%==19041 set uupver=19044%uupver:~5%
+)
+if %revmaj%==19045 (
+if /i "%branch:~0,2%"=="vb" set branch=22h1%branch:~2%
+if %uupver:~0,5%==19041 set uupver=19045%uupver:~5%
 )
 set _label2=
-if /i "%branch%"=="WinBuild" (
+set _useold=0
+if /i "%branch%"=="WinBuild" set _useold=1
+if /i "%branch%"=="GitEnlistment" set _useold=1
+if %_useold% equ 1 (
 wimlib-imagex.exe extract "!ISOdir%1!\sources\%WIMFILE%" 1 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes >nul
 for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe .\bin\temp\SOFTWARE "Microsoft\Windows NT\CurrentVersion" getvalue BuildLabEx" 2^>nul') do if not errorlevel 1 (for /f "tokens=1-5 delims=." %%i in ('echo %%~#') do set _label2=%%i.%%j.%%m.%%l_CLIENT&set branch=%%l)
 )
-if defined _label2 (set _label=%_label2%) else (set _label=%version%.%labeldate%.%branch%_CLIENT)
+if defined _label2 (set _label=%_label2%) else (set _label=%uupver%.%uupdate%.%branch%_CLIENT)
 rmdir /s /q bin\temp\
 
 set langid=!ISOlang%1!
@@ -532,25 +557,18 @@ set langid=!langid:%%#=%%#!
 )
 exit /b
 
-:setdate
-if /i %1==Jan set "isotime=01/%isotime%"
-if /i %1==Feb set "isotime=02/%isotime%"
-if /i %1==Mar set "isotime=03/%isotime%"
-if /i %1==Apr set "isotime=04/%isotime%"
-if /i %1==May set "isotime=05/%isotime%"
-if /i %1==Jun set "isotime=06/%isotime%"
-if /i %1==Jul set "isotime=07/%isotime%"
-if /i %1==Aug set "isotime=08/%isotime%"
-if /i %1==Sep set "isotime=09/%isotime%"
-if /i %1==Oct set "isotime=10/%isotime%"
-if /i %1==Nov set "isotime=11/%isotime%"
-if /i %1==Dec set "isotime=12/%isotime%"
-exit /b
-
 :E_Admin
 echo %_err%
 echo This script require administrator privileges.
 echo To do so, right click on this script and select 'Run as administrator'
+echo.
+echo Press any key to exit.
+pause >nul
+exit /b
+
+:E_PS
+echo %_err%
+echo Windows PowerShell is required for this script to work.
 echo.
 echo Press any key to exit.
 pause >nul
