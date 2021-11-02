@@ -346,7 +346,11 @@ echo exit /b
 
 for /f "tokens=3 delims=." %%# in ('echo %CTRver%') do set verchk=%%#
 set "CTRexe=1"
-if exist "!_file!" for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!_file:\=\\!'" get Version /value') do (
+set "cfile=!_file:\=\\!"
+if exist "!_file!" if %winbuild% lss 22483 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
+  if %%i geq %verchk% (set CTRexe=0)
+)
+if exist "!_file!" if %winbuild% geq 22483 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfile!\"').Version"') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
 call :StopService 1>nul 2>nul

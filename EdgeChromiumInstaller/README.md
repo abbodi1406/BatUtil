@@ -12,13 +12,13 @@ ______________________________
 
 https://msedgesetup.azureedge.net/latest/MicrosoftEdgeSetup.exe
 
-you can also acquire it from this page, search for: MicrosoftEdgeUpdateSetup
+you can also acquire it from this page (search for: MicrosoftEdgeUpdateSetup)
 
 https://edgeupdates.microsoft.com/api/products
 
 * Latest offline installer for Microsoft Edge:
 
-https://32767.ga/edge/
+http://pldm.ml/edge
 
 - choose desired channel / architecture  
 - choose desired / latest build  

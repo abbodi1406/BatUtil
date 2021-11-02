@@ -6,7 +6,7 @@
 :: https://docs.microsoft.com/en-us/deployedge/microsoft-edge-supported-languages
 set "uLang="
 
-:: channel: canary, dev, beta, stable
+:: channel: internal, canary, dev, beta, stable
 set "uChannel="
 
 :: installation level: system wide or current user
@@ -32,10 +32,12 @@ if /i "%%A"=="/L" (set sLang=1
 ) else if /i "%%A"=="/Beta" (set uChannel=Beta
 ) else if /i "%%A"=="/Stable" (set uChannel=Stable
 ) else if /i "%%A"=="/Canary" (set uChannel=Canary
+) else if /i "%%A"=="/Internal" (set uChannel=Internal
 ) else if /i "%%A"=="/CD" (set uChannel=Dev
 ) else if /i "%%A"=="/CB" (set uChannel=Beta
 ) else if /i "%%A"=="/CS" (set uChannel=Stable
 ) else if /i "%%A"=="/CC" (set uChannel=Canary
+) else if /i "%%A"=="/CI" (set uChannel=Internal
 ) else if /i "%%A"=="/System" (set uSystem=1&set uUser=0
 ) else if /i "%%A"=="/User" (set uUser=1&set uSystem=0
 ) else if /i "%%A"=="/S" (set uSystem=1&set uUser=0
@@ -119,31 +121,32 @@ for %%A in (
 2CD8A007-E189-409D-A2C8-9AF4EF3C72AA
 0D50BFEC-CD6A-4F9A-964C-C7416E3ACB10
 65C35B14-6C1D-4122-AC46-7148CC9D6497
+BE59E8FD-089A-411B-A3B0-051D9E417818
 ) do (
 set /a cc+=1
 set _gud!cc!=%%A
 )
 set /a cc=0
 for %%A in (
-Stable Beta Dev Canary
+Stable Beta Dev Canary Internal
 ) do (
 set /a cc+=1
 set _chn!cc!=%%A
 )
 set "line=============================================================="
 
-set "_file=!_work!\%_edg86%"
+echo>filever.vbs Set objFSO = CreateObject^("Scripting.FileSystemObject"^) : Wscript.Echo objFSO.GetFileVersion^(WScript.arguments^(0^)^)
 if defined _edg86 (
 for /f "skip=1 tokens=* delims=" %%# in ('certutil -hashfile %_edg86% SHA256^|findstr /i /v CertUtil') do set "_hsh86=%%#"
 for /f "tokens=* delims=" %%# in ('dir /b %_edg86%') do set "_sze86=%%~z#"
-for /f "tokens=2 delims==" %%# in ('wmic /output:stdout datafile where "name='!_file:\=\\!'" get Version /value') do set "_ver86=%%#"
+for /f "tokens=* delims=" %%# in ('cscript //nologo filever.vbs "!_work!\%_edg86%"') do set "_ver86=%%#"
 )
-set "_file=!_work!\%_edg64%"
 if defined _edg64 (
 for /f "skip=1 tokens=* delims=" %%# in ('certutil -hashfile %_edg64% SHA256^|findstr /i /v CertUtil') do set "_hsh64=%%#"
 for /f "tokens=* delims=" %%# in ('dir /b %_edg64%') do set "_sze64=%%~z#"
-for /f "tokens=2 delims==" %%# in ('wmic /output:stdout datafile where "name='!_file:\=\\!'" get Version /value') do set "_ver64=%%#"
+for /f "tokens=* delims=" %%# in ('cscript //nologo filever.vbs "!_work!\%_edg64%"') do set "_ver64=%%#"
 )
+if exist filever.vbs del /f /q filever.vbs
 
 if defined uChannel (
 set "_chan=%uChannel%"
@@ -238,11 +241,12 @@ echo. 1. Stable
 echo. 2. Beta
 echo. 3. Dev
 echo. 4. Canary
+echo. 5. Internal
 echo.
 echo %line%
 set /p inpt= ^> Enter Channel option number, and press "Enter": 
 if "%inpt%"=="" goto :eof
-for /l %%i in (1,1,4) do (if %inpt%==%%i set verified=1)
+for /l %%i in (1,1,5) do (if %inpt%==%%i set verified=1)
 if %verified%==0 goto :M_Chan
 set "_guid=!_gud%inpt%!"
 set "_chan=!_chn%inpt%!"
@@ -358,7 +362,7 @@ echo %line%
 echo.
 
 :DoInstall
-for %%# in (s,t,a,b,l,e,d,v,c,n,r,y) do (
+for %%# in (s,t,a,b,l,e,d,v,c,n,r,y,i) do (
 set _chan=!_chan:%%#=%%#!
 )
 
@@ -411,6 +415,18 @@ echo.          ^<package name="%_edge%" hash_sha256="%_hash%" size="%_size%" req
 echo.        ^</packages^>
 echo.        ^<actions^>
 echo.          ^<action event="install" run="%_edge%" arguments="--msedge-sxs --verbose-logging --do-not-launch-msedge --do-not-register-for-update-launch" needsadmin="false"/^>
+echo.        ^</actions^>
+echo.       ^</manifest^>
+echo.    ^</updatecheck^>
+echo.  ^</app^>
+echo.  ^<app appid="{BE59E8FD-089A-411B-A3B0-051D9E417818}" status="ok"^>
+echo.    ^<updatecheck status="ok"^>
+echo.      ^<manifest version="%_vern%"^>
+echo.        ^<packages^>
+echo.          ^<package name="%_edge%" hash_sha256="%_hash%" size="%_size%" required="true"/^>
+echo.        ^</packages^>
+echo.        ^<actions^>
+echo.          ^<action event="install" run="%_edge%" arguments="--msedge-internal --verbose-logging --do-not-launch-msedge --do-not-register-for-update-launch%_levl%" needsadmin="%_admn%"/^>
 echo.        ^</actions^>
 echo.       ^</manifest^>
 echo.    ^</updatecheck^>

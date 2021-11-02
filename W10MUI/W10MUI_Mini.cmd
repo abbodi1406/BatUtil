@@ -49,6 +49,7 @@ set "TMPUPDT=%TEMPDIR%\updtemp"
 set "_7z=%WORKDIR%\dism\7z.exe"
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
+for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 setlocal EnableDelayedExpansion
 
 if %_Debug% equ 0 (
@@ -63,17 +64,12 @@ if %_Debug% equ 0 (
   set "_Nul6="
   set "_Nul3="
 copy /y nul "!WORKDIR!\#.rw" %_Null% && (if exist "!WORKDIR!\#.rw" del /f /q "!WORKDIR!\#.rw") || (set "_log=!_dsk!\%~n0")
-if exist "!_log!_Debug.log" (
-  call set "_suf="
-  for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
-  set "_suf=_!_date:~8,6!"
-)
 echo.
 echo Running in Debug Mode...
 echo The window will be closed when finished
 @echo on
 @prompt $G
-@call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug!_suf!.log"&del "!_log!_tmp.log"
+@call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug.log"&del "!_log!_tmp.log"
 @title %ComSpec%
 @exit /b
 
@@ -82,7 +78,8 @@ title Windows NT 10.0 Multilingual Creator
 set "_dLog=%SystemRoot%\Logs\DISM"
 set _drv=%~d0
 set _ntf=NTFS
-if /i not "%_drv%"=="%SystemDrive%" for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" set _drv=%SystemDrive%
 if "%MOUNTDIR%"=="" set "MOUNTDIR=%_drv%\W10MUIMOUNT"
 set "INSTALLMOUNTDIR=%MOUNTDIR%\install"
@@ -118,7 +115,6 @@ goto :check
 :skipadk
 set "DISMRoot=!WORKDIR!\dism\dism.exe"
 if /i %xOS%==amd64 set "DISMRoot=!WORKDIR!\dism\dism64\dism.exe"
-for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 if %winbuild% geq 10240 set "DISMRoot=%SystemRoot%\System32\dism.exe"
 
 :check

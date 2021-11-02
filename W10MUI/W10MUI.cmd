@@ -52,6 +52,7 @@ set "TMPUPDT=%TEMPDIR%\updtemp"
 set "_7z=%WORKDIR%\dism\7z.exe"
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
+for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 setlocal EnableDelayedExpansion
 
 if %_Debug% equ 0 (
@@ -66,17 +67,12 @@ if %_Debug% equ 0 (
   set "_Nul6="
   set "_Nul3="
 copy /y nul "!WORKDIR!\#.rw" %_Null% && (if exist "!WORKDIR!\#.rw" del /f /q "!WORKDIR!\#.rw") || (set "_log=!_dsk!\%~n0")
-if exist "!_log!_Debug.log" (
-  call set "_suf="
-  for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
-  set "_suf=_!_date:~8,6!"
-)
 echo.
 echo Running in Debug Mode...
 echo The window will be closed when finished
 @echo on
 @prompt $G
-@call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug!_suf!.log"&del "!_log!_tmp.log"
+@call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug.log"&del "!_log!_tmp.log"
 @title %ComSpec%
 @exit /b
 
@@ -85,7 +81,8 @@ title Windows NT 10.0 Multilingual Creator
 set "_dLog=%SystemRoot%\Logs\DISM"
 set _drv=%~d0
 set _ntf=NTFS
-if /i not "%_drv%"=="%SystemDrive%" for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" set _drv=%SystemDrive%
 if "!MOUNTDIR!"=="" set "MOUNTDIR=%_drv%\W10MUIMOUNT"
 set "INSTALLMOUNTDIR=%MOUNTDIR%\install"
@@ -123,7 +120,6 @@ goto :check
 :skipadk
 set "DISMRoot=!WORKDIR!\dism\dism.exe"
 if /i %xOS%==amd64 set "DISMRoot=!WORKDIR!\dism\dism64\dism.exe"
-for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 if %winbuild% geq 10240 set "DISMRoot=%SystemRoot%\System32\dism.exe"
 
 :check
@@ -573,7 +569,9 @@ if not defined isolab (if %_build% geq 15063 (call :detectLab isolab) else (call
 if not defined isodate if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
 copy /y "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Package_for_RollupFix*.mum" %SystemRoot%\temp\ %_Nul1%
 for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
-for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!mumfile:\=\\!'" get LastModified /value') do set "mumdate=%%#"
+set "chkfile=!mumfile:\=\\!"
+if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "isodate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 )
@@ -858,7 +856,8 @@ move /y "!DVDDIR!\setup.exe" "!DVDDIR!\sources" %_Nul3%
 :dvd
 :: if exist "!DVDDIR!\sources\uup" rmdir /s /q "!DVDDIR!\sources\uup" %_Nul3%
 call :DATEISO
-for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
+if %winbuild% lss 22483 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
+if %winbuild% geq 22483 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
 if not defined isodate set "isodate=%_date:~2,6%-%_date:~8,4%"
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set isolab=!isolab:%%#=%%#!
@@ -932,21 +931,35 @@ if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" goto 
 copy /y "!DVDDIR!\sources\setuphost.exe" %SystemRoot%\temp\ %_Nul3%
 copy /y "!DVDDIR!\sources\setupprep.exe" %SystemRoot%\temp\ %_Nul3%
 set _svr1=0&set _svr2=0&set _svr3=0&set _svr4=0
-set "_fvr1=%SystemRoot%\temp\setuphost.exe"
-set "_fvr2=%SystemRoot%\temp\setupprep.exe"
-set "_fvr3=%SystemRoot%\temp\UpdateAgent.dll"
+set "_fvr1=%SystemRoot%\temp\UpdateAgent.dll"
+set "_fvr2=%SystemRoot%\temp\setuphost.exe"
+set "_fvr3=%SystemRoot%\temp\setupprep.exe"
 set "_fvr4=%SystemRoot%\temp\Facilitator.dll"
-if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr1:\=\\!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
-if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr2:\=\\!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
-if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr3:\=\\!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
-if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!_fvr4:\=\\!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
+set "cfvr1=!_fvr1:\=\\!"
+set "cfvr2=!_fvr2:\=\\!"
+set "cfvr3=!_fvr3:\=\\!"
+set "cfvr4=!_fvr4:\=\\!"
+if %winbuild% lss 22483 (
+if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr1!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr2!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr3!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr4!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
+)
+if %winbuild% geq 22483 (
+if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr1!\"').Version"') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr2!\"').Version"') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr3!\"').Version"') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr4!\"').Version"') do set /a "_svr4=%%a"
+)
 if %isomin% neq %_svr1% if %isomin% neq %_svr2% if %isomin% neq %_svr3% if %isomin% neq %_svr4% goto :eof
 if %isomin% equ %_svr1% set "_chk=!_fvr1!"
 if %isomin% equ %_svr2% set "_chk=!_fvr2!"
 if %isomin% equ %_svr3% set "_chk=!_fvr3!"
 if %isomin% equ %_svr4% set "_chk=!_fvr4!"
 for /f "tokens=6 delims=.) " %%# in ('powershell -nop -c "(gi '!_chk!').VersionInfo.FileVersion" %_Nul6%') do set "_ddd=%%#"
-if defined _ddd set "isodate=%_ddd%"
+if defined _ddd (
+if /i not "%_ddd%"=="winpbld" set "isodate=%_ddd%"
+)
 del /f /q "!_fvr1!" "!_fvr2!" "!_fvr3!" "!_fvr4!" %_Nul3%
 goto :eof
 

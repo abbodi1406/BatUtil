@@ -1193,7 +1193,8 @@ goto :MenuFinal
 
 :MenuFinal2
 cls
-for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
+if %winbuild% lss 22483 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
+if %winbuild% geq 22483 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
 copy /y nul "!_work!\#.rw" 1>nul 2>nul && (if exist "!_work!\#.rw" del /f /q "!_work!\#.rw") || (set "_ini=!_dsk!")
 
 (
@@ -1279,7 +1280,11 @@ echo exit /b
 )>"!_temp!\C2R_Setup.bat"
 
 set "CTRexe=1"
-if exist "!_file!" for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!_file:\=\\!'" get Version /value') do (
+set "cfile=!_file:\=\\!"
+if exist "!_file!" if %winbuild% lss 22483 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
+  if %%i geq %verchk% (set CTRexe=0)
+)
+if exist "!_file!" if %winbuild% geq 22483 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfile!\"').Version"') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
 call :StopService 1>nul 2>nul
