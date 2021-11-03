@@ -1,3 +1,4 @@
+<!-- : Begin batch script
 @setlocal DisableDelayedExpansion
 @echo off
 set "_cmdf=%~f0"
@@ -23,6 +24,15 @@ if %winbuild% LSS 7601 (
 set "msg=ERROR: Windows 7 SP1 is the minimum supported OS"
 goto :end
 )
+set "_csq=cscript.exe //NoLogo //Job:WmiQuery "%~nx0?.wsf""
+set "_csm=cscript.exe //NoLogo //Job:WmiMethod "%~nx0?.wsf""
+set WMI_VBS=0
+if %winbuild% GEQ 22483 set WMI_VBS=1
+set _WSH=1
+reg query "HKCU\SOFTWARE\Microsoft\Windows Script Host\Settings" /v Enabled 2>nul | find /i "0x0" 1>nul && (set _WSH=0)
+reg query "HKLM\SOFTWARE\Microsoft\Windows Script Host\Settings" /v Enabled 2>nul | find /i "0x0" 1>nul && (set _WSH=0)
+set "_oApp=0ff1ce15-a989-479d-af46-f275c6370663"
+set "_oA14=59a52881-a989-479d-af46-f275c6370663"
 set "_Common=%CommonProgramFiles%"
 if defined PROCESSOR_ARCHITEW6432 set "_Common=%CommonProgramW6432%"
 if /i "%PROCESSOR_ARCHITECTURE%"=="amd64" set "xBit=x64"
@@ -102,7 +112,8 @@ echo.
 echo ============================================================
 echo Uninstalling Product Key^(s)
 echo ============================================================
-call :cKMS
+call :cKMS %_Nul3%
+if %WMI_VBS% NEQ 0 cd bin
 
 :proceed
 if exist "!_file!" (
@@ -174,27 +185,35 @@ set "msg=Finished. It's recommended to restart the system."
 goto :end
 
 :cKMS
-set "OSPP=SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform"
+set "OPPk=SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform"
 set "SPPk=SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform"
 if %winbuild% geq 9200 (
 set spp=SoftwareLicensingProduct
+reg delete "HKLM\%SPPk%\0ff1ce15-a989-479d-af46-f275c6370663" /f
+reg delete "HKEY_USERS\S-1-5-20\%SPPk%\0ff1ce15-a989-479d-af46-f275c6370663" /f
 ) else (
 set spp=OfficeSoftwareProtectionProduct
+reg delete "HKLM\%OPPk%\0ff1ce15-a989-479d-af46-f275c6370663" /f
+reg delete "HKEY_USERS\S-1-5-20\%OPPk%" /f
 )
-for /f "tokens=2 delims==" %%G in ('"wmic path %spp% where (Name LIKE 'Office%%' AND PartialProductKey is not NULL) get ID /VALUE" %_Nul6%') do (set app=%%G&call :Clear)
-if %winbuild% geq 9200 (
-reg delete "HKLM\%SPPk%\0ff1ce15-a989-479d-af46-f275c6370663" /f %_Nul3%
-reg delete "HKEY_USERS\S-1-5-20\%SPPk%\0ff1ce15-a989-479d-af46-f275c6370663" /f %_Nul3%
-) else (
-reg delete "HKLM\%OSPP%\0ff1ce15-a989-479d-af46-f275c6370663" /f %_Nul3%
-reg delete "HKEY_USERS\S-1-5-20\%OSPP%" /f %_Nul3%
-)
+if %_WSH% EQU 0 if %WMI_VBS% NEQ 0 goto :eof
+if %WMI_VBS% NEQ 0 cd ..
+set "_ocq=Name LIKE 'Office%%' AND PartialProductKey is not NULL"
+set "_qr="wmic path %spp% where (%_ocq%) get ID /VALUE""
+if %WMI_VBS% NEQ 0 set "_qr=%_csq% %spp% "%_ocq%" ID"
+for /f "tokens=2 delims==" %%G in ('%_qr% %_Nul6%') do (set app=%%G&call :cAPP %_Nul3%)
 goto :eof
 
-:Clear
-wmic path %spp% where ID='%app%' call ClearKeyManagementServiceMachine %_Nul3%
-wmic path %spp% where ID='%app%' call ClearKeyManagementServicePort %_Nul3%
-wmic path %spp% where ID='%app%' call UninstallProductKey %_Nul3%
+:cAPP
+if %winbuild% geq 9200 (
+reg delete "HKLM\%SPPk%\%_oApp%\%app%" /f %_Null%
+) else (
+reg delete "HKLM\%OPPk%\%_oA14%\%app%" /f %_Null%
+reg delete "HKLM\%OPPk%\%_oApp%\%app%" /f %_Null%
+)
+set "_qr=wmic path %spp% where ID='%app%' call UninstallProductKey"
+if %WMI_VBS% NEQ 0 set "_qr=%_csm% "%spp%.ID='%app%'" UninstallProductKey"
+%_qr%
 goto :eof
 
 :end
@@ -206,3 +225,37 @@ echo.
 echo Press any key to exit.
 pause >nul
 goto :eof
+
+----- Begin wsf script --->
+<package>
+   <job id="WmiQuery">
+      <script language="VBScript">
+         If WScript.Arguments.Count = 3 Then
+            wExc = "Select " & WScript.Arguments.Item(2) & " from " & WScript.Arguments.Item(0) & " where " & WScript.Arguments.Item(1)
+            wGet = WScript.Arguments.Item(2)
+         Else
+            wExc = "Select " & WScript.Arguments.Item(1) & " from " & WScript.Arguments.Item(0)
+            wGet = WScript.Arguments.Item(1)
+         End If
+         Set objCol = GetObject("winmgmts:\\.\root\CIMV2").ExecQuery(wExc,,48)
+         For Each objItm in objCol
+            For each Prop in objItm.Properties_
+               If LCase(Prop.Name) = LCase(wGet) Then
+                  WScript.Echo Prop.Name & "=" & Prop.Value
+                  Exit For
+               End If
+            Next
+         Next
+      </script>
+   </job>
+   <job id="WmiMethod">
+      <script language="VBScript">
+         On Error Resume Next
+         wPath = WScript.Arguments.Item(0)
+         wMethod = WScript.Arguments.Item(1)
+         Set objCol = GetObject("winmgmts:\\.\root\CIMV2:" & wPath)
+         objCol.ExecMethod_(wMethod)
+         WScript.Quit Err.Number
+      </script>
+   </job>
+</package>
