@@ -1011,7 +1011,7 @@ for /f "tokens=2 delims==" %%# in ('%_qr%') do echo %%#
 call :keys %aID%
 if "%_key%"=="" (echo No associated KMS Client key found&echo.&exit /b)
 set "_qr=wmic path %_sps% where Version='%_wmi%' call InstallProductKey ProductKey="%_key%""
-if %WMI_VBS% NEQ 0 set "_qr=%_csp% %_sps% "%_pkey%""
+if %WMI_VBS% NEQ 0 set "_qr=%_csp% %_sps% "%_key%""
 %_qr% %_Nul3%
 set ERRORCODE=%ERRORLEVEL%
 if %ERRORCODE% NEQ 0 (
