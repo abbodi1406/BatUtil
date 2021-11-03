@@ -86,6 +86,7 @@ reg query "HKCU\SOFTWARE\Microsoft\Windows Script Host\Settings" /v Enabled 2>nu
 reg query "HKLM\SOFTWARE\Microsoft\Windows Script Host\Settings" /v Enabled 2>nul | find /i "0x0" 1>nul && (set _WSH=0)
 if %_WSH% EQU 0 if %WMI_VBS% NEQ 0 goto :E_VBS
 setlocal EnableDelayedExpansion
+pushd "!_work!"
 
 if %_Debug% EQU 0 (
   set "_Nul1=1>nul"
