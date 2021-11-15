@@ -618,6 +618,7 @@ rmdir /s /q bin\temp\
 
 set _rfr=refresh
 set _rsr=release_svc_%_rfr%
+if %revver%==22000.318 (set _label=22000.318.211104-1236.co_%_rsr%&set branch=co_%_rsr%&set ISOnameESD=0)
 if %revver%==22000.258 (set _label=22000.258.211007-1642.co_%_rsr%&set branch=co_%_rsr%&set ISOnameESD=0)
 if %revver%==22000.194 (set _label=22000.194.210913-1444.co_%_rsr%&set branch=co_%_rsr%&set ISOnameESD=0)
 if %revver%==22000.132 (set _label=22000.132.210809-2349.co_%_rsr%&set branch=co_%_rsr%&set ISOnameESD=0)
@@ -625,6 +626,7 @@ if %revmaj%==19045 (set _label=%revver%.%_time%.22h1_%_rsr%&set branch=22h1_%_rs
 if %revmaj%==19044 (set _label=%revver%.%_time%.21h2_%_rsr%&set branch=21h2_%_rsr%)
 if %revver%==19044.1165 (set _label=19044.1165.210806-1742.21h2_%_rsr%&set branch=21h2_%_rsr%&set ISOnameESD=0)
 if %revmaj%==19043 (set _label=%revver%.%_time%.21h1_%_rsr%&set branch=21h1_%_rsr%)
+if %revver%==19043.1288 (set _label=19043.1288.211006.21h1_%_rsr%&set branch=21h1_%_rsr%&set ISOnameESD=0)
 if %revver%==19043.928 (set _label=19043.928.210409-1212.21h1_%_rsr%&set branch=21h1_%_rsr%&set ISOnameESD=0)
 if %revver%==19043.867 (set _label=19043.867.210305-1751.21h1_%_rsr%&set branch=21h1_%_rsr%&set ISOnameESD=0)
 if %revmaj%==19042 (set _label=%revver%.%_time%.20h2_%_rsr%&set branch=20h2_%_rsr%)
