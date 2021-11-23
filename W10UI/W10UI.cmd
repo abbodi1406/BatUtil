@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.13
+@set uiv=v10.14
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -127,6 +127,28 @@ set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
+
+set "_dLog=%SystemRoot%\Logs\DISM"
+set psfnet=0
+if exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set psfnet=1
+if exist "%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set psfnet=1
+if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" if not exist "%SystemRoot%\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" set psfnet=0
+for %%# in (E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+set "_adr%%#=%%#"
+)
+if %winbuild% lss 22483 for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_Volume where (DriveLetter is not NULL) get DriveLetter /value" ^| findstr ^=') do (
+if defined _adr%%# set "_adr%%#="
+)
+if %winbuild% lss 22483 for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_LogicalDisk where (DeviceID is not NULL) get DeviceID /value" ^| findstr ^=') do (
+if defined _adr%%# set "_adr%%#="
+)
+if %winbuild% geq 22483 for /f "tokens=1 delims=:" %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter is not NULL').Get()).DriveLetter; (([WMISEARCHER]'Select * from Win32_LogicalDisk where DeviceID is not NULL').Get()).DeviceID"') do (
+if defined _adr%%# set "_adr%%#="
+)
+for %%# in (E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+if not defined _sdr (if defined _adr%%# set "_sdr=%%#:")
+)
+if not defined _sdr set psfnet=0
 setlocal EnableDelayedExpansion
 
 if %_Debug% equ 0 (
@@ -157,27 +179,6 @@ echo The window will be closed when finished
 :Begin
 title Installer for Windows NT 10.0 Updates
 cd /d "!_work!"
-set "_dLog=%SystemRoot%\Logs\DISM"
-set psfnet=0
-if exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set psfnet=1
-if exist "%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set psfnet=1
-if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set psfnet=0
-for %%# in (E F G H I J K L M N O P Q R S T U V W X Y Z) do (
-set "_adr%%#=%%#"
-)
-if %winbuild% lss 22483 for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_Volume where (DriveLetter is not NULL) get DriveLetter /value" ^| findstr ^=') do (
-if defined _adr%%# set "_adr%%#="
-)
-if %winbuild% lss 22483 for /f "tokens=2 delims==:" %%# in ('"wmic path Win32_LogicalDisk where (DeviceID is not NULL) get DeviceID /value" ^| findstr ^=') do (
-if defined _adr%%# set "_adr%%#="
-)
-if %winbuild% geq 22483 for /f "tokens=1 delims=:" %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter is not NULL').Get()).DriveLetter; (([WMISEARCHER]'Select * from Win32_LogicalDisk where DeviceID is not NULL').Get()).DeviceID"') do (
-if defined _adr%%# set "_adr%%#="
-)
-for %%# in (E F G H I J K L M N O P Q R S T U V W X Y Z) do (
-if not defined _sdr (if defined _adr%%# set "_sdr=%%#:")
-)
-if not defined _sdr set psfnet=0
 if not exist "W10UI.ini" goto :proceed
 find /i "[W10UI-Configuration]" W10UI.ini %_Nul1% || goto :proceed
 setlocal DisableDelayedExpansion
@@ -234,6 +235,7 @@ set _ADK=0
 set "showdism=Host OS"
 set "_dism2=%dismroot% /English /NoRestart /ScratchDir"
 if /i not "!dismroot!"=="dism.exe" (
+set _ADK=1
 set "showdism=%dismroot%"
 set _dism2="%dismroot%" /English /NoRestart /ScratchDir
 )
@@ -748,7 +750,7 @@ if exist "checker\Microsoft-Windows-1909Enablement-Package~*.mum" set "_fixEP=18
 if exist "checker\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "checker\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "checker\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "checker\Microsoft-Windows-22H1Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
+if exist "checker\Microsoft-Windows-22H2Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
 )
 if %_build% geq 18362 if exist "checker\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "checker" %_Null%
@@ -1158,14 +1160,19 @@ for /f "tokens=%tn% delims=-" %%A in ('echo !package!') do (
 if "%kb%"=="" (set /a _sum-=1&goto :eof)
 if %_build% geq 17763 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && (if exist "%dest%\*_*10.*.*.manifest" if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" (set "netroll=!netroll! /packagepath:%dest%\update.mum")))
-findstr /i /m "Package_for_OasisAsset" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\*OasisAssets-Package*.mum" set /a _sum-=1&goto :eof)
+findstr /i /m "Package_for_OasisAsset" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\*OasisAssets-Package*.mum" (set /a _sum-=1&goto :eof))
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
   %_Nul3% findstr /i /m "Edition\"" "%dest%\update.mum"
   if errorlevel 1 (set /a _sum-=1&goto :eof)
   )
 )
 if %_build% geq 19041 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
-findstr /i /m "Package_for_WindowsExperienceFeaturePack" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\Microsoft-Windows-UserExperience-Desktop*.mum" set /a _sum-=1&goto :eof)
+findstr /i /m "Package_for_WindowsExperienceFeaturePack" "%dest%\update.mum" %_Nul3% && (
+  if not exist "!mumtarget!\Windows\Servicing\packages\Microsoft-Windows-UserExperience-Desktop*.mum" (set /a _sum-=1&goto :eof)
+  set fxupd=0
+  for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "%dest%\update.mum" %_Nul6%') do if exist "!mumtarget!\Windows\Servicing\packages\%%~#*.mum" set fxupd=1
+  if "!fxupd!"=="0" (set /a _sum-=1&goto :eof)
+  )
 )
 if exist "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest" if not defined uupmaj (
 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
@@ -1762,7 +1769,7 @@ if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-1909Enablement
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-22H1Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-22H2Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest" (
 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
 if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
@@ -1774,7 +1781,7 @@ if %uupmaj%==19041 if /i "%uuplab:~0,2%"=="vb" set uuplab=20h1%uuplab:~2%
 if %uupmaj%==19042 if /i "%uuplab:~0,2%"=="vb" set uuplab=20h2%uuplab:~2%
 if %uupmaj%==19043 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h1%uuplab:~2%
 if %uupmaj%==19044 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h2%uuplab:~2%
-if %uupmaj%==19045 if /i "%uuplab:~0,2%"=="vb" set uuplab=22h1%uuplab:~2%
+if %uupmaj%==19045 if /i "%uuplab:~0,2%"=="vb" set uuplab=22h2%uuplab:~2%
 goto :eof
 
 :detectLab

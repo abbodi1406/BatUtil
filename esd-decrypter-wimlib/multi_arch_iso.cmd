@@ -180,7 +180,7 @@ echo. Options:
 echo.
 echo. 0 - Exit
 echo. 1 - Create ISO with 1 combined install.wim/.esd
-echo. 2 - Create ISO with 2 separate install.wim/.esd ^(Win 10^)
+echo. 2 - Create ISO with 2 separate install.wim/.esd ^(Win 11/10^)
 echo %line%
 echo.
 choice /c 120 /n /m "Choose a menu option: "

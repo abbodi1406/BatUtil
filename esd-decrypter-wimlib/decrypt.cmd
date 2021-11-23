@@ -1,9 +1,19 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v62
+@set uivr=v63
 @echo off
+:: ### Auto processing option ###
+:: 1 - create ISO with install.wim
+:: 2 - create ISO with install.esd
+:: 3 - create install.wim
+:: 4 - create install.esd
+set AutoStart=0
+
 :: Change to 1 to get ISO name similar to ESD name (ESD name must be the original, with or without sha1 hash suffix)
 set ISOnameESD=0
+
+:: Change to 1 for not creating ISO file, result distribution folder will be kept
+set SkipISO=0
 
 :: Enable menu to choose from multiple editions ESDs
 set MultiChoice=1
@@ -11,8 +21,8 @@ set MultiChoice=1
 :: Check and unify different winre.wim in multiple editions ESDs
 set CheckWinre=1
 
-:: Skip creating ISO file, distribution folder will be kept
-set SkipISO=0
+:: change to 1 to enable debug mode
+set _Debug=0
 
 :: script:     abbodi1406
 :: initial:    @rgadguard
@@ -25,8 +35,6 @@ set SkipISO=0
 
 :: #################################################################
 
-:: Internal Debug Mode, do not use
-set _Debug=0
 set "_Null=1>nul 2>nul"
 
 set "param=%~f0"
@@ -92,8 +100,11 @@ set _PSarg=%_PSarg:'=''%
 )
 
 :Passed
+set "_log=%~dpn0"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
+for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
+if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
 setlocal EnableDelayedExpansion
 
 if %_Debug% equ 0 (
@@ -115,8 +126,16 @@ if %_Debug% equ 0 (
   set "_Contn=rem."
   set "_Exit=rem."
   set "_Supp=1>nul"
+copy /y nul "!_work!\#.rw" %_Null% && (if exist "!_work!\#.rw" del /f /q "!_work!\#.rw") || (set "_log=!_dsk!\%~n0")
+echo.
+echo Running in Debug Mode...
+echo The window will be closed when finished
 @echo on
 @prompt $G
+@call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug.log"&del "!_log!_tmp.log"
+@color 07
+@title %ComSpec%
+@exit /b
 
 :Begin
 title ESD -^> ISO %uivr%
@@ -137,11 +156,32 @@ set newkeys=0
 set "_ram={7619dcc8-fafe-11d9-b411-000476eba25f}"
 set "line============================================================="
 set "lin2=%line%================"
+set _initial=0
+set _configured=0
+if not exist "DecryptConfig.ini" goto :proceed
+findstr /i \[decrypt-ESD\] DecryptConfig.ini %_Nul1% || goto :proceed
+for %%# in (
+AutoStart
+ISOnameESD
+SkipISO
+MultiChoice
+CheckWinre
+) do (
+call :ReadINI %%#
+)
+goto :proceed
+
+:ReadINI
+findstr /b /i %1 DecryptConfig.ini %_Nul1% && for /f "tokens=2 delims==" %%# in ('findstr /b /i %1 DecryptConfig.ini') do set "%1=%%#"
+goto :eof
+
+:proceed
+if %_Debug% neq 0 if %AutoStart% equ 0 set AutoStart=2
 if defined ENCRYPTEDESD goto :check
 set _esd=0
 if exist "*.esd" (for /f "delims=" %%# in ('dir /b /a:-d "*.esd"') do (call set /a _esd+=1))
-if %_esd% equ 2 goto :dCheck
 if %_esd% equ 0 goto :prompt1
+if exist "*x64*.esd" if exist "*x86*.esd" if %_esd% equ 2 goto :dCheck
 if %_esd% gtr 1 goto :prompt2
 for /f "delims=" %%# in ('dir /b /a:-d "*.esd"') do (set "ENCRYPTEDESD=%%#"&set "ENCRYPTEDESDN=%%#"&goto :check)
 
@@ -188,7 +228,6 @@ goto :check
 :check
 color 1F
 set ENCRYPTED=0
-set "ENCRYPTEDESDN=%ENCRYPTEDESDN: =%"
 if /i "%ENCRYPTEDESDN%"=="install.esd" (ren "!ENCRYPTEDESD!" %ENCRYPTEDESDN%.orig&set "ENCRYPTEDESD=!ENCRYPTEDESD!.orig")
 wimlib-imagex.exe info "!ENCRYPTEDESD!" 4 %_Nul3%
 set ERRORTEMP=%ERRORLEVEL%
@@ -197,14 +236,14 @@ if %ERRORTEMP% equ 74 set ENCRYPTED=1&goto :PRE_INFO
 if %ERRORTEMP% neq 0 goto :E_File
 
 :PRE_INFO
-set uLang=0
+set _nnn=DISPLAYNAME
 set _SrvESD=0
 imagex /info "!ENCRYPTEDESD!">bin\infoall.txt 2>&1
 find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set aedtn=1) || (set aedtn=0)
 find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set nedtn=1) || (set nedtn=0)
 find /i "CoreSingleLanguage</EDITIONID>" bin\infoall.txt %_Nul1% && (set sedtn=1) || (set sedtn=0)
 find /i "CoreCountrySpecific</EDITIONID>" bin\infoall.txt %_Nul1% && (set cedtn=1) || (set cedtn=0)
-find /i "<EDITIONID>Server" bin\infoall.txt %_Nul1% && (set _SrvESD=1)
+findstr /i "<EDITIONID>Server" bin\infoall.txt %_Nul2% | findstr /i /v ServerRdsh %_Nul1% && (set _SrvESD=1)
 imagex /info "!ENCRYPTEDESD!" 4 >bin\info.txt 2>&1
 for /f "tokens=3 delims=<>" %%# in ('find /i "<MAJOR>" bin\info.txt') do set ver1=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<MINOR>" bin\info.txt') do set ver2=%%#
@@ -214,10 +253,9 @@ for /f "tokens=3 delims=<>" %%# in ('find /i "<EDITIONID>" bin\info.txt') do set
 for /f "tokens=3 delims=<>" %%# in ('find /i "<ARCH>" bin\info.txt') do (if %%# equ 0 (set arch=x86) else if %%# equ 9 (set arch=x64) else (set arch=arm64))
 for /f "tokens=3 delims=: " %%# in ('findstr /i /b /c:"Image Count" bin\infoall.txt') do (if %%# geq 5 set MULTI=%%#)
 if %_build% leq 9600 goto :E_W81
-for %%# in (ru-ru,zh-cn,zh-tw,zh-hk) do if /i %langid%==%%# set uLang=1
+for %%# in (ru-ru,zh-cn,zh-tw,zh-hk) do if /i %langid%==%%# set _nnn=NAME
 find /i "<DISPLAYNAME>" bin\info.txt %_Nul1% && (
-for /f "tokens=3 delims=<>" %%# in ('find /i "<DISPLAYNAME>" bin\info.txt') do set "_os=%%#"
-if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.txt') do set "_os=%%#"
+for /f "tokens=3 delims=<>" %%# in ('find /i "<%_nnn%>" bin\info.txt') do set "_os=%%#"
 ) || (
 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.txt') do set "_os=%%#"
 )
@@ -226,18 +264,18 @@ imagex /info "!ENCRYPTEDESD!" %%A >bin\info%%A.txt 2>&1
 )
 if %MULTI% neq 0 for /L %%A in (4,1,%MULTI%) do (
 find /i "<DISPLAYNAME>" bin\info%%A.txt %_Nul1% && (
-for /f "tokens=3 delims=<>" %%# in ('find /i "<DISPLAYNAME>" bin\info%%A.txt') do set "_os%%A=%%#"
-if %uLang% equ 1 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info%%A.txt') do set "_os%%A=%%#"
+for /f "tokens=3 delims=<>" %%# in ('find /i "<%_nnn%>" bin\info%%A.txt') do set "_os%%A=%%#"
 ) || (
 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info%%A.txt') do set "_os%%A=%%#"
 )
 )
 del /f /q bin\info*.txt
+set images=4
 if %MULTI% neq 0 (set /a images=%MULTI%-3) else (goto :MAINMENU)
 if %MultiChoice% neq 1 goto :MAINMENU
 
 :MULTIMENU
-if %_Debug% neq 0 goto :MAINMENU
+if %AutoStart% neq 0 goto :MAINMENU
 @cls
 echo %line%
 echo                ESD file contains %images% editions:
@@ -268,7 +306,7 @@ set _single=
 echo %line%
 for /L %%# in (4,1,%MULTI%) do (
 call set /a osnum=%%#-3
-echo. !osnum!. !_os%%#!
+echo. !osnum!: !_os%%#!
 )
 echo %line%
 echo Enter edition number to include, or zero '0' to return
@@ -287,7 +325,7 @@ set _end=
 echo %line%
 for /L %%# in (4,1,%MULTI%) do (
 call set /a osnum=%%#-3
-echo. !osnum!. !_os%%#!
+echo. !osnum!: !_os%%#!
 )
 echo %line%
 echo Enter consecutive range for editions to include: Start-End
@@ -311,7 +349,7 @@ set _index=
 echo %line%
 for /L %%# in (4,1,%MULTI%) do (
 call set /a osnum=%%#-3
-echo. !osnum!. !_os%%#!
+echo. !osnum!: !_os%%#!
 )
 echo %line%
 echo Enter editions numbers to include separated with spaces
@@ -337,13 +375,16 @@ set _index%_count%=%1
 goto :eof
 
 :MAINMENU
-if %_Debug% neq 0 (set WIMFILE=install.wim&goto :ESDISO)
+if %AutoStart% equ 1 (set WIMFILE=install.wim&goto :ESDISO)
+if %AutoStart% equ 2 (set WIMFILE=install.esd&goto :ESDISO)
+if %AutoStart% equ 3 (set WIMFILE=install.wim&goto :ESDWIM)
+if %AutoStart% equ 4 (set WIMFILE=install.esd&goto :ESDWIM)
 @cls
 echo %line%
-echo.       1 - Create ISO with Standard install.wim
-echo.       2 - Create ISO with Compressed install.esd
-echo.       3 - Create Standard install.wim
-echo.       4 - Create Compressed install.esd
+echo.       1 - Create ISO with install.wim
+echo.       2 - Create ISO with install.esd
+echo.       3 - Create install.wim
+echo.       4 - Create install.esd
 if %ENCRYPTED% equ 1 (
 echo.       5 - Decrypt ESD file only
 echo ____________________________________________________________
@@ -372,6 +413,32 @@ echo %line%
 echo Running ESD -^> ISO %uivr%
 echo %line%
 echo.
+set _initial=1
+for %%# in (
+AutoStart
+ISOnameESD
+SkipISO
+) do (
+if !%%#! neq 0 set _configured=1
+)
+for %%# in (
+MultiChoice
+CheckWinre
+) do (
+if !%%#! neq 1 set _configured=1
+)
+if %_configured% equ 1 (
+echo.
+echo %line%
+echo Non-default Options . . .
+echo %line%
+echo.
+if %AutoStart% neq 0 echo AutoStart %AutoStart%
+if %ISOnameESD% neq 0 echo ISOnameESD 1
+if %SkipISO% neq 0 echo SkipISO 1
+if %MultiChoice% neq 1 echo MultiChoice 0
+if %CheckWinre% neq 1 echo CheckWinre 0
+)
 if %ENCRYPTED% equ 1 call :DECRYPT
 if %PREPARED% equ 0 call :PREPARE
 echo.
@@ -403,41 +470,12 @@ if not exist "bin\temp\dism.exe" (
 wimlib-imagex.exe update ISOFOLDER\sources\boot.wim 2 <bin\wim-update.txt %_Null%
 )
 if exist bin\temp\ rmdir /s /q bin\temp\
-echo.
-echo %line%
-echo Creating %WIMFILE% . . .
-echo %line%
-echo.
-set _src=4
-if defined _single set _src=%_single%
-if defined _start set _src=%_start%&set /a _start+=1
-if defined _index set _src=%_index1%
-if /i %WIMFILE%==install.wim set _rrr=--compress=LZX
-wimlib-imagex.exe export "!ENCRYPTEDESD!" %_src% ISOFOLDER\sources\%WIMFILE% %_rrr% %_Supp%
-set ERRORTEMP=%ERRORLEVEL%
-if %ERRORTEMP% neq 0 goto :E_Export
-if defined _single (
-for /f "tokens=3 delims=<>" %%# in ('imagex /info ISOFOLDER\sources\%WIMFILE% 1 ^| find /i "<EDITIONID>"') do set editionid=%%#
-call :SINGLEINFO
-%_Nul3% call :GUID ISOFOLDER\sources\%WIMFILE% 1
-goto :CREATEISO
-)
-if defined _start for /L %%# in (%_start%,1,%_end%) do (
-echo.&wimlib-imagex.exe export "!ENCRYPTEDESD!" %%# ISOFOLDER\sources\%WIMFILE% %_Supp%
-)
-if defined _index for /L %%# in (2,1,%_count%) do (
-echo.&wimlib-imagex.exe export "!ENCRYPTEDESD!" !_index%%#! ISOFOLDER\sources\%WIMFILE% %_Supp%
-)
-if not defined _start if not defined _index if %MULTI% neq 0 for /L %%# in (5,1,%MULTI%) do (
-echo.&wimlib-imagex.exe export "!ENCRYPTEDESD!" %%# ISOFOLDER\sources\%WIMFILE% %_Supp%
-)
-set ERRORTEMP=%ERRORLEVEL%
-if %ERRORTEMP% neq 0 goto :E_Export
-if %UnifyWinre% equ 1 call :WINRE ISOFOLDER\sources\%WIMFILE%
-%_Nul3% call :GUID ISOFOLDER\sources\%WIMFILE% 1
-
+set _file=ISOFOLDER\sources\%WIMFILE%
+set _rtrn=RetISO
+goto :InstallWim
+:RetISO
 :CREATEISO
-if %SkipISO% equ 1 (
+if %SkipISO% neq 0 (
   ren ISOFOLDER %DVDISO%
   echo.
   echo %line%
@@ -462,17 +500,47 @@ goto :QUIT
 
 :ESDWIM
 @cls
-if /i %WIMFILE%==install.wim if exist "!_work!\install.wim" (
+set /a _rnd=%random%
+if %WIMFILE%==install.wim if exist "install.wim" ren install.wim install-bak%_rnd%.wim
 echo.
 echo %line%
-echo An install.wim file is already present in the current folder
+echo Running ESD -^> %WIMFILE% %uivr%
 echo %line%
 echo.
-goto :QUIT
+set _initial=1
+for %%# in (
+AutoStart
+) do (
+if !%%#! neq 0 set _configured=1
 )
+for %%# in (
+MultiChoice
+CheckWinre
+) do (
+if !%%#! neq 1 set _configured=1
+)
+if %_configured% equ 1 (
 echo.
+echo %line%
+echo Non-default Options . . .
+echo %line%
+echo.
+if %AutoStart% neq 0 echo AutoStart %AutoStart%
+if %MultiChoice% neq 1 echo MultiChoice 0
+if %CheckWinre% neq 1 echo CheckWinre 0
+)
 if %ENCRYPTED% equ 1 call :DECRYPT
 if %PREPARED% equ 0 call :PREPARE
+set _file=%WIMFILE%
+set _rtrn=RetWIM
+goto :InstallWim
+:RetWIM
+echo.
+echo Done.
+echo.
+goto :QUIT
+
+:InstallWim
 echo.
 echo %line%
 echo Creating %WIMFILE% . . .
@@ -482,33 +550,34 @@ set _src=4
 if defined _single set _src=%_single%
 if defined _start set _src=%_start%&set /a _start+=1
 if defined _index set _src=%_index1%
-if /i %WIMFILE%==install.wim set _rrr=--compress=LZX
-wimlib-imagex.exe export "!ENCRYPTEDESD!" %_src% %WIMFILE% %_rrr% %_Supp%
+if %WIMFILE%==install.wim set _rrr=%_rrr% --compress=LZX
+wimlib-imagex.exe export "!ENCRYPTEDESD!" %_src% %_file% %_rrr% %_Supp%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
-if defined _single goto :WIMproceed
+if defined _single (
+if %_file%==%WIMFILE% %_Nul3% call :GUID %_file% 2
+if %_file%==%WIMFILE% goto :%_rtrn%
+for /f "tokens=3 delims=<>" %%# in ('imagex /info %_file% 1 ^| find /i "<EDITIONID>"') do set editionid=%%#
+call :SINGLEINFO
+%_Nul3% call :GUID %_file% 1
+goto :%_rtrn%
+)
 if defined _start for /L %%# in (%_start%,1,%_end%) do (
-echo.&wimlib-imagex.exe export "!ENCRYPTEDESD!" %%# %WIMFILE% %_Supp%
+echo.&wimlib-imagex.exe export "!ENCRYPTEDESD!" %%# %_file% %_Supp%
 )
 if defined _index for /L %%# in (2,1,%_count%) do (
-echo.&wimlib-imagex.exe export "!ENCRYPTEDESD!" !_index%%#! %WIMFILE% %_Supp%
+echo.&wimlib-imagex.exe export "!ENCRYPTEDESD!" !_index%%#! %_file% %_Supp%
 )
 if not defined _start if not defined _index if %MULTI% neq 0 for /L %%# in (5,1,%MULTI%) do (
-echo.&wimlib-imagex.exe export "!ENCRYPTEDESD!" %%# %WIMFILE% %_Supp%
+echo.&wimlib-imagex.exe export "!ENCRYPTEDESD!" %%# %_file% %_Supp%
 )
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
-if %UnifyWinre% equ 1 call :WINRE %WIMFILE%
-
-:WIMproceed
-%_Nul3% call :GUID %WIMFILE% 2
-echo.
-echo Done.
-echo.
-goto :QUIT
+if %UnifyWinre% equ 1 call :WINRE %_file%
+if %_file%==%WIMFILE% (%_Nul3% call :GUID %_file% 2) else (%_Nul3% call :GUID %_file% 1)
+goto :%_rtrn%
 
 :INFO
-@cls
 if %PREPARED% equ 0 call :PREPARE
 @cls
 echo %line%
@@ -519,18 +588,16 @@ echo Language: %langid%
 echo  Version: %ver1%.%ver2%.%revver%
 if defined branch echo   Branch: %branch%
 if %MULTI% equ 0 echo       OS: %_os%
-if %MULTI% neq 0 (
-echo     OS 1: %_os%
-for /L %%# in (5,1,%MULTI%) do (
+if %MULTI% neq 0 for /L %%# in (4,1,%MULTI%) do (
 call set /a osnum=%%#-3
 echo     OS !osnum!: !_os%%#!
-)
 )
 echo.
 %_Contn%&%_Pause%
 goto :MAINMENU
 
 :PREPARE
+if %_initial% equ 0 @cls
 echo.
 echo %line%
 echo Checking ESD Info . . .
@@ -538,7 +605,7 @@ echo %line%
 set PREPARED=1
 if %CheckWinre% equ 1 for /f "tokens=2 delims== " %%# in ('wimlib-imagex.exe dir "!ENCRYPTEDESD!" 4 --path=Windows\System32\Recovery\winre.wim --detailed %_Nul6% ^| findstr /b Hash') do call set "WinreHash=%%#"
 if %MULTI% neq 0 for /L %%A in (5,1,%MULTI%) do (
-if !CheckWinre! equ 1 for /f "tokens=2 delims== " %%# in ('wimlib-imagex.exe dir "!ENCRYPTEDESD!" %%A --path=Windows\System32\Recovery\winre.wim --detailed %_Nul6% ^| findstr /b Hash') do if /i not "%%#"=="!WinreHash!" (call set UnifyWinre=1)
+if %CheckWinre% equ 1 for /f "tokens=2 delims== " %%# in ('wimlib-imagex.exe dir "!ENCRYPTEDESD!" %%A --path=Windows\System32\Recovery\winre.wim --detailed %_Nul6% ^| findstr /b Hash') do if /i not "%%#"=="!WinreHash!" (call set UnifyWinre=1)
 )
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 1 sources\ei.cfg --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
 if exist "bin\temp\ei.cfg" type .\bin\temp\ei.cfg %_Nul2% | find /i "Volume" %_Nul1% && set VOL=1
@@ -552,6 +619,10 @@ wimlib-imagex.exe extract "!ENCRYPTEDESD!" 1 sources\setuphost.exe --dest-dir=.\
 ) else (
 wimlib-imagex.exe extract "!ENCRYPTEDESD!" 3 Windows\System32\ntoskrnl.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 7z.exe l .\bin\temp\ntoskrnl.exe >.\bin\temp\version.txt 2>&1
+)
+if %_build% geq 22478 (
+wimlib-imagex.exe extract "!ENCRYPTEDESD!" 3 Windows\System32\UpdateAgent.dll --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+if exist "bin\temp\UpdateAgent.dll" 7z.exe l .\bin\temp\UpdateAgent.dll >.\bin\temp\version.txt 2>&1
 )
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l)
 set revver=%uupver%&set revmaj=%uupmaj%&set revmin=%uupmin%
@@ -832,16 +903,17 @@ set ESDarch%%#=0
 set ESDver%%#=0
 set ESDlang%%#=0
 )
-for /f "delims=" %%# in ('dir /b /a:-d *.esd') do call :dCount %%#
+for /f "delims=" %%# in ('dir /b /a:-d "*.esd"') do call :dCount %%#
 set _SrvESD=0
 call :dInfo 1
 call :dInfo 2
-if /i %ESDarch1% equ %ESDarch2% goto :prompt2
-if /i %ESDlang1% neq %ESDlang2% goto :prompt2
+if /i "%ESDarch1%"=="%ESDarch2%" goto :prompt2
+if /i not "%ESDlang1%"=="%ESDlang2%" goto :prompt2
 if /i %ESDver1% neq %ESDver2% goto :prompt2
 
 :DUALMENU
-if %_Debug% neq 0 (set WIMFILE=install.esd&goto :ESDDual)
+if %AutoStart% equ 1 (set WIMFILE=install.wim&goto :ESDDual)
+if %AutoStart% equ 2 (set WIMFILE=install.esd&goto :ESDDual)
 color 1F
 @cls
 echo %lin2%
@@ -1039,13 +1111,13 @@ echo %line%
 echo Creating %WIMFILE% ^(!ESDarch%1!^) . . .
 echo %line%
 echo.
-if /i %WIMFILE%==install.wim set _rrr=--compress=LZX
+if %WIMFILE%==install.wim set _rrr=%_rrr% --compress=LZX
 wimlib-imagex.exe export "!ENCRYPTEDESD!" 4 ISOFOLDER\!ESDarch%1!\sources\%WIMFILE% %_rrr% %_Supp%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_Export
 if !ESDmulti%1! neq 0 for /L %%A in (5,1,!ESDmulti%1!) do (
 echo.
-if !CheckWinre! equ 1 for /f "tokens=2 delims== " %%# in ('wimlib-imagex.exe dir "!ENCRYPTEDESD!" %%A --path=Windows\System32\Recovery\winre.wim --detailed %_Nul6% ^| findstr /b Hash') do if /i not "%%#"=="!WinreHash!" (call set UnifyWinre=1)
+if %CheckWinre% equ 1 for /f "tokens=2 delims== " %%# in ('wimlib-imagex.exe dir "!ENCRYPTEDESD!" %%A --path=Windows\System32\Recovery\winre.wim --detailed %_Nul6% ^| findstr /b Hash') do if /i not "%%#"=="!WinreHash!" (call set UnifyWinre=1)
 wimlib-imagex.exe export "!ENCRYPTEDESD!" %%A ISOFOLDER\!ESDarch%1!\sources\%WIMFILE% %_Supp%
 )
 set ERRORTEMP=%ERRORLEVEL%
@@ -1083,7 +1155,7 @@ find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDedta%1=1) 
 find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDedtn%1=1) || (set ESDedtn%1=0)
 find /i "CoreSingleLanguage</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDedts%1=1) || (set ESDedts%1=0)
 find /i "CoreCountrySpecific</EDITIONID>" bin\infoall.txt %_Nul1% && (set ESDedtc%1=1) || (set ESDedtc%1=0)
-find /i "<EDITIONID>Server" bin\infoall.txt %_Nul1% && (set _SrvESD=1)
+findstr /i "<EDITIONID>Server" bin\infoall.txt %_Nul2% | findstr /i /v ServerRdsh %_Nul1% && (set _SrvESD=1)
 imagex /info "!ESDfile%1!" 4 >bin\info.txt 2>&1
 for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do set ESDver%1=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<EDITIONID>" bin\info.txt') do set ESDedition%1=%%#
