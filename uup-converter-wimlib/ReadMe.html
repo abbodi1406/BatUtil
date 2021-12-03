@@ -39,9 +39,9 @@
 
             <h2><a name="Overview"></a>Overview</h2>
             <ul style="margin-top:0in;margin-bottom:0in">
-                <li>Automated windows command script to process Microsoft Windows 10 Unified Update Platform files, allowing to build/convert them into a usable state (ISO / WIM).</li>
+                <li>Automated windows command script to process Microsoft Windows 11/10 Unified Update Platform files, allowing to build/convert them into a usable state (ISO / WIM).</li>
                 <br />
-                <li>You can get UUP files by performing upgrade from Windows 10 build to later build (starting 15063, aka version 1703).</li>
+                <li>You can get UUP files by performing upgrade from Windows 11/10 build to a later build (starting 15063, aka version 1703).</li>
                 <br />
                 <li>You can also obtain UUP canonical source using one of these projects:<br />
                 <a href="https://uupdump.net/">UUP dump website</a><br />
@@ -146,8 +146,13 @@
                 </li>
                 <br />
                 <li>
+                    <b>LCUwinre</b><br /><br />
+                    Force updating winre.wim with Cumulative Update even if SafeOS update detected.
+                </li>
+                <br />
+                <li>
                     <b>ForceDism</b><br /><br />
-                    Use the official method with dism.exe for creating boot.wim, which require Windows 10 Host OS or ADK.
+                    Use the official method with dism.exe for creating boot.wim, which require Windows 11/10 Host OS or ADK.
                 </li>
                 <br />
                 <li>
@@ -160,8 +165,8 @@
                 <li>
                     <b>SkipEdge</b><br /><br />
                     Set option to <strong>1</strong> : Do not integrate Microsoft Edge Chromium with Feature Update Enablement Package or Cumulative Update.<br />
-                    Set option to <strong>2</strong> : Skip Microsoft Edge Chromium with or Cumulative Update via alternative workaround.<br /><br />
-					This option works only with option <b>AddUpdates=1</b> (Integrate).
+                    Set option to <strong>2</strong> : Skip Microsoft Edge Chromium with Cumulative Update via alternative workaround.<br /><br />
+                    This option works only with option <b>AddUpdates=1</b> (Integrate).
                 </li>
             </ul>
             <hr />
@@ -173,7 +178,7 @@
                 <li>Starting Windows 10 version 1709, Servicing Stack Update and Latest Cumulative Update are handled and distributed with UUP source. In addition to some small dynamic updates used in upgrades.
                 </li>
                 <br />
-                <li>According to that, UUP Dump will offer multiple builds for the same Windows 10 version. Each one will represent refreshed Feature Update or new Cumulative Update.
+                <li>According to that, UUP Dump will offer multiple builds for the same Windows 11/10 version. Each one will represent refreshed Feature Update or new Cumulative Update.
                 </li>
                 <br />
                 <li>However, those updates are only used and applied by Windows Update, they not actual part of the UUP source itself and will not be included in the converted ISO/WIM by default.
@@ -182,7 +187,7 @@
                 <li><b>AddUpdates</b> option provide built-in ability to directly integrate these updates, resulting a refreshed ISO/WIM, or to add them externally.
                 </li>
                 <br />
-                <li><u>Integrate</u> updates mode only works with install.wim (ISO or Single), and require <u>Windows 10 Host OS or Windows 10 ADK</u>.
+                <li><u>Integrate</u> updates mode only works with install.wim (ISO or Single), and require <u>Windows 11/10 Host OS or Windows 11/10 ADK</u>.
                 </li>
                 <br />
                 <li><u>External</u> updates mode only works with <u>builds 17763 and later</u>, and the updates will be installed during setup (clean install or upgrade).
@@ -197,16 +202,19 @@
                 <li><b>NetFx3</b> option is to enable .NET 3.5 feature for both modes.
                 </li>
                 <br />
-                <li><u>External</u> updates mode is ment as backup procedure in case Windows 10 ADK is not installed, or the user want to have converted ISO faster. It is recommended to use the normal integration mode if possible.
+                <li><u>External</u> updates mode is ment as backup procedure in case Windows 11/10 ADK is not installed, or the user want to have converted ISO faster. It is recommended to use the normal integration mode if possible.
                 </li>
                 <br />
                 <li>If UUP source is build 17063 or later and multiple editions are selected, in order to reduce integration mode time, Pro/ProN editions will be created as upgrades from the already updated Home/HomeN editions, if possible.
                 </li>
                 <br />
-                <li><u>Integrate</u> updates mode may not work correctly on <u>Windows 7 Host OS</u>, specially with recent Windows 10 builds. <u>External</u> updates mode is recommended to use in that case.
+                <li>Similarly, for Windows Server 2022, Datacenter editions will be created as upgrades from the already updated Standard editions, if possible.
                 </li>
                 <br />
-                <li><u>Integrate</u> updates mode for ARM64 UUP images only works on <u>Windows 10 Host OS exclusively</u>.
+                <li><u>Integrate</u> updates mode may not work correctly on <u>Windows 7 Host OS</u>, specially with recent Windows 11/10 builds. <u>External</u> updates mode is recommended to use in that case.
+                </li>
+                <br />
+                <li><u>Integrate</u> updates mode for ARM64 UUP images only works on <u>Windows 11/10/8.1 Host OS</u>.
                 </li>
             </ul>
             <br />
@@ -216,14 +224,14 @@
                 <br />
                 <li>Set configuraation option <b>AddUpdates</b> to 1 or 2</b></li>
                 <br />
-                <li>If you set to 1 and Windows 10 ADK is not installed, it will be reverted to 2 (if build is supported), or turned OFF</li>
+                <li>If you set to 1 and Windows 11/10 ADK is not installed, it will be reverted to 2 (if build is supported), or turned OFF</li>
             </ul>
             <br />
             <h3><a name="UpdateNote"></a>Note</h3>
             <ul style="margin-top:0in;margin-bottom:0in">
-				<u>Warning:</u> on build 18362 and later, <b>Cleanup</b> option will also removes the base RTM Edition packages, due Cumulative Update design change by Microsoft.<br />
-				This may lead to failed installation of future cumulative updates.<br /><br />
-				Nevertheless, system itself can initiate the cleanup process after installation, either with schedule tasks <b>StartComponentCleanup</b> or <b>SilentCleanup</b>, or via Disk Cleanup.<br />
+                <u>Warning:</u> on build 18362 and later, <b>Cleanup</b> option will also removes the base RTM Edition packages, due Cumulative Update design change by Microsoft.<br />
+                This could cause future cumulative updates to fail installation.<br /><br />
+                Nevertheless, system itself can initiate the cleanup process after installation, either with schedule tasks <b>StartComponentCleanup</b> or <b>SilentCleanup</b>, or via Disk Cleanup.<br />
                 <br />
                 <u>Warning:</u> <b>ResetBase</b> option break "Reset This PC" feature. Full ResetBase is automatically disabled for build 18362 and later.
             </ul>
@@ -361,7 +369,7 @@
                 <li>If the installation file is install.esd, be aware that option 1 will require high amount of CPU/RAM to unify install.esd files</li>
                 <br />
                 <li>multi_arch_iso.cmd can be used also to create multi-architecture ISO from any similar Windows x64/x86 ISO distributions, starting Windows 7 SP1<br />
-                however, option 2 require Windows 10 setup files.<br />
+                however, option 2 only works with Windows 11/10 setup files.<br />
                 </li>
             </ul>
             <hr />
@@ -407,7 +415,7 @@
                 <li><a href="https://wimlib.net">Eric Biggers</a> - wimlib</li>
                 <li><a href="https://www.7-zip.org">Igor Pavlov</a> - 7-zip</li>
                 <li><a href="https://forums.mydigitallife.net/members/superbubble.250156/">Melinda Bellemore</a> - SxSExpand</li>
-                <li><a href="https://www.betaworld.org/">th1r5bvn23</a> - PSFExtractor</li>
+                <li><a href="https://github.com/Secant1006/PSFExtractor">BetaWorld</a> - PSFExtractor</li>
                 <li><a href="http://reboot.pro/files/file/313-offlinereg">erwan.l</a> - offlinereg</li>
                 <li><a href="http://reboot.pro/topic/20471-windows-pe-5x-boot-problem">cdob</a> - create aio efisys.bin</li>
                 <li>Special thanks to: @Enthousiast, @s1ave77, @Ratiborus58, @NecrosoftCore, @DiamondMonday, @WzorNET</li>

@@ -179,6 +179,9 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
+10.15:
+- Added support to install Windows 11 Combined UUP .msu file directly
+
 10.14:  
 - Check and exclude unsupported editions for 19041 WindowsExperienceFeaturePack
 - Fixed: ADK parameter is not enabled when using custom dism.exe

@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v74
+@set uivr=v75
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -135,8 +135,8 @@ set "_type=%~1"
 if /i not "%~2"=="" set "eLabel=%~2"
 if /i not "%~3"=="" set "eTime=%~3,%~4"
 )
-set _file=(7z.dll,7z.exe,cdimage.exe,imagex.exe,libwim-15.dll,offlinereg.exe,offreg.dll,wimlib-imagex.exe)
-for %%# in %_file% do (
+set _fils=(7z.dll,7z.exe,cdimage.exe,imagex.exe,libwim-15.dll,offlinereg.exe,offreg.dll,wimlib-imagex.exe)
+for %%# in %_fils% do (
 if not exist ".\bin\%%#" (set _bin=%%#&goto :E_Bin)
 )
 if not exist "ConvertConfig.ini" goto :proceed
@@ -701,7 +701,7 @@ if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
 if %uupver:~0,5%==19041 set uupver=19044%uupver:~5%
 )
 if %revmaj%==19045 (
-if /i "%branch:~0,2%"=="vb" set branch=22h1%branch:~2%
+if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
 if %uupver:~0,5%==19041 set uupver=19045%uupver:~5%
 )
 if %uupmin% lss %revmin% (

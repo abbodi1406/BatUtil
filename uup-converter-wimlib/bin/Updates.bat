@@ -1,7 +1,7 @@
 @echo off
 title Installing Updates . . .
 cd /d "%~dp0"
-if not exist "*Windows10*KB*.cab" if not exist "*SSU-*-*.cab" exit /b 0
+if not exist "*Windows10*KB*.msu" if not exist "*Windows10*KB*.cab" if not exist "*SSU-*-*.cab" exit /b 0
 if exist "1SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "1SSU-*-*.cab"') do (
 call dism.exe /Online /NoRestart /Add-Package /PackagePath:%%#
 )
@@ -15,6 +15,9 @@ if exist "2Windows10*KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "2Wi
 call dism.exe /Online /NoRestart /Add-Package /PackagePath:%%#
 )
 if exist "3Windows10*KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "3Windows10*KB*.cab"') do (
+call dism.exe /Online /NoRestart /Add-Package /PackagePath:%%#
+)
+if exist "3Windows10*KB*.msu" for /f "tokens=* delims=" %%# in ('dir /b /on "3Windows10*KB*.msu"') do (
 call dism.exe /Online /NoRestart /Add-Package /PackagePath:%%#
 )
 cd \
