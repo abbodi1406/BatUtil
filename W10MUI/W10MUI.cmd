@@ -242,6 +242,7 @@ set _ODtts86=
 set _ODintl86=
 set _ODext86=
 set _ODtra86=
+set _ODnetwork86=
 set _ODpaint86=
 set _ODnote86=
 set _ODpower86=
@@ -250,6 +251,8 @@ set _ODpwsf86=
 set _ODword86=
 set _ODsnip86=
 set _ODnots86=
+set _ODethernet86=
+set _ODwifi86=
 if %_oa% neq 0 for /L %%j in (1,1,%_oa%) do (
 "!_7z!" x ".\ondemand\x86\!OAFILE%%j!" -o"!TEMPDIR!\FOD86\OAFILE%%j" * -r %_Null%
 pushd "!TEMPDIR!\FOD86\OAFILE%%j"
@@ -272,6 +275,10 @@ if %_lpver% geq 21277 (
 findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODsnip86=!_ODsnip86! /PackagePath:OAFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODnots86=!_ODnots86! /PackagePath:OAFILE%%j\update.mum)
   )
+if %_lpver% geq 21382 (
+findstr /i /m Microsoft-Windows-Ethernet-Client update.mum %_Nul3% && (set _ODnetwork86=1&call set _ODethernet86=!_ODethernet86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Wifi-Client update.mum %_Nul3% && (set _ODnetwork86=1&call set _ODwifi86=!_ODwifi86! /PackagePath:OAFILE%%j\update.mum)
+  )
 popd
 )
 set _ODbasic64=
@@ -283,6 +290,7 @@ set _ODtts64=
 set _ODintl64=
 set _ODext64=
 set _ODtra64=
+set _ODnetwork64=
 set _ODpaint64=
 set _ODnote64=
 set _ODpower64=
@@ -291,6 +299,8 @@ set _ODpwsf64=
 set _ODword64=
 set _ODsnip64=
 set _ODnots64=
+set _ODethernet64=
+set _ODwifi64=
 if %_ob% neq 0 for /L %%j in (1,1,%_ob%) do (
 "!_7z!" x ".\ondemand\x64\!OBFILE%%j!" -o"!TEMPDIR!\FOD64\OBFILE%%j" * -r %_Null%
 pushd "!TEMPDIR!\FOD64\OBFILE%%j"
@@ -312,6 +322,10 @@ findstr /i /m Microsoft-Windows-WordPad-FoD update.mum %_Nul3% && (set _ODtra64=
 if %_lpver% geq 21277 (
 findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODsnip64=!_ODsnip64! /PackagePath:OBFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODnots64=!_ODnots64! /PackagePath:OBFILE%%j\update.mum)
+  )
+if %_lpver% geq 21382 (
+findstr /i /m Microsoft-Windows-Ethernet-Client update.mum %_Nul3% && (set _ODnetwork64=1&call set _ODethernet64=!_ODethernet64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-Wifi-Client update.mum %_Nul3% && (set _ODnetwork64=1&call set _ODwifi64=!_ODwifi64! /PackagePath:OBFILE%%j\update.mum)
   )
 popd
 )
@@ -540,6 +554,7 @@ if defined _ODbasic64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"
 if defined _ODbasic64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
 if defined _ODext64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODpaint64! !_ODnote64! !_ODpower64!
 if defined _ODtra64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODpmcppc64! !_ODpwsf64! !_ODword64! !_ODsnip64! !_ODnots64!
+if defined _ODnetwork64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODethernet64! !_ODwifi64!
 popd
 )
 if /i !WIMARCH%%i!==x86 if exist "!TEMPDIR!\FOD86\OAFILE1\update.mum" (
@@ -548,6 +563,7 @@ if defined _ODbasic86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"
 if defined _ODbasic86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
 if defined _ODext86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODpaint86! !_ODnote86! !_ODpower86!
 if defined _ODtra86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODpmcppc86! !_ODpwsf86! !_ODword86! !_ODsnip86! !_ODnots86!
+if defined _ODnetwork86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODethernet86! !_ODwifi86!
 popd
 )
 echo.
