@@ -2058,8 +2058,8 @@ if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" goto :er
 )
 if defined safeos if %LCUwinre% equ 0 (
 set relite=1
-call :cleanup
-if %ResetBase% equ 0 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase %_Null%
+if not defined lcumsu call :cleanup
+if not defined lcumsu if %ResetBase% equ 0 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase %_Null%
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append
 )
 if defined secureboot (
