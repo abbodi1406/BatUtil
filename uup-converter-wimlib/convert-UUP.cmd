@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v75
+@set uivr=v76
 @echo off
 :: Change to 1 to start the process directly, and create ISO with install.wim
 :: Change to 2 to start the process directly, and create ISO with install.esd
@@ -34,6 +34,9 @@ set SkipWinRE=0
 
 :: Change to 1 to force updating winre.wim with Cumulative Update even if SafeOS update detected
 set LCUwinre=0
+
+:: Change to 0 for updating ISO boot files bootmgr/bootmgr.efi/efisys.bin
+set SkipBootFiles=1
 
 :: Change to 1 to use dism.exe for creating boot.wim
 set ForceDism=0
@@ -290,6 +293,7 @@ StartVirtual
 SkipISO
 SkipWinRE
 LCUwinre
+SkipBootFiles
 wim2esd
 ForceDism
 RefESD
@@ -481,6 +485,7 @@ StartVirtual
 SkipISO
 SkipWinRE
 LCUwinre
+SkipBootFiles
 wim2esd
 ForceDism
 RefESD
@@ -506,6 +511,7 @@ if %StartVirtual% neq 0 echo StartVirtual
   SkipISO
   SkipWinRE
   LCUwinre
+  SkipBootFiles
   wim2esd
   ForceDism
   RefESD
@@ -1219,7 +1225,7 @@ set IncludeSSU=0
 if %IncludeSSU% equ 1 for /f %%# in ('dir /b /a:-d "_tMSU\SSUCompDB*.xml.cab"') do set "_MSUsdb=%%#"
 set "_MSUddd=DesktopDeployment_x86.cab"
 if exist "*DesktopDeployment*.cab" (
-for /f "delims=" %%# in ('dir /b /a:-d "*DesktopDeployment*.cab"') do set "_MSUddc=%%#"
+for /f "delims=" %%# in ('dir /b /a:-d "*DesktopDeployment*.cab" ^|find /i /v "%_MSUddd%"') do set "_MSUddc=%%#"
 ) else (
 call set "_MSUddc=_tMSU\DesktopDeployment.cab"
 call set "_MSUddd=_tMSU\DesktopDeployment_x86.cab"
@@ -2640,7 +2646,7 @@ goto :eof
 )
 call :updatewim
 if %NetFx3% equ 1 if %dvd% equ 1 call :enablenet35
-if !handle1! equ 0 if %dvd% equ 1 (
+if !handle1! equ 0 if %dvd% equ 1 if %SkipBootFiles% equ 0 (
 set handle1=1
 if /i %arch%==x86 (set efifile=bootia32.efi) else if /i %arch%==x64 (set efifile=bootx64.efi) else (set efifile=bootaa64.efi)
 for %%i in (efisys.bin,efisys_noprompt.bin) do if exist "%_mount%\Windows\Boot\DVD\EFI\en-US\%%i" (xcopy /CIDRY "%_mount%\Windows\Boot\DVD\EFI\en-US\%%i" "%_target%\efi\microsoft\boot\" %_Nul3%)
@@ -2656,6 +2662,7 @@ if exist "%_mount%\Windows\Boot\EFI\CIPolicies\" if exist "%_target%\efi\microso
 )
 if !handle2! equ 0 if %dvd% equ 1 if not exist "%_mount%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if exist "%_mount%\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
 set handle2=1
+set isomin=0
 for /f "tokens=%tok% delims=_." %%i in ('dir /b /a:-d /od "%_mount%\Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
 set "isokey=Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
 for /f %%i in ('"offlinereg.exe "%_mount%\Windows\system32\config\SOFTWARE" "!isokey!" enumkeys %_Nul6% ^| findstr /i /r ".*\.OS""') do if not errorlevel 1 (

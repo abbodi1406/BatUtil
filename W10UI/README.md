@@ -125,6 +125,9 @@ specify custom "folder" path which contain microsoft-windows-netfx3-ondemand-pac
 * LCUwinre  
 force updating winre.wim with Cumulative Update even if SafeOS update detected
 
+* SkipBootFiles  
+do not update ISO boot files bootmgr/bootmgr.efi/efisys.bin
+
 * SkipEdge  
 1 = do not install EdgeChromium with Enablement Package or Cumulative Update  
 2 = alternative workaround to skip EdgeChromium with Cumulative Update only
@@ -179,7 +182,10 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
-10.15:
+10.16:  
+- Added option "SkipBootFiles" for not updating ISO boot files bootmgr/bootmgr.efi/efisys.bin
+
+10.15:  
 - Added support to install Windows 11 Combined UUP .msu file directly
 
 10.14:  

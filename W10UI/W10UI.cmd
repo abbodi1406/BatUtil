@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.15
+@set uiv=v10.16
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -35,6 +35,9 @@ set WinRE=1
 
 :: Force updating winre.wim with Cumulative Update even if SafeOS update detected
 set LCUwinre=0
+
+:: don't update ISO boot files bootmgr/bootmgr.efi/efisys.bin
+set SkipBootFiles=1
 
 :: 1 = do not install EdgeChromium with Enablement Package or Cumulative Update
 :: 2 = alternative workaround to avoid EdgeChromium with Cumulative Update only
@@ -198,6 +201,7 @@ cleanup
 resetbase
 winre
 lcuwinre
+skipbootfiles
 skipedge
 _cabdir
 mountdir
@@ -231,6 +235,7 @@ if "%Cleanup%"=="" set Cleanup=0
 if "%ResetBase%"=="" set ResetBase=0
 if "%WinRE%"=="" set WinRE=1
 if "%LCUwinre%"=="" set LCUwinre=0
+if "%SkipBootFiles%"=="" set SkipBootFiles=0
 if "%SkipEdge%"=="" set SkipEdge=0
 if "%ISO%"=="" set ISO=1
 if "%AutoStart%"=="" set AutoStart=0
@@ -1717,11 +1722,12 @@ cd /d "!_cabdir!"
 call :doupdate
 if %net35%==1 call :enablenet35
 if %dvd%==1 (
+set isomin=0
 if not defined isomaj for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
 if not defined isolab if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 if %_build% geq 15063 (call :detectLab isolab) else (call :legacyLab isolab)
-if exist "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" if exist "!target!\efi\microsoft\boot\winsipolicy.p7b" copy /y "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" "!target!\efi\microsoft\boot\winsipolicy.p7b" %_Nul3%
-if exist "!mountdir!\Windows\Boot\EFI\CIPolicies\" if exist "!target!\efi\microsoft\boot\cipolicies\" xcopy /CEDRY "!mountdir!\Windows\Boot\EFI\CIPolicies\*" "!target!\efi\microsoft\boot\cipolicies\" %_Nul3%
+if %SkipBootFiles% equ 0 if exist "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" if exist "!target!\efi\microsoft\boot\winsipolicy.p7b" copy /y "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" "!target!\efi\microsoft\boot\winsipolicy.p7b" %_Nul3%
+if %SkipBootFiles% equ 0 if exist "!mountdir!\Windows\Boot\EFI\CIPolicies\" if exist "!target!\efi\microsoft\boot\cipolicies\" xcopy /CEDRY "!mountdir!\Windows\Boot\EFI\CIPolicies\*" "!target!\efi\microsoft\boot\cipolicies\" %_Nul3%
 )
 if %_actEP% equ 0 if exist "!mountdir!\Windows\Servicing\Packages\microsoft-windows-*enablement-package~*.mum" if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" call :detectEP
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
@@ -1828,6 +1834,7 @@ goto :eof
 if exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" xcopy /CRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
 del /f /q "!target!\sources\background.bmp" %_Nul3%
 del /f /q "!target!\sources\xmllite.dll" %_Nul3%
+if %SkipBootFiles% equ 0 (
 del /f /q "!target!\efi\microsoft\boot\*noprompt.*" %_Nul3%
 if exist "!mountdir!\Windows\Boot\DVD\EFI\en-US\efisys.bin" copy /y "!mountdir!\Windows\Boot\DVD\EFI\en-US\efisys.bin" "!target!\efi\microsoft\boot\" %_Nul1%
 if /i not %arch%==arm64 (
@@ -1837,6 +1844,7 @@ copy /y "!mountdir!\Windows\Boot\PCAT\memtest.exe" "!target!\boot\" %_Nul1%
 )
 copy /y "!mountdir!\Windows\Boot\EFI\bootmgfw.efi" "!target!\efi\boot\%efifile%" %_Nul1%
 copy /y "!mountdir!\Windows\Boot\EFI\bootmgr.efi" "!target!\" %_Nul1%
+)
 if exist "!target!\setup.exe" copy /y "!mountdir!\setup.exe" "!target!\" %_Nul3%
 if defined isoupdate if not exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" (
   set uupboot=1
