@@ -703,6 +703,7 @@ if %revver%==19043.1288 (set _label=19043.1288.211006-0459.21h1_%_rsr%&set branc
 if %revver%==19043.928 (set _label=19043.928.210409-1212.21h1_%_rsr%&set branch=21h1_%_rsr%&set ISOnameESD=0)
 if %revver%==19043.867 (set _label=19043.867.210305-1751.21h1_%_rsr%&set branch=21h1_%_rsr%&set ISOnameESD=0)
 if %revmaj%==19042 (set _label=%revver%.%_time%.20h2_%_rsr%&set branch=20h2_%_rsr%)
+if %revver%==19042.1348 (set _label=19042.1348.211103-2005.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
 if %revver%==19042.1052 (set _label=19042.1052.210606-1844.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
 if %revver%==19042.631 (set _label=19042.631.201119-0144.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)
 if %revver%==19042.630 (set _label=19042.630.201106-1636.20h2_%_rsr%&set branch=20h2_%_rsr%&set ISOnameESD=0)

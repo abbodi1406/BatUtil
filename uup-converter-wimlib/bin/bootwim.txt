@@ -43,7 +43,10 @@ ext-ms-win-advapi32-encryptedfile-l1-1-0.dll
 folderprovider.dll
 hwcompat.dll
 hwcompat.txt
+hwcompatPE.txt
 hwexclude.txt
+hwexcludePE.txt
+hwreqchk.dll
 idwbinfo.txt
 imagelib.dll
 imagingprovider.dll

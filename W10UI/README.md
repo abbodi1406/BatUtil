@@ -182,6 +182,9 @@ start the process automatically once you execute the script
 
 <details><summary>changelog</summary>
 
+10.17:  
+- Added support for the new updates file name "Windows11.0-KB*"
+
 10.16:  
 - Added option "SkipBootFiles" for not updating ISO boot files bootmgr/bootmgr.efi/efisys.bin
 
