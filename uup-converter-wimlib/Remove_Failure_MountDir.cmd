@@ -1,21 +1,29 @@
 @setlocal DisableDelayedExpansion
 @echo off
-set "_Null=1>nul 2>nul"
-reg.exe query HKU\S-1-5-19 %_Null% || (echo.&echo This script require administrator privileges.&goto :TheEnd)
+set _args=
+set _args=%*
+if not defined _args goto :NoProgArgs
+for %%A in (%_args%) do (
+if /i "%%A"=="-wow" set _rel1=1
+if /i "%%A"=="-arm" set _rel2=1
+)
+:NoProgArgs
 set "_cmdf=%~f0"
-if exist "%SystemRoot%\Sysnative\cmd.exe" (
+if exist "%SystemRoot%\Sysnative\cmd.exe" if not defined _rel1 (
 setlocal EnableDelayedExpansion
-start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" "
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" -wow "
 exit /b
 )
-if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 if not defined _rel2 (
 setlocal EnableDelayedExpansion
-start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" "
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" -arm "
 exit /b
 )
+set "_Null=1>nul 2>nul"
 set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+reg.exe query HKU\S-1-5-19 %_Null% || (echo.&echo This script require administrator privileges.&goto :TheEnd)
 set "xOS=%PROCESSOR_ARCHITECTURE%"
 if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 set "xOS=%PROCESSOR_ARCHITEW6432%")
 set "_key=HKLM\SOFTWARE\Microsoft\WIMMount\Mounted Images"

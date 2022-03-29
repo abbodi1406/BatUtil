@@ -32,11 +32,15 @@ if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
 set _pwsh=1
-if not exist "%SysPath%\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
-if %winbuild% geq 22483 if %_pwsh% EQU 0 goto :E_PS
+for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
+if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PS
 
-%_Nul3% reg query HKU\S-1-5-19 && (
+%_Nul3% reg.exe query HKU\S-1-5-19 && (
   goto :Passed
   ) || (
   if defined _elev goto :E_Admin
@@ -95,6 +99,7 @@ setlocal DisableDelayedExpansion
 
 :prompt1
 @cls
+set _erriso=0
 set _iso1=
 echo %line%
 echo Enter / Paste the complete path to 1st ISO file
@@ -103,16 +108,9 @@ echo.
 set /p _iso1=
 if not defined _iso1 (set _Debug=1&goto :QUIT)
 set "_iso1=%_iso1:"=%"
-if not exist "%_iso1%" (
-echo.
-echo %_err%
-echo Specified path is not a valid ISO file
-echo.
-echo Press any key to continue...
-pause >nul
-goto :prompt1
-)
-if /i not "%_iso1:~-4%"==".iso" (
+if not exist "%_iso1%" set _erriso=1
+if /i not "%_iso1:~-4%"==".iso" set _erriso=1
+if %_erriso% equ 1 (
 echo.
 echo %_err%
 echo Specified path is not a valid ISO file
@@ -123,6 +121,7 @@ goto :prompt1
 )
 
 :prompt2
+set _erriso=0
 set _iso2=
 echo.
 echo %line%
@@ -132,16 +131,9 @@ echo.
 set /p _iso2=
 if not defined _iso2 (set _Debug=1&goto :QUIT)
 set "_iso2=%_iso2:"=%"
-if not exist "%_iso2%" (
-echo.
-echo %_err%
-echo Specified path is not a valid ISO file
-echo.
-echo Press any key to continue...
-pause >nul
-goto :prompt2
-)
-if /i not "%_iso2:~-4%"==".iso" (
+if not exist "%_iso2%" set _erriso=1
+if /i not "%_iso2:~-4%"==".iso" set _erriso=1
+if %_erriso% equ 1 (
 echo.
 echo %_err%
 echo Specified path is not a valid ISO file
@@ -513,8 +505,8 @@ if exist "%SystemRoot%\temp\Package_for_RollupFix*.mum" (
 set uupver=%revver%
 for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
 set "chkfile=!mumfile:\=\\!"
-if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
-if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
+if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "uupdate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 )

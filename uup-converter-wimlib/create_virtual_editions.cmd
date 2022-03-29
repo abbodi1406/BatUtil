@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v75
+@set uivr=v79
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -62,11 +62,15 @@ if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
 set _pwsh=1
-if not exist "%SysPath%\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
-if %winbuild% geq 22483 if %_pwsh% EQU 0 goto :E_PS
+for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
+if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PS
 
-%_Null% reg query HKU\S-1-5-19 && (
+%_Null% reg.exe query HKU\S-1-5-19 && (
   goto :Passed
   ) || (
   if defined _elev goto :E_Admin
@@ -166,16 +170,16 @@ if /i "%_type%"=="manuesd" set wim2esd=1
 )
 dir /b /ad . %_Nul3% || goto :checkdvd
 for /f "tokens=* delims=" %%# in ('dir /b /ad .') do (
-if exist "%%~#\sources\install.wim" set _dir=1&set "ISOdir=%%~#"
 if exist "%%~#\sources\install.esd" set _dir=1&set "ISOdir=%%~#"
+if exist "%%~#\sources\install.wim" set _dir=1&set "ISOdir=%%~#"
 )
 if %_dir% neq 1 goto :checkdvd
 goto :dCheck
 
 :checkdvd
 for %%# in (D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
-if exist "%%#:\sources\install.wim" set _dvd=1&set "ISOdir=%%#:"
 if exist "%%#:\sources\install.esd" set _dvd=1&set "ISOdir=%%#:"
+if exist "%%#:\sources\install.wim" set _dvd=1&set "ISOdir=%%#:"
 )
 if %_dvd% neq 1 goto :checkiso
 goto :dCheck
@@ -192,7 +196,8 @@ goto :dISO
 if %_Debug% neq 0 goto :dCheck
 
 :prompt
-cls
+@cls
+set _erriso=0
 set ISOfile=
 echo %line%
 echo Enter / Paste the complete path to ISO file
@@ -201,15 +206,9 @@ echo.
 set /p ISOfile=
 if not defined ISOfile set _Debug=1&goto :QUIT
 set "ISOfile=%ISOfile:"=%"
-if not exist "%ISOfile%" (
-echo.
-echo %_err%
-echo Specified path is not a valid ISO file
-echo.
-%_Contn%&%_Pause%
-goto :prompt
-)
-if /i not "%ISOfile:~-4%"==".iso" (
+if not exist "%ISOfile%" set _erriso=1
+if /i not "%ISOfile:~-4%"==".iso" set _erriso=1
+if %_erriso% equ 1 (
 echo.
 echo %_err%
 echo Specified path is not a valid ISO file
@@ -222,7 +221,7 @@ set Preserve=0
 
 :dISO
 color 1F
-cls
+@cls
 echo.
 echo %line%
 echo Extracting ISO file . . .
@@ -320,7 +319,7 @@ if %CloudEditionN% equ 0 if %_build% geq 21364 echo 14. SE N {Cloud N}
 exit /b
 
 :MULTIMENU
-cls
+@cls
 echo %line%
 echo Available Target Editions:
 call :SHWOINFO
@@ -354,7 +353,7 @@ if %EditionProN% equ 1 if %_build% geq 21364 set CloudEditionN=1
 goto :CREATEMENU
 
 :SINGLEMENU
-cls
+@cls
 set verify=0
 set _single=
 echo %line%
@@ -385,7 +384,7 @@ set _single=
 goto :SINGLEMENU
 
 :RANDOMMENU
-cls
+@cls
 set verify=0
 set _count=
 set _index=
@@ -421,7 +420,7 @@ set _index=
 goto :RANDOMMENU
 
 :CREATEMENU
-if %AutoStart% equ 1 (echo.) else (cls)
+if %AutoStart% equ 1 (echo.) else (@cls)
 if %_configured% equ 1 (
 echo %line%
 echo Configured Virtual Options . . .
@@ -504,34 +503,34 @@ wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\
 )
 set /a index+=1
 wimlib-imagex.exe extract ISOFOLDER\sources\temp.wim %index% \Windows\System32\config\SOFTWARE \Windows\System32\config\SYSTEM \Windows\servicing\Editions\%EditionID%Edition.xml --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
-%_Nul3% reg load HKLM\SOF .\bin\temp\SOFTWARE
-%_Nul3% reg load HKLM\SYS .\bin\temp\SYSTEM
+%_Nul3% reg.exe load HKLM\SOF .\bin\temp\SOFTWARE
+%_Nul3% reg.exe load HKLM\SYS .\bin\temp\SYSTEM
 for %%# in (EditionID,ProductId) do (
-%_Nul3% reg add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion" /f /v %%# /t REG_SZ /d !%%#!
-%_Nul3% reg add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\DefaultProductKey2" /f /v %%# /t REG_SZ /d !%%#!
+%_Nul3% reg.exe add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion" /f /v %%# /t REG_SZ /d !%%#!
+%_Nul3% reg.exe add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\DefaultProductKey2" /f /v %%# /t REG_SZ /d !%%#!
 )
 for %%# in (DigitalProductId,DigitalProductId4) do (
-%_Nul3% reg add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion" /f /v %%# /t REG_BINARY /d !%%#!
-%_Nul3% reg add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\DefaultProductKey2" /f /v %%# /t REG_BINARY /d !%%#!
+%_Nul3% reg.exe add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion" /f /v %%# /t REG_BINARY /d !%%#!
+%_Nul3% reg.exe add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\DefaultProductKey2" /f /v %%# /t REG_BINARY /d !%%#!
 )
 for %%# in (OSProductContentId,OSProductPfn) do (
-%_Nul3% reg add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\DefaultProductKey2" /f /v %%# /t REG_SZ /d !%%#!
-%_Nul3% reg add "HKLM\SYS\ControlSet001\Control\ProductOptions" /f /v %%# /t REG_SZ /d !%%#!
+%_Nul3% reg.exe add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\DefaultProductKey2" /f /v %%# /t REG_SZ /d !%%#!
+%_Nul3% reg.exe add "HKLM\SYS\ControlSet001\Control\ProductOptions" /f /v %%# /t REG_SZ /d !%%#!
 )
 if /i %EditionID%==CoreSingleLanguage (
-%_Nul3% reg add "HKLM\SYS\ControlSet001\Services\LanmanWorkstation\Parameters" /f /v AllowInsecureGuestAuth /t REG_DWORD /d !Insecure!
+%_Nul3% reg.exe add "HKLM\SYS\ControlSet001\Services\LanmanWorkstation\Parameters" /f /v AllowInsecureGuestAuth /t REG_DWORD /d !Insecure!
 ) else if %_build% lss 18362 (
-%_Nul3% reg add "HKLM\SYS\ControlSet001\Services\LanmanWorkstation\Parameters" /f /v AllowInsecureGuestAuth /t REG_DWORD /d !Insecure!
+%_Nul3% reg.exe add "HKLM\SYS\ControlSet001\Services\LanmanWorkstation\Parameters" /f /v AllowInsecureGuestAuth /t REG_DWORD /d !Insecure!
 )
-%_Nul3% reg add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\Print" /f /v DoNotInstallCompatibleDriverFromWindowsUpdate /t REG_DWORD /d !Print!
-%_Nul3% reg add "HKLM\SOF\Microsoft\Windows\CurrentVersion\Setup\OOBE" /f /v SetupDisplayedProductKey /t REG_DWORD /d 1
+%_Nul3% reg.exe add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\Print" /f /v DoNotInstallCompatibleDriverFromWindowsUpdate /t REG_DWORD /d !Print!
+%_Nul3% reg.exe add "HKLM\SOF\Microsoft\Windows\CurrentVersion\Setup\OOBE" /f /v SetupDisplayedProductKey /t REG_DWORD /d 1
 if /i %EditionID%==ServerRdsh (
-if %_build% lss 22483 reg add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c WMIC /NAMESPACE:\\ROOT\CIMV2 PATH Win32_UserAccount WHERE \"SID like 'S-1-5-21-%%-500'\" SET Disabled=FALSE &exit /b 0 " %_Nul3%
-if %_build% geq 22483 reg add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c powershell -nop -c \"Set-CimInstance -Query 'Select * from Win32_UserAccount WHERE SID LIKE \\\"S-1-5-21-%%-500\\\"' -Property @{Disabled=0}\" &exit /b 0 " %_Nul3%
+if %_build% lss 22483 reg.exe add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c WMIC /NAMESPACE:\\ROOT\CIMV2 PATH Win32_UserAccount WHERE \"SID like 'S-1-5-21-%%-500'\" SET Disabled=FALSE &exit /b 0 " %_Nul3%
+if %_build% geq 22483 reg.exe add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c powershell -nop -c \"Set-CimInstance -Query 'Select * from Win32_UserAccount WHERE SID LIKE \\\"S-1-5-21-%%-500\\\"' -Property @{Disabled=0}\" &exit /b 0 " %_Nul3%
 )
-%_Nul3% reg unload HKLM\SYS
-%_Nul3% reg save HKLM\SOF .\bin\temp\SOFTWARE2
-%_Nul3% reg unload HKLM\SOF
+%_Nul3% reg.exe unload HKLM\SYS
+%_Nul3% reg.exe save HKLM\SOF .\bin\temp\SOFTWARE2
+%_Nul3% reg.exe unload HKLM\SOF
 %_Nul3% move /y .\bin\temp\SOFTWARE2 .\bin\temp\SOFTWARE
 type nul>bin\temp\virtual.txt
 >>bin\temp\virtual.txt echo add 'bin^\temp^\SOFTWARE' '^\Windows^\System32^\config^\SOFTWARE'
@@ -711,8 +710,8 @@ if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
 for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
 set "chkfile=!mumfile:\=\\!"
-if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
-if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
+if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "uupdate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 set "isotime=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
@@ -799,13 +798,13 @@ set "cfvr1=!_fvr1:\=\\!"
 set "cfvr2=!_fvr2:\=\\!"
 set "cfvr3=!_fvr3:\=\\!"
 set "cfvr4=!_fvr4:\=\\!"
-if %winbuild% lss 22483 (
+if %_cwmi% equ 1 (
 if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr1!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
 if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr2!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
 if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr3!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
 if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr4!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
 )
-if %winbuild% geq 22483 (
+if %_cwmi% equ 0 (
 if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr1!\"').Version"') do set /a "_svr1=%%a"
 if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr2!\"').Version"') do set /a "_svr2=%%a"
 if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr3!\"').Version"') do set /a "_svr3=%%a"
@@ -871,17 +870,18 @@ exit /b
 
 :ServerRdsh
 set "EditionID=%1"
+set "Print=1"
+set "Insecure=0"
+set "source=%IndexProf%"
+set "winver=%wtxProf%"
+if %_build% geq 17763 (
 set "ProductId=00432-70000-00001-AA701"
 set "OSProductContentId=8e20e60b-0826-3084-51fe-cda9e1b184cd"
 set "OSProductPfn=Microsoft.Windows.175.X21-83765_8wekyb3d8bbwe"
 set "DigitalProductId=A40000000300000030303433322D37303030302D30303030312D414137303100E71000005B5253355D5832312D38333736350000E710100000000019E6ABC946E0F0090000000000A23EC65C05F0E66F0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000651DE578"
 set "DigitalProductId4=F804000004000000350035003000340031002D00300034003300320037002D003000300030002D003000300030003000300031002D00300033002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100390032003000310039000000000000000000000000000000000000000000000000000000000000000000650063003800360038006500360035002D0066006100640066002D0034003700350039002D0062003200330065002D00390033006600650033003700660032006300630032003900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000530065007200760065007200520064007300680000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000E710100000000019E6ABC946E0F009002B11469E49D838FE3D68708FF122CB51C5BB3CB181B914B08DE8BFDDE9D3B495B852E47C048CEF48B76AA54F7352659895F9AA7B24F08092E3CA900D5B3DE7A15B005200530035005D005800320031002D00380033003700360035000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065003A00470056004C004B000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=1"
-set "Insecure=0"
 set "desc=Enterprise multi-session"
-set "source=%IndexProf%"
-set "winver=%wtxProf%"
-if %_build% lss 17763 (
+) else (
 set "ProductId=00389-50000-00001-AA267"
 set "OSProductContentId=8bcd2f4f-8b45-3e55-522d-c3875c18832e"
 set "OSProductPfn=Microsoft.Windows.175.X21-41298_8wekyb3d8bbwe"

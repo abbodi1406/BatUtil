@@ -1,0 +1,52 @@
+@exit /b
+
+:embed:
+$cwd = (Get-Location -PSProvider FileSystem).ProviderPath
+$doc = [xml](Get-Content .\CompDB_App.xml)
+ForEach ($a in $doc.CompDB.Features.Feature) {
+    If ($null -eq $a.CustomInformation) {continue}
+    $p = 'Apps\' + $a.FeatureID
+    $t = $p + '\License.xml'
+    If (Test-Path $t) {continue}
+    $d = $null
+    ForEach ($c in $a.CustomInformation.CustomInfo) {If ($c.Key -eq 'licensedata') {$d = $c.InnerText} }
+    If ($null -eq $d) {continue}
+    $null = [IO.Directory]::CreateDirectory($p)
+    [IO.File]::WriteAllText($t,$d,[System.Text.Encoding]::ASCII)
+}
+$packs = @{}
+ForEach ($a in $doc.CompDB.Packages.Package) {
+    $packs[$($a.ID)] = $a.Payload.PayloadItem.Path -replace 'UUP\\Desktop\\Apps\\',''
+}
+echo ('File_Prefix;Target_Path') | Out-File -Encoding ASCII .\_AppsFilesList.csv
+ForEach ($a in $doc.CompDB.Features.Feature) {
+ForEach ($b in $a.Packages.Package) {
+    $null = $packs[$($b.ID)] -match '.*\\'
+    $prefix = $matches[0].Replace('\','_')
+    $suffix = $packs[$($b.ID)] -replace '(.*?)\\(.*?)\\(.*)', '$3'
+    If ($a.Type -eq 'MSIXFramework') {$fnpath = 'Apps\MSIXFramework\' + $suffix}
+    Else {$fnpath = 'Apps\' + $a.FeatureID + '\' + $suffix}
+    echo ($prefix + ';' + $fnpath) | Out-File -Encoding ASCII -Append .\_AppsFilesList.csv
+    If (Test-Path $fnpath) {continue}
+    $flname = [IO.Path]::GetFileName($fnpath)
+    $drname = [IO.Path]::GetDirectoryName($fnpath)
+    If (Test-Path $flname) {$source = $flname}
+    ElseIf (Test-Path ($prefix + $flname)) {$source = $prefix + $flname}
+    Else {continue}
+    [bool]$pathlong = (($cwd + '\' + $fnpath).Length -gt 255) -or (($cwd + '\' + $drname).Length -gt 248)
+    If (!$pathlong) {
+        $null = [IO.Directory]::CreateDirectory($drname)
+        Move-Item -Path $source -Destination $fnpath -Force
+        continue
+    }
+    Start-Process robocopy.exe -NoNewWindow -Wait -ArgumentList ('"' + $cwd + '"' + ' ' + '"' + $cwd + '\' + $drname + '"' + ' ' + $source + ' /MOV /R:1 /W:1 /NS /NC /NFL /NDL /NP /NJH /NJS')
+}
+}
+$x = [xml](Get-Content .\AppsList.xml)
+if ($null -ne $x.Apps.Client.Feature) { $Client = [ordered]@{}; foreach ($a in $x.Apps.Client.Feature) {$Client[$($a.FeatureID)] = 'y'}; $ListClient = '_appProf='; ForEach ($k in $Client.Keys) {$ListClient += $k + ','}; echo ($ListClient) | Out-File -Encoding ASCII -Append .\_AppsEditions.txt }
+if ($null -ne $x.Apps.CoreN.Feature) { $CoreN = [ordered]@{}; foreach ($a in $x.Apps.CoreN.Feature) {$CoreN[$($a.FeatureID)] = 'y'}; $ListCoreN = '_appProN='; ForEach ($k in $CoreN.Keys) {$ListCoreN += $k + ','}; echo ($ListCoreN) | Out-File -Encoding ASCII -Append .\_AppsEditions.txt }
+if ($null -ne $x.Apps.Team.Feature) { $Team = [ordered]@{}; foreach ($a in $x.Apps.Team.Feature) {$Team[$($a.FeatureID)] = 'y'}; $ListTeam = '_appTeam='; ForEach ($k in $Team.Keys) {$ListTeam += $k + ','}; echo ($ListTeam) | Out-File -Encoding ASCII -Append .\_AppsEditions.txt }
+if ($null -ne $x.Apps.ServerAzure.Feature) { $sAzure = [ordered]@{}; foreach ($a in $x.Apps.ServerAzure.Feature) {$sAzure[$($a.FeatureID)] = 'y'}; $ListsAzure = '_appAzure='; ForEach ($k in $sAzure.Keys) {$ListsAzure += $k + ','}; echo ($ListsAzure) | Out-File -Encoding ASCII -Append .\_AppsEditions.txt }
+if ($null -ne $x.Apps.ServerCore.Feature) { $sCore = [ordered]@{}; foreach ($a in $x.Apps.ServerCore.Feature) {$sCore[$($a.FeatureID)] = 'y'}; $ListsCore = '_appSCore='; ForEach ($k in $sCore.Keys) {$ListsCore += $k + ','}; echo ($ListsCore) | Out-File -Encoding ASCII -Append .\_AppsEditions.txt }
+if ($null -ne $x.Apps.ServerFull.Feature) { $sFull = [ordered]@{}; foreach ($a in $x.Apps.ServerFull.Feature) {$sFull[$($a.FeatureID)] = 'y'}; $ListsFull = '_appSFull='; ForEach ($k in $sFull.Keys) {$ListsFull += $k + ','}; echo ($ListsFull) | Out-File -Encoding ASCII -Append .\_AppsEditions.txt }
+:embed:

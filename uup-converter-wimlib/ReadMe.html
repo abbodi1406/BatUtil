@@ -102,14 +102,16 @@
                 You have three ways to change the state of these options, where 0 means the option is OFF (no), and 1 means the option is ON (yes):<br />
                 - edit <b>ConvertConfig.ini</b> under [convert-UUP] section<br />
                 - delete <b>ConvertConfig.ini</b> and edit <b>convert-UUP.cmd</b> script directly<br />
-                - use menu choice 6 (AutoStart option is excluded from this)<br /><br />
+                - use menu choice 6 (AutoStart and AutoExit are excluded from this)<br /><br />
             <ul style="margin-top:0in;margin-bottom:0in">
                 <li>
                     <b>AutoStart</b><br /><br />
                     Start the conversion process directly without prompts.<br /><br />
-                    This require placing UUP files in *UUPs* folder, or starting convert-UUP.cmd from command prompt with path to UUP source folder, or drag and drop UUP source folder on convert-UUP.cmd.<br /><br />
+                    This require placing UUP files in <b>UUPs</b> folder, or starting convert-UUP.cmd from command prompt with path to UUP source folder, or drag and drop UUP source folder on convert-UUP.cmd.<br /><br />
                     Set this option to <strong>1</strong> to create ISO with <b>install.wim</b><br />
-                    Set this option to <strong>2</strong> to create ISO with <b>install.esd</b>
+                    Set this option to <strong>2</strong> to create ISO with <b>install.esd</b><br />
+                    Set this option to <strong>3</strong> to create <b>install.wim</b> only<br />
+                    Set this option to <strong>4</strong> to create <b>install.esd</b> only
                 </li>
                 <br />
                 <li>
@@ -129,9 +131,9 @@
                 <li>
                     <b>wim2esd</b><br /><br />
                     Convert install.wim to install.esd at the end.<br /><br />
-                    This option is intended to be used with option <b>AddUpdates</b>.<br /><br />
+                    This option is intended to be used with <b>AddUpdates</b> option.<br /><br />
                     This option will be auto enabled if you selected <b>install.esd</b> choice and <b>AddUpdates</b> is ON.<br /><br />
-                    Warning: creating install.esd will consume high amount of CPU/RAM, and might take considerable time to complete.
+                    Warning: creating install.esd will consume high amount of CPU/RAM, and take considerable time to complete.
                 </li>
                 <br />
                 <li>
@@ -156,6 +158,11 @@
                 </li>
                 <br />
                 <li>
+                    <b>UpdtBootFiles</b><br /><br />
+                    Update ISO boot files bootmgr/bootmgr.efi/efisys.bin with new files from Cumulative Update.
+                </li>
+                <br />
+                <li>
                     <b>RefESD</b><br /><br />
                     Keep converted reference ESD files for future operations instead converting them each time.<br /><br />
                     if UUP source is Express, Reference ESDs and Edition ESDs will be copied to new folder "CanonicalUUP", practically, this convert/backup Express UUP source to Canonical.<br />
@@ -167,6 +174,26 @@
                     Set option to <strong>1</strong> : Do not integrate Microsoft Edge Chromium with Feature Update Enablement Package or Cumulative Update.<br />
                     Set option to <strong>2</strong> : Skip Microsoft Edge Chromium with Cumulative Update via alternative workaround.<br /><br />
                     This option works only with option <b>AddUpdates=1</b> (Integrate).
+                </li>
+                <br />
+                <li>
+                    <b>AutoExit</b><br /><br />
+                    Exit the conversion process (script) on completion without prompt.<br /><br />
+                    useful option for multi batch conversions, best used with <b>AutoStart</b> option.
+                </li>
+                <br />
+                <li>
+                    <b>SkipApps</b><br /><br />
+                    Do not add Store Apps for builds 22563 and later.
+                </li>
+                <br />
+                <li>
+                    <b>AppsLevel</b><br /><br />
+                    Control added Apps for Client editions (except Team).<br /><br />
+                    Set to <strong>0</strong> to add all referenced Apps</b><br />
+                    Set to <strong>1</strong> to add Store, Security Health only</b><br />
+                    Set to <strong>2</strong> to add level 1 apps + Photos, Camera, Notepad, Paint<br />
+                    Set to <strong>3</strong> to add level 2 apps + Terminal, App Installer, Widgets
                 </li>
             </ul>
             <hr />
