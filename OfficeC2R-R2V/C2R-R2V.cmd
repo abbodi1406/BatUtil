@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v15
+@set uivr=v16
 @echo off
 
 :: set to 1 to enable debug mode
@@ -9,21 +9,29 @@ set _Debug=0
 :: set to 0 to enable debug mode without cleaning or converting
 set _Cnvrt=1
 
-:: set to 1 to use VBScript instead wmic.exe to access WMI
-:: this option is automatically enabled for Windows 11 build 22483 and later
+:: change to 1 to use VBScript to access WMI
+:: automatically enabled if wmic.exe is not available for Windows 11 build 22483 and later
 set WMI_VBS=0
 
 :: ##################################################################
 
+set _args=
+set _args=%*
+if not defined _args goto :NoProgArgs
+for %%A in (%_args%) do (
+if /i "%%A"=="-wow" set _rel1=1
+if /i "%%A"=="-arm" set _rel2=1
+)
+:NoProgArgs
 set "_cmdf=%~f0"
-if exist "%SystemRoot%\Sysnative\cmd.exe" (
+if exist "%SystemRoot%\Sysnative\cmd.exe" if not defined _rel1 (
 setlocal EnableDelayedExpansion
-start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" "
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" -wow "
 exit /b
 )
-if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 if not defined _rel2 (
 setlocal EnableDelayedExpansion
-start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" "
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" -arm "
 exit /b
 )
 set "SysPath=%SystemRoot%\System32"
@@ -37,8 +45,16 @@ if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "x
 if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xBit=x64"
 if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xBit=x86"
 
-:: set "_psc=powershell -noprofile -c"
-:: if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" goto :E_PS
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
+:: set _pwsh=1
+:: for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
+:: if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
+:: if %_pwsh% equ 0 goto :E_PS
+:: 
+:: set "_psc=powershell -nop -c"
 
 if %_Cnvrt% NEQ 1 set _Debug=1
 
@@ -61,7 +77,7 @@ for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 set "_csq=cscript.exe //NoLogo //Job:WmiQuery "%~nx0?.wsf""
 set "_csm=cscript.exe //NoLogo //Job:WmiMethod "%~nx0?.wsf""
 set "_csp=cscript.exe //NoLogo //Job:WmiPKey "%~nx0?.wsf""
-if %winbuild% GEQ 22483 set WMI_VBS=1
+if %_cwmi% EQU 0 set WMI_VBS=1
 if %WMI_VBS% EQU 0 (
 set "_zz1=wmic path"
 set "_zz2=where"
@@ -86,6 +102,11 @@ reg query "HKCU\SOFTWARE\Microsoft\Windows Script Host\Settings" /v Enabled 2>nu
 reg query "HKLM\SOFTWARE\Microsoft\Windows Script Host\Settings" /v Enabled 2>nul | find /i "0x0" 1>nul && (set _WSH=0)
 if %_WSH% EQU 0 if %WMI_VBS% NEQ 0 goto :E_VBS
 setlocal EnableDelayedExpansion
+copy /y nul "!_work!\#.rw" 1>nul 2>nul && (
+if exist "!_work!\#.rw" del /f /q "!_work!\#.rw"
+) || (
+set "_log=!_dsk!\%~n0"
+)
 pushd "!_work!"
 
 if %_Debug% EQU 0 (
@@ -99,7 +120,6 @@ if %_Debug% EQU 0 (
   set "_Nul2="
   set "_Nul6="
   set "_Nul3="
-  copy /y nul "!_work!\#.rw" 1>nul 2>nul && (if exist "!_work!\#.rw" del /f /q "!_work!\#.rw") || (set "_log=!_dsk!\%~n0")
   echo.
   echo Running in Debug Mode...
   echo The window will be closed when finished
@@ -480,7 +500,7 @@ find /i "Office16MondoVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (
 )
 if %sub_O365% EQU 1 (
   for %%a in (%_Suites%) do set _%%a=0
-echo Microsoft 365 product is activated with a subscription.
+echo Microsoft Office is activated with a subscription.
 echo.
 )
 if %sub_proj% EQU 1 (
@@ -939,6 +959,7 @@ echo Refreshing Windows Insider Preview Licenses...
 echo %_ln%
 echo.
 %_cscript% %_SLMGR% /rilc
+if !ERRORLEVEL! NEQ 0 %_cscript% %_SLMGR% /rilc
 )
 set "msg=Finished"
 goto :TheEnd

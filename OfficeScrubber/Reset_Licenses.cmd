@@ -1,14 +1,22 @@
 @setlocal DisableDelayedExpansion
 @echo off
+set _args=
+set _args=%*
+if not defined _args goto :NoProgArgs
+for %%A in (%_args%) do (
+if /i "%%A"=="-wow" set _rel1=1
+if /i "%%A"=="-arm" set _rel2=1
+)
+:NoProgArgs
 set "_cmdf=%~f0"
-if exist "%SystemRoot%\Sysnative\cmd.exe" (
+if exist "%SystemRoot%\Sysnative\cmd.exe" if not defined _rel1 (
 setlocal EnableDelayedExpansion
-start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" "
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" -wow"
 exit /b
 )
-if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 if not defined _rel2 (
 setlocal EnableDelayedExpansion
-start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" "
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" -arm"
 exit /b
 )
 set "SysPath=%SystemRoot%\System32"
@@ -98,6 +106,7 @@ echo Refreshing Windows Insider Preview Licenses...
 echo ============================================================
 echo.
 cscript //Nologo //B %SysPath%\slmgr.vbs /rilc
+if !ERRORLEVEL! NEQ 0 cscript //Nologo //B %SysPath%\slmgr.vbs /rilc
 )
 echo.
 echo ============================================================

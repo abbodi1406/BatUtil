@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.17
+@set uiv=v10.18
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -36,8 +36,8 @@ set WinRE=1
 :: Force updating winre.wim with Cumulative Update even if SafeOS update detected
 set LCUwinre=0
 
-:: don't update ISO boot files bootmgr/bootmgr.efi/efisys.bin
-set SkipBootFiles=1
+:: update ISO boot files bootmgr/bootmgr.efi/efisys.bin from Cumulative Update
+set UpdtBootFiles=0
 
 :: 1 = do not install EdgeChromium with Enablement Package or Cumulative Update
 :: 2 = alternative workaround to avoid EdgeChromium with Cumulative Update only
@@ -205,7 +205,7 @@ cleanup
 resetbase
 winre
 lcuwinre
-skipbootfiles
+updtbootfiles
 skipedge
 _cabdir
 mountdir
@@ -239,7 +239,7 @@ if "%Cleanup%"=="" set Cleanup=0
 if "%ResetBase%"=="" set ResetBase=0
 if "%WinRE%"=="" set WinRE=1
 if "%LCUwinre%"=="" set LCUwinre=0
-if "%SkipBootFiles%"=="" set SkipBootFiles=0
+if "%UpdtBootFiles%"=="" set UpdtBootFiles=0
 if "%SkipEdge%"=="" set SkipEdge=0
 if "%ISO%"=="" set ISO=1
 if "%AutoStart%"=="" set AutoStart=0
@@ -810,7 +810,15 @@ if not exist "%package%" (
   if not exist "%pkgn%.psf" for /f %%# in ('dir /b /a:-d "!repo!\*%pkgid%*%arch%*.psf"') do copy /y "!repo!\%%#" %pkgn%.psf %_Nul3%
   )
 if not exist "PSFExtractor.exe" (
+  setlocal
+  set "TMP=%SystemRoot%\Temp"
+  set "TEMP=%SystemRoot%\Temp"
+  )
+)
+if defined psf_%pkgn% (
+if not exist "PSFExtractor.exe" (
   %_Nul3% powershell -nop -c "$d='!cd!';$f=[IO.File]::ReadAllText('!_batp!') -split ':embdbin\:.*';iex ($f[1]);X 1"
+  endlocal
   )
 PSFExtractor.exe %package% %_Null%
 if !errorlevel! neq 0 (
@@ -1146,7 +1154,15 @@ if not exist "%lcupkg%" (
   if not exist "%lcupkg:~0,-4%.psf" for /f %%# in ('dir /b /a:-d "!repo!\%lcupkg:~0,-12%*.psf"') do copy /y "!repo!\%%#" %lcupkg:~0,-4%.psf %_Nul3%
   )
 if not exist "PSFExtractor.exe" (
+  setlocal
+  set "TMP=%SystemRoot%\Temp"
+  set "TEMP=%SystemRoot%\Temp"
+  )
+)
+if exist "%lcudir%\*.psf.cix.xml" (
+if not exist "PSFExtractor.exe" (
   %_Nul3% powershell -nop -c "$d='!cd!';$f=[IO.File]::ReadAllText('!_batp!') -split ':embdbin\:.*';iex ($f[1]);X 1"
+  endlocal
   )
 PSFExtractor.exe %lcupkg% %_Null%
 if !_sbst! equ 1 popd
@@ -1747,8 +1763,8 @@ set isomin=0
 if not defined isomaj for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
 if not defined isolab if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 if %_build% geq 15063 (call :detectLab isolab) else (call :legacyLab isolab)
-if %SkipBootFiles% equ 0 if exist "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" if exist "!target!\efi\microsoft\boot\winsipolicy.p7b" copy /y "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" "!target!\efi\microsoft\boot\winsipolicy.p7b" %_Nul3%
-if %SkipBootFiles% equ 0 if exist "!mountdir!\Windows\Boot\EFI\CIPolicies\" if exist "!target!\efi\microsoft\boot\cipolicies\" xcopy /CEDRY "!mountdir!\Windows\Boot\EFI\CIPolicies\*" "!target!\efi\microsoft\boot\cipolicies\" %_Nul3%
+if %UpdtBootFiles% equ 1 if exist "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" if exist "!target!\efi\microsoft\boot\winsipolicy.p7b" copy /y "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" "!target!\efi\microsoft\boot\winsipolicy.p7b" %_Nul3%
+if %UpdtBootFiles% equ 1 if exist "!mountdir!\Windows\Boot\EFI\CIPolicies\" if exist "!target!\efi\microsoft\boot\cipolicies\" xcopy /CEDRY "!mountdir!\Windows\Boot\EFI\CIPolicies\*" "!target!\efi\microsoft\boot\cipolicies\" %_Nul3%
 )
 if %_actEP% equ 0 if exist "!mountdir!\Windows\Servicing\Packages\microsoft-windows-*enablement-package~*.mum" if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" call :detectEP
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
@@ -1857,7 +1873,7 @@ goto :eof
 if exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" xcopy /CRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
 del /f /q "!target!\sources\background.bmp" %_Nul3%
 del /f /q "!target!\sources\xmllite.dll" %_Nul3%
-if %SkipBootFiles% equ 0 (
+if %UpdtBootFiles% equ 1 (
 del /f /q "!target!\efi\microsoft\boot\*noprompt.*" %_Nul3%
 if exist "!mountdir!\Windows\Boot\DVD\EFI\en-US\efisys.bin" copy /y "!mountdir!\Windows\Boot\DVD\EFI\en-US\efisys.bin" "!target!\efi\microsoft\boot\" %_Nul1%
 if /i not %arch%==arm64 (

@@ -1,15 +1,23 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
 @echo off
+set _args=
+set _args=%*
+if not defined _args goto :NoProgArgs
+for %%A in (%_args%) do (
+if /i "%%A"=="-wow" set _rel1=1
+if /i "%%A"=="-arm" set _rel2=1
+)
+:NoProgArgs
 set "_cmdf=%~f0"
-if exist "%SystemRoot%\Sysnative\cmd.exe" (
+if exist "%SystemRoot%\Sysnative\cmd.exe" if not defined _rel1 (
 setlocal EnableDelayedExpansion
-start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" "
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" -wow"
 exit /b
 )
-if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 (
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 if not defined _rel2 (
 setlocal EnableDelayedExpansion
-start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" "
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" -arm"
 exit /b
 )
 set "SysPath=%SystemRoot%\System32"
@@ -24,10 +32,16 @@ if %winbuild% LSS 7601 (
 set "msg=ERROR: Windows 7 SP1 is the minimum supported OS"
 goto :end
 )
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
+set _pwsh=1
+for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
 set "_csq=cscript.exe //NoLogo //Job:WmiQuery "%~nx0?.wsf""
 set "_csm=cscript.exe //NoLogo //Job:WmiMethod "%~nx0?.wsf""
 set WMI_VBS=0
-if %winbuild% GEQ 22483 set WMI_VBS=1
+if %_cwmi% EQU 0 set WMI_VBS=1
 set _WSH=1
 reg query "HKCU\SOFTWARE\Microsoft\Windows Script Host\Settings" /v Enabled 2>nul | find /i "0x0" 1>nul && (set _WSH=0)
 reg query "HKLM\SOFTWARE\Microsoft\Windows Script Host\Settings" /v Enabled 2>nul | find /i "0x0" 1>nul && (set _WSH=0)
@@ -146,14 +160,14 @@ echo Executing OLicenseCleanup.vbs
 echo ============================================================
 %_Nul3% cscript //Nologo //B OLicenseCleanup.vbs
 
-if %winbuild% GEQ 17133 if exist "WAMAccounts.ps1" (
+if %winbuild% GEQ 17133 if exist "WAMAccounts.ps1" if %_pwsh% equ 1 (
 echo.
 echo ============================================================
 echo Executing WAMAccounts.ps1
 echo ============================================================
 %_Nul3% powershell -ep unrestricted -nop -c "try {& .\WAMAccounts.ps1} catch {}"
 )
-if %OfficeUWP% equ 1 (
+if %OfficeUWP% equ 1 if %_pwsh% equ 1 (
 echo.
 echo ============================================================
 echo Removing Office UWP Apps
@@ -180,6 +194,7 @@ echo Refreshing Windows Insider Preview Licenses...
 echo ============================================================
 echo.
 cscript //Nologo //B %SysPath%\slmgr.vbs /rilc
+if !ERRORLEVEL! NEQ 0 cscript //Nologo //B %SysPath%\slmgr.vbs /rilc
 )
 set "msg=Finished. It's recommended to restart the system."
 goto :end
