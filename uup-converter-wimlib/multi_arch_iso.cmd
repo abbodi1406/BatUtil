@@ -17,16 +17,39 @@ set "_Nul3=1>nul 2>nul"
 
 set _Debug=0
 set _elev=
-set _args=%1
-if defined _args if "%~1"=="-elevated" set _elev=1
+set _args=
+set _args=%*
+if not defined _args goto :NoProgArgs
+
+set _args=%_args:"=%
+for %%A in (%_args%) do (
+if /i "%%A"=="-elevated" (set _elev=1
+) else if /i "%%A"=="-wow" (set _rel1=1
+) else if /i "%%A"=="-arm" (set _rel2=1
+)
+
+:NoProgArgs
+set "_cmdf=%~f0"
+if exist "%SystemRoot%\Sysnative\cmd.exe" if not defined _rel1 (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\Sysnative\cmd.exe /c ""!_cmdf!" -wow %*"
+exit /b
+)
+if exist "%SystemRoot%\SysArm32\cmd.exe" if /i %PROCESSOR_ARCHITECTURE%==AMD64 if not defined _rel2 (
+setlocal EnableDelayedExpansion
+start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" -arm %*"
+exit /b
+)
 
 set "SysPath=%SystemRoot%\System32"
-if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
-set "xOS=%PROCESSOR_ARCHITECTURE%"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
-  set "xOS=%PROCESSOR_ARCHITEW6432%"
-  )
+set "Path=%SystemRoot%\System32;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\"
+if exist "%SystemRoot%\Sysnative\reg.exe" (
+set "SysPath=%SystemRoot%\Sysnative"
+set "Path=%SystemRoot%\Sysnative;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
 )
+set "xOS=%PROCESSOR_ARCHITECTURE%"
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" (if defined PROCESSOR_ARCHITEW6432 set "xOS=%PROCESSOR_ARCHITEW6432%")
+
 set "xDS=bin\bin64;bin"
 if /i not %xOS%==amd64 set "xDS=bin"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
@@ -40,7 +63,7 @@ set _pwsh=1
 for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
 if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PS
 
-%_Nul3% reg.exe query HKU\S-1-5-19 && (
+1>nul 2>nul reg.exe query HKU\S-1-5-19 && (
   goto :Passed
   ) || (
   if defined _elev goto :E_Admin
@@ -49,11 +72,11 @@ if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PS
 set _PSarg="""%~f0""" -elevated
 set _PSarg=%_PSarg:'=''%
 
-(%_Nul3% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" -elevated) && (
+(1>nul 2>nul cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" -elevated) && (
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Nul3% powershell -nop -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
+  1>nul 2>nul %SysPath%\WindowsPowerShell\v1.0\powershell -nop -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
@@ -77,24 +100,55 @@ set "ramdiskoptions={7619dcc8-fafe-11d9-b411-000476eba25f}"
 set combine=0
 set custom=0
 set winx=1
+set wimswm=0
 set "line============================================================="
 set _dir64=0
 set _dir86=0
 set _iso64=0
 set _iso86=0
 
-dir /b /ad *_amd64* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *amd64*') do if exist "%%~#\sources\*.wim" (set _dir64=1&set "ISOdir1=%%#"))
-dir /b /ad *_x64* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x64*') do if exist "%%~#\sources\*.wim" (set _dir64=1&set "ISOdir1=%%#"))
-dir /b /ad *_x32* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x32*') do if exist "%%~#\sources\*.wim" (set _dir86=1&set "ISOdir2=%%#"))
-dir /b /ad *_x86* %_Nul3% && (for /f "tokens=* delims=" %%# in ('dir /b /ad *x86*') do if exist "%%~#\sources\*.wim" (set _dir86=1&set "ISOdir2=%%#"))
+dir /b /ad *_x64* %_Nul3% && for /f "tokens=* delims=" %%# in ('dir /b /ad *_x64*') do (
+if exist "%%~#\sources\install.wim" set _dir64=1&set "ISOdir1=%%#"
+if exist "%%~#\sources\install.esd" set _dir64=1&set "ISOdir1=%%#"
+if exist "%%~#\sources\install.swm" set _dir64=1&set "ISOdir1=%%#"
+)
+if %_dir64% equ 0 dir /b /ad *_amd64* %_Nul3% && for /f "tokens=* delims=" %%# in ('dir /b /ad *_amd64*') do (
+if exist "%%~#\sources\install.wim" set _dir64=1&set "ISOdir1=%%#"
+if exist "%%~#\sources\install.esd" set _dir64=1&set "ISOdir1=%%#"
+if exist "%%~#\sources\install.swm" set _dir64=1&set "ISOdir1=%%#"
+)
+dir /b /ad *_x86* %_Nul3% && for /f "tokens=* delims=" %%# in ('dir /b /ad *_x86*') do (
+if exist "%%~#\sources\install.wim" set _dir86=1&set "ISOdir2=%%#"
+if exist "%%~#\sources\install.esd" set _dir86=1&set "ISOdir2=%%#"
+if exist "%%~#\sources\install.swm" set _dir86=1&set "ISOdir2=%%#"
+)
+if %_dir86% equ 0 dir /b /ad *_x32* %_Nul3% && for /f "tokens=* delims=" %%# in ('dir /b /ad *_x32*') do (
+if exist "%%~#\sources\install.wim" set _dir86=1&set "ISOdir2=%%#"
+if exist "%%~#\sources\install.esd" set _dir86=1&set "ISOdir2=%%#"
+if exist "%%~#\sources\install.swm" set _dir86=1&set "ISOdir2=%%#"
+)
 if %_dir64% equ 1 if %_dir86% equ 1 goto :DUALMENU
 
-dir /b /a:-d *_amd64*.iso %_Nul3% && (set _iso64=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_amd64*.iso') do set "ISOfile1=%%#")
-dir /b /a:-d *_x64*.iso %_Nul3% && (set _iso64=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_x64*.iso') do set "ISOfile1=%%#")
-dir /b /a:-d *_x32*.iso %_Nul3% && (set _iso86=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_x32*.iso') do set "ISOfile2=%%#")
-dir /b /a:-d *_x86*.iso %_Nul3% && (set _iso86=1&for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_x86*.iso') do set "ISOfile2=%%#")
+if not exist "*.iso" goto :noiso
+dir /b /a:-d *_x64*.iso %_Nul3% && (
+set _iso64=1
+for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_x64*.iso') do set "ISOfile1=%%#"
+)
+if %_iso64% equ 0 dir /b /a:-d *_amd64*.iso %_Nul3% && (
+set _iso64=1
+for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_amd64*.iso') do set "ISOfile1=%%#"
+)
+dir /b /a:-d *_x86*.iso %_Nul3% && (
+set _iso86=1
+for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_x86*.iso') do set "ISOfile2=%%#"
+)
+if %_iso86% equ 0 dir /b /a:-d *_x32*.iso %_Nul3% && (
+set _iso86=1
+for /f "tokens=* delims=" %%# in ('dir /b /a:-d *_x32*.iso') do set "ISOfile2=%%#"
+)
 if %_iso64% equ 1 if %_iso86% equ 1 goto :DUALMENU
 
+:noiso
 setlocal DisableDelayedExpansion
 
 :prompt1
@@ -144,20 +198,20 @@ pause >nul
 goto :prompt2
 )
 
-echo "%_iso1%"| findstr /I /C:"amd64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso1%")
 echo "%_iso1%"| findstr /I /C:"x64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso1%")
-echo "%_iso1%"| findstr /I /C:"x32" 1>nul && (set _iso86=1&set "ISOfile2=%_iso1%")
+if %_iso64% equ 0 echo "%_iso1%"| findstr /I /C:"amd64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso1%")
 echo "%_iso1%"| findstr /I /C:"x86" 1>nul && (set _iso86=1&set "ISOfile2=%_iso1%")
-echo "%_iso2%"| findstr /I /C:"amd64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso2%")
+if %_iso86% equ 0 echo "%_iso1%"| findstr /I /C:"x32" 1>nul && (set _iso86=1&set "ISOfile2=%_iso1%")
 echo "%_iso2%"| findstr /I /C:"x64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso2%")
-echo "%_iso2%"| findstr /I /C:"x32" 1>nul && (set _iso86=1&set "ISOfile2=%_iso2%")
+if %_iso64% equ 0 echo "%_iso2%"| findstr /I /C:"amd64" 1>nul && (set _iso64=1&set "ISOfile1=%_iso2%")
 echo "%_iso2%"| findstr /I /C:"x86" 1>nul && (set _iso86=1&set "ISOfile2=%_iso2%")
+if %_iso86% equ 0 echo "%_iso2%"| findstr /I /C:"x32" 1>nul && (set _iso86=1&set "ISOfile2=%_iso2%")
 
 setlocal EnableDelayedExpansion
 if %_iso64% equ 1 if %_iso86% equ 1 goto :DUALMENU
 if %_iso64% equ 0 if %_iso86% equ 0 (set "MESSAGE=could not detect architecture tags"&goto :E_MSG)
-if %_iso64% equ 1 if %_iso86% equ 0 (set "MESSAGE=both ISO files are x64"&goto :E_MSG)
-if %_iso64% equ 0 if %_iso86% equ 1 (set "MESSAGE=both ISO files are x86"&goto :E_MSG)
+if %_iso64% equ 1 if %_iso86% equ 0 (set "MESSAGE=could not detect x86 ISO file"&goto :E_MSG)
+if %_iso64% equ 0 if %_iso86% equ 1 (set "MESSAGE=could not detect x64 ISO file"&goto :E_MSG)
 
 :DUALMENU
 color 1F
@@ -171,8 +225,8 @@ echo %line%
 echo. Options:
 echo.
 echo. 0 - Exit
-echo. 1 - Create ISO with 1 combined install.wim/.esd
-echo. 2 - Create ISO with 2 separate install.wim/.esd ^(Win 11/10^)
+echo. 1 - Create ISO with 1 combined install .wim/.esd
+echo. 2 - Create ISO with 2 separate install .wim/.esd/.swm ^(Win 11/10^)
 echo %line%
 echo.
 choice /c 120 /n /m "Choose a menu option: "
@@ -215,11 +269,12 @@ set WIMFILE%%#=0
 )
 call :dInfo 1
 call :dInfo 2
+if %wimswm% equ 1 (set combine=0&set custom=0)
 :: if /i "%ISOver1%" neq "%ISOver2%" (set "MESSAGE=ISO distributions have different Windows versions."&goto :E_MSG)
 if /i "%ISOarch1%" equ "%ISOarch2%" (set "MESSAGE=ISO distributions have the same architecture."&goto :E_MSG)
 if /i "%ISOlang1%" neq "%ISOlang2%" (set "MESSAGE=ISO distributions have different languages."&goto :E_MSG)
 if /i "%WIMFILE1%" neq "%WIMFILE2%" (set "MESSAGE=ISO distributions have different install file format."&goto :E_MSG)
-if %combine% equ 0 if %winx% equ 0  (set "MESSAGE=ISO with 2 separate install files require Windows 10 setup files"&goto :E_MSG)
+ if %combine% equ 0 if %winx% equ 0 (set "MESSAGE=ISO with 2 separate install files require Windows 11/10 setup files"&goto :E_MSG)
 set WIMFILE=%WIMFILE1%
 echo.
 echo %line%
@@ -229,7 +284,7 @@ call :dPREPARE 1
 call :dPREPARE 2
 if exist ISOFOLDER\ rmdir /s /q ISOFOLDER\
 mkdir ISOFOLDER
-if %Preserve%==1 (
+if %Preserve% equ 1 (
 echo.
 echo %line%
 echo Copying distributions folders . . .
@@ -287,7 +342,7 @@ echo.
 %_Nul3% copy /y ISOFOLDER\x86\boot\bootsect.exe ISOFOLDER\boot\
 set "BCDBIOS=ISOFOLDER\boot\bcd"
 set "BCDUEFI=ISOFOLDER\efi\microsoft\boot\bcd"
-if %custom%==0 (
+if %custom% equ 0 (
 %_Nul3% copy /y ISOFOLDER\x86\setup.exe ISOFOLDER\
 set "entry64=[boot]\x64\sources\boot.wim,%ramdiskoptions%"
 set "entry86=[boot]\x86\sources\boot.wim,%ramdiskoptions%"
@@ -347,7 +402,7 @@ bcdedit /store %BCDUEFI% /enum all | findstr /i {memdiag} 1>nul || (
   %_Nul3% bcdedit /store %BCDUEFI% /toolsdisplayorder {memdiag} /addlast
   )
 )
-if %custom%==0 goto :ISOCREATE
+if %custom% equ 0 goto :ISOCREATE
 echo.
 echo %line%
 echo Preparing Custom AIO settings . . .
@@ -430,7 +485,8 @@ exit /b
 if not exist "!ISOdir%1!\sources\boot.wim" (set "MESSAGE=ISO %1 is missing boot.wim"&goto :E_MSG)
 dir /b "!ISOdir%1!\sources\install.wim" %_Nul3% && (set WIMFILE%1=install.wim)
 dir /b "!ISOdir%1!\sources\install.esd" %_Nul3% && (set WIMFILE%1=install.esd)
-if /i !WIMFILE%1! equ 0 (set "MESSAGE=ISO %1 is missing install.wim/install.esd"&goto :E_MSG)
+dir /b "!ISOdir%1!\sources\install.swm" %_Nul3% && (set WIMFILE%1=install.swm&set wimswm=1)
+if /i !WIMFILE%1! equ 0 (set "MESSAGE=ISO %1 is missing install .wim/.esd/.swm"&goto :E_MSG)
 wimlib-imagex.exe info "!ISOdir%1!\sources\!WIMFILE%1!">bin\infoall.txt 2>&1
 find /i "CoreCountrySpecific" bin\infoall.txt 1>nul && (set ISOeditionc%1=1) || (set ISOeditionc%1=0)
 wimlib-imagex.exe info "!ISOdir%1!\sources\!WIMFILE%1!" 1 >bin\info.txt 2>&1
@@ -528,7 +584,7 @@ if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
 if %uupver:~0,5%==19041 set uupver=19044%uupver:~5%
 )
 if %revmaj%==19045 (
-if /i "%branch:~0,2%"=="vb" set branch=22h1%branch:~2%
+if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
 if %uupver:~0,5%==19041 set uupver=19045%uupver:~5%
 )
 set _label2=

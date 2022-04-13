@@ -185,6 +185,9 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 6.8:  
+updated Monthly Rollup detection for boot.wim/winre.wim
+
 * 6.7:  
 new hyper-v integration services package KB5001088
 

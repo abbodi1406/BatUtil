@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.7
+@set uiv=v6.8
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -805,11 +805,13 @@ if /i %kb%==KB4502496 (if %winbuild% lss 9600 set /a _sum-=1&set /a _msu-=1&goto
 if exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" if %winpe% equ 0 (
 mkdir "!cab_dir!\check"
 if %msu% equ 1 (expand.exe -f:*Windows*.cab "%package%" "!cab_dir!\check" %_Null%) else (copy /y "%package%" "!cab_dir!\check\" %_Nul1%)
-expand.exe -f:update.mum "!cab_dir!\check\*.cab" . %_Null%
-findstr /i /m "Package_for_RollupFix" "update.mum" %_Nul3% || (del /f /q "update.mum"&rd /s /q "!cab_dir!\check\"&set /a _sum-=1&if %msu% equ 1 (set /a _msu-=1&goto :eof) else (set /a _cab-=1&goto :eof))
-del /f /q "update.mum"
+expand.exe -f:%sss%_microsoft-windows-rollup-version*.manifest "!cab_dir!\check\*.cab" "!cab_dir!\check" %_Null%
+if not exist "!cab_dir!\check\*.manifest" (rd /s /q "!cab_dir!\check\"&set /a _sum-=1&if %msu% equ 1 (set /a _msu-=1&goto :eof) else (set /a _cab-=1&goto :eof))
 rd /s /q "!cab_dir!\check\"
 )
+:: expand.exe -f:update.mum "!cab_dir!\check\*.cab" . %_Null%
+:: findstr /i /m "Package_for_RollupFix" "update.mum" %_Nul3% || (del /f /q "update.mum"&rd /s /q "!cab_dir!\check\"&set /a _sum-=1&if %msu% equ 1 (set /a _msu-=1&goto :eof) else (set /a _cab-=1&goto :eof))
+:: del /f /q "update.mum"
 set inver=0
 if /i %kb%==%hv_integ_kb% if exist "!mountdir!\Windows\servicing\packages\*Hyper-V-Integration-Services*.mum" (
 for /f "tokens=6,7 delims=~." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\servicing\packages\*Hyper-V-Integration-Services*.mum"') do set inver=%%i%%j
