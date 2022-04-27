@@ -595,17 +595,6 @@ if %_actEP% equ 0 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\microso
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
 if exist "%INSTALLMOUNTDIR%\Windows\system32\UpdateAgent.dll" if not exist "%SystemRoot%\temp\UpdateAgent.dll" copy /y "%INSTALLMOUNTDIR%\Windows\system32\UpdateAgent.dll" %SystemRoot%\temp\ %_Nul3%
 if exist "%INSTALLMOUNTDIR%\Windows\system32\Facilitator.dll" if not exist "%SystemRoot%\temp\Facilitator.dll" copy /y "%INSTALLMOUNTDIR%\Windows\system32\Facilitator.dll" %SystemRoot%\temp\ %_Nul3%
-if %foundupdates%==1 if not defined efifile (
-if /i %BOOTARCH%==x86 (set efifile=bootia32.efi) else (set efifile=bootx64.efi)
-for %%i in (efisys.bin,efisys_noprompt.bin) do if exist "%INSTALLMOUNTDIR%\Windows\Boot\DVD\EFI\en-US\%%i" (copy /y "%INSTALLMOUNTDIR%\Windows\Boot\DVD\EFI\en-US\%%i" "!DVDDIR!\efi\microsoft\boot\" %_Nul3%)
-copy /y "%INSTALLMOUNTDIR%\Windows\Boot\PCAT\bootmgr" "!DVDDIR!\" %_Nul1%
-copy /y "%INSTALLMOUNTDIR%\Windows\Boot\PCAT\memtest.exe" "!DVDDIR!\boot\" %_Nul1%
-copy /y "%INSTALLMOUNTDIR%\Windows\Boot\EFI\memtest.efi" "!DVDDIR!\efi\microsoft\boot\" %_Nul1%
-copy /y "%INSTALLMOUNTDIR%\Windows\Boot\EFI\bootmgfw.efi" "!DVDDIR!\efi\boot\!efifile!" %_Nul1%
-copy /y "%INSTALLMOUNTDIR%\Windows\Boot\EFI\bootmgr.efi" "!DVDDIR!\" %_Nul1%
-if exist "%INSTALLMOUNTDIR%\Windows\Boot\EFI\winsipolicy.p7b" if exist "!DVDDIR!\efi\microsoft\boot\winsipolicy.p7b" copy /y "%INSTALLMOUNTDIR%\Windows\Boot\EFI\winsipolicy.p7b" "!DVDDIR!\efi\microsoft\boot\winsipolicy.p7b" %_Nul3%
-if exist "%INSTALLMOUNTDIR%\Windows\Boot\EFI\CIPolicies\" if exist "!DVDDIR!\efi\microsoft\boot\cipolicies\" xcopy /CEDRY "%INSTALLMOUNTDIR%\Windows\Boot\EFI\CIPolicies\*" "!DVDDIR!\efi\microsoft\boot\cipolicies\" %_Nul3%
-)
 if %NET35%==1 if not exist "%INSTALLMOUNTDIR%\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" (
 echo.
 echo ============================================================

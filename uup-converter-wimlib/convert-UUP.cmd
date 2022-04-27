@@ -1444,7 +1444,7 @@ if %EXPRESS% equ 1 (
 mkdir "!_work!\CanonicalUUP" %_Nul3%
 move /y "!_work!\temp\*.ESD" "!_work!\CanonicalUUP\" %_Nul3%
 for /L %%# in (1,1,%uups_esd_num%) do copy /y "!_UUP!\!uups_esd%%#!" "!_work!\CanonicalUUP\" %_Nul3%
-for /f %%# in ('dir /b /a:-d "!_UUP!\*Package*.ESD" %_Nul3% ') do if not exist "!_work!\CanonicalUUP\%%#" (copy /y "!_UUP!\%%#" "!_work!\CanonicalUUP\" %_Nul3%)
+for /f %%# in ('dir /b /a:-d "!_UUP!\*Package*.ESD" %_Nul6%') do if not exist "!_work!\CanonicalUUP\%%#" (copy /y "!_UUP!\%%#" "!_work!\CanonicalUUP\" %_Nul3%)
 exit /b
 )
 mkdir "!_UUP!\Original" %_Nul3%
