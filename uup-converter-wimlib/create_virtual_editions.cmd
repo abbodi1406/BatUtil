@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v79
+@set uivr=v80
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -28,6 +28,10 @@ set Preserve=0
 
 :: Change to 1 to convert install.wim to install.esd
 set wim2esd=0
+
+:: Change to 1 to split install.wim into multiple install.swm
+:: note: if both options are 1, install.esd takes precedence
+set wim2swm=0
 
 :: Change to 1 for not creating ISO file, result distribution folder will be kept
 set SkipISO=0
@@ -151,6 +155,7 @@ DeleteSource
 Preserve
 SkipISO
 wim2esd
+wim2swm
 ) do (
 call :ReadINI %%#
 )
@@ -163,10 +168,12 @@ goto :eof
 
 :proceed
 if defined _args (
-if /i "%_type%"=="autowim" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0
-if /i "%_type%"=="autoesd" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=1
-if /i "%_type%"=="manuwim" set wim2esd=0
-if /i "%_type%"=="manuesd" set wim2esd=1
+if /i "%_type%"=="autoswm" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0&set wim2swm=1
+if /i "%_type%"=="autowim" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0&set wim2swm=0
+if /i "%_type%"=="autoesd" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=1&set wim2swm=0
+if /i "%_type%"=="manuswm" set wim2esd=0&set wim2swm=1
+if /i "%_type%"=="manuwim" set wim2esd=0&set wim2swm=0
+if /i "%_type%"=="manuesd" set wim2esd=1&set wim2swm=0
 )
 dir /b /ad . %_Nul3% || goto :checkdvd
 for /f "tokens=* delims=" %%# in ('dir /b /ad .') do (
@@ -250,6 +257,7 @@ DeleteSource
 Preserve
 SkipISO
 wim2esd
+wim2swm
 ) do (
 if !%%#! equ 1 set _configured=1
 )
@@ -432,6 +440,7 @@ echo.
   Preserve
   SkipISO
   wim2esd
+  wim2swm
   ) do (
   if !%%#! equ 1 echo %%#
   )
@@ -555,7 +564,13 @@ echo Rebuilding %WimFile% . . .
 echo %line%
 echo.
 wimlib-imagex.exe optimize ISOFOLDER\sources\%WimFile% %_Supp%
-) else (
+)
+pushd "ISOFOLDER\sources"
+for /f %%# in ('dir /b /a:-d %WimFile%') do set "_size=000000%%~z#"
+popd
+if "%_size%" lss "0000004194304000" set wim2swm=0
+if %wim2esd% equ 0 if %wim2swm% equ 0 goto :finVIR
+if %wim2esd% equ 0 if %wim2swm% equ 1 goto :swmVIR
 echo %line%
 echo Converting install.wim to install.esd . . .
 echo %line%
@@ -564,7 +579,18 @@ wimlib-imagex.exe export ISOFOLDER\sources\install.wim all ISOFOLDER\sources\ins
 call set ERRORTEMP=!ERRORLEVEL!
 if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during export. Discarding install.esd&del /f /q ISOFOLDER\sources\install.esd %_Nul3%)
 if exist ISOFOLDER\sources\install.esd del /f /q ISOFOLDER\sources\install.wim
-)
+goto :finVIR
+:swmVIR
+echo.
+echo %line%
+echo Splitting install.wim into multiple install*.swm . . .
+echo %line%
+echo.
+wimlib-imagex.exe split ISOFOLDER\sources\install.wim ISOFOLDER\sources\install.swm 3500 %_Supp%
+call set ERRORTEMP=!ERRORLEVEL!
+if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during split. Discarding install.swm&del /f /q ISOFOLDER\sources\install*.swm %_Nul3%)
+if exist ISOFOLDER\sources\install*.swm del /f /q ISOFOLDER\sources\install.wim
+:finVIR
 if %SkipISO% neq 0 (
   ren ISOFOLDER %DVDISO%
   echo.
@@ -590,8 +616,8 @@ echo.
 goto :QUIT
 
 :dInfo
-if exist "%ISOdir%\sources\install.wim" (set WimFile=install.wim) else (set WimFile=install.esd&set wim2esd=0)
-imagex /info "%ISOdir%\sources\%WimFile%" | findstr /i /c:"LZMS" %_Nul1% && (set wim2esd=0)
+if exist "%ISOdir%\sources\install.wim" (set WimFile=install.wim) else (set WimFile=install.esd&set wim2esd=0&set wim2swm=0)
+imagex /info "%ISOdir%\sources\%WimFile%" | findstr /i /c:"LZMS" %_Nul1% && (set wim2esd=0&set wim2swm=0)
 wimlib-imagex.exe info "%ISOdir%\sources\%WimFile%" 1 %_Nul3%
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 (

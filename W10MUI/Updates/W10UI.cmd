@@ -729,8 +729,8 @@ expand.exe -f:toc.xml "!repo!\!package!" "checker" %_Null%
 if exist "checker\toc.xml" (
 echo %count%/%_sum%: %package% [Combined]
 expand.exe -f:* "!repo!\!package!" "%dest%" %_Null%
-if exist "%dest%\Windows1*-KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "%dest%\Windows1*-KB*.cab"') do (set "compkg=%%#"&call :inrenupd)
 if exist "%dest%\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "%dest%\SSU-*%arch%*.cab"') do (set "compkg=%%#"&call :inrenssu)
+if exist "%dest%\Windows1*-KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "%dest%\Windows1*-KB*.cab"') do (set "compkg=%%#"&call :inrenupd)
 rmdir /s /q "%dest%\" %_Nul3%
 rmdir /s /q "checker\" %_Nul3%
 goto :eof
@@ -840,7 +840,7 @@ if not exist "%dest%\chck\update.mum" goto :eof
 for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "%dest%\chck\update.mum"') do set kbupd=%%~#
 if "%kbupd%"=="" goto :eof
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
-if %_build% geq 22563 set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
+dir /b /on "%dest%\chck\*Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
 if exist "!repo!\%_ufn%" goto :eof
 if %_embd% equ 0 (
 set "uuppkg=!uuppkg! %_ufn%"
@@ -854,7 +854,7 @@ goto :eof
 :inrenupd
 for /f "tokens=2 delims=-" %%V in ('echo %compkg%') do set kbupd=%%V
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
-if %_build% geq 22563 set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
+echo %compkg%| findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
 if exist "!repo!\%_ufn%" goto :eof
 call set /a _sum+=1
 if %_embd% equ 0 (
@@ -874,7 +874,7 @@ if not exist "%dest%\update.mum" goto :eof
 for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "%dest%\update.mum"') do set kbupd=%%~#
 if "%kbupd%"=="" goto :eof
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
-if %_build% geq 22563 set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
+dir /b /on "%dest%\Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
 if exist "!repo!\%_ufn%" goto :eof
 call set /a _sum+=1
 if %_embd% equ 0 (
@@ -1568,7 +1568,7 @@ goto :eof
 
 :enablenet35
 if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
-if exist "!mumtarget!\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" goto :eof
+if exist "!mumtarget!\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" (echo.&echo .NET 3.5 feature: already enabled&goto :eof)
 if not defined net35source (
 for %%# in (D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do if not defined net35source (if exist "%%#:\sources\sxs\*netfx3*.cab" set "net35source=%%#:\sources\sxs")
 if %dvd%==1 if exist "!target!\sources\sxs\*netfx3*.cab" set "net35source=!target!\sources\sxs"
@@ -1577,8 +1577,8 @@ if %wim%==1 if not defined net35source for %%# in ("!target!") do (
   if exist "!_wimpath!\sxs\*netfx3*.cab" set "net35source=!_wimpath!\sxs"
   )
 )
-if not defined net35source goto :eof
-if not exist "!net35source!\*.cab" goto :eof
+if not defined net35source (echo.&echo .NET 3.5 feature: source folder not defined or detected&goto :eof)
+if not exist "!net35source!\*.cab" (echo.&echo .NET 3.5 feature: source cab file not found or detected&goto :eof)
 echo.
 echo ============================================================
 echo Adding .NET Framework 3.5 feature...

@@ -1,0 +1,67 @@
+### UWP Store applications, for integration into builds 22563 and later
+
+### Choose the wanted apps from below by removing # prefix
+
+### Common Apps / Client editions all
+Microsoft.WindowsStore_8wekyb3d8bbwe
+Microsoft.StorePurchaseApp_8wekyb3d8bbwe
+Microsoft.SecHealthUI_8wekyb3d8bbwe
+Microsoft.VCLibs.140.00_8wekyb3d8bbwe
+# Microsoft.Windows.Photos_8wekyb3d8bbwe
+# Microsoft.WindowsCamera_8wekyb3d8bbwe
+# Microsoft.WindowsNotepad_8wekyb3d8bbwe
+# Microsoft.Paint_8wekyb3d8bbwe
+# Microsoft.WindowsTerminal_8wekyb3d8bbwe
+# Microsoft.DesktopAppInstaller_8wekyb3d8bbwe
+# MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy
+# Microsoft.WindowsAlarms_8wekyb3d8bbwe
+# Microsoft.WindowsCalculator_8wekyb3d8bbwe
+# Microsoft.WindowsMaps_8wekyb3d8bbwe
+# Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe
+# Microsoft.ScreenSketch_8wekyb3d8bbwe
+# microsoft.windowscommunicationsapps_8wekyb3d8bbwe
+# Microsoft.People_8wekyb3d8bbwe
+# Microsoft.BingNews_8wekyb3d8bbwe
+# Microsoft.BingWeather_8wekyb3d8bbwe
+# Microsoft.MicrosoftSolitaireCollection_8wekyb3d8bbwe
+# Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe
+# Microsoft.WindowsFeedbackHub_8wekyb3d8bbwe
+# Microsoft.GetHelp_8wekyb3d8bbwe
+# Microsoft.Getstarted_8wekyb3d8bbwe
+# Microsoft.Todos_8wekyb3d8bbwe
+# Microsoft.XboxSpeechToTextOverlay_8wekyb3d8bbwe
+# Microsoft.XboxGameOverlay_8wekyb3d8bbwe
+# Microsoft.XboxIdentityProvider_8wekyb3d8bbwe
+# Microsoft.PowerAutomateDesktop_8wekyb3d8bbwe
+# Microsoft.549981C3F5F10_8wekyb3d8bbwe
+# MicrosoftCorporationII.QuickAssist_8wekyb3d8bbwe
+# MicrosoftCorporationII.MicrosoftFamily_8wekyb3d8bbwe
+
+### Media Apps / Client non-N editions
+# Microsoft.ZuneMusic_8wekyb3d8bbwe
+# Microsoft.ZuneVideo_8wekyb3d8bbwe
+# Microsoft.YourPhone_8wekyb3d8bbwe
+# Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe
+# Microsoft.GamingApp_8wekyb3d8bbwe
+# Microsoft.XboxGamingOverlay_8wekyb3d8bbwe
+# Microsoft.Xbox.TCUI_8wekyb3d8bbwe
+# Clipchamp.Clipchamp_yxz26nhyzhsrt
+
+### Media Codecs / Client non-N editions, Team edition
+# Microsoft.WebMediaExtensions_8wekyb3d8bbwe
+# Microsoft.RawImageExtension_8wekyb3d8bbwe
+# Microsoft.HEIFImageExtension_8wekyb3d8bbwe
+# Microsoft.HEVCVideoExtension_8wekyb3d8bbwe
+# Microsoft.VP9VideoExtensions_8wekyb3d8bbwe
+# Microsoft.WebpImageExtension_8wekyb3d8bbwe
+
+### Surface Hub Apps / Team edition
+# Microsoft.Whiteboard_8wekyb3d8bbwe
+# microsoft.microsoftskydrive_8wekyb3d8bbwe
+# Microsoft.MicrosoftTeamsforSurfaceHub_8wekyb3d8bbwe
+# MicrosoftCorporationII.MailforSurfaceHub_8wekyb3d8bbwe
+# Microsoft.MicrosoftPowerBIForWindows_8wekyb3d8bbwe
+# Microsoft.SkypeApp_kzf8qxf38zg5c
+# Microsoft.Office.Excel_8wekyb3d8bbwe
+# Microsoft.Office.PowerPoint_8wekyb3d8bbwe
+# Microsoft.Office.Word_8wekyb3d8bbwe

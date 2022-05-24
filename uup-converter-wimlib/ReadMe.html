@@ -100,9 +100,9 @@
             <h2><a name="Manual"></a>Configuration Options</h2>
                 Control conversion behavior, output and automation.<br /><br />
                 You have three ways to change the state of these options, where 0 means the option is OFF (no), and 1 means the option is ON (yes):<br />
-                - edit <b>ConvertConfig.ini</b> under [convert-UUP] section<br />
+                - edit <b>ConvertConfig.ini</b> under [convert-UUP] and [Store_Apps] sections<br />
                 - delete <b>ConvertConfig.ini</b> and edit <b>convert-UUP.cmd</b> script directly<br />
-                - use menu choice 6 (AutoStart and AutoExit are excluded from this)<br /><br />
+                - use menu choice 6 (this does not include all options)<br /><br />
             <ul style="margin-top:0in;margin-bottom:0in">
                 <li>
                     <b>AutoStart</b><br /><br />
@@ -137,6 +137,13 @@
                 </li>
                 <br />
                 <li>
+                    <b>wim2swm</b><br /><br />
+                    Split install.wim into multiple install.swm files.<br /><br />
+                    This option will be auto disabled if install.wim size is below 4 GB.<br /><br />
+                    If both wim2esd/wim2swm are ON, install.esd takes precedence over split install.swm.
+                </li>
+                <br />
+                <li>
                     <b>SkipISO</b><br /><br />
                     If you are not interested to create ISO file currently, or want to create Multi-Architecture ISO (x86/x64) later with multi_arch_iso.cmd, or intend to manually use create_virtual_editions.cmd
                 </li>
@@ -153,13 +160,13 @@
                 </li>
                 <br />
                 <li>
-                    <b>ForceDism</b><br /><br />
-                    Use the official method with dism.exe for creating boot.wim, which require Windows 11/10 Host OS or ADK.
+                    <b>UpdtBootFiles</b><br /><br />
+                    Update ISO boot files bootmgr/bootmgr.efi/efisys.bin with new files from Cumulative Update.
                 </li>
                 <br />
                 <li>
-                    <b>UpdtBootFiles</b><br /><br />
-                    Update ISO boot files bootmgr/bootmgr.efi/efisys.bin with new files from Cumulative Update.
+                    <b>ForceDism</b><br /><br />
+                    Use the official method with dism.exe for creating boot.wim, which require Windows 11/10 Host OS or ADK.
                 </li>
                 <br />
                 <li>
@@ -193,7 +200,14 @@
                     Set to <strong>0</strong> to add all referenced Apps</b><br />
                     Set to <strong>1</strong> to add Store, Security Health only</b><br />
                     Set to <strong>2</strong> to add level 1 apps + Photos, Camera, Notepad, Paint<br />
-                    Set to <strong>3</strong> to add level 2 apps + Terminal, App Installer, Widgets
+                    Set to <strong>3</strong> to add level 2 apps + Terminal, App Installer, Widgets<br />
+                    Set to <strong>4</strong> to add level 3 apps + Media apps (Music, Video, Codecs, Phone Link) / not for N editions
+                </li>
+                <br />
+                <li>
+                    <b>CustomList</b><br /><br />
+                    Enable using CustomAppsList.txt to pick and choose added Apps.<br /><br />
+                    If enabled, this option takes precedence over AppsLevel option.
                 </li>
             </ul>
             <hr />

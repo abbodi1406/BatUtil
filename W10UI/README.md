@@ -25,11 +25,16 @@ valid locations: mounted iso, inserted dvd/usb, sxs folder for distribution targ
 
 * Detect Windows ADK [Deployment Tools](https://docs.microsoft.com/windows-hardware/get-started/adk-install) for offline integration
 
-## Updated ISO Requirement:
+* Perform pending cleanup operation for online OS after restarting.  
+you must run W10UI.cmd at least once after restart to perform Cleanup or Reset OS image, before installing any new updates
+
+## Updated ISO recommendation:
 
 * Creating updated iso file for a distribution target require either of:  
 - install Windows ADK
 - place oscdimg.exe or cdimage.exe in the same folder next to W10UI.cmd
+
+otherwise, embedded Powershell/.NET funcion `DIR2ISO` will be used to create the iso
 
 ## Limitations:
 
@@ -106,7 +111,7 @@ directory for temporary extracted files, default is on the same drive as the scr
 
 ## Configuration options (for advanced users):
 
-- Edit W10UI.ini to change the default value of main options:  
+- Edit W10UI.ini to change the default value of the main options:  
 > Target  
 Repo  
 DismRoot  
@@ -125,8 +130,8 @@ specify custom "folder" path which contain microsoft-windows-netfx3-ondemand-pac
 * LCUwinre  
 force updating winre.wim with Cumulative Update even if SafeOS update detected
 
-* SkipBootFiles  
-do not update ISO boot files bootmgr/bootmgr.efi/efisys.bin
+* UpdtBootFiles  
+update ISO boot files bootmgr/bootmgr.efi/efisys.bin from Cumulative Update
 
 * SkipEdge  
 1 = do not install EdgeChromium with Enablement Package or Cumulative Update  
@@ -151,7 +156,8 @@ folder path for iso file, leave it blank to create in the script current directo
 keep or delete DVD distribution folder after creating updated ISO
 
 * AutoStart  
-start the process automatically once you execute the script
+start the process automatically once you execute the script  
+the option will also auto exit at the end without prompt
 
 - Note: Do not change the structure of W10UI.ini, just set your options after the equal sign `=`
 

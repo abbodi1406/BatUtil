@@ -1,7 +1,10 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v79
+@set uivr=v80
 @echo off
+:: Change to 1 to enable debug mode
+set _Debug=0
+
 :: ### Auto processing option ###
 :: 1 - create ISO with install.wim
 :: 2 - create ISO with install.esd
@@ -29,6 +32,10 @@ set StartVirtual=0
 :: Change to 1 to convert install.wim to install.esd
 set wim2esd=0
 
+:: Change to 1 to split install.wim into multiple install.swm
+:: note: if both options are 1, install.esd takes precedence
+set wim2swm=0
+
 :: Change to 1 for not creating ISO file, result distribution folder will be kept
 set SkipISO=0
 
@@ -54,18 +61,21 @@ set SkipEdge=0
 :: Change to 1 to exit the process on completion without prompt
 set AutoExit=0
 
-:: Change to 1 for not integrating store apps into install.wim (for builds 22563 and later)
+:: ### Store Apps for builds 22563 and later ###
+
+:: Change to 1 for not integrating store apps into install.wim
 set SkipApps=0
 
-:: ### Control added Apps for Client editions (except Team) ###
+:: # Control added Apps for Client editions (except Team)
 :: 0 / all referenced Apps
 :: 1 / only Store, Security Health
 :: 2 / level 1 + Photos, Camera, Notepad, Paint
-:: 3 / level 2 + Terminal, App Installer, Widgets
+:: 3 / level 2 + Terminal, App Installer, Widgets, Mail
+:: 4 / level 3 + Media apps (Music, Video, Codecs, Phone Link) / not for N editions
 set AppsLevel=0
 
-:: Change to 1 to enable debug mode
-set _Debug=0
+:: Enable using CustomAppsList.txt to pick and choose added Apps (takes precedence over AppsLevel)
+set CustomList=0
 
 :: script:	     abbodi1406, @rgadguard
 :: wimlib:	     synchronicity
@@ -239,10 +249,12 @@ set "pub=_8wekyb3d8bbwe"
 set "_appBase=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,microsoft.windowscommunicationsapps%pub%,Microsoft.WindowsCalculator%pub%,Microsoft.Windows.Photos%pub%,Microsoft.WindowsMaps%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsFeedbackHub%pub%,Microsoft.Getstarted%pub%,Microsoft.WindowsAlarms%pub%"
 set "_appClnt=Microsoft.WindowsNotepad%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.Paint%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,Microsoft.People%pub%,Microsoft.ScreenSketch%pub%,Microsoft.MicrosoftStickyNotes%pub%,Microsoft.XboxIdentityProvider%pub%,Microsoft.XboxSpeechToTextOverlay%pub%,Microsoft.XboxGameOverlay%pub%"
 set "_appCodec=Microsoft.WebMediaExtensions%pub%,Microsoft.RawImageExtension%pub%,Microsoft.HEIFImageExtension%pub%,Microsoft.HEVCVideoExtension%pub%,Microsoft.VP9VideoExtensions%pub%,Microsoft.WebpImageExtension%pub%"
-set "_appMedia=Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.WindowsSoundRecorder%pub%,Microsoft.GamingApp%pub%,Microsoft.XboxGamingOverlay%pub%,Microsoft.Xbox.TCUI%pub%,Microsoft.YourPhone%pub%",Clipchamp.Clipchamp_yxz26nhyzhsrt
+set "_appMedia=Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.WindowsSoundRecorder%pub%,Microsoft.GamingApp%pub%,Microsoft.XboxGamingOverlay%pub%,Microsoft.Xbox.TCUI%pub%,Microsoft.YourPhone%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt"
+set "_appPPIP=Microsoft.MicrosoftPowerBIForWindows%pub%,microsoft.microsoftskydrive%pub%,Microsoft.MicrosoftTeamsforSurfaceHub%pub%,MicrosoftCorporationII.MailforSurfaceHub%pub%,Microsoft.Whiteboard%pub%,Microsoft.SkypeApp_kzf8qxf38zg5c"
 set "_appMin1=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%"
 set "_appMin2=Microsoft.Windows.Photos%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsNotepad%pub%,Microsoft.Paint%pub%"
-set "_appMin3=Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy"
+set "_appMin3=Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,microsoft.windowscommunicationsapps%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy"
+set "_appMin4=%_appCodec%,Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.YourPhone%pub%"
 set ksub=SOFTWIM
 set ERRORTEMP=
 set PREPARED=0
@@ -326,12 +338,14 @@ SkipWinRE
 LCUwinre
 UpdtBootFiles
 wim2esd
+wim2swm
 ForceDism
 RefESD
 SkipEdge
 AutoExit
 SkipApps
 AppsLevel
+CustomList
 ) do (
 call :ReadINI %%#
 )
@@ -456,7 +470,7 @@ if %AddUpdates% neq 0 (
   )
 )
 if %StartVirtual% neq 0 (echo. 4 - StartVirtual: Yes) else (echo. 4 - StartVirtual: No)
-if %wim2esd% neq 0 (echo. 5 - WIM2ESD     : Yes) else (echo. 5 - WIM2ESD     : No)
+if %wim2esd% neq 0 (echo. 5 - WIM2ESD     : Yes) else (if %wim2swm% neq 0 (echo. 5 - WIM2SWM     : Yes) else (echo. 5 - WIM2ESD/SWM : No))
 if %SkipISO% neq 0 (echo. 6 - SkipISO     : Yes) else (echo. 6 - SkipISO     : No)
 if %SkipWinRE% neq 0 (echo. 7 - SkipWinRE   : Yes) else (echo. 7 - SkipWinRE   : No)
 if %W10UI% neq 0 (
@@ -483,7 +497,7 @@ if %userinp%==9 (if %RefESD% equ 0 (set RefESD=1) else (set RefESD=0))&goto :CON
 if %userinp%==8 (if %W10UI% neq 0 (if %ForceDism% equ 0 (set ForceDism=1) else (set ForceDism=0)))&goto :CONFMENU
 if %userinp%==7 (if %SkipWinRE% equ 0 (set SkipWinRE=1) else (set SkipWinRE=0))&goto :CONFMENU
 if %userinp%==6 (if %SkipISO% equ 0 (set SkipISO=1) else (set SkipISO=0))&goto :CONFMENU
-if %userinp%==5 (if %wim2esd% equ 0 (set wim2esd=1) else (set wim2esd=0))&goto :CONFMENU
+if %userinp%==5 (if %wim2esd% equ 1 (set wim2esd=0) else (set wim2esd=1&if %wim2swm% equ 0 (set wim2swm=1) else (set wim2swm=0)))&goto :CONFMENU
 if %userinp%==4 (if %StartVirtual% equ 0 (set StartVirtual=1) else (set StartVirtual=0))&goto :CONFMENU
 if %userinp%==3 if %AddUpdates% neq 0 (if %NetFx3% equ 0 (set NetFx3=1) else (set NetFx3=0))&goto :CONFMENU
 if %userinp%==2 if %AddUpdates% equ 1 (if %Cleanup% equ 1 (set Cleanup=0) else (set Cleanup=1&if %ResetBase% equ 0 (set ResetBase=1) else (set ResetBase=0)))&goto :CONFMENU
@@ -531,12 +545,14 @@ SkipWinRE
 LCUwinre
 UpdtBootFiles
 wim2esd
+wim2swm
 ForceDism
 RefESD
 SkipEdge
 AutoExit
 SkipApps
 AppsLevel
+CustomList
 ) do (
 if !%%#! neq 0 set _configured=1
 )
@@ -560,6 +576,7 @@ echo.
   LCUwinre
   UpdtBootFiles
   wim2esd
+  wim2swm
   ForceDism
   RefESD
   AutoExit
@@ -568,9 +585,12 @@ echo.
   )
 )
 if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge %SkipEdge%
+set _appsCustom=0
+if %CustomList% neq 0 if exist "CustomAppsList.txt" set _appsCustom=1
 if %_build% geq 22563 if %W10UI% neq 0 (
 if %SkipApps% neq 0 echo SkipApps
 if %AppsLevel% neq 0 echo AppsLevel %AppsLevel%
+if %_appsCustom% equ 1 echo CustomAppsList.txt
 )
 if %_runIPA% equ 1 call :appx_sort
 if %_IPA% equ 1 if %SkipApps% equ 1 if exist "!_UUP!\*.*xbundle" call :appx_sort
@@ -603,7 +623,10 @@ set _file=ISOFOLDER\sources\%WIMFILE%
 set _rtrn=RetISO
 goto :InstallWim
 :RetISO
-if %_Debug% neq 0 if %WIMFILE%==install.esd set SkipWinRE=1
+if %WIMFILE%==install.esd (
+set wim2swm=0
+if %_Debug% neq 0 set SkipWinRE=1
+)
 set _rtrn=BakISO
 goto :WinreWim
 :BakISO
@@ -629,7 +652,12 @@ if %StartVirtual% neq 0 (
   ren ISOFOLDER %DVDISO%
   if %AutoStart% neq 0 (goto :V_Auto) else (goto :V_Manu)
 )
-if %wim2esd% neq 0 (
+pushd "ISOFOLDER\sources"
+for /f %%# in ('dir /b /a:-d %WIMFILE%') do set "_size=000000%%~z#"
+popd
+if "%_size%" lss "0000004194304000" set wim2swm=0
+if %wim2esd% equ 0 if %wim2swm% equ 0 goto :finISO
+if %wim2esd% equ 0 if %wim2swm% equ 1 goto :swmISO
 echo.
 echo %line%
 echo Converting install.wim to install.esd . . .
@@ -639,7 +667,18 @@ wimlib-imagex.exe export ISOFOLDER\sources\install.wim all ISOFOLDER\sources\ins
 call set ERRORTEMP=!ERRORLEVEL!
 if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during export. Discarding install.esd&del /f /q ISOFOLDER\sources\install.esd %_Nul3%)
 if exist ISOFOLDER\sources\install.esd del /f /q ISOFOLDER\sources\install.wim
-)
+goto :finISO
+:swmISO
+echo.
+echo %line%
+echo Splitting install.wim into multiple install*.swm . . .
+echo %line%
+echo.
+wimlib-imagex.exe split ISOFOLDER\sources\install.wim ISOFOLDER\sources\install.swm 3500 %_Supp%
+call set ERRORTEMP=!ERRORLEVEL!
+if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during split. Discarding install.swm&del /f /q ISOFOLDER\sources\install*.swm %_Nul3%)
+if exist ISOFOLDER\sources\install*.swm del /f /q ISOFOLDER\sources\install.wim
+:finISO
 if %SkipISO% neq 0 (
   if %RefESD% neq 0 call :uups_backup
   ren ISOFOLDER %DVDISO%
@@ -706,11 +745,13 @@ ResetBase
 SkipWinRE
 LCUwinre
 wim2esd
+wim2swm
 RefESD
 SkipEdge
 AutoExit
 SkipApps
 AppsLevel
+CustomList
 ) do (
 if !%%#! neq 0 set _configured=1
 )
@@ -730,6 +771,7 @@ echo.
   SkipWinRE
   LCUwinre
   wim2esd
+  wim2swm
   RefESD
   AutoExit
   ) do (
@@ -737,9 +779,12 @@ echo.
   )
 )
 if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge %SkipEdge%
+set _appsCustom=0
+if %CustomList% neq 0 if exist "CustomAppsList.txt" set _appsCustom=1
 if %_build% geq 22563 if %W10UI% neq 0 (
 if %SkipApps% neq 0 echo SkipApps
 if %AppsLevel% neq 0 echo AppsLevel %AppsLevel%
+if %_appsCustom% equ 1 echo CustomAppsList.txt
 )
 if %_runIPA% equ 1 call :appx_sort
 if %_IPA% equ 1 if %SkipApps% equ 1 if exist "!_UUP!\*.*xbundle" call :appx_sort
@@ -750,11 +795,17 @@ set _file=%WIMFILE%
 set _rtrn=RetWIM
 goto :InstallWim
 :RetWIM
-if %_Debug% neq 0 if %WIMFILE%==install.esd set SkipWinRE=1
+if %WIMFILE%==install.esd (
+set wim2swm=0
+if %_Debug% neq 0 set SkipWinRE=1
+)
 set _rtrn=BakWIM
 if %SkipWinRE% equ 0 goto :WinreWim
 :BakWIM
-if %wim2esd% neq 0 (
+for /f %%# in ('dir /b /a:-d %WIMFILE%') do set "_size=000000%%~z#"
+if "%_size%" lss "0000004194304000" set wim2swm=0
+if %wim2esd% equ 0 if %wim2swm% equ 0 goto :finWIM
+if %wim2esd% equ 0 if %wim2swm% equ 1 goto :swmWIM
 echo.
 echo %line%
 echo Converting install.wim to install.esd . . .
@@ -764,7 +815,18 @@ wimlib-imagex.exe export install.wim all install.esd --compress=LZMS --solid %_S
 call set ERRORTEMP=!ERRORLEVEL!
 if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during export. Discarding install.esd&del /f /q install.esd %_Nul3%)
 if exist install.esd del /f /q install.wim
-)
+goto :finWIM
+:swmWIM
+echo.
+echo %line%
+echo Splitting install.wim into multiple install*.swm . . .
+echo %line%
+echo.
+wimlib-imagex.exe split install.wim install.swm 3500 %_Supp%
+call set ERRORTEMP=!ERRORLEVEL!
+if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during split. Discarding install.swm&del /f /q install*.swm %_Nul3%)
+if exist install*.swm del /f /q install.wim
+:finWIM
 if %RefESD% neq 0 call :uups_backup
 echo.
 echo Done.
@@ -1304,10 +1366,10 @@ echo.
 echo LCU %_MSUkbn% msu file already exist, skip operation.
 goto :msu_uups
 )
-set "_MSUkbf=Windows10.0-%_MSUkbn%-%arch%"
-if %_build% geq 22563 set "_MSUkbf=Windows11.0-%_MSUkbn%-%arch%"
 for /f "delims=" %%# in ('dir /b /a:-d "*Windows1*%_MSUkbn%*%arch%*.cab"') do set "_MSUcab=%%#"
 for /f "delims=" %%# in ('dir /b /a:-d "*Windows1*%_MSUkbn%*%arch%*.psf"') do set "_MSUpsf=%%#"
+set "_MSUkbf=Windows10.0-%_MSUkbn%-%arch%"
+echo %_MSUcab%| findstr /i "Windows11\." %_Nul1% && set "_MSUkbf=Windows11.0-%_MSUkbn%-%arch%"
 if exist "SSU-*%arch%*.cab" (
 for /f "tokens=2 delims=-" %%# in ('dir /b /a:-d "SSU-*%arch%*.cab"') do set "_MSUtsu=SSU-%%#-%arch%.cab"
 for /f "delims=" %%# in ('dir /b /a:-d "SSU-*%arch%*.cab"') do set "_MSUssu=%%#"
@@ -1599,8 +1661,8 @@ if exist "!_cabdir!\toc.xml" (
 echo LCU: %packf% [Combined]
 mkdir "!_cabdir!\lcu" %_Nul3%
 expand.exe -f:* "!_UUP!\%packf%" "!_cabdir!\lcu" %_Null%
-if exist "!_cabdir!\lcu\*Windows1*-KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.cab"') do (set "compkg=%%#"&call :inrenupd)
 if exist "!_cabdir!\lcu\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*%arch%*.cab"') do (set "compkg=%%#"&call :inrenssu)
+if exist "!_cabdir!\lcu\*Windows1*-KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.cab"') do (set "compkg=%%#"&call :inrenupd)
 rmdir /s /q "!_cabdir!\lcu\" %_Nul3%
 exit /b
 )
@@ -1928,8 +1990,8 @@ if exist "!dest!\toc.xml" (
 echo %count%/%_cab%: %package% [Combined]
 mkdir "!_cabdir!\lcu" %_Nul3%
 expand.exe -f:* "!_UUP!\%package%" "!_cabdir!\lcu" %_Null%
-if exist "!_cabdir!\lcu\*Windows1*-KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.cab"') do (set "compkg=%%#"&call :inrenupd)
 if exist "!_cabdir!\lcu\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*%arch%*.cab"') do (set "compkg=%%#"&call :inrenssu)
+if exist "!_cabdir!\lcu\*Windows1*-KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.cab"') do (set "compkg=%%#"&call :inrenupd)
 rmdir /s /q "!_cabdir!\lcu\" %_Nul3%
 rmdir /s /q "!dest!\" %_Nul3%
 goto :eof
@@ -2061,7 +2123,7 @@ exit /b
 :inrenupd
 for /f "tokens=2 delims=-" %%V in ('echo %compkg%') do set kbupd=%%V
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
-if %_build% geq 22563 set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
+echo %compkg%| findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
 if exist "!_UUP!\%_ufn%" goto :eof
 call set /a _cab+=1
 set "tmpcmp=!tmpcmp! %_ufn%"
@@ -2076,7 +2138,7 @@ if not exist "!_cabdir!\lcu\update.mum" goto :eof
 for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "!_cabdir!\lcu\update.mum"') do set kbupd=%%~#
 if "%kbupd%"=="" goto :eof
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
-if %_build% geq 22563 set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
+dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
 if exist "!_UUP!\%_ufn%" goto :eof
 call set /a _cab+=1
 set "tmpcmp=!tmpcmp! %_ufn%"
@@ -3053,14 +3115,16 @@ if /i %xOS%==x86 reg.exe save HKLM\OFFSOFT "%mumtarget%\Windows\System32\Config\
 reg.exe unload HKLM\OFFSOFT %_Nul1%
 if /i %xOS%==x86 move /y "%mumtarget%\Windows\System32\Config\SOFTWARE2" "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
+if %_appsCustom% equ 1 for /f "eol=# tokens=*" %%a in ('type CustomAppsList.txt') do set "cal_%%a=1"
 set "_appProf=%_appBase%,%_appClnt%,%_appCodec%,%_appMedia%"
 set "_appProN=%_appBase%,%_appClnt%"
-set "_appTeam=%_appBase%,%_appCodec%,Microsoft.MicrosoftPowerBIForWindows%pub%,microsoft.microsoftskydrive%pub%,Microsoft.MicrosoftTeamsforSurfaceHub%pub%,Microsoft.Whiteboard%pub%",Microsoft.SkypeApp_kzf8qxf38zg5c
+set "_appTeam=%_appBase%,%_appCodec%,%_appPPIP%"
 set "_appSFull=Microsoft.SecHealthUI%pub%"
 set "_appSCore="
 set "_appAzure="
 pushd "!_UUP!\Apps"
 if exist "_AppsEditions.txt" for /f "tokens=* delims=" %%# in ('type _AppsEditions.txt') do set "%%#"
+if %_appsCustom% equ 0 (
 if %AppsLevel% gtr 0 (
 set "_appProf=%_appMin1%"
 set "_appProN=%_appMin1%"
@@ -3072,6 +3136,10 @@ set "_appProN=%_appProN%,%_appMin2%"
 if %AppsLevel% gtr 2 (
 set "_appProf=%_appProf%,%_appMin3%"
 set "_appProN=%_appProN%,%_appMin3%"
+)
+if %AppsLevel% gtr 3 (
+set "_appProf=%_appProf%,%_appMin4%"
+)
 )
 set "_appList="
 for %%# in (Core,CoreCountrySpecific,CoreSingleLanguage,Professional,ProfessionalEducation,ProfessionalWorkstation,Education,Enterprise,EnterpriseG,EnterpriseS,ServerRdsh,IoTEnterprise,IoTEnterpriseS,CloudEdition,CloudEditionL) do (
@@ -3094,10 +3162,12 @@ echo %%~n#
 )
 if defined _appList for %%# in (%_appList%) do call :appx_add "%%#"
 popd
+if %_appsCustom% equ 1 for /f "eol=# tokens=*" %%a in ('type CustomAppsList.txt') do set "cal_%%a="
 goto :eof
 
 :appx_add
 set "_pfn=%~1"
+if %_appsCustom% equ 1 if not defined cal_%_pfn% goto :eof
 if not exist "%_pfn%\License.xml" goto :eof
 if not exist "%_pfn%\*.appx*" if not exist "%_pfn%\*.msix*" goto :eof
 set "_main="
@@ -3109,7 +3179,7 @@ if not defined _main goto :eof
 set "_stub="
 if exist "%_pfn%\AppxMetadata\Stub\*.*x" set "_stub=/StubPackageOption:InstallStub"
 echo %_pfn%
-%_Nul1% %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismAppx.log" /Add-ProvisionedAppxPackage /PackagePath:"%_pfn%\%_main%" /LicensePath:"%_pfn%\License.xml" %_stub%
+%_Nul1% %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismAppx.log" /Add-ProvisionedAppxPackage /PackagePath:"%_pfn%\%_main%" /LicensePath:"%_pfn%\License.xml" /Region:all %_stub%
 goto :eof
 
 :appx_update
@@ -3232,7 +3302,11 @@ if !errorlevel! neq 0 (
 goto :eof
 
 :V_Auto
-if %wim2esd% equ 0 (call create_virtual_editions.cmd autowim %_label% %isotime%) else (call create_virtual_editions.cmd autoesd %_label% %isotime%)
+if %wim2esd% equ 0 (
+if %wim2swm% equ 0 (call create_virtual_editions.cmd autowim %_label% %isotime%) else (call create_virtual_editions.cmd autoswm %_label% %isotime%)
+) else (
+call create_virtual_editions.cmd autoesd %_label% %isotime%
+)
 if /i "%_Exit%"=="rem." set _Debug=1
 if %_Debug% neq 0 @echo on
 title UUP -^> ISO %uivr%
@@ -3240,7 +3314,11 @@ echo.
 goto :QUIT
 
 :V_Manu
-if %wim2esd% equ 0 (start /i "" !_ComSpec! /c "create_virtual_editions.cmd manuwim %_label% %isotime%") else (start /i "" !_ComSpec! /c "create_virtual_editions.cmd manuesd %_label% %isotime%")
+if %wim2esd% equ 0 (
+if %wim2swm% equ 0 (start /i "" !_ComSpec! /c "create_virtual_editions.cmd manuwim %_label% %isotime%") else (start /i "" !_ComSpec! /c "create_virtual_editions.cmd manuswm %_label% %isotime%")
+) else (
+start /i "" !_ComSpec! /c "create_virtual_editions.cmd manuesd %_label% %isotime%"
+)
 if exist temp\ rmdir /s /q temp\
 popd
 echo.
