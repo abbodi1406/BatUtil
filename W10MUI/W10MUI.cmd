@@ -243,16 +243,21 @@ set _ODintl86=
 set _ODext86=
 set _ODtra86=
 set _ODnetwork86=
+set _ODnickl86=
 set _ODpaint86=
 set _ODnote86=
 set _ODpower86=
 set _ODpmcppc86=
 set _ODpwsf86=
 set _ODword86=
+set _ODstep86=
 set _ODsnip86=
 set _ODnots86=
+set _ODieop86=
 set _ODethernet86=
 set _ODwifi86=
+set _ODmedia86=
+set _ODwmi86=
 if %_oa% neq 0 for /L %%j in (1,1,%_oa%) do (
 "!_7z!" x ".\ondemand\x86\!OAFILE%%j!" -o"!TEMPDIR!\FOD86\OAFILE%%j" * -r %_Null%
 pushd "!TEMPDIR!\FOD86\OAFILE%%j"
@@ -270,14 +275,22 @@ findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum %_Nul3% && (set _O
 findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODpmcppc86=!_ODpmcppc86! /PackagePath:OAFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODpwsf86=!_ODpwsf86! /PackagePath:OAFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-WordPad-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODword86=!_ODword86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-StepsRecorder update.mum %_Nul3% && (set _ODtra86=1&call set _ODstep86=!_ODstep86! /PackagePath:OAFILE%%j\update.mum)
   )
 if %_lpver% geq 21277 (
+findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODext86=1&call set _ODnots86=!_ODnots86! /PackagePath:OAFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODsnip86=!_ODsnip86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODnots86=!_ODnots86! /PackagePath:OAFILE%%j\update.mum)
   )
 if %_lpver% geq 21382 (
 findstr /i /m Microsoft-Windows-Ethernet-Client update.mum %_Nul3% && (set _ODnetwork86=1&call set _ODethernet86=!_ODethernet86! /PackagePath:OAFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-Wifi-Client update.mum %_Nul3% && (set _ODnetwork86=1&call set _ODwifi86=!_ODwifi86! /PackagePath:OAFILE%%j\update.mum)
+  )
+if %_lpver% geq 22000 (
+findstr /i /m Microsoft-Windows-InternetExplorer-Optional update.mum %_Nul3% && (set _ODext86=1&call set _ODieop86=!_ODieop86! /PackagePath:OAFILE%%j\update.mum)
+  )
+if %_lpver% geq 22567 (
+findstr /i /m Microsoft-Windows-MediaPlayer update.mum %_Nul3% && (set _ODnickl86=1&call set _ODmedia86=!_ODmedia86! /PackagePath:OAFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-WMIC-FoD update.mum %_Nul3% && (set _ODnickl86=1&call set _ODwmi86=!_ODwmi86! /PackagePath:OAFILE%%j\update.mum)
   )
 popd
 )
@@ -291,16 +304,21 @@ set _ODintl64=
 set _ODext64=
 set _ODtra64=
 set _ODnetwork64=
+set _ODnickl64=
 set _ODpaint64=
 set _ODnote64=
 set _ODpower64=
 set _ODpmcppc64=
 set _ODpwsf64=
 set _ODword64=
+set _ODstep64=
 set _ODsnip64=
 set _ODnots64=
+set _ODieop64=
 set _ODethernet64=
 set _ODwifi64=
+set _ODmedia64=
+set _ODwmi64=
 if %_ob% neq 0 for /L %%j in (1,1,%_ob%) do (
 "!_7z!" x ".\ondemand\x64\!OBFILE%%j!" -o"!TEMPDIR!\FOD64\OBFILE%%j" * -r %_Null%
 pushd "!TEMPDIR!\FOD64\OBFILE%%j"
@@ -318,14 +336,22 @@ findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum %_Nul3% && (set _O
 findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODpmcppc64=!_ODpmcppc64! /PackagePath:OBFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODpwsf64=!_ODpwsf64! /PackagePath:OBFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-WordPad-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODword64=!_ODword64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-StepsRecorder update.mum %_Nul3% && (set _ODtra64=1&call set _ODstep64=!_ODstep64! /PackagePath:OBFILE%%j\update.mum)
   )
 if %_lpver% geq 21277 (
+findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODext64=1&call set _ODnots64=!_ODnots64! /PackagePath:OBFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODsnip64=!_ODsnip64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODnots64=!_ODnots64! /PackagePath:OBFILE%%j\update.mum)
   )
 if %_lpver% geq 21382 (
 findstr /i /m Microsoft-Windows-Ethernet-Client update.mum %_Nul3% && (set _ODnetwork64=1&call set _ODethernet64=!_ODethernet64! /PackagePath:OBFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-Wifi-Client update.mum %_Nul3% && (set _ODnetwork64=1&call set _ODwifi64=!_ODwifi64! /PackagePath:OBFILE%%j\update.mum)
+  )
+if %_lpver% geq 22000 (
+findstr /i /m Microsoft-Windows-InternetExplorer-Optional update.mum %_Nul3% && (set _ODext64=1&call set _ODieop64=!_ODieop64! /PackagePath:OBFILE%%j\update.mum)
+  )
+if %_lpver% geq 22567 (
+findstr /i /m Microsoft-Windows-MediaPlayer update.mum %_Nul3% && (set _ODnickl64=1&call set _ODmedia64=!_ODmedia64! /PackagePath:OBFILE%%j\update.mum)
+findstr /i /m Microsoft-Windows-WMIC-FoD update.mum %_Nul3% && (set _ODnickl64=1&call set _ODwmi64=!_ODwmi64! /PackagePath:OBFILE%%j\update.mum)
   )
 popd
 )
@@ -550,20 +576,22 @@ if defined _PP86 if /i !WIMARCH%%i!==x86 (
 popd
 if /i !WIMARCH%%i!==amd64 if exist "!TEMPDIR!\FOD64\OBFILE1\update.mum" (
 pushd "!TEMPDIR!\FOD64"
-if defined _ODbasic64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODbasic64!
-if defined _ODbasic64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
-if defined _ODext64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODpaint64! !_ODnote64! !_ODpower64!
-if defined _ODtra64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODpmcppc64! !_ODpwsf64! !_ODword64! !_ODsnip64! !_ODnots64!
-if defined _ODnetwork64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64.log" /Add-Package !_ODethernet64! !_ODwifi64!
+if defined _ODbasic64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64a.log" /Add-Package !_ODbasic64!
+if defined _ODbasic64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64a.log" /Add-Package !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
+if defined _ODext64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64b.log" /Add-Package !_ODpaint64! !_ODnote64! !_ODpower64! !_ODnots64! !_ODieop64!
+if defined _ODtra64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64c.log" /Add-Package !_ODpmcppc64! !_ODpwsf64! !_ODword64! !_ODstep64! !_ODsnip64!
+if defined _ODnetwork64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64d.log" /Add-Package !_ODethernet64! !_ODwifi64!
+if defined _ODnickl64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64e.log" /Add-Package !_ODmedia64! !_ODwmi64!
 popd
 )
 if /i !WIMARCH%%i!==x86 if exist "!TEMPDIR!\FOD86\OAFILE1\update.mum" (
 pushd "!TEMPDIR!\FOD86"
-if defined _ODbasic86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODbasic86!
-if defined _ODbasic86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
-if defined _ODext86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODpaint86! !_ODnote86! !_ODpower86!
-if defined _ODtra86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODpmcppc86! !_ODpwsf86! !_ODword86! !_ODsnip86! !_ODnots86!
-if defined _ODnetwork86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86.log" /Add-Package !_ODethernet86! !_ODwifi86!
+if defined _ODbasic86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86a.log" /Add-Package !_ODbasic86!
+if defined _ODbasic86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86a.log" /Add-Package !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
+if defined _ODext86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86b.log" /Add-Package !_ODpaint86! !_ODnote86! !_ODpower86! !_ODnots86! !_ODieop86!
+if defined _ODtra86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86c.log" /Add-Package !_ODpmcppc86! !_ODpwsf86! !_ODword86! !_ODstep86! !_ODsnip86!
+if defined _ODnetwork86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86d.log" /Add-Package !_ODethernet86! !_ODwifi86!
+if defined _ODnickl86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86e.log" /Add-Package !_ODmedia86! !_ODwmi86!
 popd
 )
 echo.

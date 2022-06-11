@@ -10,17 +10,23 @@
 - languagefeatures-texttospeech is required for languagefeatures-speech pack to work
 - zh-HK packs require zh-TW LangPack
 
+- To download the files for a specific language(s) directly or via download manager, prepend the following url before each file name:
+for x86:
+https://uupdump.net/getfile.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&file=
+for x64:
+https://uupdump.net/getfile.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&file=
+
 - Credits:
-https://www.uupdump.net/
+https://uupdump.net/
 
 =================================================================================================
 x86 (32 Bit)
 
 rename_script.cmd
-https://www.uupdump.net/get.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&renscript=1
+https://uupdump.net/get.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&renscript=1
 
 ar-SA
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=ar-
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=ar-
 microsoft-windows-languagefeatures-basic-ar-sa-package-x86.cab
 microsoft-windows-languagefeatures-ocr-ar-sa-package-x86.cab
 microsoft-windows-languagefeatures-texttospeech-ar-sa-package-x86.cab
@@ -31,11 +37,12 @@ microsoft-windows-powershell-ise-fod-package-x86-ar-sa.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-ar-sa.cab
 microsoft-windows-printing-wfs-fod-package-x86-ar-sa.cab
 microsoft-windows-wordpad-fod-package-x86-ar-sa.cab
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
+microsoft-windows-stepsrecorder-package-x86-ar-sa.cab
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
 microsoft-windows-languagefeatures-fonts-arab-package-x86.cab
 
 bg-BG
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=bg-bg
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=bg-bg
 microsoft-windows-languagefeatures-basic-bg-bg-package-x86.cab
 microsoft-windows-languagefeatures-ocr-bg-bg-package-x86.cab
 microsoft-windows-languagefeatures-texttospeech-bg-bg-package-x86.cab
@@ -45,9 +52,10 @@ microsoft-windows-powershell-ise-fod-package-x86-bg-bg.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-bg-bg.cab
 microsoft-windows-printing-wfs-fod-package-x86-bg-bg.cab
 microsoft-windows-wordpad-fod-package-x86-bg-bg.cab
+microsoft-windows-stepsrecorder-package-x86-bg-bg.cab
 
 cs-CZ
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=cs-cz
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=cs-cz
 microsoft-windows-languagefeatures-basic-cs-cz-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-cs-cz-package-x86.cab
 microsoft-windows-languagefeatures-ocr-cs-cz-package-x86.cab
@@ -58,9 +66,10 @@ microsoft-windows-powershell-ise-fod-package-x86-cs-cz.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-cs-cz.cab
 microsoft-windows-printing-wfs-fod-package-x86-cs-cz.cab
 microsoft-windows-wordpad-fod-package-x86-cs-cz.cab
+microsoft-windows-stepsrecorder-package-x86-cs-cz.cab
 
 da-DK
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=da-dk
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=da-dk
 microsoft-windows-languagefeatures-basic-da-dk-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-da-dk-package-x86.cab
 microsoft-windows-languagefeatures-ocr-da-dk-package-x86.cab
@@ -72,9 +81,10 @@ microsoft-windows-powershell-ise-fod-package-x86-da-dk.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-da-dk.cab
 microsoft-windows-printing-wfs-fod-package-x86-da-dk.cab
 microsoft-windows-wordpad-fod-package-x86-da-dk.cab
+microsoft-windows-stepsrecorder-package-x86-da-dk.cab
 
 de-DE
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=de-de
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=de-de
 microsoft-windows-languagefeatures-basic-de-de-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-de-de-package-x86.cab
 microsoft-windows-languagefeatures-ocr-de-de-package-x86.cab
@@ -86,9 +96,10 @@ microsoft-windows-powershell-ise-fod-package-x86-de-de.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-de-de.cab
 microsoft-windows-printing-wfs-fod-package-x86-de-de.cab
 microsoft-windows-wordpad-fod-package-x86-de-de.cab
+microsoft-windows-stepsrecorder-package-x86-de-de.cab
 
 el-GR
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=el-gr
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=el-gr
 microsoft-windows-languagefeatures-basic-el-gr-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-el-gr-package-x86.cab
 microsoft-windows-languagefeatures-ocr-el-gr-package-x86.cab
@@ -99,9 +110,10 @@ microsoft-windows-powershell-ise-fod-package-x86-el-gr.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-el-gr.cab
 microsoft-windows-printing-wfs-fod-package-x86-el-gr.cab
 microsoft-windows-wordpad-fod-package-x86-el-gr.cab
+microsoft-windows-stepsrecorder-package-x86-el-gr.cab
 
 en-GB
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=en-gb
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=en-gb
 microsoft-windows-languagefeatures-basic-en-gb-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-en-gb-package-x86.cab
 microsoft-windows-languagefeatures-ocr-en-gb-package-x86.cab
@@ -113,9 +125,10 @@ microsoft-windows-powershell-ise-fod-package-x86-en-gb.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-en-gb.cab
 microsoft-windows-printing-wfs-fod-package-x86-en-gb.cab
 microsoft-windows-wordpad-fod-package-x86-en-gb.cab
+microsoft-windows-stepsrecorder-package-x86-en-gb.cab
 
 en-US
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=en-us
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=en-us
 microsoft-windows-languagefeatures-basic-en-us-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-en-us-package-x86.cab
 microsoft-windows-languagefeatures-ocr-en-us-package-x86.cab
@@ -127,9 +140,10 @@ microsoft-windows-powershell-ise-fod-package-x86-en-us.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-en-us.cab
 microsoft-windows-printing-wfs-fod-package-x86-en-us.cab
 microsoft-windows-wordpad-fod-package-x86-en-us.cab
+microsoft-windows-stepsrecorder-package-x86-en-us.cab
 
 es-ES
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=es-es
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=es-es
 microsoft-windows-languagefeatures-basic-es-es-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-es-es-package-x86.cab
 microsoft-windows-languagefeatures-ocr-es-es-package-x86.cab
@@ -141,9 +155,10 @@ microsoft-windows-powershell-ise-fod-package-x86-es-es.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-es-es.cab
 microsoft-windows-printing-wfs-fod-package-x86-es-es.cab
 microsoft-windows-wordpad-fod-package-x86-es-es.cab
+microsoft-windows-stepsrecorder-package-x86-es-es.cab
 
 es-MX
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=es-mx
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=es-mx
 microsoft-windows-languagefeatures-basic-es-mx-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-es-mx-package-x86.cab
 microsoft-windows-languagefeatures-ocr-es-mx-package-x86.cab
@@ -155,9 +170,10 @@ microsoft-windows-powershell-ise-fod-package-x86-es-mx.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-es-mx.cab
 microsoft-windows-printing-wfs-fod-package-x86-es-mx.cab
 microsoft-windows-wordpad-fod-package-x86-es-mx.cab
+microsoft-windows-stepsrecorder-package-x86-es-mx.cab
 
 et-EE
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=et-ee
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=et-ee
 microsoft-windows-languagefeatures-basic-et-ee-package-x86.cab
 microsoft-windows-mspaint-fod-package-x86-et-ee.cab
 microsoft-windows-notepad-fod-package-x86-et-ee.cab
@@ -165,9 +181,10 @@ microsoft-windows-powershell-ise-fod-package-x86-et-ee.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-et-ee.cab
 microsoft-windows-printing-wfs-fod-package-x86-et-ee.cab
 microsoft-windows-wordpad-fod-package-x86-et-ee.cab
+microsoft-windows-stepsrecorder-package-x86-et-ee.cab
 
 fi-FI
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fi-fi
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fi-fi
 microsoft-windows-languagefeatures-basic-fi-fi-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-fi-fi-package-x86.cab
 microsoft-windows-languagefeatures-ocr-fi-fi-package-x86.cab
@@ -178,9 +195,10 @@ microsoft-windows-powershell-ise-fod-package-x86-fi-fi.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-fi-fi.cab
 microsoft-windows-printing-wfs-fod-package-x86-fi-fi.cab
 microsoft-windows-wordpad-fod-package-x86-fi-fi.cab
+microsoft-windows-stepsrecorder-package-x86-fi-fi.cab
 
 fr-CA
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fr-ca
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fr-ca
 microsoft-windows-languagefeatures-basic-fr-ca-package-x86.cab
 microsoft-windows-languagefeatures-ocr-fr-ca-package-x86.cab
 microsoft-windows-languagefeatures-speech-fr-ca-package-x86.cab
@@ -191,9 +209,10 @@ microsoft-windows-powershell-ise-fod-package-x86-fr-ca.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-fr-ca.cab
 microsoft-windows-printing-wfs-fod-package-x86-fr-ca.cab
 microsoft-windows-wordpad-fod-package-x86-fr-ca.cab
+microsoft-windows-stepsrecorder-package-x86-fr-ca.cab
 
 fr-FR
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fr-fr
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fr-fr
 microsoft-windows-languagefeatures-basic-fr-fr-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-fr-fr-package-x86.cab
 microsoft-windows-languagefeatures-ocr-fr-fr-package-x86.cab
@@ -205,9 +224,10 @@ microsoft-windows-powershell-ise-fod-package-x86-fr-fr.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-fr-fr.cab
 microsoft-windows-printing-wfs-fod-package-x86-fr-fr.cab
 microsoft-windows-wordpad-fod-package-x86-fr-fr.cab
+microsoft-windows-stepsrecorder-package-x86-fr-fr.cab
 
 he-IL
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=he-il
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=he-il
 microsoft-windows-languagefeatures-basic-he-il-package-x86.cab
 microsoft-windows-languagefeatures-texttospeech-he-il-package-x86.cab
 microsoft-windows-mspaint-fod-package-x86-he-il.cab
@@ -216,11 +236,12 @@ microsoft-windows-powershell-ise-fod-package-x86-he-il.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-he-il.cab
 microsoft-windows-printing-wfs-fod-package-x86-he-il.cab
 microsoft-windows-wordpad-fod-package-x86-he-il.cab
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
+microsoft-windows-stepsrecorder-package-x86-he-il.cab
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
 microsoft-windows-languagefeatures-fonts-hebr-package-x86.cab
 
 hr-HR
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=hr-hr
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=hr-hr
 microsoft-windows-languagefeatures-basic-hr-hr-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-hr-hr-package-x86.cab
 microsoft-windows-languagefeatures-ocr-hr-hr-package-x86.cab
@@ -231,9 +252,10 @@ microsoft-windows-powershell-ise-fod-package-x86-hr-hr.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-hr-hr.cab
 microsoft-windows-printing-wfs-fod-package-x86-hr-hr.cab
 microsoft-windows-wordpad-fod-package-x86-hr-hr.cab
+microsoft-windows-stepsrecorder-package-x86-hr-hr.cab
 
 hu-HU
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=hu-hu
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=hu-hu
 microsoft-windows-languagefeatures-basic-hu-hu-package-x86.cab
 microsoft-windows-languagefeatures-ocr-hu-hu-package-x86.cab
 microsoft-windows-languagefeatures-texttospeech-hu-hu-package-x86.cab
@@ -243,9 +265,10 @@ microsoft-windows-powershell-ise-fod-package-x86-hu-hu.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-hu-hu.cab
 microsoft-windows-printing-wfs-fod-package-x86-hu-hu.cab
 microsoft-windows-wordpad-fod-package-x86-hu-hu.cab
+microsoft-windows-stepsrecorder-package-x86-hu-hu.cab
 
 it-IT
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=it-it
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=it-it
 microsoft-windows-languagefeatures-basic-it-it-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-it-it-package-x86.cab
 microsoft-windows-languagefeatures-ocr-it-it-package-x86.cab
@@ -257,9 +280,10 @@ microsoft-windows-powershell-ise-fod-package-x86-it-it.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-it-it.cab
 microsoft-windows-printing-wfs-fod-package-x86-it-it.cab
 microsoft-windows-wordpad-fod-package-x86-it-it.cab
+microsoft-windows-stepsrecorder-package-x86-it-it.cab
 
 ja-JP
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=ja-jp
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=ja-jp
 microsoft-windows-languagefeatures-basic-ja-jp-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-ja-jp-package-x86.cab
 microsoft-windows-languagefeatures-ocr-ja-jp-package-x86.cab
@@ -271,11 +295,12 @@ microsoft-windows-powershell-ise-fod-package-x86-ja-jp.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-ja-jp.cab
 microsoft-windows-printing-wfs-fod-package-x86-ja-jp.cab
 microsoft-windows-wordpad-fod-package-x86-ja-jp.cab
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
+microsoft-windows-stepsrecorder-package-x86-ja-jp.cab
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
 microsoft-windows-languagefeatures-fonts-jpan-package-x86.cab
 
 ko-KR
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=ko-kr
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=ko-kr
 microsoft-windows-languagefeatures-basic-ko-kr-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-ko-kr-package-x86.cab
 microsoft-windows-languagefeatures-ocr-ko-kr-package-x86.cab
@@ -286,11 +311,12 @@ microsoft-windows-powershell-ise-fod-package-x86-ko-kr.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-ko-kr.cab
 microsoft-windows-printing-wfs-fod-package-x86-ko-kr.cab
 microsoft-windows-wordpad-fod-package-x86-ko-kr.cab
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
+microsoft-windows-stepsrecorder-package-x86-ko-kr.cab
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
 microsoft-windows-languagefeatures-fonts-kore-package-x86.cab
 
 lt-LT
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=lt-lt
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=lt-lt
 microsoft-windows-languagefeatures-basic-lt-lt-package-x86.cab
 microsoft-windows-mspaint-fod-package-x86-lt-lt.cab
 microsoft-windows-notepad-fod-package-x86-lt-lt.cab
@@ -298,9 +324,10 @@ microsoft-windows-powershell-ise-fod-package-x86-lt-lt.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-lt-lt.cab
 microsoft-windows-printing-wfs-fod-package-x86-lt-lt.cab
 microsoft-windows-wordpad-fod-package-x86-lt-lt.cab
+microsoft-windows-stepsrecorder-package-x86-lt-lt.cab
 
 lv-LV
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=lv-lv
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=lv-lv
 microsoft-windows-languagefeatures-basic-lv-lv-package-x86.cab
 microsoft-windows-mspaint-fod-package-x86-lv-lv.cab
 microsoft-windows-notepad-fod-package-x86-lv-lv.cab
@@ -308,9 +335,10 @@ microsoft-windows-powershell-ise-fod-package-x86-lv-lv.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-lv-lv.cab
 microsoft-windows-printing-wfs-fod-package-x86-lv-lv.cab
 microsoft-windows-wordpad-fod-package-x86-lv-lv.cab
+microsoft-windows-stepsrecorder-package-x86-lv-lv.cab
 
 nb-NO
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=nb-no
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=nb-no
 microsoft-windows-languagefeatures-basic-nb-no-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-nb-no-package-x86.cab
 microsoft-windows-languagefeatures-ocr-nb-no-package-x86.cab
@@ -321,9 +349,10 @@ microsoft-windows-powershell-ise-fod-package-x86-nb-no.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-nb-no.cab
 microsoft-windows-printing-wfs-fod-package-x86-nb-no.cab
 microsoft-windows-wordpad-fod-package-x86-nb-no.cab
+microsoft-windows-stepsrecorder-package-x86-nb-no.cab
 
 nl-NL
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=nl-nl
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=nl-nl
 microsoft-windows-languagefeatures-basic-nl-nl-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-nl-nl-package-x86.cab
 microsoft-windows-languagefeatures-ocr-nl-nl-package-x86.cab
@@ -334,9 +363,10 @@ microsoft-windows-powershell-ise-fod-package-x86-nl-nl.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-nl-nl.cab
 microsoft-windows-printing-wfs-fod-package-x86-nl-nl.cab
 microsoft-windows-wordpad-fod-package-x86-nl-nl.cab
+microsoft-windows-stepsrecorder-package-x86-nl-nl.cab
 
 pl-PL
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=pl-pl
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=pl-pl
 microsoft-windows-languagefeatures-basic-pl-pl-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-pl-pl-package-x86.cab
 microsoft-windows-languagefeatures-ocr-pl-pl-package-x86.cab
@@ -347,9 +377,10 @@ microsoft-windows-powershell-ise-fod-package-x86-pl-pl.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-pl-pl.cab
 microsoft-windows-printing-wfs-fod-package-x86-pl-pl.cab
 microsoft-windows-wordpad-fod-package-x86-pl-pl.cab
+microsoft-windows-stepsrecorder-package-x86-pl-pl.cab
 
 pt-BR
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=pt-br
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=pt-br
 microsoft-windows-languagefeatures-basic-pt-br-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-pt-br-package-x86.cab
 microsoft-windows-languagefeatures-ocr-pt-br-package-x86.cab
@@ -361,9 +392,10 @@ microsoft-windows-powershell-ise-fod-package-x86-pt-br.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-pt-br.cab
 microsoft-windows-printing-wfs-fod-package-x86-pt-br.cab
 microsoft-windows-wordpad-fod-package-x86-pt-br.cab
+microsoft-windows-stepsrecorder-package-x86-pt-br.cab
 
 pt-PT
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=pt-pt
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=pt-pt
 microsoft-windows-languagefeatures-basic-pt-pt-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-pt-pt-package-x86.cab
 microsoft-windows-languagefeatures-ocr-pt-pt-package-x86.cab
@@ -374,9 +406,10 @@ microsoft-windows-powershell-ise-fod-package-x86-pt-pt.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-pt-pt.cab
 microsoft-windows-printing-wfs-fod-package-x86-pt-pt.cab
 microsoft-windows-wordpad-fod-package-x86-pt-pt.cab
+microsoft-windows-stepsrecorder-package-x86-pt-pt.cab
 
 ro-RO
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=ro-ro
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=ro-ro
 microsoft-windows-languagefeatures-basic-ro-ro-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-ro-ro-package-x86.cab
 microsoft-windows-languagefeatures-ocr-ro-ro-package-x86.cab
@@ -387,9 +420,10 @@ microsoft-windows-powershell-ise-fod-package-x86-ro-ro.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-ro-ro.cab
 microsoft-windows-printing-wfs-fod-package-x86-ro-ro.cab
 microsoft-windows-wordpad-fod-package-x86-ro-ro.cab
+microsoft-windows-stepsrecorder-package-x86-ro-ro.cab
 
 ru-RU
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=ru-ru
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=ru-ru
 microsoft-windows-languagefeatures-basic-ru-ru-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-ru-ru-package-x86.cab
 microsoft-windows-languagefeatures-ocr-ru-ru-package-x86.cab
@@ -400,9 +434,10 @@ microsoft-windows-powershell-ise-fod-package-x86-ru-ru.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-ru-ru.cab
 microsoft-windows-printing-wfs-fod-package-x86-ru-ru.cab
 microsoft-windows-wordpad-fod-package-x86-ru-ru.cab
+microsoft-windows-stepsrecorder-package-x86-ru-ru.cab
 
 sk-SK
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=sk-sk
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=sk-sk
 microsoft-windows-languagefeatures-basic-sk-sk-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-sk-sk-package-x86.cab
 microsoft-windows-languagefeatures-ocr-sk-sk-package-x86.cab
@@ -413,9 +448,10 @@ microsoft-windows-powershell-ise-fod-package-x86-sk-sk.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-sk-sk.cab
 microsoft-windows-printing-wfs-fod-package-x86-sk-sk.cab
 microsoft-windows-wordpad-fod-package-x86-sk-sk.cab
+microsoft-windows-stepsrecorder-package-x86-sk-sk.cab
 
 sl-SI
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=sl-si
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=sl-si
 microsoft-windows-languagefeatures-basic-sl-si-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-sl-si-package-x86.cab
 microsoft-windows-languagefeatures-ocr-sl-si-package-x86.cab
@@ -426,9 +462,10 @@ microsoft-windows-powershell-ise-fod-package-x86-sl-si.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-sl-si.cab
 microsoft-windows-printing-wfs-fod-package-x86-sl-si.cab
 microsoft-windows-wordpad-fod-package-x86-sl-si.cab
+microsoft-windows-stepsrecorder-package-x86-sl-si.cab
 
 sr-Latn-RS
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=sr-latn
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=sr-latn
 microsoft-windows-languagefeatures-basic-sr-latn-rs-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-sr-latn-rs-package-x86.cab
 microsoft-windows-languagefeatures-ocr-sr-latn-rs-package-x86.cab
@@ -438,9 +475,10 @@ microsoft-windows-powershell-ise-fod-package-x86-sr-latn-rs.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-sr-latn-rs.cab
 microsoft-windows-printing-wfs-fod-package-x86-sr-latn-rs.cab
 microsoft-windows-wordpad-fod-package-x86-sr-latn-rs.cab
+microsoft-windows-stepsrecorder-package-x86-sr-latn-rs.cab
 
 sv-SE
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=sv-se
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=sv-se
 microsoft-windows-languagefeatures-basic-sv-se-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-sv-se-package-x86.cab
 microsoft-windows-languagefeatures-ocr-sv-se-package-x86.cab
@@ -451,9 +489,10 @@ microsoft-windows-powershell-ise-fod-package-x86-sv-se.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-sv-se.cab
 microsoft-windows-printing-wfs-fod-package-x86-sv-se.cab
 microsoft-windows-wordpad-fod-package-x86-sv-se.cab
+microsoft-windows-stepsrecorder-package-x86-sv-se.cab
 
 th-TH
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=th-th
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=th-th
 microsoft-windows-languagefeatures-basic-th-th-package-x86.cab
 microsoft-windows-languagefeatures-texttospeech-th-th-package-x86.cab
 microsoft-windows-mspaint-fod-package-x86-th-th.cab
@@ -462,11 +501,12 @@ microsoft-windows-powershell-ise-fod-package-x86-th-th.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-th-th.cab
 microsoft-windows-printing-wfs-fod-package-x86-th-th.cab
 microsoft-windows-wordpad-fod-package-x86-th-th.cab
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
+microsoft-windows-stepsrecorder-package-x86-th-th.cab
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
 microsoft-windows-languagefeatures-fonts-thai-package-x86.cab
 
 tr-TR
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=tr-tr
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=tr-tr
 microsoft-windows-languagefeatures-basic-tr-tr-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-tr-tr-package-x86.cab
 microsoft-windows-languagefeatures-ocr-tr-tr-package-x86.cab
@@ -477,9 +517,10 @@ microsoft-windows-powershell-ise-fod-package-x86-tr-tr.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-tr-tr.cab
 microsoft-windows-printing-wfs-fod-package-x86-tr-tr.cab
 microsoft-windows-wordpad-fod-package-x86-tr-tr.cab
+microsoft-windows-stepsrecorder-package-x86-tr-tr.cab
 
 uk-UA
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=uk-ua
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=uk-ua
 microsoft-windows-languagefeatures-basic-uk-ua-package-x86.cab
 microsoft-windows-mspaint-fod-package-x86-uk-ua.cab
 microsoft-windows-notepad-fod-package-x86-uk-ua.cab
@@ -487,9 +528,10 @@ microsoft-windows-powershell-ise-fod-package-x86-uk-ua.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-uk-ua.cab
 microsoft-windows-printing-wfs-fod-package-x86-uk-ua.cab
 microsoft-windows-wordpad-fod-package-x86-uk-ua.cab
+microsoft-windows-stepsrecorder-package-x86-uk-ua.cab
 
 zh-CN
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=zh-cn
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=zh-cn
 microsoft-windows-languagefeatures-basic-zh-cn-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-zh-cn-package-x86.cab
 microsoft-windows-languagefeatures-ocr-zh-cn-package-x86.cab
@@ -501,11 +543,12 @@ microsoft-windows-powershell-ise-fod-package-x86-zh-cn.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-zh-cn.cab
 microsoft-windows-printing-wfs-fod-package-x86-zh-cn.cab
 microsoft-windows-wordpad-fod-package-x86-zh-cn.cab
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
+microsoft-windows-stepsrecorder-package-x86-zh-cn.cab
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
 microsoft-windows-languagefeatures-fonts-hans-package-x86.cab
 
 zh-TW
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=zh-tw
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=zh-tw
 microsoft-windows-languagefeatures-basic-zh-tw-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-zh-tw-package-x86.cab
 microsoft-windows-languagefeatures-ocr-zh-tw-package-x86.cab
@@ -517,27 +560,28 @@ microsoft-windows-powershell-ise-fod-package-x86-zh-tw.cab
 microsoft-windows-printing-pmcppc-fod-package-x86-zh-tw.cab
 microsoft-windows-printing-wfs-fod-package-x86-zh-tw.cab
 microsoft-windows-wordpad-fod-package-x86-zh-tw.cab
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
+microsoft-windows-stepsrecorder-package-x86-zh-tw.cab
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
 microsoft-windows-languagefeatures-fonts-hant-package-x86.cab
 
 zh-HK (Hong Kong S.A.R.)
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=zh-hk
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=zh-hk
 microsoft-windows-languagefeatures-basic-zh-hk-package-x86.cab
 microsoft-windows-languagefeatures-handwriting-zh-hk-package-x86.cab
 microsoft-windows-languagefeatures-ocr-zh-hk-package-x86.cab
 microsoft-windows-languagefeatures-speech-zh-hk-package-x86.cab
 microsoft-windows-languagefeatures-texttospeech-zh-hk-package-x86.cab
-https://www.uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
+https://uupdump.net/findfiles.php?id=6de7bba2-dd72-456a-b5b8-c90ea734ae1d&q=fonts
 microsoft-windows-languagefeatures-fonts-hant-package-x86.cab
 
 =================================================================================================
 x64 (64 Bit)
 
 rename_script.cmd
-https://www.uupdump.net/get.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&renscript=1
+https://uupdump.net/get.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&renscript=1
 
 ar-SA
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=ar-
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=ar-
 microsoft-windows-languagefeatures-basic-ar-sa-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-ar-sa-package-amd64.cab
 microsoft-windows-languagefeatures-texttospeech-ar-sa-package-amd64.cab
@@ -552,11 +596,13 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-ar-sa.cab
 microsoft-windows-printing-wfs-fod-package-amd64-ar-sa.cab
 microsoft-windows-wordpad-fod-package-amd64-ar-sa.cab
 microsoft-windows-wordpad-fod-package-wow64-ar-sa.cab
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
+microsoft-windows-stepsrecorder-package-amd64-ar-sa.cab
+microsoft-windows-stepsrecorder-package-wow64-ar-sa.cab
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
 microsoft-windows-languagefeatures-fonts-arab-package-amd64.cab
 
 bg-BG
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=bg-bg
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=bg-bg
 microsoft-windows-languagefeatures-basic-bg-bg-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-bg-bg-package-amd64.cab
 microsoft-windows-languagefeatures-texttospeech-bg-bg-package-amd64.cab
@@ -570,9 +616,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-bg-bg.cab
 microsoft-windows-printing-wfs-fod-package-amd64-bg-bg.cab
 microsoft-windows-wordpad-fod-package-amd64-bg-bg.cab
 microsoft-windows-wordpad-fod-package-wow64-bg-bg.cab
+microsoft-windows-stepsrecorder-package-amd64-bg-bg.cab
+microsoft-windows-stepsrecorder-package-wow64-bg-bg.cab
 
 cs-CZ
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=cs-cz
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=cs-cz
 microsoft-windows-languagefeatures-basic-cs-cz-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-cs-cz-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-cs-cz-package-amd64.cab
@@ -587,9 +635,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-cs-cz.cab
 microsoft-windows-printing-wfs-fod-package-amd64-cs-cz.cab
 microsoft-windows-wordpad-fod-package-amd64-cs-cz.cab
 microsoft-windows-wordpad-fod-package-wow64-cs-cz.cab
+microsoft-windows-stepsrecorder-package-amd64-cs-cz.cab
+microsoft-windows-stepsrecorder-package-wow64-cs-cz.cab
 
 da-DK
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=da-dk
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=da-dk
 microsoft-windows-languagefeatures-basic-da-dk-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-da-dk-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-da-dk-package-amd64.cab
@@ -605,9 +655,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-da-dk.cab
 microsoft-windows-printing-wfs-fod-package-amd64-da-dk.cab
 microsoft-windows-wordpad-fod-package-amd64-da-dk.cab
 microsoft-windows-wordpad-fod-package-wow64-da-dk.cab
+microsoft-windows-stepsrecorder-package-amd64-da-dk.cab
+microsoft-windows-stepsrecorder-package-wow64-da-dk.cab
 
 de-DE
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=de-de
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=de-de
 microsoft-windows-languagefeatures-basic-de-de-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-de-de-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-de-de-package-amd64.cab
@@ -623,9 +675,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-de-de.cab
 microsoft-windows-printing-wfs-fod-package-amd64-de-de.cab
 microsoft-windows-wordpad-fod-package-amd64-de-de.cab
 microsoft-windows-wordpad-fod-package-wow64-de-de.cab
+microsoft-windows-stepsrecorder-package-amd64-de-de.cab
+microsoft-windows-stepsrecorder-package-wow64-de-de.cab
 
 el-GR
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=el-gr
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=el-gr
 microsoft-windows-languagefeatures-basic-el-gr-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-el-gr-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-el-gr-package-amd64.cab
@@ -640,9 +694,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-el-gr.cab
 microsoft-windows-printing-wfs-fod-package-amd64-el-gr.cab
 microsoft-windows-wordpad-fod-package-amd64-el-gr.cab
 microsoft-windows-wordpad-fod-package-wow64-el-gr.cab
+microsoft-windows-stepsrecorder-package-amd64-el-gr.cab
+microsoft-windows-stepsrecorder-package-wow64-el-gr.cab
 
 en-GB
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=en-gb
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=en-gb
 microsoft-windows-languagefeatures-basic-en-gb-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-en-gb-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-en-gb-package-amd64.cab
@@ -658,9 +714,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-en-gb.cab
 microsoft-windows-printing-wfs-fod-package-amd64-en-gb.cab
 microsoft-windows-wordpad-fod-package-amd64-en-gb.cab
 microsoft-windows-wordpad-fod-package-wow64-en-gb.cab
+microsoft-windows-stepsrecorder-package-amd64-en-gb.cab
+microsoft-windows-stepsrecorder-package-wow64-en-gb.cab
 
 en-US
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=en-us
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=en-us
 microsoft-windows-languagefeatures-basic-en-us-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-en-us-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-en-us-package-amd64.cab
@@ -676,9 +734,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-en-us.cab
 microsoft-windows-printing-wfs-fod-package-amd64-en-us.cab
 microsoft-windows-wordpad-fod-package-amd64-en-us.cab
 microsoft-windows-wordpad-fod-package-wow64-en-us.cab
+microsoft-windows-stepsrecorder-package-amd64-en-us.cab
+microsoft-windows-stepsrecorder-package-wow64-en-us.cab
 
 es-ES
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=es-es
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=es-es
 microsoft-windows-languagefeatures-basic-es-es-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-es-es-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-es-es-package-amd64.cab
@@ -694,9 +754,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-es-es.cab
 microsoft-windows-printing-wfs-fod-package-amd64-es-es.cab
 microsoft-windows-wordpad-fod-package-amd64-es-es.cab
 microsoft-windows-wordpad-fod-package-wow64-es-es.cab
+microsoft-windows-stepsrecorder-package-amd64-es-es.cab
+microsoft-windows-stepsrecorder-package-wow64-es-es.cab
 
 es-MX
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=es-mx
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=es-mx
 microsoft-windows-languagefeatures-basic-es-mx-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-es-mx-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-es-mx-package-amd64.cab
@@ -712,9 +774,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-es-mx.cab
 microsoft-windows-printing-wfs-fod-package-amd64-es-mx.cab
 microsoft-windows-wordpad-fod-package-amd64-es-mx.cab
 microsoft-windows-wordpad-fod-package-wow64-es-mx.cab
+microsoft-windows-stepsrecorder-package-amd64-es-mx.cab
+microsoft-windows-stepsrecorder-package-wow64-es-mx.cab
 
 et-EE
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=et-ee
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=et-ee
 microsoft-windows-languagefeatures-basic-et-ee-package-amd64.cab
 microsoft-windows-mspaint-fod-package-amd64-et-ee.cab
 microsoft-windows-mspaint-fod-package-wow64-et-ee.cab
@@ -726,9 +790,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-et-ee.cab
 microsoft-windows-printing-wfs-fod-package-amd64-et-ee.cab
 microsoft-windows-wordpad-fod-package-amd64-et-ee.cab
 microsoft-windows-wordpad-fod-package-wow64-et-ee.cab
+microsoft-windows-stepsrecorder-package-amd64-et-ee.cab
+microsoft-windows-stepsrecorder-package-wow64-et-ee.cab
 
 fi-FI
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fi-fi
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fi-fi
 microsoft-windows-languagefeatures-basic-fi-fi-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-fi-fi-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-fi-fi-package-amd64.cab
@@ -743,9 +809,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-fi-fi.cab
 microsoft-windows-printing-wfs-fod-package-amd64-fi-fi.cab
 microsoft-windows-wordpad-fod-package-amd64-fi-fi.cab
 microsoft-windows-wordpad-fod-package-wow64-fi-fi.cab
+microsoft-windows-stepsrecorder-package-amd64-fi-fi.cab
+microsoft-windows-stepsrecorder-package-wow64-fi-fi.cab
 
 fr-CA
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fr-ca
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fr-ca
 microsoft-windows-languagefeatures-basic-fr-ca-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-fr-ca-package-amd64.cab
 microsoft-windows-languagefeatures-speech-fr-ca-package-amd64.cab
@@ -760,9 +828,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-fr-ca.cab
 microsoft-windows-printing-wfs-fod-package-amd64-fr-ca.cab
 microsoft-windows-wordpad-fod-package-amd64-fr-ca.cab
 microsoft-windows-wordpad-fod-package-wow64-fr-ca.cab
+microsoft-windows-stepsrecorder-package-amd64-fr-ca.cab
+microsoft-windows-stepsrecorder-package-wow64-fr-ca.cab
 
 fr-FR
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fr-fr
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fr-fr
 microsoft-windows-languagefeatures-basic-fr-fr-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-fr-fr-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-fr-fr-package-amd64.cab
@@ -778,9 +848,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-fr-fr.cab
 microsoft-windows-printing-wfs-fod-package-amd64-fr-fr.cab
 microsoft-windows-wordpad-fod-package-amd64-fr-fr.cab
 microsoft-windows-wordpad-fod-package-wow64-fr-fr.cab
+microsoft-windows-stepsrecorder-package-amd64-fr-fr.cab
+microsoft-windows-stepsrecorder-package-wow64-fr-fr.cab
 
 he-IL
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=he-il
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=he-il
 microsoft-windows-languagefeatures-basic-he-il-package-amd64.cab
 microsoft-windows-languagefeatures-texttospeech-he-il-package-amd64.cab
 microsoft-windows-mspaint-fod-package-amd64-he-il.cab
@@ -793,11 +865,13 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-he-il.cab
 microsoft-windows-printing-wfs-fod-package-amd64-he-il.cab
 microsoft-windows-wordpad-fod-package-amd64-he-il.cab
 microsoft-windows-wordpad-fod-package-wow64-he-il.cab
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
+microsoft-windows-stepsrecorder-package-amd64-he-il.cab
+microsoft-windows-stepsrecorder-package-wow64-he-il.cab
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
 microsoft-windows-languagefeatures-fonts-hebr-package-amd64.cab
 
 hr-HR
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=hr-hr
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=hr-hr
 microsoft-windows-languagefeatures-basic-hr-hr-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-hr-hr-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-hr-hr-package-amd64.cab
@@ -812,9 +886,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-hr-hr.cab
 microsoft-windows-printing-wfs-fod-package-amd64-hr-hr.cab
 microsoft-windows-wordpad-fod-package-amd64-hr-hr.cab
 microsoft-windows-wordpad-fod-package-wow64-hr-hr.cab
+microsoft-windows-stepsrecorder-package-amd64-hr-hr.cab
+microsoft-windows-stepsrecorder-package-wow64-hr-hr.cab
 
 hu-HU
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=hu-hu
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=hu-hu
 microsoft-windows-languagefeatures-basic-hu-hu-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-hu-hu-package-amd64.cab
 microsoft-windows-languagefeatures-texttospeech-hu-hu-package-amd64.cab
@@ -828,9 +904,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-hu-hu.cab
 microsoft-windows-printing-wfs-fod-package-amd64-hu-hu.cab
 microsoft-windows-wordpad-fod-package-amd64-hu-hu.cab
 microsoft-windows-wordpad-fod-package-wow64-hu-hu.cab
+microsoft-windows-stepsrecorder-package-amd64-hu-hu.cab
+microsoft-windows-stepsrecorder-package-wow64-hu-hu.cab
 
 it-IT
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=it-it
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=it-it
 microsoft-windows-languagefeatures-basic-it-it-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-it-it-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-it-it-package-amd64.cab
@@ -846,9 +924,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-it-it.cab
 microsoft-windows-printing-wfs-fod-package-amd64-it-it.cab
 microsoft-windows-wordpad-fod-package-amd64-it-it.cab
 microsoft-windows-wordpad-fod-package-wow64-it-it.cab
+microsoft-windows-stepsrecorder-package-amd64-it-it.cab
+microsoft-windows-stepsrecorder-package-wow64-it-it.cab
 
 ja-JP
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=ja-jp
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=ja-jp
 microsoft-windows-languagefeatures-basic-ja-jp-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-ja-jp-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-ja-jp-package-amd64.cab
@@ -864,11 +944,13 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-ja-jp.cab
 microsoft-windows-printing-wfs-fod-package-amd64-ja-jp.cab
 microsoft-windows-wordpad-fod-package-amd64-ja-jp.cab
 microsoft-windows-wordpad-fod-package-wow64-ja-jp.cab
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
+microsoft-windows-stepsrecorder-package-amd64-ja-jp.cab
+microsoft-windows-stepsrecorder-package-wow64-ja-jp.cab
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
 microsoft-windows-languagefeatures-fonts-jpan-package-amd64.cab
 
 ko-KR
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=ko-kr
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=ko-kr
 microsoft-windows-languagefeatures-basic-ko-kr-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-ko-kr-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-ko-kr-package-amd64.cab
@@ -883,11 +965,13 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-ko-kr.cab
 microsoft-windows-printing-wfs-fod-package-amd64-ko-kr.cab
 microsoft-windows-wordpad-fod-package-amd64-ko-kr.cab
 microsoft-windows-wordpad-fod-package-wow64-ko-kr.cab
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
+microsoft-windows-stepsrecorder-package-amd64-ko-kr.cab
+microsoft-windows-stepsrecorder-package-wow64-ko-kr.cab
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
 microsoft-windows-languagefeatures-fonts-kore-package-amd64.cab
 
 lt-LT
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=lt-lt
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=lt-lt
 microsoft-windows-languagefeatures-basic-lt-lt-package-amd64.cab
 microsoft-windows-mspaint-fod-package-amd64-lt-lt.cab
 microsoft-windows-mspaint-fod-package-wow64-lt-lt.cab
@@ -899,9 +983,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-lt-lt.cab
 microsoft-windows-printing-wfs-fod-package-amd64-lt-lt.cab
 microsoft-windows-wordpad-fod-package-amd64-lt-lt.cab
 microsoft-windows-wordpad-fod-package-wow64-lt-lt.cab
+microsoft-windows-stepsrecorder-package-amd64-lt-lt.cab
+microsoft-windows-stepsrecorder-package-wow64-lt-lt.cab
 
 lv-LV
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=lv-lv
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=lv-lv
 microsoft-windows-languagefeatures-basic-lv-lv-package-amd64.cab
 microsoft-windows-mspaint-fod-package-amd64-lv-lv.cab
 microsoft-windows-mspaint-fod-package-wow64-lv-lv.cab
@@ -913,9 +999,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-lv-lv.cab
 microsoft-windows-printing-wfs-fod-package-amd64-lv-lv.cab
 microsoft-windows-wordpad-fod-package-amd64-lv-lv.cab
 microsoft-windows-wordpad-fod-package-wow64-lv-lv.cab
+microsoft-windows-stepsrecorder-package-amd64-lv-lv.cab
+microsoft-windows-stepsrecorder-package-wow64-lv-lv.cab
 
 nb-NO
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=nb-no
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=nb-no
 microsoft-windows-languagefeatures-basic-nb-no-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-nb-no-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-nb-no-package-amd64.cab
@@ -930,9 +1018,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-nb-no.cab
 microsoft-windows-printing-wfs-fod-package-amd64-nb-no.cab
 microsoft-windows-wordpad-fod-package-amd64-nb-no.cab
 microsoft-windows-wordpad-fod-package-wow64-nb-no.cab
+microsoft-windows-stepsrecorder-package-amd64-nb-no.cab
+microsoft-windows-stepsrecorder-package-wow64-nb-no.cab
 
 nl-NL
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=nl-nl
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=nl-nl
 microsoft-windows-languagefeatures-basic-nl-nl-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-nl-nl-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-nl-nl-package-amd64.cab
@@ -947,9 +1037,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-nl-nl.cab
 microsoft-windows-printing-wfs-fod-package-amd64-nl-nl.cab
 microsoft-windows-wordpad-fod-package-amd64-nl-nl.cab
 microsoft-windows-wordpad-fod-package-wow64-nl-nl.cab
+microsoft-windows-stepsrecorder-package-amd64-nl-nl.cab
+microsoft-windows-stepsrecorder-package-wow64-nl-nl.cab
 
 pl-PL
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=pl-pl
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=pl-pl
 microsoft-windows-languagefeatures-basic-pl-pl-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-pl-pl-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-pl-pl-package-amd64.cab
@@ -964,9 +1056,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-pl-pl.cab
 microsoft-windows-printing-wfs-fod-package-amd64-pl-pl.cab
 microsoft-windows-wordpad-fod-package-amd64-pl-pl.cab
 microsoft-windows-wordpad-fod-package-wow64-pl-pl.cab
+microsoft-windows-stepsrecorder-package-amd64-pl-pl.cab
+microsoft-windows-stepsrecorder-package-wow64-pl-pl.cab
 
 pt-BR
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=pt-br
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=pt-br
 microsoft-windows-languagefeatures-basic-pt-br-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-pt-br-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-pt-br-package-amd64.cab
@@ -982,9 +1076,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-pt-br.cab
 microsoft-windows-printing-wfs-fod-package-amd64-pt-br.cab
 microsoft-windows-wordpad-fod-package-amd64-pt-br.cab
 microsoft-windows-wordpad-fod-package-wow64-pt-br.cab
+microsoft-windows-stepsrecorder-package-amd64-pt-br.cab
+microsoft-windows-stepsrecorder-package-wow64-pt-br.cab
 
 pt-PT
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=pt-pt
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=pt-pt
 microsoft-windows-languagefeatures-basic-pt-pt-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-pt-pt-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-pt-pt-package-amd64.cab
@@ -999,9 +1095,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-pt-pt.cab
 microsoft-windows-printing-wfs-fod-package-amd64-pt-pt.cab
 microsoft-windows-wordpad-fod-package-amd64-pt-pt.cab
 microsoft-windows-wordpad-fod-package-wow64-pt-pt.cab
+microsoft-windows-stepsrecorder-package-amd64-pt-pt.cab
+microsoft-windows-stepsrecorder-package-wow64-pt-pt.cab
 
 ro-RO
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=ro-ro
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=ro-ro
 microsoft-windows-languagefeatures-basic-ro-ro-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-ro-ro-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-ro-ro-package-amd64.cab
@@ -1016,9 +1114,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-ro-ro.cab
 microsoft-windows-printing-wfs-fod-package-amd64-ro-ro.cab
 microsoft-windows-wordpad-fod-package-amd64-ro-ro.cab
 microsoft-windows-wordpad-fod-package-wow64-ro-ro.cab
+microsoft-windows-stepsrecorder-package-amd64-ro-ro.cab
+microsoft-windows-stepsrecorder-package-wow64-ro-ro.cab
 
 ru-RU
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=ru-ru
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=ru-ru
 microsoft-windows-languagefeatures-basic-ru-ru-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-ru-ru-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-ru-ru-package-amd64.cab
@@ -1033,9 +1133,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-ru-ru.cab
 microsoft-windows-printing-wfs-fod-package-amd64-ru-ru.cab
 microsoft-windows-wordpad-fod-package-amd64-ru-ru.cab
 microsoft-windows-wordpad-fod-package-wow64-ru-ru.cab
+microsoft-windows-stepsrecorder-package-amd64-ru-ru.cab
+microsoft-windows-stepsrecorder-package-wow64-ru-ru.cab
 
 sk-SK
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=sk-sk
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=sk-sk
 microsoft-windows-languagefeatures-basic-sk-sk-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-sk-sk-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-sk-sk-package-amd64.cab
@@ -1050,9 +1152,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-sk-sk.cab
 microsoft-windows-printing-wfs-fod-package-amd64-sk-sk.cab
 microsoft-windows-wordpad-fod-package-amd64-sk-sk.cab
 microsoft-windows-wordpad-fod-package-wow64-sk-sk.cab
+microsoft-windows-stepsrecorder-package-amd64-sk-sk.cab
+microsoft-windows-stepsrecorder-package-wow64-sk-sk.cab
 
 sl-SI
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=sl-si
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=sl-si
 microsoft-windows-languagefeatures-basic-sl-si-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-sl-si-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-sl-si-package-amd64.cab
@@ -1067,9 +1171,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-sl-si.cab
 microsoft-windows-printing-wfs-fod-package-amd64-sl-si.cab
 microsoft-windows-wordpad-fod-package-amd64-sl-si.cab
 microsoft-windows-wordpad-fod-package-wow64-sl-si.cab
+microsoft-windows-stepsrecorder-package-amd64-sl-si.cab
+microsoft-windows-stepsrecorder-package-wow64-sl-si.cab
 
 sr-Latn-RS
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=sr-latn
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=sr-latn
 microsoft-windows-languagefeatures-basic-sr-latn-rs-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-sr-latn-rs-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-sr-latn-rs-package-amd64.cab
@@ -1083,9 +1189,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-sr-latn-rs.cab
 microsoft-windows-printing-wfs-fod-package-amd64-sr-latn-rs.cab
 microsoft-windows-wordpad-fod-package-amd64-sr-latn-rs.cab
 microsoft-windows-wordpad-fod-package-wow64-sr-latn-rs.cab
+microsoft-windows-stepsrecorder-package-amd64-sr-latn-rs.cab
+microsoft-windows-stepsrecorder-package-wow64-sr-latn-rs.cab
 
 sv-SE
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=sv-se
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=sv-se
 microsoft-windows-languagefeatures-basic-sv-se-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-sv-se-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-sv-se-package-amd64.cab
@@ -1100,9 +1208,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-sv-se.cab
 microsoft-windows-printing-wfs-fod-package-amd64-sv-se.cab
 microsoft-windows-wordpad-fod-package-amd64-sv-se.cab
 microsoft-windows-wordpad-fod-package-wow64-sv-se.cab
+microsoft-windows-stepsrecorder-package-amd64-sv-se.cab
+microsoft-windows-stepsrecorder-package-wow64-sv-se.cab
 
 th-TH
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=th-th
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=th-th
 microsoft-windows-languagefeatures-basic-th-th-package-amd64.cab
 microsoft-windows-languagefeatures-texttospeech-th-th-package-amd64.cab
 microsoft-windows-mspaint-fod-package-amd64-th-th.cab
@@ -1115,11 +1225,13 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-th-th.cab
 microsoft-windows-printing-wfs-fod-package-amd64-th-th.cab
 microsoft-windows-wordpad-fod-package-amd64-th-th.cab
 microsoft-windows-wordpad-fod-package-wow64-th-th.cab
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
+microsoft-windows-stepsrecorder-package-amd64-th-th.cab
+microsoft-windows-stepsrecorder-package-wow64-th-th.cab
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
 microsoft-windows-languagefeatures-fonts-thai-package-amd64.cab
 
 tr-TR
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=tr-tr
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=tr-tr
 microsoft-windows-languagefeatures-basic-tr-tr-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-tr-tr-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-tr-tr-package-amd64.cab
@@ -1134,9 +1246,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-tr-tr.cab
 microsoft-windows-printing-wfs-fod-package-amd64-tr-tr.cab
 microsoft-windows-wordpad-fod-package-amd64-tr-tr.cab
 microsoft-windows-wordpad-fod-package-wow64-tr-tr.cab
+microsoft-windows-stepsrecorder-package-amd64-tr-tr.cab
+microsoft-windows-stepsrecorder-package-wow64-tr-tr.cab
 
 uk-UA
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=uk-ua
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=uk-ua
 microsoft-windows-languagefeatures-basic-uk-ua-package-amd64.cab
 microsoft-windows-mspaint-fod-package-amd64-uk-ua.cab
 microsoft-windows-mspaint-fod-package-wow64-uk-ua.cab
@@ -1148,9 +1262,11 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-uk-ua.cab
 microsoft-windows-printing-wfs-fod-package-amd64-uk-ua.cab
 microsoft-windows-wordpad-fod-package-amd64-uk-ua.cab
 microsoft-windows-wordpad-fod-package-wow64-uk-ua.cab
+microsoft-windows-stepsrecorder-package-amd64-uk-ua.cab
+microsoft-windows-stepsrecorder-package-wow64-uk-ua.cab
 
 zh-CN
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=zh-cn
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=zh-cn
 microsoft-windows-languagefeatures-basic-zh-cn-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-zh-cn-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-zh-cn-package-amd64.cab
@@ -1166,11 +1282,13 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-zh-cn.cab
 microsoft-windows-printing-wfs-fod-package-amd64-zh-cn.cab
 microsoft-windows-wordpad-fod-package-amd64-zh-cn.cab
 microsoft-windows-wordpad-fod-package-wow64-zh-cn.cab
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
+microsoft-windows-stepsrecorder-package-amd64-zh-cn.cab
+microsoft-windows-stepsrecorder-package-wow64-zh-cn.cab
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
 microsoft-windows-languagefeatures-fonts-hans-package-amd64.cab
 
 zh-TW
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=zh-tw
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=zh-tw
 microsoft-windows-languagefeatures-basic-zh-tw-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-zh-tw-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-zh-tw-package-amd64.cab
@@ -1186,15 +1304,17 @@ microsoft-windows-printing-pmcppc-fod-package-amd64-zh-tw.cab
 microsoft-windows-printing-wfs-fod-package-amd64-zh-tw.cab
 microsoft-windows-wordpad-fod-package-amd64-zh-tw.cab
 microsoft-windows-wordpad-fod-package-wow64-zh-tw.cab
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
+microsoft-windows-stepsrecorder-package-amd64-zh-tw.cab
+microsoft-windows-stepsrecorder-package-wow64-zh-tw.cab
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
 microsoft-windows-languagefeatures-fonts-hant-package-amd64.cab
 
 zh-HK (Hong Kong S.A.R.)
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=zh-hk
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=zh-hk
 microsoft-windows-languagefeatures-basic-zh-hk-package-amd64.cab
 microsoft-windows-languagefeatures-handwriting-zh-hk-package-amd64.cab
 microsoft-windows-languagefeatures-ocr-zh-hk-package-amd64.cab
 microsoft-windows-languagefeatures-speech-zh-hk-package-amd64.cab
 microsoft-windows-languagefeatures-texttospeech-zh-hk-package-amd64.cab
-https://www.uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
+https://uupdump.net/findfiles.php?id=700d530c-2c64-4f15-a27f-ba5bb0677911&q=fonts
 microsoft-windows-languagefeatures-fonts-hant-package-amd64.cab
