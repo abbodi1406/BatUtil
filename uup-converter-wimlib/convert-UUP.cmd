@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v80
+@set uivr=v81
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -1041,6 +1041,7 @@ for /f "tokens=3 delims=<>" %%# in ('find /i "<MINOR>" bin\info.txt') do set ver
 for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do set _build=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<SPBUILD>" bin\info.txt') do set svcbuild=%%#
 for /f "tokens=3 delims=<>" %%# in ('imagex /info "!MetadataESD!" 3 ^| find /i "<DISPLAYNAME>" %_Nul6%') do if /i "%%#"=="/DISPLAYNAME" (set FixDisplay=1)
+set /a _fixSV=%_build%+1
 if %uups_esd_num% gtr 1 for /L %%A in (2,1,%uups_esd_num%) do (
 imagex /info "!_UUP!\!uups_esd%%A!" 3 >bin\info%%A.txt 2>&1
 )
@@ -1573,6 +1574,9 @@ if %uupmaj%==19045 (
 if /i "%xdubranch:~0,2%"=="vb" set xdubranch=22h2%xdubranch:~2%
 if %xduver:~0,5%==19041 set xduver=19045%xduver:~5%
 )
+if %uupmaj%==%_fixSV% if %_build% geq 21382 (
+if %xduver:~0,5%==%_build% set xduver=%_fixSV%%xduver:~5%
+)
 set _label=%xduver%.%xdudate%.%xdubranch%
 call :setlabel
 exit /b
@@ -1595,6 +1599,7 @@ if exist "!_cabdir!\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=
 if exist "!_cabdir!\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!_cabdir!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
 if exist "!_cabdir!\Microsoft-Windows-22H2Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
+if exist "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
 )
 set tmpcmp=
 if %_build% geq 21382 if exist "!_UUP!\*Windows1*-KB*.msu" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\*Windows1*-KB*.msu"') do (set "packn=%%~n#"&set "packf=%%#"&call :external_msu)
@@ -1734,6 +1739,12 @@ if exist "!_cabdir!\*_microsoft-windows-coreos-revision*.manifest" for /f "token
 
 if not exist "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest" (
 expand.exe -f:%_ss%_microsoft-updatetargeting-*os_*.manifest "!_UUP!\%packf%" "!_cabdir!" %_Null%
+)
+if %_build% geq 21382 if exist "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest" (
+mkdir bin\sxs
+for /f %%a in ('dir /b /a:-d "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest"') do SxSExpand.exe "!_cabdir!\%%a" bin\sxs\%%a %_Nul1%
+move /y bin\sxs\* "!_cabdir!\" %_Nul1%
+rmdir /s /q bin\sxs\
 )
 if exist "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest" for /f "tokens=8 delims== " %%# in ('findstr /i Branch "!_cabdir!\*_microsoft-updatetargeting-*os_*.manifest"') do if not defined regbranch set regbranch=%%~#
 if defined regbranch set branch=%regbranch%
@@ -1910,6 +1921,9 @@ if /i "%isobranch:~0,2%"=="vb" set isobranch=22h2%isobranch:~2%
 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
 if %iduver:~0,5%==19041 set iduver=19045%iduver:~5%
 )
+if %isomaj%==%_fixSV% if %_build% geq 21382 (
+if %iduver:~0,5%==%_build% set iduver=%_fixSV%%iduver:~5%
+)
 set _label=%isover%.%isodate%.%isobranch%
 if /i not "%branch%"=="WinBuild" if /i not "%branch%"=="GitEnlistment" if /i not "%idudate%"=="winpbld" (set _label=%iduver%.%idudate%.%branch%)
 if %isomin% neq %idumin% (set _label=%isover%.%isodate%.%isobranch%)
@@ -2040,6 +2054,7 @@ if exist "!dest!\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=190
 if exist "!dest!\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!dest!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
 if exist "!dest!\Microsoft-Windows-22H2Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
+if exist "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
 )
 if %_build% geq 18362 if exist "!dest!\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
@@ -3281,6 +3296,7 @@ if %uProN% equ 0 goto :eof
 call set /a _imgi+=1
 call set ddesc="%_wtx% Pro N"
 wimlib-imagex.exe info "%_www%" !_imgi! !ddesc! !ddesc! --image-property DISPLAYNAME=!ddesc! --image-property DISPLAYDESCRIPTION=!ddesc! --image-property FLAGS=ProfessionalN %_Nul3%
+goto :eof
 
 :doappx
 %_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:"%_www%" /Index:%_inx% /MountDir:"%_mount%"

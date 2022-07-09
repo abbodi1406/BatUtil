@@ -24,6 +24,7 @@ set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 reg.exe query HKU\S-1-5-19 %_Null% || (echo.&echo This script require administrator privileges.&goto :TheEnd)
+set _drv=%~d0
 set "xOS=%PROCESSOR_ARCHITECTURE%"
 if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 set "xOS=%PROCESSOR_ARCHITEW6432%")
 set "_key=HKLM\SOFTWARE\Microsoft\WIMMount\Mounted Images"

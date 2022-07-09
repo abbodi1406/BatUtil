@@ -188,6 +188,10 @@ the option will also auto exit at the end without prompt
 
 <details><summary>changelog</summary>
 
+10.19:  
+- Added support for Windows 11 22622 Enablement Package
+- Fixed Combined UUP update naming scheme for Windows 11 22H2
+
 10.18:  
 - Enhanced detection for wmic.exe
 - Changed option "SkipBootFiles" to "UpdtBootFiles" to avoid confusion
