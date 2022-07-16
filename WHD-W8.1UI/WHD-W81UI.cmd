@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.8
+@set uiv=v6.9
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -79,19 +79,27 @@ set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "xOS=amd64"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (if not defined PROCESSOR_ARCHITEW6432 (
-  set "xOS=x86"
-  )
-)
+if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xOS=arm64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xOS=x86"
+if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
+if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
 set "_Null=1>nul 2>nul"
+set "_err===== ERROR ===="
+for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
 reg.exe query HKU\S-1-5-19 %_Null% || goto :E_Admin
 set "_oscdimg=%SysPath%\oscdimg.exe"
-set "_SxS=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\SideBySide\Configuration"
+set "_sbs=Microsoft\Windows\CurrentVersion\SideBySide\Configuration"
+set "_SxS=HKLM\SOFTWARE\%_sbs%"
+set "_CBS=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing"
 set "_log=%~dpn0"
 set "_work=%~dp0"
-if "%_work:~-1%"=="\" set "_work=%_work:~0,-1%"
+set "_work=%_work:~0,-1%"
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
-if exist "%SystemDrive%\Users\Public\Desktop\desktop.ini" set "_dsk=%SystemDrive%\Users\Public\Desktop"
+if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
 setlocal EnableDelayedExpansion
 
 if %_Debug% equ 0 (
@@ -161,7 +169,6 @@ goto :eof
 
 :proceed
 if %_Debug% neq 0 set autostart=1
-for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 if "!repo!"=="" set "repo=Updates"
 if "!dismroot!"=="" set "DismRoot=dism.exe"
 if "!cab_dir!"=="" set "Cab_Dir=W81UItemp"
@@ -182,6 +189,7 @@ set _ADK=0
 set "showdism=Host OS"
 set "_dism2=%dismroot% /NoRestart /ScratchDir"
 if /i not "!dismroot!"=="dism.exe" (
+set _ADK=1
 set "showdism=%dismroot%"
 set _dism2="%dismroot%" /NoRestart /ScratchDir
 )
@@ -190,7 +198,8 @@ for %%# in (LDRbranch Hotfix WUSatisfy Windows10 WMF RSAT) do if /i "!%%#!"=="NO
 set _drv=%~d0
 if /i "%cab_dir:~0,5%"=="W81UI" set "cab_dir=%_drv%\W81UItemp"
 set _ntf=NTFS
-if /i not "%_drv%"=="%SystemDrive%" for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" set _drv=%SystemDrive%
 if /i "%mountdir:~0,5%"=="W81UI" set "mountdir=%_drv%\W81UImount"
 if /i "%winremount:~0,5%"=="W81UI" set "winremount=%_drv%\W81UImountre"
@@ -228,7 +237,7 @@ if %_init%==1 if "!target!"=="" if exist "*.wim" (for /f "tokens=* delims=" %%# 
 if "!target!"=="" set "target=%SystemDrive%"
 if "%target:~-1%"=="\" set "target=!target:~0,-1!"
 if /i "!target!"=="%SystemDrive%" (
-if %xOS%==amd64 (set arch=x64) else (set arch=x86)
+if /i %xOS%==amd64 (set arch=x64) else (set arch=x86)
 if %_init%==1 (goto :check) else (goto :mainmenu)
 )
 if /i "%target:~-4%"==".wim" (
@@ -244,7 +253,8 @@ if %offline%==0 if %wim%==0 if %dvd%==0 (if %_init%==1 (set "target=%SystemDrive
 if %offline%==1 (
 dir /b /ad "!target!\Windows\servicing\Version\6.3.9600.*" %_Nul3% || (set "MESSAGE=Detected target offline image is not Windows 8.1"&goto :E_Target)
 set "mountdir=!target!"
-if exist "!target!\Windows\SysWOW64\cmd.exe" (set arch=x64) else (set arch=x86)
+set arch=x86
+if exist "!target!\Windows\Servicing\Packages\*~amd64~~*.mum" set arch=x64
 )
 if %wim%==1 (
 echo.
@@ -288,8 +298,8 @@ if /i "!target!"=="%SystemDrive%" (
 reg.exe query %_SxS% /v W81UIclean %_Nul3% && (set onlineclean=1&set online=1&set cleanup=1)
 reg.exe query %_SxS% /v W81UIrebase %_Nul3% && (set onlineclean=1&set online=1&set cleanup=1&set resetbase=1)
 )
-if defined onlineclean goto :mainboard2
-if /i not "!dismroot!"=="dism.exe" if exist "!dismroot!" (set _ADK=1&goto :mainmenu)
+if defined onlineclean goto :main2board
+if /i not "!dismroot!"=="dism.exe" if exist "!dismroot!" goto :mainmenu
 goto :checkadk
 
 :mainboard
@@ -303,8 +313,7 @@ if "!cab_dir!"=="" (%_Goto%)
 if "!mountdir!"=="" (%_Goto%)
 if /i "!target!"=="%SystemDrive%" (set dismtarget=/online&set "mountdir=!target!"&set online=1) else (set dismtarget=/image:"!mountdir!")
 
-:mainboard2
-rem if %_Debug% neq 0 set "
+:main2board
 @cls
 echo ============================================================
 echo Running WHD-W81UI %uiv%
@@ -330,9 +339,9 @@ if exist "%SystemRoot%\WinSxS\pending.xml" (
 set verb=0
 set "mountdir=!target!"
 set dismtarget=/online
-call :cleanup
 reg.exe delete %_SxS% /v W81UIclean /f %_Nul3%
 reg.exe delete %_SxS% /v W81UIrebase /f %_Nul3%
+call :cleanup
 goto :fin
 )
 if %dvd%==1 if %copytarget%==1 (
@@ -345,21 +354,26 @@ robocopy "!target!" "!_work!\DVD81UI" /E /A-:R >nul
 set "target=!_work!\DVD81UI"
 )
 if /i %arch%==x64 (set efifile=bootx64.efi&set sss=amd64) else (set efifile=bootia32.efi&set sss=x86)
-if %online%==1 (
-call :update
+
+:igonline
+if %online%==0 goto :igoffline
+call :doupdate
 goto :fin
-)
-if %offline%==1 (
-call :update
+
+:igoffline
+if %offline%==0 goto :igwim
+call :doupdate
 call :cleanup
 goto :fin
-)
-if %wim%==1 (
+
+:igwim
+if %wim%==0 goto :igdvd
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount "%targetname%"
 if /i not "%targetname%"=="winre.wim" (if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%)
 goto :fin
-)
+
+:igdvd
 if %dvd%==0 goto :fin
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\install.wim
@@ -379,7 +393,7 @@ if %errorlevel% equ 0 (del /f /q sources\install.wim %_Nul3%) else (del /f /q so
 cd /d "!_work!"
 goto :fin
 
-:update
+:doupdate
 set verb=1
 if not "%1"=="" (
 set verb=0
@@ -900,7 +914,7 @@ goto :eof
 
 :cleaner
 cd /d "!repo!"
-if %wimfiles%==1 (
+if %wimfiles% equ 1 (
 if exist "!cab_dir!\*.cab" del /f /q "!cab_dir!\*.cab" %_Nul1%
 ) else (
   if exist "!cab_dir!\" (
@@ -973,13 +987,20 @@ reg.exe delete "HKLM\%ksub1%\Microsoft\Windows NT\CurrentVersion\AppCompatFlags"
 reg.exe delete "HKLM\%ksub1%\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\TelemetryController" /f
 reg.exe delete HKLM\%ksub1%\Microsoft\Windows\CurrentVersion\Diagnostics\DiagTrack /f
 reg.exe add HKLM\%ksub1%\Microsoft\Windows\CurrentVersion\Diagnostics\DiagTrack /v DiagTrackAuthorization /t REG_DWORD /d 0 /f
+reg.exe add HKLM\%ksub1%\Microsoft\Windows\CurrentVersion\EOSNotify /f /v DiscontinueEOS /t REG_DWORD /d 1
 
+set "T_USR=HKCU\Software\Microsoft\Windows\CurrentVersion"
+set "T_US2=HKLM\OFFUSR\Software\Microsoft\Windows\CurrentVersion"
 set "T_Win=Microsoft\Windows"
 set "T_App=Microsoft\Windows\Application Experience"
 set "T_CEIP=Microsoft\Windows\Customer Experience Improvement Program"
 (
 echo @echo off
 echo reg.exe query "HKU\S-1-5-19" 1^>nul 2^>nul ^|^| ^(echo Run the script as administrator^&pause^&exit^)
+echo reg.exe add %T_USR%\EOSNotify /f /v RemindMeAfterEndOfSupport /t REG_DWORD /d 1
+echo reg.exe add %T_USR%\EOSNotify /f /v DiscontinueEOS /t REG_DWORD /d 1
+echo reg.exe add %T_USR%\EOSNotify /f /v TimestampOverride /t REG_DWORD /d 1
+echo reg.exe add %T_USR%\EOSNotify /f /v LastRunTimestamp /t REG_QWORD /d 0x0
 echo reg.exe delete HKLM\SYSTEM\CurrentControlSet\Control\WMI\AutoLogger\AutoLogger-Diagtrack-Listener /f
 echo reg.exe delete HKLM\SYSTEM\CurrentControlSet\Control\WMI\AutoLogger\Diagtrack-Listener /f
 echo rem reg.exe delete HKLM\SYSTEM\CurrentControlSet\Control\WMI\AutoLogger\SQMLogger /f
@@ -988,6 +1009,8 @@ echo del /f /q "%%ProgramData%%\Microsoft\Diagnosis\*.rbs"
 echo del /f /q /s "%%ProgramData%%\Microsoft\Diagnosis\ETLLogs\*"
 echo sc.exe config DiagTrack start= disabled
 echo sc.exe stop DiagTrack
+echo schtasks.exe /Change /DISABLE /TN "%T_Win%\Setup\EOSNotify"
+echo schtasks.exe /Change /DISABLE /TN "%T_Win%\Setup\EOSNotify2"
 echo schtasks.exe /Change /DISABLE /TN "%T_Win%\PerfTrack\BackgroundConfigSurveyor"
 echo schtasks.exe /Change /DISABLE /TN "%T_Win%\SetupSQMTask"
 echo schtasks.exe /Change /DISABLE /TN "%T_CEIP%\BthSQM"
@@ -998,6 +1021,8 @@ echo schtasks.exe /Change /DISABLE /TN "%T_CEIP%\UsbCeip"
 echo schtasks.exe /Change /DISABLE /TN "%T_App%\AitAgent"
 echo schtasks.exe /Change /DISABLE /TN "%T_App%\Microsoft Compatibility Appraiser"
 echo schtasks.exe /Change /DISABLE /TN "%T_App%\ProgramDataUpdater"
+echo schtasks.exe /Delete /TN "%T_Win%\Setup\EOSNotify" /F
+echo schtasks.exe /Delete /TN "%T_Win%\Setup\EOSNotify2" /F
 echo schtasks.exe /Delete /TN "%T_Win%\PerfTrack\BackgroundConfigSurveyor" /F
 echo schtasks.exe /Delete /TN "%T_Win%\SetupSQMTask" /F
 echo schtasks.exe /Delete /TN "%T_CEIP%\BthSQM" /F
@@ -1016,6 +1041,20 @@ if exist "%SystemRoot%\winsxs\pending.xml" (move /y "W10Tel.cmd" "!mountdir!\Use
 ) else (
 move /y "W10Tel.cmd" "!mountdir!\Users\Public\Desktop\RunOnce_W10_Telemetry_Tasks.cmd"
 reg.exe unload HKLM\%ksub1%
+)
+
+if %online%==1 (
+reg.exe add %T_USR%\EOSNotify /f /v RemindMeAfterEndOfSupport /t REG_DWORD /d 1
+reg.exe add %T_USR%\EOSNotify /f /v DiscontinueEOS /t REG_DWORD /d 1
+reg.exe add %T_USR%\EOSNotify /f /v TimestampOverride /t REG_DWORD /d 1
+reg.exe add %T_USR%\EOSNotify /f /v LastRunTimestamp /t REG_QWORD /d 0x0
+) else (
+reg.exe load HKLM\OFFUSR "!mountdir!\Users\Default\ntuser.dat"
+reg.exe add %T_US2%\EOSNotify /f /v RemindMeAfterEndOfSupport /t REG_DWORD /d 1
+reg.exe add %T_US2%\EOSNotify /f /v DiscontinueEOS /t REG_DWORD /d 1
+reg.exe add %T_US2%\EOSNotify /f /v TimestampOverride /t REG_DWORD /d 1
+reg.exe add %T_US2%\EOSNotify /f /v LastRunTimestamp /t REG_QWORD /d 0x0
+reg.exe unload HKLM\OFFUSR
 )
 goto :eof
 
@@ -1084,7 +1123,7 @@ cd /d "!_wimpath!"
 %_dism2%:"!cab_dir!" /Mount-Wim /Wimfile:%_wimfile% /Index:%%# /MountDir:"!mountdir!"
 if !errorlevel! neq 0 goto :E_MOUNT
 cd /d "!_work!"
-call :update
+call :doupdate
 call :cleanup
 if %dvd%==1 if exist "!mountdir!\sources\setup.exe" call :boots
 if %dvd%==1 if not defined isover (
@@ -1151,7 +1190,7 @@ goto :eof
   %_dism2%:"!cab_dir!" /Mount-Wim /Wimfile:winre.wim /Index:1 /MountDir:"!winremount!"
   if %errorlevel% neq 0 goto :E_MOUNT
   cd /d "!cab_dir!"
-  call :update winre
+  call :doupdate winre
   %_dism2%:"!cab_dir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase
   call :cleanmanual
   %_dism2%:"!cab_dir!" /Unmount-Wim /MountDir:"!winremount!" /Commit
@@ -1237,7 +1276,7 @@ dism.exe /Unmount-Wim /MountDir:"!mountdir!" /Discard
 dism.exe /Unmount-Wim /MountDir:"!winremount!" /Discard %_Nul3%
 dism.exe /Cleanup-Mountpoints %_Nul3%
 dism.exe /Cleanup-Wim %_Nul3%
-if %wimfiles%==1 (if exist "!mountdir!\" if not exist "!mountdir!\Windows\" rmdir /s /q "!mountdir!\" %_Nul3%)
+if %wimfiles% equ 1 (if exist "!mountdir!\" if not exist "!mountdir!\Windows\" rmdir /s /q "!mountdir!\" %_Nul3%)
 if exist "!winremount!\" if not exist "!winremount!\Windows\" rmdir /s /q "!winremount!\" %_Nul3%
 if exist "!cab_dir!\" (
 echo.
@@ -1282,13 +1321,15 @@ if %wowRegKeyPathFound% equ 0 (
 )
 for /f "skip=2 tokens=2*" %%i in ('reg.exe query "%regKeyPath%" /v KitsRoot81') do set "KitsRoot=%%j"
 set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
-if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
-set _ADK=1
-if %winbuild% lss 9600 set "showdism=Windows 8.1 ADK"
-if %winbuild% lss 9600 set "Path=%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-)
 if exist "%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe" (
 set "_oscdimg=%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe"
+)
+if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
+set _ADK=1
+if %winbuild% lss 10240 set "showdism=Windows 8.1 ADK"
+if %winbuild% lss 10240 set "Path=%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+) else (
+goto :check10adk
 )
 goto :mainmenu
 
@@ -1310,8 +1351,8 @@ for /f "skip=2 tokens=2*" %%i in ('reg.exe query "%regKeyPath%" /v KitsRoot10') 
 set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
 if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
 set _ADK=1
-if %winbuild% lss 9600 set "showdism=Windows 10 ADK"
-if %winbuild% lss 9600 set "Path=%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set "showdism=Windows NT 10.0 ADK"
+set "Path=%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 )
 if exist "%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe" (
 set "_oscdimg=%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe"
@@ -1374,7 +1415,11 @@ set /p _pp=
 if not defined _pp goto :mainmenu
 set "_pp=%_pp:"=%"
 if not exist "!_pp!" (echo.&echo ERROR: DISM path not found&pause&goto :dismmenu)
-for /f "tokens=4 delims==." %%# in ('wmic datafile where "name='!_pp:\=\\!'" get Version /value') do if %%# lss 9600 (echo.&echo ERROR: DISM version is lower than 6.3.9600&pause&goto :dismmenu)
+set "cpp=!_pp:\=\\!"
+set "dsmver=9600"
+if %_cwmi% equ 1 for /f "tokens=4 delims==." %%# in ('wmic datafile where "name='!cpp!'" get Version /value') do set "dsmver=%%#" 
+if %_cwmi% equ 0 for /f "tokens=3 delims=." %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cpp!\"').Version"') do set "dsmver=%%#"
+if %dsmver% lss 9600 (echo.&echo ERROR: DISM version is lower than 6.3.9600&pause&goto :dismmenu)
 set "dismroot=%_pp%"
 set "showdism=%_pp%"
 set _dism2="%_pp%" /NoRestart /ScratchDir
@@ -1488,7 +1533,7 @@ echo [L] Online installation limit: %onlinelimit% updates
 ) else (
 if %winbuild% lss 9600 (if %_ADK% equ 0 (echo [D] Select Windows 8.1 dism.exe) else (echo [D] DISM: "!showdism!")) else (echo [D] DISM: "!showdism!")
 )
-if %wimfiles%==1 (
+if %wimfiles% equ 1 (
 if /i "%targetname%"=="install.wim" (echo.&if %winre%==1 (echo [U] Update WinRE.wim: YES) else (echo [U] Update WinRE.wim: NO))
 if %imgcount% gtr 1 (
 echo.
@@ -1505,11 +1550,11 @@ echo ==================================================================
 choice /c 1234567890DELIKMNUCT /n /m "Change a menu option, press 0 to start the process, or 9 to exit: "
 if errorlevel 20 (if %resetbase%==1 (set resetbase=0) else (set resetbase=1))&goto :mainmenu
 if errorlevel 19 (if %cleanup%==1 (set cleanup=0) else (set cleanup=1))&goto :mainmenu
-if errorlevel 18 (if %wimfiles%==1 (if %winre%==1 (set winre=0) else (set winre=1)))&goto :mainmenu
+if errorlevel 18 (if %wimfiles% equ 1 (if %winre%==1 (set winre=0) else (set winre=1)))&goto :mainmenu
 if errorlevel 17 (if %net35%==1 (set net35=0) else (set net35=1))&goto :mainmenu
-if errorlevel 16 (if %wimfiles%==1 (goto :mountmenu))&goto :mainmenu
-if errorlevel 15 (if %wimfiles%==1 if %imgcount% gtr 1 (if %keep%==1 (set keep=0) else (set keep=1)))&goto :mainmenu
-if errorlevel 14 (if %wimfiles%==1 if %imgcount% gtr 1 (goto :indexmenu))&goto :mainmenu
+if errorlevel 16 (if %wimfiles% equ 1 (goto :mountmenu))&goto :mainmenu
+if errorlevel 15 (if %wimfiles% equ 1 if %imgcount% gtr 1 (if %keep%==1 (set keep=0) else (set keep=1)))&goto :mainmenu
+if errorlevel 14 (if %wimfiles% equ 1 if %imgcount% gtr 1 (goto :indexmenu))&goto :mainmenu
 if errorlevel 13 goto :countmenu
 if errorlevel 12 goto :extractmenu
 if errorlevel 11 goto :dismmenu
@@ -1528,19 +1573,24 @@ goto :mainmenu
 :ISO
 if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\cdimage.exe" goto :eof
 if "!isodir!"=="" set "isodir=!_work!"
-for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
+if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
+if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
 set "isodate=%_date:~0,4%-%_date:~4,2%-%_date:~6,2%"
-if defined isover (set isofile=Win8.1_%isover%_%arch%_%isodate%.iso) else (set isofile=Win8.1_%arch%_%isodate%.iso)
+if defined isover (set isofile=%isover%_%arch%_%isodate%.iso) else (set isofile=Win8.1_%arch%_%isodate%.iso)
 set /a rnd=%random%
 if exist "!isodir!\%isofile%" ren "!isodir!\%isofile%" "%rnd%_%isofile%"
 echo.
 echo ============================================================
 echo Creating updated ISO file...
 echo ============================================================
+echo.
+echo ISO Location:
+echo "!isodir!"
 if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else (set _ff="!_work!\cdimage.exe")
 cd /d "!target!"
-!_ff! -m -o -u2 -udfver102 -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -l"%isover%u" . "%isofile%"
+!_ff! -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -m -o -u2 -udfver102 -l"%isover%u" . "%isofile%"
 set errcode=%errorlevel%
+if not exist "%isofile%" set errcode=1
 if %errcode% equ 0 move /y "%isofile%" "!isodir!\" %_Nul3%
 cd /d "!_work!"
 if %errcode% equ 0 if %delete_source% equ 1 rmdir /s /q "!target!\" %_Nul1%
@@ -1556,7 +1606,7 @@ echo Removing temporary extracted files...
 echo ============================================================
 rmdir /s /q "!cab_dir!\" %_Nul1%
 )
-if %wimfiles%==1 if exist "!mountdir!\" rmdir /s /q "!mountdir!\" %_Nul1%
+if %wimfiles% equ 1 if exist "!mountdir!\" rmdir /s /q "!mountdir!\" %_Nul1%
 if exist "!winremount!\" rmdir /s /q "!winremount!\" %_Nul1%
 if %dvd%==1 if %iso%==1 call :ISO
 echo.
@@ -1571,9 +1621,9 @@ echo System restart is required to complete installation
 echo ============================================================
 echo.
 )
+if %_Debug% neq 0 goto :eof
 echo.
 echo Press 9 to exit.
-if %_Debug% neq 0 goto :eof
 choice /c 9 /n
 if errorlevel 1 (goto :eof) else (rem.)
 

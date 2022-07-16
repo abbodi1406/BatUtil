@@ -98,17 +98,17 @@ if %_dir64% equ 1 if %_dir86% equ 1 goto :DUALMENU
 goto :fndiso
 
 :chkdir
-if exist "%~1\efi\boot\bootx64.efi" (set _dir64=1&set "ISOdir1=%%#"&exit /b) else if exist "%~1\efi\boot\bootia32.efi" (set _dir86=1&set "ISOdir2=%%#"&exit /b)
+if exist "%~1\efi\boot\bootx64.efi" (set _dir64=1&set "ISOdir1=%~1"&exit /b) else if exist "%~1\efi\boot\bootia32.efi" (set _dir86=1&set "ISOdir2=%~1"&exit /b)
 if exist "%~1\sources\idwbinfo.txt" (
-findstr /i amd64 idwbinfo.txt %_Nul3% && (set _dir64=1&set "ISOdir1=%%#"&exit /b)
-findstr /i x86 idwbinfo.txt %_Nul3% && (set _dir86=1&set "ISOdir2=%%#"&exit /b)
+findstr /i amd64 idwbinfo.txt %_Nul3% && (set _dir64=1&set "ISOdir1=%~1"&exit /b)
+findstr /i x86 idwbinfo.txt %_Nul3% && (set _dir86=1&set "ISOdir2=%~1"&exit /b)
 )
-if exist "%~1\sources\sxs\*amd64*.cab" (set _dir64=1&set "ISOdir1=%%#"&exit /b)
-if exist "%~1\sources\sxs\*x86*.cab" (set _dir86=1&set "ISOdir2=%%#"&exit /b)
+if exist "%~1\sources\sxs\*amd64*.cab" (set _dir64=1&set "ISOdir1=%~1"&exit /b)
+if exist "%~1\sources\sxs\*x86*.cab" (set _dir86=1&set "ISOdir2=%~1"&exit /b)
 if not exist "%~1\sources\setup.exe" exit /b
 7z.exe l "%~1\sources\setup.exe" >.\bin\version.txt 2>&1
-findstr /i /b "CPU" .\bin\version.txt | find /i "x64" %_Nul3% && (set _dir64=1&set "ISOdir1=%%#")
-findstr /i /b "CPU" .\bin\version.txt | find /i "x86" %_Nul3% && (set _dir86=1&set "ISOdir2=%%#")
+findstr /i /b "CPU" .\bin\version.txt | find /i "x64" %_Nul3% && (set _dir64=1&set "ISOdir1=%~1")
+findstr /i /b "CPU" .\bin\version.txt | find /i "x86" %_Nul3% && (set _dir86=1&set "ISOdir2=%~1")
 del /f /q .\bin\version.txt %_Nul3%
 exit /b
 
