@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.19
+@set uiv=v10.20
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -292,6 +292,7 @@ set _init=1
 
 :checktarget
 set tmpssu=
+set isomin=0
 set _fixEP=0
 set _actEP=0
 set _SrvEdt=0
@@ -682,6 +683,7 @@ set msu_%dest%=1
 if not defined isodate findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% && (
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 copy /y "%dest%\update.mum" %SystemRoot%\temp\ %_Nul1%
+if %_build% geq 22621 copy /y "%dest%\update.mum" "!_cabdir!\LCU.mum" %_Nul1%
 call :datemum isodate isotime
 )
 cd /d "!_work!"
@@ -723,6 +725,7 @@ set psf_%pkgn%=1
 if not defined isodate findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% && (
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 copy /y "checker\update.mum" %SystemRoot%\temp\ %_Nul1%
+if %_build% geq 22621 copy /y "checker\update.mum" "!_cabdir!\LCU.mum" %_Nul1%
 call :datemum isodate isotime
 )
 expand.exe -f:toc.xml "!repo!\!package!" "checker" %_Null%
@@ -1113,6 +1116,18 @@ echo.&echo %%#
 )
 if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
 if %_build% equ 14393 if %wimfiles% equ 1 call :MeltdownSpectre
+if not exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" goto :cumwd
+if %online%==1 goto :cumwd
+for /f %%# in ('dir /b /a:-d /od "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum"') do set "lcumum=%%#"
+if defined lcumsu if %_build% geq 22621 if exist "!_cabdir!\LCU.mum" (
+%_Nul3% icacls "!mumtarget!\Windows\Servicing\Packages\%lcumum%" /save "!_cabdir!\acl.txt"
+%_Nul3% takeown /f "!mumtarget!\Windows\Servicing\Packages\%lcumum%" /A
+%_Nul3% icacls "!mumtarget!\Windows\Servicing\Packages\%lcumum%" /grant *S-1-5-32-544:F
+%_Nul3% copy /y "!_cabdir!\LCU.mum" "!mumtarget!\Windows\Servicing\Packages\%lcumum%"
+%_Nul3% icacls "!mumtarget!\Windows\Servicing\Packages\%lcumum%" /setowner *S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464
+%_Nul3% icacls "!mumtarget!\Windows\Servicing\Packages" /restore "!_cabdir!\acl.txt"
+%_Nul3% del /f /q "!_cabdir!\acl.txt"
+)
 :cumwd
 if defined lcupkg call :ReLCU
 if defined callclean call :cleanup
@@ -1470,7 +1485,7 @@ if not exist "!mumtarget!\Windows\WinSxS\Manifests\%_SxsCom%.manifest" (
 %_Nul3% takeown /f "!mumtarget!\Windows\WinSxS\Manifests" /A
 %_Nul3% icacls "!mumtarget!\Windows\WinSxS\Manifests" /grant:r "*S-1-5-32-544:(OI)(CI)(F)"
 %_Nul3% copy /y "%dest%\%_SxsCom%.manifest" "!mumtarget!\Windows\WinSxS\Manifests\"
-%_Nul3% icacls "!mumtarget!\Windows\WinSxS\Manifests" /setowner "NT SERVICE\TrustedInstaller"
+%_Nul3% icacls "!mumtarget!\Windows\WinSxS\Manifests" /setowner *S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464
 %_Nul3% icacls "!mumtarget!\Windows\WinSxS" /restore "!_cabdir!\acl.txt"
 %_Nul3% del /f /q "!_cabdir!\acl.txt"
 )
@@ -1761,7 +1776,6 @@ cd /d "!_cabdir!"
 call :doupdate
 if %net35%==1 call :enablenet35
 if %dvd%==1 (
-set isomin=0
 if not defined isomaj for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
 if not defined isolab if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 if %_build% geq 15063 (call :detectLab isolab) else (call :legacyLab isolab)

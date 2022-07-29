@@ -257,6 +257,7 @@ for /f "tokens=3 delims=<>" %%# in ('find /i "<EDITIONID>" bin\info.txt') do set
 for /f "tokens=3 delims=<>" %%# in ('find /i "<ARCH>" bin\info.txt') do (if %%# equ 0 (set arch=x86) else if %%# equ 9 (set arch=x64) else (set arch=arm64))
 for /f "tokens=3 delims=: " %%# in ('findstr /i /b /c:"Image Count" bin\infoall.txt') do (if %%# geq 5 set MULTI=%%#)
 if %_build% leq 9600 goto :E_W81
+set /a _fixSV=%_build%+1
 for %%# in (ru-ru,zh-cn,zh-tw,zh-hk) do if /i %langid%==%%# set _nnn=NAME
 find /i "<DISPLAYNAME>" bin\info.txt %_Nul1% && (
 for /f "tokens=3 delims=<>" %%# in ('find /i "<%_nnn%>" bin\info.txt') do set "_os=%%#"
@@ -667,6 +668,13 @@ if %revmaj%==19045 (
 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
 if %uupver:~0,5%==19041 set uupver=19045%uupver:~5%
 )
+if %revmaj%==19046 (
+if /i "%branch:~0,2%"=="vb" set branch=23h2%branch:~2%
+if %uupver:~0,5%==19041 set uupver=19046%uupver:~5%
+)
+if %uupmaj%==%_fixSV% if %_build% geq 21382 (
+if %uupver:~0,5%==%_build% set uupver=%_fixSV%%uupver:~5%
+)
 if %uupmin% lss %revmin% (
 set uupver=%revver%
 set uupmin=%revmin%
@@ -698,6 +706,7 @@ if %revver%==22000.258 (set _label=22000.258.211007-1642.co_%_rsr%&set branch=co
 if %revver%==22000.194 (set _label=22000.194.210913-1444.co_%_rsr%&set branch=co_%_rsr%&set ISOnameESD=0)
 if %revver%==22000.132 (set _label=22000.132.210809-2349.co_%_rsr%&set branch=co_%_rsr%&set ISOnameESD=0)
 if %revmaj%==19045 (set _label=%revver%.%_time%.22h2_%_rsr%&set branch=22h2_%_rsr%)
+if %revver%==19045.1826 (set _label=19045.1826.220707-2303.22h2_%_rsr%&set branch=22h2_%_rsr%&set ISOnameESD=0)
 if %revmaj%==19044 (set _label=%revver%.%_time%.21h2_%_rsr%&set branch=21h2_%_rsr%)
 if %revver%==19044.1706 (set _label=19044.1706.220505-0136.21h2_%_rsr%&set branch=21h2_%_rsr%&set ISOnameESD=0)
 if %revver%==19044.1288 (set _label=19044.1288.211006-0501.21h2_%_rsr%&set branch=21h2_%_rsr%&set ISOnameESD=0)
@@ -1227,6 +1236,7 @@ call :setdate
 set arch=!ESDarch%1!
 set _build=!ESDver%1!
 set langid=!ESDlang%1!
+set /a _fixSV=%_build%+1
 call :setlabel %1
 exit /b
 
