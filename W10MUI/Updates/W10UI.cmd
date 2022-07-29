@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.20
+@set uiv=v10.21
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -777,7 +777,10 @@ if exist "checker\Microsoft-Windows-1909Enablement-Package~*.mum" set "_fixEP=18
 if exist "checker\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "checker\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "checker\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "checker\Microsoft-Windows-22H2Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
+if exist "checker\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
+if exist "checker\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=19046"
+if exist "checker\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
+if exist "checker\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "checker\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
 )
 if %_build% geq 18362 if exist "checker\*enablement-package*.mum" (
@@ -1851,7 +1854,10 @@ if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-1909Enablement
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-22H2Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=19046"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
 set "wnt=31bf3856ad364e35_10"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_31bf3856ad364e35_11.*.manifest" set "wnt=31bf3856ad364e35_11"
@@ -1867,6 +1873,9 @@ if %uupmaj%==19042 if /i "%uuplab:~0,2%"=="vb" set uuplab=20h2%uuplab:~2%
 if %uupmaj%==19043 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h1%uuplab:~2%
 if %uupmaj%==19044 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h2%uuplab:~2%
 if %uupmaj%==19045 if /i "%uuplab:~0,2%"=="vb" set uuplab=22h2%uuplab:~2%
+if %uupmaj%==19046 if /i "%uuplab:~0,2%"=="vb" set uuplab=23h2%uuplab:~2%
+if %uupmaj%==20349 if /i "%uuplab:~0,2%"=="fe" set uuplab=22h2%uuplab:~2%
+if %uupmaj%==20350 if /i "%uuplab:~0,2%"=="fe" set uuplab=23h2%uuplab:~2%
 goto :eof
 
 :detectLab

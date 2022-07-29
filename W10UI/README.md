@@ -188,6 +188,9 @@ the option will also auto exit at the end without prompt
 
 <details><summary>changelog</summary>
 
+10.21:  
+- Added support for Azure Stack HCI, 22H2 Enablement Package
+
 10.20:  
 - Restore original timestamp for Package_for_RollupFix .mum for 22621+ MSU integration
 

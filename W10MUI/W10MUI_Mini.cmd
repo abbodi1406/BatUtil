@@ -201,8 +201,8 @@ set foundupdates=0
 if exist ".\Updates\W10UI.cmd" (
 if exist ".\Updates\SSU-*-*.cab" set foundupdates=1
 if exist ".\Updates\SSU-*-*.msu" set foundupdates=1
-if exist ".\Updates\*Windows10*KB*.cab" set foundupdates=1
-if exist ".\Updates\*Windows10*KB*.msu" set foundupdates=1
+if exist ".\Updates\*Windows1*-KB*.cab" set foundupdates=1
+if exist ".\Updates\*Windows1*-KB*.msu" set foundupdates=1
 )
 
 for /L %%j in (1,1,%LANGUAGES%) do (
