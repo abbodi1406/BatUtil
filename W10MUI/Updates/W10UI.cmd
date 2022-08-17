@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.21
+@set uiv=v10.22
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -500,7 +500,7 @@ if exist "%SystemRoot%\temp\Facilitator.dll" del /f /q "%SystemRoot%\temp\Facili
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\install.wim
 if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%
-set imgcount=%bootimg%&set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
+set keep=0&set imgcount=%bootimg%&set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\boot.wim
 if not defined isoupdate goto :dvdproceed
   echo.
@@ -537,7 +537,8 @@ echo Converting install.wim to install.esd ...
 echo ============================================================
 cd /d "!target!"
 %_dism2%:"!_cabdir!" /Export-Image /SourceImageFile:sources\install.wim /All /DestinationImageFile:sources\install.esd /Compress:LZMS
-if %errorlevel% equ 0 (del /f /q sources\install.wim %_Nul3%) else (del /f /q sources\install.esd %_Nul3%)
+if %errorlevel% neq 0 del /f /q sources\install.esd %_Nul3%
+if exist sources\install.esd del /f /q sources\install.wim
 cd /d "!_work!"
 goto :fin
 
@@ -548,7 +549,8 @@ echo Splitting install.wim into install.swm^(s^)...
 echo ============================================================
 cd /d "!target!"
 %_dism2%:"!_cabdir!" /Split-Image /ImageFile:sources\install.wim /SWMFile:sources\install.swm /FileSize:4000
-if %errorlevel% equ 0 (del /f /q sources\install.wim %_Nul3%) else (del /f /q sources\install*.swm %_Nul3%)
+if %errorlevel% neq 0 del /f /q sources\install*.swm %_Nul3%
+if exist sources\install*.swm del /f /q sources\install.wim
 cd /d "!_work!"
 goto :fin
 
@@ -1224,8 +1226,8 @@ for /f "tokens=%tn% delims=-" %%A in ('echo !package!') do (
 :endmumLoop
 if "%kb%"=="" (set /a _sum-=1&goto :eof)
 if %_build% geq 17763 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
-findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" (
-  if exist "%dest%\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:%dest%\update.mum") else (if exist "%dest%\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:%dest%\update.mum")
+findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && (
+  if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" if not exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" (if exist "%dest%\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:%dest%\update.mum") else (if exist "%dest%\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:%dest%\update.mum"))
   ))
 findstr /i /m "Package_for_OasisAsset" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\*OasisAssets-Package*.mum" (set /a _sum-=1&goto :eof))
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
@@ -1265,7 +1267,7 @@ if exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" (
 set "servicingstack=!servicingstack! /PackagePath:%dest%\update.mum"
 goto :eof
 )
-if exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" if exist "%dest%\*_netfx4clientcorecomp.resources*_en-us_*.manifest" (
+if exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" (
 if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
 set "netpack=!netpack! /PackagePath:%dest%\update.mum"
 goto :eof
@@ -1307,6 +1309,11 @@ if %_build% geq 16299 (
   for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "%dest%\update.mum" %_Nul6%') do if exist "!mumtarget!\Windows\Servicing\packages\%%~#*.mum" set flash=1
   if "!flash!"=="0" (set /a _sum-=1&goto :eof)
   )
+)
+if exist "%dest%\*enablement-package*.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+  set epkb=0
+  for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "%dest%\update.mum" %_Nul6%') do if exist "!mumtarget!\Windows\Servicing\packages\%%~#*.mum" set epkb=1
+  if "!epkb!"=="0" (set /a _sum-=1&goto :eof)
 )
 for %%# in (%directcab%) do (
 if /i "!package!"=="%%~#" (
@@ -1831,6 +1838,7 @@ if !discard!==1 (
 )
 if !errorlevel! neq 0 goto :E_MOUNT
 )
+if %keep%==0 if %wim2esd%==1 if %dvd%==1 if /i "%_wimfile%"=="sources\install.wim" goto :eof
 echo.
 echo ============================================================
 echo Rebuilding %_wimfile% ...
@@ -1889,11 +1897,12 @@ move /y "!mountdir!\Windows\System32\Config\SOFTWARE2" "!mountdir!\Windows\Syste
 goto :eof
 
 :legacyLab
-reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
-for /f "skip=2 tokens=6 delims=. " %%# in ('"reg.exe query "HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLabEx" %_Nul6%') do set "%1=%%#"
-reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" %_Nul1%
-reg.exe unload HKLM\uiSOFTWARE %_Nul1%
-move /y "!mountdir!\Windows\System32\Config\SOFTWARE2" "!mountdir!\Windows\System32\Config\SOFTWARE" %_Nul1%
+for /f "tokens=5 delims=.( " %%# in ('powershell -nop -c "(gi '!mountdir!\Windows\system32\ntoskrnl.exe').VersionInfo.FileVersion" %_Nul6%') do set "%1=%%#"
+:: reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
+:: for /f "skip=2 tokens=6 delims=. " %%# in ('"reg.exe query "HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLabEx" %_Nul6%') do set "%1=%%#"
+:: reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" %_Nul1%
+:: reg.exe unload HKLM\uiSOFTWARE %_Nul1%
+:: move /y "!mountdir!\Windows\System32\Config\SOFTWARE2" "!mountdir!\Windows\System32\Config\SOFTWARE" %_Nul1%
 goto :eof
 
 :boots
@@ -2043,14 +2052,14 @@ icacls "!mumtarget!\Windows\WinSxS\ManifestCache\*.bin" /grant *S-1-5-32-544:F %
 del /f /q "!mumtarget!\Windows\WinSxS\ManifestCache\*.bin" %_Nul3%
 )
 if exist "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\$$Delete*" (
-takeown /f "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\*" /A %_Nul3%
-icacls "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F %_Nul3%
+takeown /f "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\*" /A %_Null%
+icacls "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F %_Null%
 del /f /q "!mumtarget!\Windows\WinSxS\Temp\PendingDeletes\*" %_Nul3%
 )
 if exist "!mumtarget!\Windows\WinSxS\Temp\TransformerRollbackData\*" (
-takeown /f "!mumtarget!\Windows\WinSxS\Temp\TransformerRollbackData\*" /R /A %_Nul3%
-icacls "!mumtarget!\Windows\WinSxS\Temp\TransformerRollbackData\*" /grant *S-1-5-32-544:F /T %_Nul3%
-del /s /f /q "!mumtarget!\Windows\WinSxS\Temp\TransformerRollbackData\*" %_Nul3%
+takeown /f "!mumtarget!\Windows\WinSxS\Temp\TransformerRollbackData\*" /R /A %_Null%
+icacls "!mumtarget!\Windows\WinSxS\Temp\TransformerRollbackData\*" /grant *S-1-5-32-544:F /T %_Null%
+del /s /f /q "!mumtarget!\Windows\WinSxS\Temp\TransformerRollbackData\*" %_Null%
 )
 if exist "!mumtarget!\Windows\inf\*.log" (
 del /f /q "!mumtarget!\Windows\inf\*.log" %_Nul3%

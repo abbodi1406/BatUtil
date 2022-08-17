@@ -123,9 +123,13 @@ if /i %xOS%==amd64 set "DISMRoot=!WORKDIR!\dism\dism64\dism.exe"
 if %winbuild% geq 10240 set "DISMRoot=%SystemRoot%\System32\dism.exe"
 
 :check
+cd /d "!WORKDIR!"
+if "!WINPEPATH!"=="" (
+for /f %%# in ('dir /b /ad "WinPE\amd64\WinPE_OCs\*-*" %_Nul6%') do if exist "WinPE\amd64\WinPE_OCs\%%#\lp.cab" set "WinPERoot=!WORKDIR!\WinPE"
+for /f %%# in ('dir /b /ad "WinPE\x86\WinPE_OCs\*-*" %_Nul6%') do if exist "WinPE\x86\WinPE_OCs\%%#\lp.cab" set "WinPERoot=!WORKDIR!\WinPE"
+)
 if not "!WINPEPATH!"=="" set "WinPERoot=!WINPEPATH!"
 if not exist "!WinPERoot!\amd64\WinPE_OCs\*" if not exist "!WinPERoot!\x86\WinPE_OCs\*" set WINPE=0
-cd /d "!WORKDIR!"
 if not exist "!_7z!" goto :E_BIN
 if not exist "!DISMRoot!" goto :E_BIN
 set _dism2="!DISMRoot!" /English /ScratchDir
@@ -1166,11 +1170,16 @@ goto :eof
 "!_7z!" e ".\langs\!LPFILE%1!" -o"!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!" oobe_help_opt_in_details.rtf -r -aos %_Null%
 if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\bootsect.exe.mui" (xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\bootsect.exe.mui" "!DVDDIR!\boot\!LANGUAGE%1!\" /chryi %_Nul3%)
 xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\*" "!DVDDIR!\sources\!LANGUAGE%1!\" /cheryi %_Nul3%
-if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\cli" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\cli\*" "!DVDDIR!\sources\!LANGUAGE%1!\" /chryi %_Nul3%
-if exist "!DVDDIR!\sources\!LANGUAGE%1!\cli" rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\cli" %_Nul3%
+if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\cli\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\cli\*" "!DVDDIR!\sources\!LANGUAGE%1!\" /chryi %_Nul3%
+if exist "!DVDDIR!\sources\asz\*.dll" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\asz\*" "!DVDDIR!\sources\asz\!LANGUAGE%1!\" /chryi %_Nul3%
+if exist "!DVDDIR!\sources\svr\*.dll" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\svr\*" "!DVDDIR!\sources\svr\!LANGUAGE%1!\" /chryi %_Nul3%
 rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\dlmanifests" %_Nul3%
 rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\etwproviders" %_Nul3%
 rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\replacementmanifests" %_Nul3%
+rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\tdb" %_Nul3%
+rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\asz" %_Nul3%
+rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\cli" %_Nul3%
+rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\svr" %_Nul3%
 mkdir "!DVDDIR!\sources\dlmanifests\!LANGUAGE%1!"
 mkdir "!DVDDIR!\sources\replacementmanifests\!LANGUAGE%1!"
 xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\dlmanifests\microsoft-windows-iasserver-migplugin\*" "!DVDDIR!\sources\dlmanifests\microsoft-windows-iasserver-migplugin\!LANGUAGE%1!\" /chryi %_Nul3%
@@ -1207,6 +1216,7 @@ for /L %%j in (1,1,%LANGUAGES%) do (
     copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\reagent.adml" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
     for %%G in %bootmui% do (
     copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\%%G.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
+    if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\%%G.mui" copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\%%G.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
     )
     attrib -A -S -H -I "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" /S /D %_Nul1%
   )

@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.6
+@set uiv=v6.7
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -74,11 +74,17 @@ set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "xOS=amd64"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (if not defined PROCESSOR_ARCHITEW6432 (
-  set "xOS=x86"
-  )
-)
+if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xOS=arm64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xOS=x86"
+if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
+if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
 set "_Null=1>nul 2>nul"
+set "_err===== ERROR ===="
+for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
 reg.exe query HKU\S-1-5-19 %_Null% || goto :E_Admin
 set "_CBS=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing"
 set "_oscdimg=%SysPath%\oscdimg.exe"
@@ -158,7 +164,6 @@ goto :eof
 
 :proceed
 if %_Debug% neq 0 set autostart=1
-for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 set win7=0
 if %winbuild% geq 7600 if %winbuild% lss 9200 set win7=1
 if exist "!_work!\imagex.exe" set "_imagex=!_work!\imagex.exe"
@@ -178,6 +183,7 @@ set _ADK=0
 set "ShowDism=Host OS"
 set "_dism2=%DismRoot% /NoRestart /ScratchDir"
 if /i not "!DismRoot!"=="dism.exe" (
+set _ADK=1
 set "ShowDism=%DismRoot%"
 set _dism2="%DismRoot%" /NoRestart /ScratchDir
 )
@@ -186,7 +192,8 @@ for %%# in (ESUpdates LDRbranch IE11 RDP Hotfix Features Windows10 WAT WMF ADLDS
 set _drv=%~d0
 if /i "%cab_dir:~0,4%"=="W7UI" set "cab_dir=%_drv%\W7UItemp"
 set _ntf=NTFS
-if /i not "%_drv%"=="%SystemDrive%" for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" set _drv=%SystemDrive%
 if /i "%mountdir:~0,4%"=="W7UI" set "mountdir=%_drv%\W7UImount"
 if /i "%winremount:~0,4%"=="W7UI" set "winremount=%_drv%\W7UImountre"
@@ -210,6 +217,8 @@ rmdir /s /q "!cab_dir!\" %_Nul1%
 set _init=1
 
 :checktarget
+set isomin=0
+set _SrvEdt=0
 set dvd=0
 set wim=0
 set offline=0
@@ -223,7 +232,7 @@ if %_init%==1 if "!target!"=="" if exist "*.wim" (for /f "tokens=* delims=" %%# 
 if "!target!"=="" set "target=%SystemDrive%"
 if "%target:~-1%"=="\" set "target=!target:~0,-1!"
 if /i "!target!"=="%SystemDrive%" (
-if %xOS%==amd64 (set arch=x64) else (set arch=x86)
+if /i %xOS%==amd64 (set arch=x64) else (set arch=x86)
 if %_init%==1 (goto :check) else (goto :mainmenu)
 )
 if /i "%target:~-4%"==".wim" (
@@ -239,7 +248,8 @@ if %offline%==0 if %wim%==0 if %dvd%==0 (if %_init%==1 (set "target=%SystemDrive
 if %offline%==1 (
 dir /b /ad "!target!\Windows\servicing\Version\6.1.760*" %_Nul3% || (set "MESSAGE=Detected target offline image is not Windows 7 SP1"&goto :E_Target)
 set "mountdir=!target!"
-if exist "!target!\Windows\SysWOW64\cmd.exe" (set arch=x64) else (set arch=x86)
+set arch=x86
+if exist "!target!\Windows\Servicing\Packages\*~amd64~~*.mum" set arch=x64
 )
 if %wim%==1 (
 echo.
@@ -279,7 +289,7 @@ cd /d "!_work!"
 if %_init%==1 (goto :check) else (goto :mainmenu)
 
 :check
-if /i not "!DismRoot!"=="dism.exe" if exist "!DismRoot!" (set _ADK=1&goto :mainmenu)
+if /i not "!DismRoot!"=="dism.exe" if exist "!DismRoot!" goto :mainmenu
 goto :checkadk
 
 :mainboard
@@ -293,7 +303,6 @@ if "!mountdir!"=="" (%_Goto%)
 if /i "!target!"=="%SystemDrive%" (set dismtarget=/online&set "mountdir=!target!"&set online=1) else (set dismtarget=/image:"!mountdir!")
 
 :mainboard2
-:: if %_Debug% neq 0 set "
 @cls
 echo ============================================================
 echo Running WHD-W7UI_WithoutKB3125574 %uiv%
@@ -337,30 +346,35 @@ cd /d "!repo!\Security\ESU\"
 for /f %%# in ('dir /b /od *%arch%*.msu') do (set "package=%%#"&set "_size=%%~z#"&call :ChkSSU)
 cd /d "!repo!"
 )
-if %online%==1 (
-call :update
+
+:igonline
+if %online%==0 goto :igoffline
+call :doupdate
 goto :fin
-)
-if %offline%==1 (
-call :update
+
+:igoffline
+if %offline%==0 goto :igwim
+call :doupdate
 goto :fin
-)
-if %wim%==1 (
+
+:igwim
+if %wim%==0 goto :igdvd
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount "%targetname%"
 if /i not "%targetname%"=="winre.wim" (if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%)
 goto :fin
-)
+
+:igdvd
 if %dvd%==0 goto :fin
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\install.wim
 if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%
-xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
-set imgcount=%bootimg%&set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
+set keep=0&set imgcount=%bootimg%&set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\boot.wim
+xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
 goto :fin
 
-:update
+:doupdate
 set verb=1
 if not "%1"=="" (
 set verb=0
@@ -379,16 +393,7 @@ set allcount=0
 set IEcab=0
 set ssucsuesu=0
 set winpe=0
-if exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
-call :ssu
-call :csu
-call :esu
-set winpe=1
-if /i "%ESUpdates%"=="YES" (call :secupdates) else (call :security)
-set winpe=0
-call :cleanmanual
-goto :eof
-)
+if exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" goto :wpe
 call :ssu
 call :csu
 call :esu
@@ -405,6 +410,16 @@ call :online
 call :security
 if /i "%ESUpdates%"=="YES" call :secupdates
 if /i "%Hotfix%"=="YES" call :regfix
+call :cleanmanual
+goto :eof
+
+:wpe
+call :ssu
+call :csu
+call :esu
+set winpe=1
+if /i "%ESUpdates%"=="YES" (call :secupdates) else (call :security)
+set winpe=0
 call :cleanmanual
 goto :eof
 
@@ -1043,7 +1058,7 @@ goto :eof
 
 :cleaner
 cd /d "!repo!"
-if %wimfiles%==1 (
+if %wimfiles% equ 1 (
 if exist "!cab_dir!\*.cab" del /f /q "!cab_dir!\*.cab" %_Nul1%
 ) else (
   if exist "!cab_dir!\" (
@@ -1549,27 +1564,39 @@ if %dvd%==1 set "_wimpath=!target!"
 if exist "!mountdir!\" rmdir /s /q "!mountdir!\" %_Nul1%
 if not exist "!mountdir!\" mkdir "!mountdir!"
 if not exist "!cab_dir!\" mkdir "!cab_dir!"
-for %%# in (%indices%) do (
+for %%# in (%indices%) do (set "_inx=%%#"&call :dowork)
+cd /d "!_work!"
+if %winbuild% lss 9600 if %_ADK% equ 0 if /i "!DismRoot!"=="dism.exe" if not exist "!_imagex!" goto :eof
+if /i "%_wimfile%"=="sources\boot.wim" (call :pebuild) else (call :rebuild)
+cd /d "!_work!"
+goto :eof
+
+:dowork
 echo.
 echo ============================================================
-echo Mounting %_wimfile% - index %%#/%imgcount%
+echo Mounting %_wimfile% - index %_inx%/%imgcount%
 echo ============================================================
 cd /d "!_wimpath!"
-%_dism2%:"!cab_dir!" /Mount-Wim /Wimfile:%_wimfile% /Index:%%# /MountDir:"!mountdir!"
+%_dism2%:"!cab_dir!" /Mount-Wim /Wimfile:%_wimfile% /Index:%_inx% /MountDir:"!mountdir!"
 if !errorlevel! neq 0 goto :E_MOUNT
 cd /d "!_work!"
-call :update
-if %dvd%==1 if exist "!mountdir!\sources\setup.exe" call :boots
-if %dvd%==1 if not defined isover (
-  if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-rollup-version*.manifest" for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-rollup-version*.manifest"') do set isover=%%i.%%j
+call :doupdate
+if %dvd%==1 (
+  if not defined isover if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-rollup-version*.manifest" for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-rollup-version*.manifest"') do (set isover=%%i.%%j&set isomin=%%j)
+  if not defined isolab if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" call :legacyLab
+  if not defined isodate if exist "!mountdir!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
+  if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
+  for /f %%# in ('dir /b /a:-d /od "!mountdir!\Windows\Servicing\Packages\Package_for_RollupFix*.mum"') do copy /y "!mountdir!\Windows\Servicing\Packages\%%#" %SystemRoot%\temp\update.mum %_Nul1%
+  call :datemum isodate isotime
+  )
+  if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
+  if exist "!mountdir!\sources\setup.exe" call :boots
 )
 if %wim%==1 if exist "!_wimpath!\setup.exe" (
   if exist "!mountdir!\sources\setup.exe" copy /y "!mountdir!\sources\setup.exe" "!_wimpath!" %_Nul3%
 )
-if exist "!mountdir!\Windows\System32\Recovery\winre.wim" (
-attrib -S -H -I "!mountdir!\Windows\System32\Recovery\winre.wim" %_Nul3%
-if %WinRE%==1 if not exist "!_work!\winre.wim" call :winre
-)
+if exist "!mountdir!\Windows\System32\Recovery\winre.wim" attrib -S -H -I "!mountdir!\Windows\System32\Recovery\winre.wim" %_Nul3%
+if %winre%==1 if exist "!mountdir!\Windows\System32\Recovery\winre.wim" if not exist "!_work!\winre.wim" call :winre
 if exist "!mountdir!\Windows\System32\Recovery\winre.wim" if exist "!_work!\winre.wim" (
 echo.
 echo ============================================================
@@ -1580,15 +1607,27 @@ copy /y "!_work!\winre.wim" "!mountdir!\Windows\System32\Recovery\"
 )
 echo.
 echo ============================================================
-echo Unmounting %_wimfile% - index %%#/%imgcount%
+echo Unmounting %_wimfile% - index %_inx%/%imgcount%
 echo ============================================================
 %_dism2%:"!cab_dir!" /Unmount-Wim /MountDir:"!mountdir!" /Commit
 if !errorlevel! neq 0 goto :E_MOUNT
-)
-cd /d "!_work!"
-if %winbuild% lss 9600 if %_ADK% equ 0 if /i "!DismRoot!"=="dism.exe" if not exist "!_imagex!" goto :eof
-if /i "%_wimfile%"=="sources\boot.wim" (call :pebuild) else (call :rebuild)
-cd /d "!_work!"
+goto :eof
+
+:datemum
+set "mumfile=%SystemRoot%\temp\update.mum"
+set "chkfile=!mumfile:\=\\!"
+if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
+del /f /q %SystemRoot%\temp\*.mum
+set "%1=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
+set "%2=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
+goto :eof
+
+:legacyLab
+reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
+for /f "skip=2 tokens=3-7 delims=. " %%i in ('"reg.exe query "HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLabEx" %_Nul6%') do (set regver=%%i.%%j&set regmin=%%j&set regdate=%%m&set reglab=%%l)
+reg.exe unload HKLM\uiSOFTWARE %_Nul1%
+for /f "tokens=3-6 delims=.() " %%i in ('powershell -nop -c "(gi '!mountdir!\Windows\system32\ntoskrnl.exe').VersionInfo.FileVersion" %_Nul6%') do (set ntkver=%%i.%%j&set ntkmin=%%j&set ntkdate=%%l&set isolab=%%k)
 goto :eof
 
 :boots
@@ -1601,7 +1640,6 @@ if exist "!target!\setup.exe" copy /y "!mountdir!\setup.exe" "!target!\" %_Nul3%
 goto :eof
 
 :winre
-if !WinRE!==0 goto :eof
 dism.exe /english /get-wiminfo /wimfile:"!mountdir!\Windows\System32\Recovery\winre.wim" /index:1 | find /i "Version : 6.1.7601" %_Nul1% || (goto :eof)
   echo.
   echo ============================================================
@@ -1614,7 +1652,7 @@ dism.exe /english /get-wiminfo /wimfile:"!mountdir!\Windows\System32\Recovery\wi
   %_dism2%:"!cab_dir!" /Mount-Wim /Wimfile:winre.wim /Index:1 /MountDir:"!winremount!"
   if %errorlevel% neq 0 goto :E_MOUNT
   cd /d "!cab_dir!"
-  call :update winre
+  call :doupdate winre
   %_dism2%:"!cab_dir!" /Unmount-Wim /MountDir:"!winremount!" /Commit
   if %errorlevel% neq 0 goto :E_MOUNT
   set "mountdir=!mountdib!"
@@ -1689,8 +1727,8 @@ icacls "!mountdir!\Windows\WinSxS\ManifestCache\*.bin" /grant *S-1-5-32-544:F %_
 del /f /q "!mountdir!\Windows\WinSxS\ManifestCache\*.bin" %_Nul3%
 )
 if exist "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" (
-takeown /f "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" /A %_Nul3%
-icacls "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F %_Nul3%
+takeown /f "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" /A %_Null%
+icacls "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F %_Null%
 del /f /q "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" %_Nul3%
 )
 if exist "!mountdir!\Windows\inf\*.log" (
@@ -1715,7 +1753,7 @@ dism.exe /Unmount-Wim /MountDir:"!winremount!" /Discard %_Nul3%
 dism.exe /Unmount-Wim /MountDir:"!mountdir!" /Discard
 dism.exe /Cleanup-Mountpoints %_Nul3%
 dism.exe /Cleanup-Wim %_Nul3%
-if %wimfiles%==1 (if exist "!mountdir!\" if not exist "!mountdir!\Windows\" rmdir /s /q "!mountdir!\" %_Nul3%)
+if %wimfiles% equ 1 (if exist "!mountdir!\" if not exist "!mountdir!\Windows\" rmdir /s /q "!mountdir!\" %_Nul3%)
 if exist "!winremount!\" if not exist "!winremount!\Windows\" rmdir /s /q "!winremount!\" %_Nul3%
 if exist "!cab_dir!\" (
 echo.
@@ -1760,16 +1798,18 @@ if %wowRegKeyPathFound% equ 0 (
 )
 for /f "skip=2 tokens=2*" %%i in ('reg.exe query "%regKeyPath%" /v KitsRoot81') do set "KitsRoot=%%j"
 set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
-if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
-set _ADK=1
-set "ShowDism=Windows 8.1 ADK"
-set "Path=%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-)
 if exist "%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe" (
 set "_oscdimg=%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe"
 )
 if exist "%DandIRoot%\%xOS%\DISM\imagex.exe" (
 set "_imagex=%DandIRoot%\%xOS%\DISM\imagex.exe"
+)
+if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
+set _ADK=1
+if %winbuild% lss 10240 set "ShowDism=Windows 8.1 ADK"
+if %winbuild% lss 10240 set "Path=%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+) else (
+goto :check10adk
 )
 goto :mainmenu
 
@@ -1789,17 +1829,17 @@ if %wowRegKeyPathFound% equ 0 (
 )
 for /f "skip=2 tokens=2*" %%i in ('reg.exe query "%regKeyPath%" /v KitsRoot10') do set "KitsRoot=%%j"
 set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
-if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
-set _ADK=1
-set "ShowDism=Host OS / Windows 10 ADK detected"
-if %winbuild% gtr 9600 set "ShowDism=Windows 10 ADK"
-if %winbuild% gtr 9600 set "Path=%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-)
 if exist "%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe" (
 set "_oscdimg=%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe"
 )
 if exist "%DandIRoot%\%xOS%\DISM\imagex.exe" (
 set "_imagex=%DandIRoot%\%xOS%\DISM\imagex.exe"
+)
+if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
+set _ADK=1
+set "ShowDism=Host OS / Windows NT 10.0 ADK detected"
+if %winbuild% gtr 9600 set "ShowDism=Windows NT 10.0 ADK"
+if %winbuild% gtr 9600 set "Path=%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 )
 goto :mainmenu
 
@@ -1962,7 +2002,7 @@ echo [L] Online installation limit: %onlinelimit% updates
 ) else (
 echo [D] DISM: "!ShowDism!"
 )
-if %wimfiles%==1 (
+if %wimfiles% equ 1 (
 if /i "%targetname%"=="install.wim" (echo.&if %WinRE%==1 (echo [U] Update WinRE.wim: YES) else (echo [U] Update WinRE.wim: NO))
 if %imgcount% gtr 1 (
 echo.
@@ -1978,10 +2018,10 @@ echo.
 echo ==================================================================
 choice /c 1234567890AWSRLDEMIKUX /n /m "Change a menu option, press 0 to start the process, or 9 to exit: "
 if errorlevel 22 (if /i "%ESUpdates%"=="YES" (set "ESUpdates=NO ") else (set ESUpdates=YES))&goto :mainmenu
-if errorlevel 21 (if %wimfiles%==1 (if %WinRE%==1 (set winre=0) else (set winre=1)))&goto :mainmenu
-if errorlevel 20 (if %wimfiles%==1 if %imgcount% gtr 1 (if %keep%==1 (set keep=0) else (set keep=1)))&goto :mainmenu
-if errorlevel 19 (if %wimfiles%==1 if %imgcount% gtr 1 (goto :indexmenu))&goto :mainmenu
-if errorlevel 18 (if %wimfiles%==1 (goto :mountmenu))&goto :mainmenu
+if errorlevel 21 (if %wimfiles% equ 1 (if %WinRE%==1 (set winre=0) else (set winre=1)))&goto :mainmenu
+if errorlevel 20 (if %wimfiles% equ 1 if %imgcount% gtr 1 (if %keep%==1 (set keep=0) else (set keep=1)))&goto :mainmenu
+if errorlevel 19 (if %wimfiles% equ 1 if %imgcount% gtr 1 (goto :indexmenu))&goto :mainmenu
+if errorlevel 18 (if %wimfiles% equ 1 (goto :mountmenu))&goto :mainmenu
 if errorlevel 17 goto :extractmenu
 if errorlevel 16 goto :dismmenu
 if errorlevel 15 goto :countmenu
@@ -2016,15 +2056,38 @@ echo ============================================================
 if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else (set _ff="!_work!\cdimage.exe")
 cd /d "!target!"
 if exist "efi\microsoft\boot\efisys.bin" (
-!_ff! -m -o -u2 -udfver102 -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -l"%isover%u" . "%isofile%"
+!_ff! -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
 ) else (
-!_ff! -m -o -u2 -udfver102 -b".\boot\etfsboot.com" -l"%isover%u" . "%isofile%"
+!_ff! -b".\boot\etfsboot.com" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
 )
 set errcode=%errorlevel%
+if not exist "%isofile%" set errcode=1
 if %errcode% equ 0 move /y "%isofile%" "!isodir!\" %_Nul3%
 cd /d "!_work!"
 if %errcode% equ 0 if %delete_source% equ 1 rmdir /s /q "!target!\" %_Nul1%
 if %errcode% equ 0 if exist "!_work!\DVD7UI\" rmdir /s /q "!_work!\DVD7UI\" %_Nul1%
+goto :eof
+
+:LANGISO
+cd /d "!target!"
+for %%a in (3 2 1) do (for /f "tokens=1 delims== " %%b in ('findstr %%a "sources\lang.ini"') do echo %%b>>"isolang.txt")
+if exist "isolang.txt" for /f "usebackq tokens=1" %%a in ("isolang.txt") do (
+if defined _mui (set "_mui=!_mui!_%%a") else (set "_mui=%%a")
+)
+if defined _mui for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
+set _mui=!_mui:%%#=%%#!
+)
+del /f /q "isolang.txt" %_Nul3%
+cd /d "!_work!"
+goto :eof
+
+:DATEISO
+if not defined isover (if defined ntkver (set isover=%ntkver%) else if defined regver (set isover=%regver%) else (set isover=7601.17514))
+if not defined isolab (if defined reglab (set isolab=%reglab%) else (set isolab=win7sp1_rtm))
+if not defined ntkmin goto :eof
+if %isomin% gtr %ntkmin% goto :eof
+set isover=%ntkver%
+set isodate=%ntkdate%
 goto :eof
 
 :fin
@@ -2036,7 +2099,7 @@ echo Removing temporary extracted files...
 echo ============================================================
 rmdir /s /q "!cab_dir!\" %_Nul1%
 )
-if %wimfiles%==1 if exist "!mountdir!\" rmdir /s /q "!mountdir!\" %_Nul1%
+if %wimfiles% equ 1 if exist "!mountdir!\" rmdir /s /q "!mountdir!\" %_Nul1%
 if exist "!winremount!\" rmdir /s /q "!winremount!\" %_Nul1%
 if %dvd%==1 if %iso%==1 call :ISO
 echo.
@@ -2051,9 +2114,9 @@ echo System restart is required to complete installation
 echo ============================================================
 echo.
 )
+if %_Debug% neq 0 goto :eof
 echo.
 echo Press 9 to exit.
-if %_Debug% neq 0 goto :eof
 choice /c 9 /n
 if errorlevel 1 (goto :eof) else (rem.)
 

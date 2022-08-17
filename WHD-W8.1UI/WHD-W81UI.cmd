@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.9
+@set uiv=v7.0
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -223,6 +223,8 @@ rmdir /s /q "!cab_dir!\" %_Nul1%
 set _init=1
 
 :checktarget
+set isomin=0
+set _SrvEdt=0
 set _DNF=0
 set dvd=0
 set wim=0
@@ -378,18 +380,19 @@ if %dvd%==0 goto :fin
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\install.wim
 if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%
-set imgcount=%bootimg%&set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
+set keep=0&set imgcount=%bootimg%&set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\boot.wim
 xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
 if %_DNF%==1 if exist "!target!\sources\sxs\msil_microsoft.build.engine*3.5.9600.16384*" (rmdir /s /q "!target!\sources\sxs\" %_Nul1%)
 if %wim2esd%==0 goto :fin
 echo.
 echo ============================================================
-echo Converting install.wim to install.esd
+echo Converting install.wim to install.esd ...
 echo ============================================================
 cd /d "!target!"
 %_dism2%:"!cab_dir!" /Export-Image /SourceImageFile:sources\install.wim /All /DestinationImageFile:sources\install.esd /Compress:Recovery
-if %errorlevel% equ 0 (del /f /q sources\install.wim %_Nul3%) else (del /f /q sources\install.esd %_Nul3%)
+if %errorlevel% neq 0 del /f /q sources\install.esd %_Nul3%
+if exist sources\install.esd del /f /q sources\install.wim
 cd /d "!_work!"
 goto :fin
 
@@ -1114,20 +1117,44 @@ if %dvd%==1 set "_wimpath=!target!"
 if exist "!mountdir!\" rmdir /s /q "!mountdir!\" %_Nul1%
 if not exist "!mountdir!\" mkdir "!mountdir!"
 if not exist "!cab_dir!\" mkdir "!cab_dir!"
-for %%# in (%indices%) do (
+for %%# in (%indices%) do (set "_inx=%%#"&call :dowork)
+cd /d "!_work!"
+if %keep%==0 if %wim2esd%==1 if %dvd%==1 if /i "%_wimfile%"=="sources\install.wim" goto :eof
 echo.
 echo ============================================================
-echo Mounting %_wimfile% - index %%#/%imgcount%
+echo Rebuilding %_wimfile% ...
 echo ============================================================
 cd /d "!_wimpath!"
-%_dism2%:"!cab_dir!" /Mount-Wim /Wimfile:%_wimfile% /Index:%%# /MountDir:"!mountdir!"
+if %keep%==1 (
+for %%# in (%indices%) do %_dism2%:"!cab_dir!" /Export-Image /SourceImageFile:%_wimfile% /SourceIndex:%%# /DestinationImageFile:temp.wim
+) else (
+%_dism2%:"!cab_dir!" /Export-Image /SourceImageFile:%_wimfile% /All /DestinationImageFile:temp.wim
+)
+if %errorlevel% equ 0 (move /y temp.wim %_wimfile% %_Nul1%) else (del /f /q temp.wim %_Nul3%)
+cd /d "!_work!"
+goto :eof
+
+:dowork
+echo.
+echo ============================================================
+echo Mounting %_wimfile% - index %_inx%/%imgcount%
+echo ============================================================
+cd /d "!_wimpath!"
+%_dism2%:"!cab_dir!" /Mount-Wim /Wimfile:%_wimfile% /Index:%_inx% /MountDir:"!mountdir!"
 if !errorlevel! neq 0 goto :E_MOUNT
 cd /d "!_work!"
 call :doupdate
 call :cleanup
-if %dvd%==1 if exist "!mountdir!\sources\setup.exe" call :boots
-if %dvd%==1 if not defined isover (
-  if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-rollup-version*.manifest" for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-rollup-version*.manifest"') do set isover=%%i.%%j
+if %dvd%==1 (
+  if not defined isover if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-rollup-version*.manifest" for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-rollup-version*.manifest"') do (set isover=%%i.%%j&set isomin=%%j)
+  if not defined isolab if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" call :legacyLab
+  if not defined isodate if exist "!mountdir!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
+  if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
+  for /f %%# in ('dir /b /a:-d /od "!mountdir!\Windows\Servicing\Packages\Package_for_RollupFix*.mum"') do copy /y "!mountdir!\Windows\Servicing\Packages\%%#" %SystemRoot%\temp\update.mum %_Nul1%
+  call :datemum isodate isotime
+  )
+  if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
+  if exist "!mountdir!\sources\setup.exe" call :boots
 )
 if %wim%==1 if exist "!_wimpath!\setup.exe" (
   if exist "!mountdir!\sources\setup.exe" copy /y "!mountdir!\sources\setup.exe" "!_wimpath!" %_Nul3%
@@ -1144,24 +1171,27 @@ copy /y "!_work!\winre.wim" "!mountdir!\Windows\System32\Recovery\"
 )
 echo.
 echo ============================================================
-echo Unmounting %_wimfile% - index %%#/%imgcount%
+echo Unmounting %_wimfile% - index %_inx%/%imgcount%
 echo ============================================================
 %_dism2%:"!cab_dir!" /Unmount-Wim /MountDir:"!mountdir!" /Commit
 if !errorlevel! neq 0 goto :E_MOUNT
-)
-cd /d "!_work!"
-echo.
-echo ============================================================
-echo Rebuilding %_wimfile%
-echo ============================================================
-cd /d "!_wimpath!"
-if %keep%==1 (
-for %%# in (%indices%) do %_dism2%:"!cab_dir!" /Export-Image /SourceImageFile:%_wimfile% /SourceIndex:%%# /DestinationImageFile:temp.wim
-) else (
-%_dism2%:"!cab_dir!" /Export-Image /SourceImageFile:%_wimfile% /All /DestinationImageFile:temp.wim
-)
-if %errorlevel% equ 0 (move /y temp.wim %_wimfile% %_Nul1%) else (del /f /q temp.wim %_Nul3%)
-cd /d "!_work!"
+goto :eof
+
+:datemum
+set "mumfile=%SystemRoot%\temp\update.mum"
+set "chkfile=!mumfile:\=\\!"
+if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
+del /f /q %SystemRoot%\temp\*.mum
+set "%1=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
+set "%2=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
+goto :eof
+
+:legacyLab
+reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
+for /f "skip=2 tokens=3-7 delims=. " %%i in ('"reg.exe query "HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLabEx" %_Nul6%') do (set regver=%%i.%%j&set regmin=%%j&set regdate=%%m&set reglab=%%l)
+reg.exe unload HKLM\uiSOFTWARE %_Nul1%
+for /f "tokens=3-6 delims=.() " %%i in ('powershell -nop -c "(gi '!mountdir!\Windows\system32\ntoskrnl.exe').VersionInfo.FileVersion" %_Nul6%') do (set ntkver=%%i.%%j&set ntkmin=%%j&set ntkdate=%%l&set isolab=%%k)
 goto :eof
 
 :boots
@@ -1243,14 +1273,14 @@ icacls "!mountdir!\Windows\WinSxS\ManifestCache\*.bin" /grant *S-1-5-32-544:F %_
 del /f /q "!mountdir!\Windows\WinSxS\ManifestCache\*.bin" %_Nul3%
 )
 if exist "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" (
-takeown /f "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" /A %_Nul3%
-icacls "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F %_Nul3%
+takeown /f "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" /A %_Null%
+icacls "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F %_Null%
 del /f /q "!mountdir!\Windows\WinSxS\Temp\PendingDeletes\*" %_Nul3%
 )
 if exist "!mountdir!\Windows\WinSxS\Temp\TransformerRollbackData\*" (
-takeown /f "!mountdir!\Windows\WinSxS\Temp\TransformerRollbackData\*" /R /A %_Nul3%
-icacls "!mountdir!\Windows\WinSxS\Temp\TransformerRollbackData\*" /grant *S-1-5-32-544:F /T %_Nul3%
-del /s /f /q "!mountdir!\Windows\WinSxS\Temp\TransformerRollbackData\*" %_Nul3%
+takeown /f "!mountdir!\Windows\WinSxS\Temp\TransformerRollbackData\*" /R /A %_Null%
+icacls "!mountdir!\Windows\WinSxS\Temp\TransformerRollbackData\*" /grant *S-1-5-32-544:F /T %_Null%
+del /s /f /q "!mountdir!\Windows\WinSxS\Temp\TransformerRollbackData\*" %_Null%
 )
 if exist "!mountdir!\Windows\inf\*.log" (
 del /f /q "!mountdir!\Windows\inf\*.log" %_Nul3%
@@ -1573,10 +1603,19 @@ goto :mainmenu
 :ISO
 if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\cdimage.exe" goto :eof
 if "!isodir!"=="" set "isodir=!_work!"
+call :DATEISO
 if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
 if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
-set "isodate=%_date:~0,4%-%_date:~4,2%-%_date:~6,2%"
-if defined isover (set isofile=%isover%_%arch%_%isodate%.iso) else (set isofile=Win8.1_%arch%_%isodate%.iso)
+if not defined isodate set "isodate=%_date:~2,6%-%_date:~8,4%"
+for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
+set isolab=!isolab:%%#=%%#!
+)
+set _label=%isover%.%isodate%.%isolab%
+if %_SrvEdt% equ 1 (set _label=%_label%_SERVER) else (set _label=%_label%_CLIENT)
+if /i %arch%==x86 set archl=X86
+if /i %arch%==x64 set archl=X64
+if exist "!target!\sources\lang.ini" call :LANGISO
+if defined _mui (set "isofile=%_label%_%archl%FRE_%_mui%.iso") else (set "isofile=%_label%_%archl%FRE.iso")
 set /a rnd=%random%
 if exist "!isodir!\%isofile%" ren "!isodir!\%isofile%" "%rnd%_%isofile%"
 echo.
@@ -1588,13 +1627,35 @@ echo ISO Location:
 echo "!isodir!"
 if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else (set _ff="!_work!\cdimage.exe")
 cd /d "!target!"
-!_ff! -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -m -o -u2 -udfver102 -l"%isover%u" . "%isofile%"
+!_ff! -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
 set errcode=%errorlevel%
 if not exist "%isofile%" set errcode=1
 if %errcode% equ 0 move /y "%isofile%" "!isodir!\" %_Nul3%
 cd /d "!_work!"
 if %errcode% equ 0 if %delete_source% equ 1 rmdir /s /q "!target!\" %_Nul1%
 if %errcode% equ 0 if exist "!_work!\DVD81UI\" rmdir /s /q "!_work!\DVD81UI\" %_Nul1%
+goto :eof
+
+:LANGISO
+cd /d "!target!"
+for %%a in (3 2 1) do (for /f "tokens=1 delims== " %%b in ('findstr %%a "sources\lang.ini"') do echo %%b>>"isolang.txt")
+if exist "isolang.txt" for /f "usebackq tokens=1" %%a in ("isolang.txt") do (
+if defined _mui (set "_mui=!_mui!_%%a") else (set "_mui=%%a")
+)
+if defined _mui for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
+set _mui=!_mui:%%#=%%#!
+)
+del /f /q "isolang.txt" %_Nul3%
+cd /d "!_work!"
+goto :eof
+
+:DATEISO
+if not defined isover (if defined ntkver (set isover=%ntkver%) else if defined regver (set isover=%regver%) else (set isover=9600.16384))
+if not defined isolab (if defined reglab (set isolab=%reglab%) else (set isolab=winblue_ltsb))
+if not defined ntkmin goto :eof
+if %isomin% gtr %ntkmin% goto :eof
+set isover=%ntkver%
+set isodate=%ntkdate%
 goto :eof
 
 :fin

@@ -185,6 +185,9 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 7.0:  
+updated final ISO file name scheme
+
 * 6.9:  
 suppress EOSNotify. few code improvements
 

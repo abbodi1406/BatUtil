@@ -25,10 +25,6 @@ ______________________________
 
 * If the distribution already contain installed updates (e.g. refreshed ISO media), it's required/recommended to add the latest updates after language packs
 
-* versions 20H2/21H1/21H2 share the same build number and files with version 2004
-
-* version 1909 share the same build number and files with version 1903
-
 * Since version 1809 (build 17763), regular windowsupdate links for cab files are no longer available
 
 instead, you need to download the required files from UUP source
@@ -105,7 +101,7 @@ https://software-download.microsoft.com/download/sg/20348.1.210507-1500.fe_relea
 https://software-download.microsoft.com/download/sg/20348.1.210507-1500.fe_release_amd64fre_adkwinpeaddons.iso
 ```
 
-- Build 19041 - Windows 10 version 2004 / 20H2 / 21H1 / 21H2:  
+- Build 19041 - Windows 10 versions 2004-22H2:  
 ```
 https://download.microsoft.com/download/8/6/c/86c218f3-4349-4aa5-beba-d05e48bbc286/adk/adksetup.exe
 https://download.microsoft.com/download/3/c/2/3c2b23b2-96a0-452c-b9fd-6df72266e335/adkwinpeaddons/adkwinpesetup.exe
@@ -115,7 +111,7 @@ https://software-download.microsoft.com/download/pr/19041.1.191206-1406.vb_relea
 https://software-download.microsoft.com/download/pr/19041.1.191206-1406.vb_release_amd64fre_adkwinpeaddons.iso
 ```
 
-- Build 18362 - Windows 10 version 1903 / 1909:  
+- Build 18362 - Windows 10 versions 1903-1909:  
 ```
 https://download.microsoft.com/download/B/E/6/BE63E3A5-5D1C-43E7-9875-DFA2B301EC70/adk/adksetup.exe  
 https://download.microsoft.com/download/E/F/A/EFA17CF0-7140-4E92-AC0A-D89366EBD79E/adkwinpeaddons/adkwinpesetup.exe
@@ -233,19 +229,18 @@ optional, custom directory path for WinPE language packs files, in case you do n
 
 you must keep the same directory hierarchy as original installed ADK
 
+then you set the parent WinPE directory as path:  
+`set WINPEPATH=C:\MUIDVD\WinPE`
+
+leave it blank to auto detect the path for WinPE folder in the script current directory 
+
 example:
 
-x64 German files:
-
+x64 German files:  
 `C:\MUIDVD\WinPE\amd64\WinPE_OCs\de-de`
 
-x86 Arabic files:
-
+x86 Arabic files:  
 `C:\MUIDVD\WinPE\x86\WinPE_OCs\ar-sa`
-
-then you set the parent WinPE directory as path:
-
-`set WINPEPATH=C:\MUIDVD\WinPE`
 
 **DEFAULTLANGUAGE**
 

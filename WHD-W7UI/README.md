@@ -195,6 +195,9 @@ ESUpdates Concept: IMI Kurwica
 
 ## Changelog:
 
+* 6.7:  
+updated final ISO file name scheme
+
 * 6.6:  
 fixed ESU updates mis-integration for multiple install.wim indexes  
 added applicability check for KB2646060/KB3161102/winre.wim

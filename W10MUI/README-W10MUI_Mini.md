@@ -52,19 +52,18 @@ optional, custom directory path for WinPE language packs files, in case you do n
 
 you must keep the same directory hierarchy as original installed ADK
 
+then you set the parent WinPE directory as path:  
+`set WINPEPATH=C:\MUIDVD\WinPE`
+
+leave it blank to auto detect the path for WinPE folder in the script current directory 
+
 example:
 
-x64 German files:
-
+x64 German files:  
 `C:\MUIDVD\WinPE\amd64\WinPE_OCs\de-de`
 
-x86 Arabic files:
-
+x86 Arabic files:  
 `C:\MUIDVD\WinPE\x86\WinPE_OCs\ar-sa`
-
-then you set the parent WinPE directory as path:
-
-`set WINPEPATH=C:\MUIDVD\WinPE`
 
 **DEFAULTLANGUAGE**
 
