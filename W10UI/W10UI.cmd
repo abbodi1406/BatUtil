@@ -1226,10 +1226,14 @@ for /f "tokens=%tn% delims=-" %%A in ('echo !package!') do (
 )
 :endmumLoop
 if "%kb%"=="" (set /a _sum-=1&goto :eof)
+if %_build% geq 20348 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\package_1_for*.mum" %_Nul3% && (
+  if exist "%dest%\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (set "netupdt=!netupdt! /PackagePath:%dest%\update.mum"&set /a _sum-=1&goto :eof)
+  ))
+)
 if %_build% geq 17763 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && (
-  if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" if not exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" (if exist "%dest%\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:%dest%\update.mum") else (if exist "%dest%\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:%dest%\update.mum"))
-  if exist "%dest%\*_microsoft-windows-n..35wpfcomp.resources*_*10.0.*.manifest" (set "netupdt=!netupdt! /PackagePath:%dest%\update.mum") else if exist "%dest%\*_microsoft-windows-n..35wpfcomp.resources*_*11.0.*.manifest" (set "netupdt=!netupdt! /PackagePath:%dest%\update.mum")
+  if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" if not exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" if not exist "%dest%\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (if exist "%dest%\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:%dest%\update.mum") else (if exist "%dest%\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:%dest%\update.mum"))
   ))
 findstr /i /m "Package_for_OasisAsset" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\*OasisAssets-Package*.mum" (set /a _sum-=1&goto :eof))
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (

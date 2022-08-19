@@ -286,7 +286,6 @@ if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('powershell 
 if /i not "%_ntf%"=="NTFS" (
 set "_mount=%SystemDrive%\MountUUP"
 )
-:: set "_mount=!_mount!_%random%"
 set "line============================================================="
 if defined _UUP goto :check
 if %_Debug% neq 0 goto :check
@@ -647,7 +646,7 @@ call :BootPE
 ) else (
 call :BootADK
 )
-if %StartVirtual% neq 0 (
+if %StartVirtual% neq 0 if %_SrvESD% equ 0 (
   if %RefESD% neq 0 call :uups_backup
   ren ISOFOLDER %DVDISO%
   if %AutoStart% neq 0 (goto :V_Auto) else (goto :V_Manu)
@@ -849,7 +848,7 @@ wimlib-imagex.exe info %_file% 1 "%_wsr% %_flg%" "%_wsr% %_flg%" --image-propert
 ) else if !FixDisplay! equ 1 (
 wimlib-imagex.exe info %_file% 1 "!_os!" "!_os!" --image-property DISPLAYNAME="!_dName!" --image-property DISPLAYDESCRIPTION="!_dDesc!" --image-property FLAGS=%_flg% %_Nul3%
 ) else (
-wimlib-imagex.exe info %_file% 1 --image-property FLAGS=%_flg% %_Nul3%
+wimlib-imagex.exe info %_file% 1 --image-property DISPLAYNAME="!_dName!" --image-property DISPLAYDESCRIPTION="!_dDesc!" --image-property FLAGS=%_flg% %_Nul3%
 )
 set _img=1
 if %_count% gtr 1 for /L %%i in (2,1,%_count%) do (
@@ -863,7 +862,7 @@ for /L %%# in (1,1,%uups_esd_num%) do if !_index%%i! equ %%# (
     ) else if !FixDisplay! equ 1 (
     wimlib-imagex.exe info %_file% !_img! "!_os%%#!" "!_os%%#!" --image-property DISPLAYNAME="!_dName%%#!" --image-property DISPLAYDESCRIPTION="!_dDesc%%#!" --image-property FLAGS=!edition%%#! %_Nul3%
     ) else (
-    wimlib-imagex.exe info %_file% !_img! --image-property FLAGS=!edition%%#! %_Nul3%
+    wimlib-imagex.exe info %_file% !_img! --image-property DISPLAYNAME="!_dName%%#!" --image-property DISPLAYDESCRIPTION="!_dDesc%%#!" --image-property FLAGS=!edition%%#! %_Nul3%
     )
   )
 )
@@ -876,7 +875,7 @@ if !_ESDSrv%%#! equ 1 (
   ) else if !FixDisplay! equ 1 (
   wimlib-imagex.exe info %_file% %%# "!_os%%#!" "!_os%%#!" --image-property DISPLAYNAME="!_dName%%#!" --image-property DISPLAYDESCRIPTION="!_dDesc%%#!" --image-property FLAGS=!edition%%#! %_Nul3%
   ) else (
-  wimlib-imagex.exe info %_file% %%# --image-property FLAGS=!edition%%#! %_Nul3%
+  wimlib-imagex.exe info %_file% %%# --image-property DISPLAYNAME="!_dName%%#!" --image-property DISPLAYDESCRIPTION="!_dDesc%%#!" --image-property FLAGS=!edition%%#! %_Nul3%
   )
 )
 if %_reMSU% equ 1 call :uups_msu
@@ -2209,7 +2208,7 @@ set "_Wnn=HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide\Winners"
 set "_Cmp=HKLM\%COMPONENTS%\DerivedData\Components"
 if exist "%mumtarget%\Windows\Servicing\Packages\*arm64*.mum" (
 set "xBT=arm64"
-set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0a0357560ca88a4d"
+set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0a035f900ca87ee9"
 set "_EdgKey=%_Wnn%\arm64_%_EdgCmp%_%_Pkt%_none_1e5e2b2c8adcf701"
 set "_CedKey=%_Wnn%\arm64_%_CedCmp%_%_Pkt%_none_df3eefecc502346d"
 ) else if exist "%mumtarget%\Windows\Servicing\Packages\*amd64*.mum" (
@@ -2228,6 +2227,7 @@ set lcumsu=
 set mpamfe=
 set servicingstack=
 set cumulative=
+set netupdt=
 set netpack=
 set netroll=
 set netlcu=
@@ -2443,9 +2443,14 @@ for /f "tokens=2 delims=-" %%V in ('echo %pckn%') do set pckid=%%V
 if %xmsu% equ 0 if %_build% geq 21382 if exist "!_UUP!\*Windows1*%pckid%*%arch%*.msu" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\*Windows1*%pckid%*%arch%*.msu"') do (
 expand.exe -d -f:*Windows*.psf "!_UUP!\%%#" | findstr /i %arch%\.psf %_Nul3% && goto :eof
 )
+if %_build% geq 20348 if exist "!dest!\update.mum" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "!dest!\package_1_for*.mum" %_Nul3% && (
+  if exist "!dest!\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (set "netupdt=!netupdt! /PackagePath:!dest!\update.mum"&goto :eof)
+  ))
+)
 if %_build% geq 17763 if exist "!dest!\update.mum" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
-findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "!dest!\*.mum" %_Nul3% && if not exist "!dest!\*_netfx4clientcorecomp.resources*.manifest" (
-  if exist "!dest!\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:!dest!\update.mum") else (if exist "!dest!\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:!dest!\update.mum")
+findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "!dest!\*.mum" %_Nul3% && (
+  if not exist "!dest!\*_netfx4clientcorecomp.resources*.manifest" if not exist "!dest!\*_netfx4-netfx_detectionkeys_extended*.manifest" if not exist "!dest!\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (if exist "!dest!\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:!dest!\update.mum") else (if exist "!dest!\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:!dest!\update.mum"))
   ))
 findstr /i /m "Package_for_OasisAsset" "!dest!\update.mum" %_Nul3% && (if not exist "%mumtarget%\Windows\Servicing\packages\*OasisAssets-Package*.mum" goto :eof)
 findstr /i /m "WinPE" "!dest!\update.mum" %_Nul3% && (
@@ -2465,7 +2470,7 @@ if exist "!dest!\*_microsoft-windows-servicingstack_*.manifest" (
 set "servicingstack=!servicingstack! /PackagePath:!dest!\update.mum"
 goto :eof
 )
-if exist "!dest!\*_netfx4-netfx_detectionkeys_extended*.manifest" if exist "!dest!\*_netfx4clientcorecomp.resources*_en-us_*.manifest" (
+if exist "!dest!\*_netfx4-netfx_detectionkeys_extended*.manifest" (
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
 set "netpack=!netpack! /PackagePath:!dest!\update.mum"
 goto :eof
@@ -2507,6 +2512,11 @@ if %_build% geq 16299 (
   for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "!dest!\update.mum" %_Nul6%') do if exist "%mumtarget%\Windows\Servicing\packages\%%~#*.mum" set flash=1
   if "!flash!"=="0" goto :eof
   )
+)
+if exist "!dest!\*enablement-package*.mum" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+  set epkb=0
+  for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "!dest!\update.mum" %_Nul6%') do if exist "%mumtarget%\Windows\Servicing\packages\%%~#*.mum" set epkb=1
+  if "!epkb!"=="0" goto :eof
 )
 for %%# in (%directcab%) do (
 if /i "%package%"=="%%~#" (
@@ -3035,8 +3045,11 @@ if exist "%mumtarget%\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" goto 
 if not exist "%_target%\sources\sxs\*netfx3*.cab" goto :eof
 set "net35source=%_target%\sources\sxs"
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Enable-Feature /FeatureName:NetFx3 /All /LimitAccess /Source:"%net35source%"
+if defined netupdt (
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netupdt%
+)
 if not defined netroll if not defined netlcu if not defined netmsu if not defined cumulative (call :cleanmanual&goto :eof)
-if %_build% geq 20231 dir /b /ad "%mumtarget%\Windows\Servicing\LCU\Package_for_RollupFix*" %_Nul3% && (call :cleanmanual&goto :eof)
+if not defined netupdt if %_build% geq 20231 dir /b /ad "%mumtarget%\Windows\Servicing\LCU\Package_for_RollupFix*" %_Nul3% && (call :cleanmanual&goto :eof)
 set netxtr=
 if defined netroll set "netxtr=%netroll%"
 if defined netlcu set "netxtr=%netxtr% %netlcu%"
