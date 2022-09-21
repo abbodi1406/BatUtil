@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v81
+@set uivr=v84
 @echo off
 :: Change to 1 to start the process directly
 :: it will create editions specified in AutoEditions if possible
@@ -730,8 +730,12 @@ if %revmaj%==19045 (
 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
 if %uupver:~0,5%==19041 set uupver=19045%uupver:~5%
 )
-if %revmaj%==%_fixSV% if %_build% geq 21382 (
-if %uupver:~0,5%==%_build% set uupver=%_fixSV%%uupver:~5%
+if %revmaj%==19046 (
+if /i "%branch:~0,2%"=="vb" set branch=23h2%branch:~2%
+if %uupver:~0,5%==19041 set uupver=19046%uupver:~5%
+)
+if %revmaj% geq %_build% if %_build% geq 21382 (
+if %uupver:~0,5%==%_build% set uupver=%revmaj%%uupver:~5%
 )
 if %uupmin% lss %revmin% (
 set uupver=%revver%

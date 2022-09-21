@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.22
+@set uiv=v10.24
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -192,6 +192,10 @@ echo The window will be closed when finished
 title Installer for Windows NT 10.0 Updates
 set "_dLog=%SystemRoot%\Logs\DISM"
 cd /d "!_work!"
+set psfcpp=0
+if exist "PSFExtractor.exe" set psfcpp=1&set _exe="!_work!\PSFExtractor.exe"
+if exist "bin\PSFExtractor.exe" set psfcpp=1&set _exe="!_work!\bin\PSFExtractor.exe"
+if not defined _sdr set psfcpp=0
 if not exist "W10UI.ini" goto :proceed
 find /i "[W10UI-Configuration]" W10UI.ini %_Nul1% || goto :proceed
 setlocal DisableDelayedExpansion
@@ -717,7 +721,7 @@ if not exist "!repo!\%pkgn%.psf" if not exist "!repo!\*%pkgid%*%arch%*.psf" (
   rmdir /s /q "checker\" %_Nul3%
   goto :eof
   )
-if %psfnet% equ 0 (
+if %psfnet% equ 0 if %psfcpp% equ 0 (
   echo %count%/%_sum%: %package% / PSFExtractor is not available
   rmdir /s /q "checker\" %_Nul3%
   goto :eof
@@ -784,6 +788,11 @@ if exist "checker\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=19
 if exist "checker\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
 if exist "checker\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "checker\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
+if exist "checker\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "checker\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
+  for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
+    set /a _fixEP=%_build%+%%i
+    )
+  )
 )
 if %_build% geq 18362 if exist "checker\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "checker" %_Null%
@@ -819,16 +828,19 @@ if not exist "%package%" (
   copy /y "!repo!\%pkgn%.*" . %_Nul3%
   if not exist "%pkgn%.psf" for /f %%# in ('dir /b /a:-d "!repo!\*%pkgid%*%arch%*.psf"') do copy /y "!repo!\%%#" %pkgn%.psf %_Nul3%
   )
-if not exist "PSFExtractor.exe" (
+if not exist "PSFExtractor.exe" if %psfcpp% equ 0 (
   setlocal
   set "TMP=%SystemRoot%\Temp"
   set "TEMP=%SystemRoot%\Temp"
   )
 )
 if defined psf_%pkgn% (
-if not exist "PSFExtractor.exe" (
+if not exist "PSFExtractor.exe" if %psfcpp% equ 0 (
   %_Nul3% powershell -nop -c "$d='!cd!';$f=[IO.File]::ReadAllText('!_batp!') -split ':embdbin\:.*';iex ($f[1]);X 1"
   endlocal
+  )
+if not exist "PSFExtractor.exe" if %psfcpp% equ 1 (
+  %_Nul3% copy /y "!_exe!" .
   )
 PSFExtractor.exe %package% %_Null%
 if !errorlevel! neq 0 (
@@ -935,7 +947,7 @@ set "_Wnn=HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide\Winners"
 set "_Cmp=HKLM\%COMPONENTS%\DerivedData\Components"
 if exist "!mumtarget!\Windows\Servicing\Packages\*~arm64~~*.mum" (
 set "xBT=arm64"
-set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0a0357560ca88a4d"
+set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0a035f900ca87ee9"
 set "_EdgKey=%_Wnn%\arm64_%_EdgCmp%_%_Pkt%_none_1e5e2b2c8adcf701"
 set "_CedKey=%_Wnn%\arm64_%_CedCmp%_%_Pkt%_none_df3eefecc502346d"
 ) else if exist "!mumtarget!\Windows\Servicing\Packages\*~amd64~~*.mum" (
@@ -954,6 +966,7 @@ set lcumsu=
 set mpamfe=
 set servicingstack=
 set cumulative=
+set netupdt=
 set netpack=
 set netroll=
 set netlcu=
@@ -1175,16 +1188,19 @@ if not exist "%lcupkg%" (
   copy /y "!repo!\%lcupkg:~0,-4%.*" . %_Nul3%
   if not exist "%lcupkg:~0,-4%.psf" for /f %%# in ('dir /b /a:-d "!repo!\%lcupkg:~0,-12%*.psf"') do copy /y "!repo!\%%#" %lcupkg:~0,-4%.psf %_Nul3%
   )
-if not exist "PSFExtractor.exe" (
+if not exist "PSFExtractor.exe" if %psfcpp% equ 0 (
   setlocal
   set "TMP=%SystemRoot%\Temp"
   set "TEMP=%SystemRoot%\Temp"
   )
 )
 if exist "%lcudir%\*.psf.cix.xml" (
-if not exist "PSFExtractor.exe" (
+if not exist "PSFExtractor.exe" if %psfcpp% equ 0 (
   %_Nul3% powershell -nop -c "$d='!cd!';$f=[IO.File]::ReadAllText('!_batp!') -split ':embdbin\:.*';iex ($f[1]);X 1"
   endlocal
+  )
+if not exist "PSFExtractor.exe" if %psfcpp% equ 1 (
+  %_Nul3% copy /y "!_exe!" .
   )
 PSFExtractor.exe %lcupkg% %_Null%
 if !_sbst! equ 1 popd
@@ -1225,9 +1241,14 @@ for /f "tokens=%tn% delims=-" %%A in ('echo !package!') do (
 )
 :endmumLoop
 if "%kb%"=="" (set /a _sum-=1&goto :eof)
+if %_build% geq 20348 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\package_1_for*.mum" %_Nul3% && (
+  if exist "%dest%\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (set "netupdt=!netupdt! /PackagePath:%dest%\update.mum"&set /a _sum-=1&goto :eof)
+  ))
+)
 if %_build% geq 17763 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && (
-  if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" if not exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" (if exist "%dest%\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:%dest%\update.mum") else (if exist "%dest%\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:%dest%\update.mum"))
+  if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" if not exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" if not exist "%dest%\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (if exist "%dest%\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:%dest%\update.mum") else (if exist "%dest%\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:%dest%\update.mum"))
   ))
 findstr /i /m "Package_for_OasisAsset" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\*OasisAssets-Package*.mum" (set /a _sum-=1&goto :eof))
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
@@ -1620,11 +1641,14 @@ goto :eof
 )
 cd /d "!_cabdir!"
 set _DNF=1
+if defined netupdt (
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netupdt%
+)
 if not defined netroll if not defined netlcu if not defined netmsu if not defined cumulative (
 call :cleanup
 goto :eof
 )
-if %_build% geq 20231 dir /b /ad "!mumtarget!\Windows\Servicing\LCU\Package_for_RollupFix*" %_Nul3% && (
+if not defined netupdt if %_build% geq 20231 dir /b /ad "!mumtarget!\Windows\Servicing\LCU\Package_for_RollupFix*" %_Nul3% && (
 call :cleanup
 goto :eof
 )
@@ -1867,6 +1891,11 @@ if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-23H2Enablement
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
+  for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
+    set /a _fixEP=%_build%+%%i
+  )
+)
 set "wnt=31bf3856ad364e35_10"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_31bf3856ad364e35_11.*.manifest" set "wnt=31bf3856ad364e35_11"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" (

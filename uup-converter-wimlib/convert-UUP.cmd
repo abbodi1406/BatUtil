@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v83
+@set uivr=v84
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -1617,6 +1617,12 @@ if exist "!_cabdir!\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=
 if exist "!_cabdir!\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
 if exist "!_cabdir!\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
+if exist "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
+  for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
+    set /a _fixSV=%_build%+%%i
+    set /a _fixEP=%_build%+%%i
+    )
+  )
 )
 set tmpcmp=
 if %_build% geq 21382 if exist "!_UUP!\*Windows1*-KB*.msu" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\*Windows1*-KB*.msu"') do (set "packn=%%~n#"&set "packf=%%#"&call :external_msu)
@@ -2093,6 +2099,12 @@ if exist "!dest!\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=190
 if exist "!dest!\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
 if exist "!dest!\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
+if exist "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
+  for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
+    set /a _fixSV=%_build%+%%i
+    set /a _fixEP=%_build%+%%i
+    )
+  )
 )
 if %_build% geq 18362 if exist "!dest!\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!_UUP!\%package%" "!dest!" %_Null%

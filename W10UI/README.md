@@ -188,6 +188,12 @@ the option will also auto exit at the end without prompt
 
 <details><summary>changelog</summary>
 
+10.24:  
+- Add support for future Windows 11 22H2 Moments Enablement Packages
+
+10.23:  
+- Detect and use external PSFExtractor.exe (located next to the script)
+
 10.22:  
 - Fix detection for .NET 4.8.1 pack KB5011048
 - Skip Enablement Package for not applicable editions
