@@ -54,6 +54,8 @@ avoid using them with the script and install them manually
 
 * Recommended Host OS: Windows 8.1 or later
 
+* Updating offline images of Windows 11 builds 22567 and later, require at least Windows 10 v1607 Host OS
+
 * Optional: place W10UI.cmd next to the updates (.msu/.cab) to detect them by default
 
 * Run the script as administrator

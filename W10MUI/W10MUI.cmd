@@ -40,6 +40,13 @@ if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "x
 if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
 if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
 set "_Null=1>nul 2>nul"
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
+set _pwsh=1
+for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
+if %_cwmi% equ 0 if %_pwsh% equ 0 goto :E_PS
 reg.exe query HKU\S-1-5-19 %_Null% || goto :E_ADMIN
 set "_log=%~dpn0"
 set "WORKDIR=%~dp0"
@@ -81,8 +88,8 @@ title Windows NT 10.0 Multilingual Creator
 set "_dLog=%SystemRoot%\Logs\DISM"
 set _drv=%~d0
 set _ntf=NTFS
-if /i not "%_drv%"=="%SystemDrive%" if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
-if /i not "%_drv%"=="%SystemDrive%" if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" set _drv=%SystemDrive%
 if "!MOUNTDIR!"=="" set "MOUNTDIR=%_drv%\W10MUIMOUNT"
 set "INSTALLMOUNTDIR=%MOUNTDIR%\install"
@@ -380,10 +387,9 @@ dism\imagex.exe /info "!DVDDIR!\sources\install.wim" | findstr /c:"LZMS" %_Nul1%
 for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\install.wim" ^| findstr "Index"') do set imgcount=%%i
 for /f "tokens=4 delims=:. " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\install.wim" /index:1 ^| find /i "Version :"') do set _build=%%i
 if %_build% equ 18363 set _build=18362
-if %_build% equ 19042 set _build=19041
-if %_build% equ 19043 set _build=19041
-if %_build% equ 19044 set _build=19041
-if %_build% equ 19045 set _build=19041
+for %%# in (19042 19043 19044 19045 19046) do if %_build% equ %%# set _build=19041
+for %%# in (22622 22623 22624 22625 22626) do if %_build% equ %%# set _build=22621
+for %%# in (20349 20350 20351) do if %_build% equ %%# set _build=20348
 for /L %%j in (1,1,%LANGUAGES%) do (
 if not !LPBUILD%%j!==%_build% set "ERRFILE=!LPFILE%%j!"&goto :E_VER
 )
@@ -534,28 +540,9 @@ call set _PP64=!_PP64! /PackagePath:!LANGUAGE%%j!\update.mum
 if %wimbit%==32 if not defined _PP86 goto :E_ARCH
 if %wimbit%==64 if not defined _PP64 goto :E_ARCH
 
-if %SLIM% EQU 1 goto :proceed
-echo.
-echo ============================================================
-echo Add language files to distribution
-echo ============================================================
-echo.
-if /i %BOOTARCH%==x86 for /L %%j in (1,1,%LANGUAGES%) do (
-if /i !LPARCH%%j!==x86 (
-echo !LANGUAGE%%j! / 32-bit
-call :ISOmui %%j
-)
-)
-if /i %BOOTARCH%==amd64 for /L %%j in (1,1,%LANGUAGES%) do (
-if /i !LPARCH%%j!==amd64 (
-echo !LANGUAGE%%j! / 64-bit
-call :ISOmui %%j
-)
-)
-
-:proceed
 set _actEP=0
 set _SrvEdt=0
+set _AszEdt=0
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 if exist "%SystemRoot%\temp\UpdateAgent.dll" del /f /q "%SystemRoot%\temp\UpdateAgent.dll" %_Nul3%
 if exist "%SystemRoot%\temp\Facilitator.dll" del /f /q "%SystemRoot%\temp\Facilitator.dll" %_Nul3%
@@ -613,18 +600,16 @@ if %foundupdates%==1 call Updates\W10UI.cmd 1 "%INSTALLMOUNTDIR%" "!TMPUPDT!" "!
 if %_Debug% neq 0 @echo on
 cd /d "!WORKDIR!"
 if not defined isomaj for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
-if not defined isolab (if %_build% geq 15063 (call :detectLab isolab) else (call :legacyLab isolab))
+if not defined isolab (
+if %_build% geq 15063 (call :detectLab isolab) else (call :legacyLab isolab)
+)
 if not defined isodate if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
-copy /y "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Package_for_RollupFix*.mum" %SystemRoot%\temp\ %_Nul1%
-for /f %%# in ('dir /b /a:-d /od %SystemRoot%\temp\Package_for_RollupFix*.mum') do set "mumfile=%SystemRoot%\temp\%%#"
-set "chkfile=!mumfile:\=\\!"
-if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
-if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
-del /f /q %SystemRoot%\temp\*.mum
-set "isodate=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
+for /f %%# in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Package_for_RollupFix*.mum"') do copy /y "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\%%#" %SystemRoot%\temp\update.mum %_Nul1%
+call :datemum isodate
 )
 if %_actEP% equ 0 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\microsoft-windows-*enablement-package~*.mum" call :detectEP
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-ServerAzureStackHCI*Edition~*.mum" set _AszEdt=1
 if exist "%INSTALLMOUNTDIR%\Windows\system32\UpdateAgent.dll" if not exist "%SystemRoot%\temp\UpdateAgent.dll" copy /y "%INSTALLMOUNTDIR%\Windows\system32\UpdateAgent.dll" %SystemRoot%\temp\ %_Nul3%
 if exist "%INSTALLMOUNTDIR%\Windows\system32\Facilitator.dll" if not exist "%SystemRoot%\temp\Facilitator.dll" copy /y "%INSTALLMOUNTDIR%\Windows\system32\Facilitator.dll" %SystemRoot%\temp\ %_Nul3%
 if %NET35%==1 if not exist "%INSTALLMOUNTDIR%\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" (
@@ -641,7 +626,7 @@ if /i !LANGUAGE%%j!==zh-cn xcopy "%INSTALLMOUNTDIR%\Windows\Boot\Fonts\*" "!EXTR
 if /i !LANGUAGE%%j!==zh-hk xcopy "%INSTALLMOUNTDIR%\Windows\Boot\Fonts\*" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\" /chryi %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\msjh.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\mingliub.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\simsun.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%
 if /i !LANGUAGE%%j!==zh-tw xcopy "%INSTALLMOUNTDIR%\Windows\Boot\Fonts\*" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\" /chryi %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\msjh.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\mingliub.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\simsun.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%
 )
-attrib -S -H -I "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" %_Nul3%
+if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" attrib -S -H -I "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" %_Nul3%
 if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" if not exist "!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" (
   echo.
   echo ============================================================
@@ -794,6 +779,7 @@ if %WINPE%==1 (
     !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PEM64! !_PEF64!
     if exist "%BOOTMOUNTDIR%\Windows\servicing\Packages\WinPE-Setup-Package~31bf3856ad364e35~*.mum" (
       !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PES64!
+      if %_build% geq 22557 call :MUIman
       ) else (
       call :WIMman 2
     )
@@ -803,6 +789,7 @@ if %WINPE%==1 (
     !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PEM86! !_PEF86!
     if exist "%BOOTMOUNTDIR%\Windows\servicing\Packages\WinPE-Setup-Package~31bf3856ad364e35~*.mum" (
       !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PES86!
+      if %_build% geq 22557 call :MUIman
       ) else (
       call :WIMman 2
     )
@@ -859,6 +846,26 @@ if exist "!DVDDIR!\install.wim" move /y "!DVDDIR!\install.wim" "!DVDDIR!\sources
 if %NET35%==1 if exist "!DVDDIR!\sources\sxs\*netfx3*.cab" del /f /q "!DVDDIR!\sources\sxs\*netfx3*.cab" %_Nul3%
 xcopy "!DVDDIR!\efi\microsoft\boot\fonts\*" "!DVDDIR!\boot\fonts\" /chryi %_Nul3%
 
+if %SLIM% EQU 1 goto :proceed
+echo.
+echo ============================================================
+echo Add language files to distribution
+echo ============================================================
+echo.
+if /i %BOOTARCH%==x86 for /L %%j in (1,1,%LANGUAGES%) do (
+if /i !LPARCH%%j!==x86 (
+echo !LANGUAGE%%j! / 32-bit
+call :ISOmui %%j
+)
+)
+if /i %BOOTARCH%==amd64 for /L %%j in (1,1,%LANGUAGES%) do (
+if /i !LPARCH%%j!==amd64 (
+echo !LANGUAGE%%j! / 64-bit
+call :ISOmui %%j
+)
+)
+
+:proceed
 if %SLIM% NEQ 1 goto :dvd
 echo.
 echo ============================================================
@@ -891,10 +898,9 @@ move /y "!DVDDIR!\lang.ini" "!DVDDIR!\sources" %_Nul3%
 move /y "!DVDDIR!\setup.exe" "!DVDDIR!\sources" %_Nul3%
 
 :dvd
-:: if exist "!DVDDIR!\sources\uup" rmdir /s /q "!DVDDIR!\sources\uup" %_Nul3%
 call :DATEISO
-if %winbuild% lss 22483 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
-if %winbuild% geq 22483 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
+if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
+if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
 if not defined isodate set "isodate=%_date:~2,6%-%_date:~8,4%"
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set isolab=!isolab:%%#=%%#!
@@ -964,7 +970,7 @@ del /f /q "isolang.txt" %_Nul3%
 goto :eof
 
 :DATEISO
-if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" goto :eof
+if %_pwsh% equ 0 goto :eof
 copy /y "!DVDDIR!\sources\setuphost.exe" %SystemRoot%\temp\ %_Nul3%
 copy /y "!DVDDIR!\sources\setupprep.exe" %SystemRoot%\temp\ %_Nul3%
 set _svr1=0&set _svr2=0&set _svr3=0&set _svr4=0
@@ -976,13 +982,13 @@ set "cfvr1=!_fvr1:\=\\!"
 set "cfvr2=!_fvr2:\=\\!"
 set "cfvr3=!_fvr3:\=\\!"
 set "cfvr4=!_fvr4:\=\\!"
-if %winbuild% lss 22483 (
+if %_cwmi% equ 1 (
 if exist "!_fvr1!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr1!'" get Version /value ^| find "="') do set /a "_svr1=%%a"
 if exist "!_fvr2!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr2!'" get Version /value ^| find "="') do set /a "_svr2=%%a"
 if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr3!'" get Version /value ^| find "="') do set /a "_svr3=%%a"
 if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr4!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
 )
-if %winbuild% geq 22483 (
+if %_cwmi% equ 0 (
 if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr1!\"').Version"') do set /a "_svr1=%%a"
 if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr2!\"').Version"') do set /a "_svr2=%%a"
 if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr3!\"').Version"') do set /a "_svr3=%%a"
@@ -1008,10 +1014,20 @@ if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-1909Ena
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-22H1Enablement-Package~*.mum" if %_build% lss 22000 set "_fixEP=19045"
-if exist "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest" (
-for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
-if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_*10.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=19046"
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
+  for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
+    set /a _fixEP=%_build%+%%i
+  )
+)
+set "wnt=31bf3856ad364e35_10"
+if exist "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_31bf3856ad364e35_11.*.manifest" set "wnt=31bf3856ad364e35_11"
+if exist "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" (
+for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
+if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
 )
 if not defined uupmaj goto :eof
 if not defined uuplab (if defined isolab (set "uuplab=%isolab%") else (call :detectLab uuplab))
@@ -1020,7 +1036,10 @@ if %uupmaj%==19041 if /i "%uuplab:~0,2%"=="vb" set uuplab=20h1%uuplab:~2%
 if %uupmaj%==19042 if /i "%uuplab:~0,2%"=="vb" set uuplab=20h2%uuplab:~2%
 if %uupmaj%==19043 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h1%uuplab:~2%
 if %uupmaj%==19044 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h2%uuplab:~2%
-if %uupmaj%==19045 if /i "%uuplab:~0,2%"=="vb" set uuplab=22h1%uuplab:~2%
+if %uupmaj%==19045 if /i "%uuplab:~0,2%"=="vb" set uuplab=22h2%uuplab:~2%
+if %uupmaj%==19046 if /i "%uuplab:~0,2%"=="vb" set uuplab=23h2%uuplab:~2%
+if %uupmaj%==20349 if /i "%uuplab:~0,2%"=="fe" set uuplab=22h2%uuplab:~2%
+if %uupmaj%==20350 if /i "%uuplab:~0,2%"=="fe" set uuplab=23h2%uuplab:~2%
 goto :eof
 
 :detectLab
@@ -1034,11 +1053,12 @@ move /y "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE2" "%INSTALLMOUNTDIR%
 goto :eof
 
 :legacyLab
-reg.exe load HKLM\uiSOFTWARE "%INSTALLMOUNTDIR%\Windows\system32\config\SOFTWARE" %_Nul1%
-for /f "skip=2 tokens=6 delims=. " %%# in ('"reg.exe query "HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLabEx" %_Nul6%') do set "%1=%%#"
-reg.exe save HKLM\uiSOFTWARE "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE2" %_Nul1%
-reg.exe unload HKLM\uiSOFTWARE %_Nul1%
-move /y "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE2" "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE" %_Nul1%
+for /f "tokens=5 delims=.( " %%# in ('powershell -nop -c "(gi '%INSTALLMOUNTDIR%\Windows\system32\ntoskrnl.exe').VersionInfo.FileVersion" %_Nul6%') do set "%1=%%#"
+:: reg.exe load HKLM\uiSOFTWARE "%INSTALLMOUNTDIR%\Windows\system32\config\SOFTWARE" %_Nul1%
+:: for /f "skip=2 tokens=6 delims=. " %%# in ('"reg.exe query "HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLabEx" %_Nul6%') do set "%1=%%#"
+:: reg.exe save HKLM\uiSOFTWARE "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE2" %_Nul1%
+:: reg.exe unload HKLM\uiSOFTWARE %_Nul1%
+:: move /y "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE2" "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE" %_Nul1%
 goto :eof
 
 :boots
@@ -1051,6 +1071,15 @@ if %_actEP% equ 0 goto :eof
 if %isomaj% gtr %uupmaj% goto :eof
 set isover=%uupver%
 set isolab=%uuplab%
+goto :eof
+
+:datemum
+set "mumfile=%SystemRoot%\temp\update.mum"
+set "chkfile=!mumfile:\=\\!"
+if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
+del /f /q %SystemRoot%\temp\*.mum
+set "%1=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 goto :eof
 
 :E_BIN
@@ -1107,6 +1136,10 @@ goto :END
 
 :E_ADMIN
 set MESSAGE=ERROR: Run the script as administrator
+goto :END
+
+:E_PS
+set MESSAGE=ERROR: wmic.exe or Windows PowerShell is required for this script to work
 goto :END
 
 :E_CREATEISO
@@ -1170,9 +1203,9 @@ goto :eof
 "!_7z!" e ".\langs\!LPFILE%1!" -o"!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!" oobe_help_opt_in_details.rtf -r -aos %_Null%
 if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\bootsect.exe.mui" (xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\bootsect.exe.mui" "!DVDDIR!\boot\!LANGUAGE%1!\" /chryi %_Nul3%)
 xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\*" "!DVDDIR!\sources\!LANGUAGE%1!\" /cheryi %_Nul3%
-if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\cli\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\cli\*" "!DVDDIR!\sources\!LANGUAGE%1!\" /chryi %_Nul3%
-if exist "!DVDDIR!\sources\asz\*.dll" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\asz\*" "!DVDDIR!\sources\asz\!LANGUAGE%1!\" /chryi %_Nul3%
-if exist "!DVDDIR!\sources\svr\*.dll" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\svr\*" "!DVDDIR!\sources\svr\!LANGUAGE%1!\" /chryi %_Nul3%
+if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\cli\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\cli\*.mui" "!DVDDIR!\sources\!LANGUAGE%1!\" /chryi %_Nul3%
+if %_SrvEdt% equ 1 if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\svr\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\svr\*.mui" "!DVDDIR!\sources\!LANGUAGE%1!\" /chryi %_Nul3%
+if %_AszEdt% equ 1 if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\asz\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\asz\*.mui" "!DVDDIR!\sources\!LANGUAGE%1!\" /chryi %_Nul3%
 rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\dlmanifests" %_Nul3%
 rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\etwproviders" %_Nul3%
 rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\replacementmanifests" %_Nul3%
@@ -1216,14 +1249,24 @@ for /L %%j in (1,1,%LANGUAGES%) do (
     copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\reagent.adml" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
     for %%G in %bootmui% do (
     copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\%%G.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
-    if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\%%G.mui" copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\%%G.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
     )
+    if %_build% geq 22557 call :MUIman
     attrib -A -S -H -I "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" /S /D %_Nul1%
   )
 )
 if "%1"=="1" for /L %%j in (1,1,%LANGUAGES%) do (
   if /i !LPARCH%%j!==!BOOTARCH! (
     call :EAfonts %%j
+  )
+)
+goto :eof
+
+:MUIman
+for /L %%j in (1,1,%LANGUAGES%) do (
+  if /i !LPARCH%%j!==!BOOTARCH! (
+    if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
+    if %_SrvEdt% equ 1 if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\svr\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\svr\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
+    if %_AszEdt% equ 1 if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\asz\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\asz\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
   )
 )
 goto :eof

@@ -56,6 +56,8 @@ ______________________________
 
 * Working Environment: Windows 8.1 or later with at least 15 GB of free space.
 
+* Servicing Windows 11 builds 22567 and later, require at least Windows 10 v1607 Host OS  
+
 * Windows 11/10 distribution (ISO file, DVD/USB, ISO extracted to folder).
 
 * Windows 11/10 Language Packs, matching the distribution build version

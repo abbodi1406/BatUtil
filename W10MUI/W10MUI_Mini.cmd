@@ -38,6 +38,13 @@ if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "x
 if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
 if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
 set "_Null=1>nul 2>nul"
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
+set _pwsh=1
+for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
+if %_cwmi% equ 0 if %_pwsh% equ 0 goto :E_PS
 reg.exe query HKU\S-1-5-19 %_Null% || goto :E_ADMIN
 set "_log=%~dpn0"
 set "WORKDIR=%~dp0"
@@ -78,8 +85,8 @@ title Windows NT 10.0 Multilingual Creator
 set "_dLog=%SystemRoot%\Logs\DISM"
 set _drv=%~d0
 set _ntf=NTFS
-if /i not "%_drv%"=="%SystemDrive%" if %winbuild% lss 22483 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
-if /i not "%_drv%"=="%SystemDrive%" if %winbuild% geq 22483 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" set _drv=%SystemDrive%
 if "%MOUNTDIR%"=="" set "MOUNTDIR=%_drv%\W10MUIMOUNT"
 set "INSTALLMOUNTDIR=%MOUNTDIR%\install"
@@ -354,10 +361,9 @@ dism\imagex.exe /info "!WIMPATH!" | findstr /c:"LZMS" %_Nul1% && goto :E_ESD
 for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!WIMPATH!" ^| findstr "Index"') do set imgcount=%%i
 for /f "tokens=4 delims=:. " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!WIMPATH!" /index:1 ^| find /i "Version :"') do set _build=%%i
 if %_build% equ 18363 set _build=18362
-if %_build% equ 19042 set _build=19041
-if %_build% equ 19043 set _build=19041
-if %_build% equ 19044 set _build=19041
-if %_build% equ 19045 set _build=19041
+for %%# in (19042 19043 19044 19045 19046) do if %_build% equ %%# set _build=19041
+for %%# in (22622 22623 22624 22625 22626) do if %_build% equ %%# set _build=22621
+for %%# in (20349 20350 20351) do if %_build% equ %%# set _build=20348
 for /L %%j in (1,1,%LANGUAGES%) do (
 if not !LPBUILD%%j!==%_build% set "ERRFILE=!LPFILE%%j!"&goto :E_VER
 )
@@ -686,6 +692,10 @@ goto :END
 
 :E_ADMIN
 set MESSAGE=ERROR: Run the script as administrator
+goto :END
+
+:E_PS
+set MESSAGE=ERROR: wmic.exe or Windows PowerShell is required for this script to work
 goto :END
 
 :remove
