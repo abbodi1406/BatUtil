@@ -1250,10 +1250,10 @@ for /L %%j in (1,1,%LANGUAGES%) do (
     for %%G in %bootmui% do (
     copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\%%G.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
     )
-    if %_build% geq 22557 call :MUIman
     attrib -A -S -H -I "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" /S /D %_Nul1%
   )
 )
+if %_build% geq 22557 call :MUIman
 if "%1"=="1" for /L %%j in (1,1,%LANGUAGES%) do (
   if /i !LPARCH%%j!==!BOOTARCH! (
     call :EAfonts %%j
@@ -1263,7 +1263,7 @@ goto :eof
 
 :MUIman
 for /L %%j in (1,1,%LANGUAGES%) do (
-  if /i !LPARCH%%j!==!BOOTARCH! (
+  if /i !LPARCH%%j!==!BOOTARCH! if not exist "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\w32uires.dll.mui" (
     if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
     if %_SrvEdt% equ 1 if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\svr\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\svr\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
     if %_AszEdt% equ 1 if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\asz\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\asz\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%

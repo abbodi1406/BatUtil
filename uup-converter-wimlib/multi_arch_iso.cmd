@@ -748,7 +748,6 @@ popd
 if %_Debug% neq 0 exit /b
 echo Press 0 to exit.
 choice /c 0 /n
-choice /c 0 /n
 if errorlevel 1 (exit /b) else (rem.)
 
 ----- Begin wsf script --->
