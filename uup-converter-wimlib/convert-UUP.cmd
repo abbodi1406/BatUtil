@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v84
+@set uivr=v85
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -278,6 +278,7 @@ set _Srvr=0
 set _reMSU=0
 set _IPA=0
 set _runIPA=0
+set _appsCustom=0
 set _initial=0
 set "_mount=%_drv%\MountUUP"
 set "_ntf=NTFS"
@@ -362,6 +363,7 @@ if exist bin\temp\ rmdir /s /q bin\temp\
 if exist temp\ rmdir /s /q temp\
 mkdir bin\temp
 mkdir temp
+if %CustomList% neq 0 if exist "CustomAppsList.txt" set _appsCustom=1
 set _updexist=0
 if exist "!_UUP!\*Windows1*-KB*.msu" set _updexist=1
 if exist "!_UUP!\*Windows1*-KB*.cab" set _updexist=1
@@ -584,15 +586,15 @@ echo.
   )
 )
 if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge %SkipEdge%
-set _appsCustom=0
-if %CustomList% neq 0 if exist "CustomAppsList.txt" set _appsCustom=1
 if %_build% geq 22563 if %W10UI% neq 0 (
 if %SkipApps% neq 0 echo SkipApps
 if %AppsLevel% neq 0 echo AppsLevel %AppsLevel%
-if %_appsCustom% equ 1 echo CustomAppsList.txt
+if %_appsCustom% neq 0 echo CustomAppsList.txt
 )
 if %_runIPA% equ 1 call :appx_sort
-if %_IPA% equ 1 if %SkipApps% equ 1 if exist "!_UUP!\*.*xbundle" call :appx_sort
+if %_IPA% equ 1 if %SkipApps% equ 1 (
+if exist "!_UUP!\*.*xbundle" (call :appx_sort) else if exist "!_UUP!\*.appx" (call :appx_sort)
+)
 call :uups_ref
 echo.
 echo %line%
@@ -778,15 +780,15 @@ echo.
   )
 )
 if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge %SkipEdge%
-set _appsCustom=0
-if %CustomList% neq 0 if exist "CustomAppsList.txt" set _appsCustom=1
 if %_build% geq 22563 if %W10UI% neq 0 (
 if %SkipApps% neq 0 echo SkipApps
 if %AppsLevel% neq 0 echo AppsLevel %AppsLevel%
-if %_appsCustom% equ 1 echo CustomAppsList.txt
+if %_appsCustom% neq 0 echo CustomAppsList.txt
 )
 if %_runIPA% equ 1 call :appx_sort
-if %_IPA% equ 1 if %SkipApps% equ 1 if exist "!_UUP!\*.*xbundle" call :appx_sort
+if %_IPA% equ 1 if %SkipApps% equ 1 (
+if exist "!_UUP!\*.*xbundle" (call :appx_sort) else if exist "!_UUP!\*.appx" (call :appx_sort)
+)
 call :uups_ref
 if %AIO% equ 1 set "MetadataESD=!_UUP!\%uups_esd1%"&set "_flg=%edition1%"&set "_Srvr=%_ESDSrv1%"
 if %_count% gtr 1 set "MetadataESD=!_UUP!\!uups_esd%_index1%!"&set "_flg=!edition%_index1%!"&set "_Srvr=!_ESDSrv%_index1%!"
@@ -1063,6 +1065,7 @@ del /f /q bin\info*.txt
 if %_build% geq 21382 if exist "!_UUP!\*.AggregatedMetadata*.cab" if exist "!_UUP!\*Windows1*-KB*.cab" if exist "!_UUP!\*Windows1*-KB*.psf" set _reMSU=1
 if %_build% geq 22563 if exist "!_UUP!\*.AggregatedMetadata*.cab" (
 if exist "!_UUP!\*.*xbundle" set _IPA=1
+if exist "!_UUP!\*.appx" set _IPA=1
 if exist "!_UUP!\Apps\*_8wekyb3d8bbwe" set _IPA=1
 )
 wimlib-imagex.exe extract "!MetadataESD!" 1 sources\ei.cfg --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
@@ -2280,7 +2283,7 @@ reg.exe save HKLM\%SOFTWARE% "%mumtarget%\Windows\System32\Config\SOFTWARE2" %_N
 reg.exe unload HKLM\%SOFTWARE% %_Nul1%
 move /y "%mumtarget%\Windows\System32\Config\SOFTWARE2" "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
-if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if /i not %arch%==arm64 (
 reg.exe load HKLM\%SOFTWARE% "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 reg.exe add HKLM\%SOFTWARE%\%_SxsCfg% /v DisableComponentBackups /t REG_DWORD /d 1 /f %_Nul1%
 reg.exe unload HKLM\%SOFTWARE% %_Nul1%
@@ -3207,7 +3210,7 @@ if /i %xOS%==x86 reg.exe save HKLM\OFFSOFT "%mumtarget%\Windows\System32\Config\
 reg.exe unload HKLM\OFFSOFT %_Nul1%
 if /i %xOS%==x86 move /y "%mumtarget%\Windows\System32\Config\SOFTWARE2" "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
-if %_appsCustom% equ 1 for /f "eol=# tokens=*" %%a in ('type CustomAppsList.txt') do set "cal_%%a=1"
+if %_appsCustom% neq 0 for /f "eol=# tokens=*" %%a in ('type CustomAppsList.txt') do set "cal_%%a=1"
 set "_appProf=%_appBase%,%_appClnt%,%_appCodec%,%_appMedia%"
 set "_appProN=%_appBase%,%_appClnt%"
 set "_appTeam=%_appBase%,%_appCodec%,%_appPPIP%"
@@ -3254,12 +3257,12 @@ echo %%~n#
 )
 if defined _appList for %%# in (%_appList%) do call :appx_add "%%#"
 popd
-if %_appsCustom% equ 1 for /f "eol=# tokens=*" %%a in ('type CustomAppsList.txt') do set "cal_%%a="
+if %_appsCustom% neq 0 for /f "eol=# tokens=*" %%a in ('type CustomAppsList.txt') do set "cal_%%a="
 goto :eof
 
 :appx_add
 set "_pfn=%~1"
-if %_appsCustom% equ 1 if not defined cal_%_pfn% goto :eof
+if %_appsCustom% neq 0 if not defined cal_%_pfn% goto :eof
 if not exist "%_pfn%\License.xml" goto :eof
 if not exist "%_pfn%\*.appx*" if not exist "%_pfn%\*.msix*" goto :eof
 set "_main="
@@ -3435,7 +3438,7 @@ exit /b
 
 :E_PS
 echo %_err%
-echo Windows PowerShell is required for this script to work.
+echo wmic.exe or Windows PowerShell is required for this script to work.
 echo.
 if %AutoExit% neq 0 exit /b
 if %_Debug% neq 0 exit /b
