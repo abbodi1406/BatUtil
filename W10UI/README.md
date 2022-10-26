@@ -190,6 +190,13 @@ the option will also auto exit at the end without prompt
 
 <details><summary>changelog</summary>
 
+10.25:  
+- Changed integration routine for WinPE images:  
+winre.wim will get SSU + SafeOS only  
+winre.wim will get LCU only if LCUwinre=1 (regardless of SafeOS)  
+boot.wim will not get SafeOS DU (regardless of LCU)  
+boot.wim will get Enablement KB
+
 10.24:  
 - Add support for future Windows 11 22H2 Moments Enablement Packages
 

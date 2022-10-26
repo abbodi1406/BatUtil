@@ -1,12 +1,15 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v16
+@set uivr=v17
 @echo off
 
-:: set to 1 to enable debug mode
+:: change to 0 to keep Office C2R vNext license (subscription or lifetime)
+set vNextOverride=1
+
+:: change to 1 to enable debug mode
 set _Debug=0
 
-:: set to 0 to enable debug mode without cleaning or converting
+:: change to 0 to enable debug mode without cleaning or converting
 set _Cnvrt=1
 
 :: change to 1 to use VBScript to access WMI
@@ -312,21 +315,21 @@ echo.
 echo %_ln%
 echo Checking Office Licenses...
 echo %_ln%
-set "_qr=%_zz1% %_spp% %_zz2% %_zz5%ApplicationID='%_oApp%' AND Description like '%%KMSCLIENT%%' %_zz6% %_zz3% LicenseFamily %_zz4%"
+set "_qr=%_zz1% %_spp% %_zz2% %_zz5%ApplicationID='%_oApp%' AND Description LIKE '%%KMSCLIENT%%' %_zz6% %_zz3% LicenseFamily %_zz4%"
 %_qr% %_Nul2% | findstr /I /C:"Office" %_Nul1% && (set _KMS=1) || (set _KMS=0)
-set "_qr=%_zz1% %_spp% %_zz2% %_zz5%ApplicationID='%_oApp%' AND Description like '%%TIMEBASED%%' %_zz6% %_zz3% LicenseFamily %_zz4%"
+set "_qr=%_zz1% %_spp% %_zz2% %_zz5%ApplicationID='%_oApp%' AND Description LIKE '%%TIMEBASED%%' %_zz6% %_zz3% LicenseFamily %_zz4%"
 %_qr% %_Nul2% | findstr /I /C:"Office" %_Nul1% && (set _Time=1) || (set _Time=0)
-set "_qr=%_zz1% %_spp% %_zz2% %_zz5%ApplicationID='%_oApp%' AND Description like '%%Trial%%' %_zz6% %_zz3% LicenseFamily %_zz4%"
+set "_qr=%_zz1% %_spp% %_zz2% %_zz5%ApplicationID='%_oApp%' AND Description LIKE '%%Trial%%' %_zz6% %_zz3% LicenseFamily %_zz4%"
 %_qr% %_Nul2% | findstr /I /C:"Office" %_Nul1% && (set _Time=1)
-set "_qr=%_zz1% %_spp% %_zz2% %_zz5%ApplicationID='%_oApp%' AND Description like '%%Grace%%' %_zz6% %_zz3% LicenseFamily %_zz4%"
+set "_qr=%_zz1% %_spp% %_zz2% %_zz5%ApplicationID='%_oApp%' AND Description LIKE '%%Grace%%' %_zz6% %_zz3% LicenseFamily %_zz4%"
 %_qr% %_Nul2% | findstr /I /C:"Office" %_Nul1% && (set _Grace=1) || (set _Grace=0)
 set "_qr=%_zz1% %_spp% %_zz2% "ApplicationID='%_oApp%'" %_zz3% LicenseFamily %_zz4%"
 %_qr% > "!_temp!\crvchk.txt" 2>&1
-set "_qr=%_zz1% %_spp% %_zz2% "ApplicationID='%_oApp%' AND LicenseFamily like 'Office16O365%%'" %_zz3% LicenseFamily %_zz4%"
+set "_qr=%_zz1% %_spp% %_zz2% "ApplicationID='%_oApp%' AND LicenseFamily LIKE 'Office16O365%%'" %_zz3% LicenseFamily %_zz4%"
 if %_Office16% EQU 1 find /i "Office16MondoVL_KMS_Client" "!_temp!\crvchk.txt" %_Nul1% && (
 %_qr% %_Nul2% | find /i "O365" %_Nul1% || (set _Grace=1)
 )
-set "_qr=%_zz1% %_spp% %_zz2% "ApplicationID='%_oApp%' AND LicenseFamily like 'OfficeO365%%'" %_zz3% LicenseFamily %_zz4%"
+set "_qr=%_zz1% %_spp% %_zz2% "ApplicationID='%_oApp%' AND LicenseFamily LIKE 'OfficeO365%%'" %_zz3% LicenseFamily %_zz4%"
 if %_Office15% EQU 1 find /i "OfficeMondoVL_KMS_Client" "!_temp!\crvchk.txt" %_Nul1% && (
 %_qr% %_Nul2% | find /i "O365" %_Nul1% || (set _Grace=1)
 )
@@ -335,24 +338,32 @@ set "msg=No Conversion or Cleanup Required..."
 goto :TheEnd
 )
 
-set _Identity=0
-set _vNext=0
-set sub_O365=0
+set sub_next=0
+set sub_o365=0
 set sub_proj=0
-set sub_vis=0
+set sub_vsio=0
+set _Identity=0
+set kNext=HKCU\SOFTWARE\Microsoft\Office\16.0\Common\Licensing\LicensingNext
 dir /b /s /a:-d "!_Local!\Microsoft\Office\Licenses\*1*" %_Nul3% && set _Identity=1
 dir /b /s /a:-d "!ProgramData!\Microsoft\Office\Licenses\*1*" %_Nul3% && set _Identity=1
-set kNext=HKCU\SOFTWARE\Microsoft\Office\16.0\Common\Licensing\LicensingNext
-if %_Identity% EQU 1 reg query %kNext% /v MigrationToV5Done %_Nul2% | find /i "0x1" %_Nul1% && set _vNext=1
-if %_vNext% EQU 1 (
-reg query %kNext% | findstr /i /r ".*retail" %_Nul2% | findstr /i /v "project visio" %_Nul2% | find /i "0x2" %_Nul1% && (set sub_O365=1)
-reg query %kNext% | findstr /i /r ".*retail" %_Nul2% | findstr /i /v "project visio" %_Nul2% | find /i "0x3" %_Nul1% && (set sub_O365=1)
-reg query %kNext% | findstr /i /r ".*volume" %_Nul2% | findstr /i /v "project visio" %_Nul2% | find /i "0x2" %_Nul1% && (set sub_O365=1)
-reg query %kNext% | findstr /i /r ".*volume" %_Nul2% | findstr /i /v "project visio" %_Nul2% | find /i "0x3" %_Nul1% && (set sub_O365=1)
+if %_Identity% EQU 1 reg query %kNext% /v MigrationToV5Done %_Nul2% | find /i "0x1" %_Nul1% && (
+reg query %kNext% | findstr /i /r ".*retail" %_Nul2% | findstr /i /v "project visio" %_Nul2% | find /i "0x2" %_Nul1% && (set sub_o365=1)
+reg query %kNext% | findstr /i /r ".*retail" %_Nul2% | findstr /i /v "project visio" %_Nul2% | find /i "0x3" %_Nul1% && (set sub_o365=1)
+reg query %kNext% | findstr /i /r ".*volume" %_Nul2% | findstr /i /v "project visio" %_Nul2% | find /i "0x2" %_Nul1% && (set sub_o365=1)
+reg query %kNext% | findstr /i /r ".*volume" %_Nul2% | findstr /i /v "project visio" %_Nul2% | find /i "0x3" %_Nul1% && (set sub_o365=1)
 reg query %kNext% | findstr /i /r "project.*" %_Nul2% | find /i "0x2" %_Nul1% && set sub_proj=1
 reg query %kNext% | findstr /i /r "project.*" %_Nul2% | find /i "0x3" %_Nul1% && set sub_proj=1
-reg query %kNext% | findstr /i /r "visio.*" %_Nul2% | find /i "0x2" %_Nul1% && set sub_vis=1
-reg query %kNext% | findstr /i /r "visio.*" %_Nul2% | find /i "0x3" %_Nul1% && set sub_vis=1
+reg query %kNext% | findstr /i /r "visio.*" %_Nul2% | find /i "0x2" %_Nul1% && set sub_vsio=1
+reg query %kNext% | findstr /i /r "visio.*" %_Nul2% | find /i "0x3" %_Nul1% && set sub_vsio=1
+)
+if %sub_o365% EQU 1 set sub_next=1
+if %sub_proj% EQU 1 set sub_next=1
+if %sub_vsio% EQU 1 set sub_next=1
+if %vNextOverride% EQU 1 if %_Cnvrt% EQU 1 (
+set sub_o365=0
+set sub_proj=0
+set sub_vsio=0
+if %sub_next% EQU 1 reg delete HKCU\SOFTWARE\Microsoft\Office\16.0\Common\Licensing /f %_Nul3%
 )
 set _Retail=0
 set "_ocq=ApplicationID='%_oApp%' AND LicenseStatus='1' AND PartialProductKey is not NULL"
@@ -408,6 +419,8 @@ echo.
 set _O16O365=0
 set _C16Msg=0
 set _C15Msg=0
+set _C16Vol=0
+set _C15Vol=0
 set "_qr=%_csq% %_spp% "%_ocq%" LicenseFamily"
 if %_Retail% EQU 1 if %WMI_VBS% EQU 0 wmic path %_spp% where (%_ocq%) get LicenseFamily %_Nul2% |findstr /V /R "^$" >"!_temp!\crvRetail.txt"
 if %_Retail% EQU 1 if %WMI_VBS% NEQ 0 %_qr% %_Nul2% >"!_temp!\crvRetail.txt"
@@ -444,24 +457,24 @@ set _%%a=0
 )
 if !_LTSC! EQU 1 for %%a in (%_V21Ids%) do (
 findstr /I /C:"%%aVolume" "!_temp!\crvProductIds.txt" %_Nul1% && (
-  find /i "Office21%%aVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _%%a=0) || (set _%%a=1)
+  find /i "Office21%%aVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _%%a=0&set _C16Vol=1) || (set _%%a=1)
   )
 )
 for %%a in (%_V19Ids%) do (
 findstr /I /C:"%%aVolume" "!_temp!\crvProductIds.txt" %_Nul1% && (
-  find /i "Office19%%aVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _%%a=0) || (set _%%a=1)
+  find /i "Office19%%aVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _%%a=0&set _C16Vol=1) || (set _%%a=1)
   )
 )
 for %%a in (%_V16Ids%) do (
 findstr /I /C:"%%aVolume" "!_temp!\crvProductIds.txt" %_Nul1% && (
-  find /i "Office16%%aVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _%%a=0) || (set _%%a=1)
+  find /i "Office16%%aVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _%%a=0&set _C16Vol=1) || (set _%%a=1)
   )
 )
 reg query %_PRIDs%\ProPlusRetail.16 %_Nul3% && (
-  find /i "Office16ProPlusVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _ProPlus=0) || (set _ProPlus=1)
+  find /i "Office16ProPlusVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _ProPlus=0&set _C16Vol=1) || (set _ProPlus=1)
 )
 reg query %_PRIDs%\ProPlusVolume.16 %_Nul3% && (
-  find /i "Office16ProPlusVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _ProPlus=0) || (set _ProPlus=1)
+  find /i "Office16ProPlusVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _ProPlus=0&set _C16Vol=1) || (set _ProPlus=1)
 )
 if %_Retail% EQU 1 for %%a in (%_RetIds%) do (
 findstr /I /C:"%%aRetail" "!_temp!\crvProductIds.txt" %_Nul1% && (
@@ -492,25 +505,25 @@ if %_Retail% EQU 1 reg query %_PRIDs%\ProPlusRetail.16 %_Nul3% && (
   find /i "Office16ProPlusMSDNR_" "!_temp!\crvRetail.txt" %_Nul1% && set _ProPlus=0
   find /i "Office16ProPlusVL_MAK" "!_temp!\crvRetail.txt" %_Nul1% && set _ProPlus=0
 )
-set "_qr=%_zz1% %_spp% %_zz2% "ApplicationID='%_oApp%' AND LicenseFamily like 'Office16O365%%'" %_zz3% LicenseFamily %_zz4%"
+set "_qr=%_zz1% %_spp% %_zz2% "ApplicationID='%_oApp%' AND LicenseFamily LIKE 'Office16O365%%'" %_zz3% LicenseFamily %_zz4%"
 find /i "Office16MondoVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (
 %_qr% %_Nul2% | find /i "O365" %_Nul1% && (
   for %%a in (O365ProPlus,O365Business,O365SmallBusPrem,O365HomePrem,O365EduCloud) do set _%%a=0
   )
 )
-if %sub_O365% EQU 1 (
+if %sub_o365% EQU 1 (
   for %%a in (%_Suites%) do set _%%a=0
-echo Microsoft Office is activated with a subscription.
+echo Microsoft Office is activated with a vNext license.
 echo.
 )
 if %sub_proj% EQU 1 (
   for %%a in (%_PrjSKU%) do set _%%a=0
-echo Microsoft Project is activated with a subscription.
+echo Microsoft Project is activated with a vNext license.
 echo.
 )
-if %sub_vis% EQU 1 (
+if %sub_vsio% EQU 1 (
   for %%a in (%_VisSKU%) do set _%%a=0
-echo Microsoft Visio is activated with a subscription.
+echo Microsoft Visio is activated with a vNext license.
 echo.
 )
 
@@ -518,6 +531,7 @@ if %_Cnvrt% NEQ 1 (if %_Office15% EQU 1 (goto :R15V) else (set "msg=Finished"&go
 
 for %%a in (%_RetIds%,ProPlus) do if !_%%a! EQU 1 (
 set _C16Msg=1
+set _C16Vol=1
 )
 if %_C16Msg% EQU 1 (
 echo.
@@ -747,14 +761,14 @@ findstr /I /C:"%%aRetail" "!_temp!\crvProduct15s.txt" %_Nul1% && set _%%a=1
 )
 for %%a in (%_V15Ids%) do (
 findstr /I /C:"%%aVolume" "!_temp!\crvProduct15s.txt" %_Nul1% && (
-  find /i "Office%%aVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _%%a=0) || (set _%%a=1)
+  find /i "Office%%aVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _%%a=0&set _C15Vol=1) || (set _%%a=1)
   )
 )
 reg query %_PR15IDs%\Active\ProPlusRetail\x-none %_Nul3% && (
-  find /i "OfficeProPlusVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _ProPlus=0) || (set _ProPlus=1)
+  find /i "OfficeProPlusVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _ProPlus=0&set _C15Vol=1) || (set _ProPlus=1)
 )
 reg query %_PR15IDs%\Active\ProPlusVolume\x-none %_Nul3% && (
-  find /i "OfficeProPlusVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _ProPlus=0) || (set _ProPlus=1)
+  find /i "OfficeProPlusVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (set _ProPlus=0&set _C15Vol=1) || (set _ProPlus=1)
 )
 if %_Retail% EQU 1 for %%a in (%_R15Ids%) do (
 findstr /I /C:"%%aRetail" "!_temp!\crvProduct15s.txt" %_Nul1% && (
@@ -774,7 +788,7 @@ if %_Retail% EQU 1 reg query %_PR15IDs%\Active\ProPlusRetail\x-none %_Nul3% && (
   find /i "OfficeProPlusMSDNR_" "!_temp!\crvRetail.txt" %_Nul1% && set _ProPlus=0
   find /i "OfficeProPlusVL_MAK" "!_temp!\crvRetail.txt" %_Nul1% && set _ProPlus=0
 )
-set "_qr=%_zz1% %_spp% %_zz2% "ApplicationID='%_oApp%' AND LicenseFamily like 'OfficeO365%%'" %_zz3% LicenseFamily %_zz4%"
+set "_qr=%_zz1% %_spp% %_zz2% "ApplicationID='%_oApp%' AND LicenseFamily LIKE 'OfficeO365%%'" %_zz3% LicenseFamily %_zz4%"
 find /i "OfficeMondoVL_KMS_Client" "!_temp!\crvVolume.txt" %_Nul1% && (
 %_qr% %_Nul2% | find /i "O365" %_Nul1% && (
   for %%a in (O365ProPlus,O365Business,O365SmallBusPrem,O365HomePrem) do set _%%a=0
@@ -785,6 +799,7 @@ if %_Cnvrt% NEQ 1 (set "msg=Finished"&goto :TheEnd)
 
 for %%a in (%_R15Ids%,ProPlus) do if !_%%a! EQU 1 (
 set _C15Msg=1
+set _C15Vol=1
 )
 if %_C15Msg% EQU 1 if %_C16Msg% EQU 0 (
 echo.
@@ -941,14 +956,18 @@ set "_qr=wmic path %_sps% where Version='%_wmi%' call RefreshLicenseStatus"
 if %WMI_VBS% NEQ 0 set "_qr=%_csm% "%_sps%.Version='%_wmi%'" RefreshLicenseStatus"
 if %winbuild% GEQ 9200 %_qr% %_Nul3%
 for %%# in (15,16,19,21) do call :C2RLoc %%#
-if %_Retail% EQU 0 if !_Loc15! EQU 0 call :C2Runi %%#
-if %_Retail% EQU 0 if %sub_O365% EQU 0 if %sub_proj% EQU 0 if %sub_vis% EQU 0 (
-if !_Loc16! EQU 0 call :C2Runi %%#
-if !_Loc19! EQU 0 call :C2Runi %%#
-if !_Loc21! EQU 0 call :C2Runi %%#
+if %_Retail% EQU 0 (
+for %%# in (15) do if !_Loc%%#! EQU 0 call :C2Runi %%#
 )
-if %_C16Msg% EQU 1 for %%# in (16,19,21) do if !_Loc%%#! EQU 1 call :C2Rins %%#
-if %_C15Msg% EQU 1 for %%# in (15) do if !_Loc%%#! EQU 1 call :C2Rins %%#
+if %_Retail% EQU 0 if %sub_o365% EQU 0 if %sub_proj% EQU 0 if %sub_vsio% EQU 0 (
+for %%# in (16,19,21) do if !_Loc%%#! EQU 0 call :C2Runi %%#
+)
+if %_C15Vol% EQU 1 (
+for %%# in (15) do if !_Loc%%#! EQU 1 call :C2Rins %%#
+)
+if %_C16Vol% EQU 1 (
+for %%# in (16,19,21) do if !_Loc%%#! EQU 1 call :C2Rins %%#
+)
 set "_qr=wmic path %_sps% where Version='%_wmi%' call RefreshLicenseStatus"
 if %WMI_VBS% NEQ 0 set "_qr=%_csm% "%_sps%.Version='%_wmi%'" RefreshLicenseStatus"
 if %winbuild% GEQ 9200 %_qr% %_Nul3%
@@ -965,12 +984,12 @@ set "msg=Finished"
 goto :TheEnd
 
 :C2Runi
-set "_qr=%_zz1% %_spp% %_zz2% "Name like 'Office %~1%%' AND PartialProductKey is not NULL" %_zz3% ID %_zz4%"
+set "_qr=%_zz1% %_spp% %_zz2% "Name LIKE 'Office %~1%%' AND PartialProductKey is not NULL" %_zz3% ID %_zz4%"
 for /f "tokens=2 delims==" %%# in ('%_qr% %_Nul6%') do (set "aID=%%#"&call :UniKey)
 exit /b
 
 :C2Rins
-set "_qr=%_zz7% %_spp% %_zz2% %_zz5%Description like 'Office %1, VOLUME_KMSCLIENT%%' AND PartialProductKey is NULL%_zz6% %_zz3% ID %_zz8%"
+set "_qr=%_zz7% %_spp% %_zz2% %_zz5%Description LIKE 'Office %1, VOLUME_KMSCLIENT%%' AND PartialProductKey is NULL%_zz6% %_zz3% ID %_zz8%"
 for /f "tokens=2 delims==" %%# in ('%_qr% %_Nul6%') do (set "aID=%%#"&call :InsKey)
 exit /b
 
