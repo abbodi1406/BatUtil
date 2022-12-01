@@ -2407,7 +2407,7 @@ goto :mainmenu
 
 :ISO
 set imapi=0
-if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\cdimage.exe" if not exist "!_work!\bin\cdimage.exe" set imapi=1
+if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\cdimage.exe" if not exist "!_work!\bin\oscdimg.exe" if not exist "!_work!\bin\cdimage.exe" set imapi=1
 if %imapi%==1 if %_pwsh% equ 0 goto :eof
 if "!isodir!"=="" set "isodir=!_work!"
 call :DATEISO
