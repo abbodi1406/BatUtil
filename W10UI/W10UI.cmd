@@ -2433,7 +2433,7 @@ echo ============================================================
 echo.
 echo ISO Location:
 echo "!isodir!"
-if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else if exist "!_work!\cdimage.exe" (set _ff="!_work!\cdimage.exe") else (set _ff="!_work!\bin\cdimage.exe")
+if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else if exist "!_work!\cdimage.exe" (set _ff="!_work!\cdimage.exe") else if exist "!_work!\bin\oscdimg.exe" (set _ff="!_work!\bin\oscdimg.exe") else (set _ff="!_work!\bin\cdimage.exe")
 cd /d "!target!"
 if %imapi%==0 if /i not %arch%==arm64 (
 !_ff! -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
