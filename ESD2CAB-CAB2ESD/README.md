@@ -25,3 +25,4 @@ to get high-compressed solid ESD files (require high amount of CPU/RAM), edit th
 ## Credits
 
 * OnePiece [DXTool](https://ryanvm.net/forum/viewtopic.php?f=7&t=9945)
+* Melinda Bellemore [SxSExpand](https://forums.mydigitallife.net/members/superbubble.250156/)

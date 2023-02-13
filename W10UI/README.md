@@ -7,18 +7,18 @@ Automated script to install or integrate updates for:
 
 ## Features:
 
-* Supported targets:
-- Current Online OS
-- Offline image (already mounted directory, another partition)
-- Distribution folder (extracted iso, copied dvd/usb)
-- Distribution Drive (virtual mounted iso, inserted dvd, usb drive)
-- WIM file directly (unmounted)
+* Supported targets:  
+> Current Online OS  
+Offline image (already mounted directory, another partition)  
+Distribution folder (extracted iso, copied dvd/usb)  
+Distribution Drive (virtual mounted iso, inserted dvd, usb drive)  
+WIM file directly (unmounted)
 
-* Supports having updates in one folder:
-- Detect and install servicing stack update first
-- Skip installing non-winpe updates for boot.wim/winre.wim (flash, oobe, .net 4.x)
-- Skip installing Adobe Flash update for Server Core or if the package is removed
-- Handle dynamic updates for setup media 'sources' folder (skip installing it, extract it for distribution target)
+* Supports having updates in one folder:  
+> Detect and install servicing stack update first  
+Skip installing non-winpe updates for boot.wim/winre.wim (flash, oobe, .net 4.x)  
+Skip installing Adobe Flash update for Server Core or if the package is removed  
+Handle dynamic updates for setup media 'sources' folder (skip installing it, extract it for distribution target)
 
 * Enable .NET Framework 3.5 if available source detected, and reinstall Cumulative updates afterwards.  
 valid locations: mounted iso, inserted dvd/usb, sxs folder for distribution target, custom specified folder path
@@ -31,9 +31,8 @@ you must run W10UI.cmd at least once after restart to perform Cleanup or Reset O
 ## Updated ISO recommendation:
 
 * Creating updated iso file for a distribution target require either of:  
-- install Windows ADK
-- place oscdimg.exe or cdimage.exe in the same folder next to W10UI.cmd
-
+> install Windows ADK  
+place oscdimg.exe or cdimage.exe in the same folder next to W10UI.cmd  
 otherwise, embedded Powershell/.NET funcion `DIR2ISO` will be used to create the iso
 
 ## Limitations:
@@ -70,45 +69,45 @@ avoid using them with the script and install them manually
 
 Press each option corresponding number/letter to change it
 
-1. Target  
+**1.** Target  
 target windows image, default is current online system  
 if a wim file is available besides the script, it will be detected automatically
 
-2. Updates  
+**2.** Updates  
 location of updates files
 
-3. DISM  
+**3.** DISM  
 the path for custom dism.exe  
 required when the current Host OS is lower than Windows NT 10.0 without ADK installed
 
-4. Enable .NET 3.5  
+**4.** Enable .NET 3.5  
 process or skip enabling .NET 3.5 feature
 
-5. Cleanup System Image: YES      6. Reset Image Base: NO  
+**5.** Cleanup System Image: YES      **6.** Reset Image Base: NO  
 in this choice, the OS images will be cleaned and superseded components will be "delta-compressed"  
 safe operation, but might take long time to complete.
 
-5. Cleanup System Image: YES      6. Reset Image Base: YES  
+**5.** Cleanup System Image: YES      **6.** Reset Image Base: YES  
 in this choice, the OS images will be rebased and superseded components will be "removed"  
 quick operation and reduce size further more, but might break "Reset this PC" feature.
 
-7. Update WinRE.wim  
+**7.** Update WinRE.wim  
 available only if the target is a distribution folder, or WIM file  
 enable or disable updating winre.wim inside install.wim
 
-8. Selected Install.wim indexes  
+**7.** Selected Install.wim indexes  
 available only if the target is a distribution folder, or WIM file  
 a choice to select specific index(s) to update from install.wim, or all indexes by default
 
-K. Keep indexes  
+**K.** Keep indexes  
 available only if you selected specific index(s) in above option 8  
 a choice to only keep selected index(s) when rebuilding install.wim, or keep ALL indexes
 
-M. Mount Directory  
+**M.** Mount Directory  
 available only if the target is a distribution folder, or WIM file  
 mount directory for updating wim files, default is on the same drive as the script
 
-E. Extraction Directory  
+**E.** Extraction Directory  
 directory for temporary extracted files, default is on the same drive as the script
 
 ## Configuration options (for advanced users):
@@ -144,8 +143,7 @@ convert install.wim to install.esd, if the target is a distribution
 warning: the process will consume very high amount of CPU and RAM resources
 
 * wim2swm  
-split install.wim into multiple install.swm files, if the target is a distribution
-
+split install.wim into multiple install.swm files, if the target is a distribution  
 note: if both wim2esd/wim2swm are 1, install.esd takes precedence over split install.swm
 
 * ISO  
@@ -172,10 +170,10 @@ the option will also auto exit at the end without prompt
 * The operation progress will not be shown in this mode
 
 * How To:  
-- edit the script and change set _Debug=0 to 1  
-- set main manual options correctly, specially "target" and "repo"  
-- save and run the script as admin  
-- wait until command prompt window is closed and W10UI_Debug.log is created
+> edit the script and change set _Debug=0 to 1  
+set main manual options correctly, specially "target" and "repo"  
+save and run the script as admin  
+wait until command prompt window is closed and W10UI_Debug.log is created
 
 ## Credits:
 

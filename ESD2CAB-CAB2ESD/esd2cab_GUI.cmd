@@ -2,14 +2,15 @@
 title ESD -^> CAB
 cd /d "%~dp0"
 if /i "%PROCESSOR_ARCHITECTURE%" equ "AMD64" (set "arch=x64") else (set "arch=x86")
-for %%A in (image%arch%.exe,DXTool_%arch%.exe) do (
+for %%A in (image%arch%.exe,DXTool_%arch%.exe,SxSExpand.exe) do (
 if not exist "bin\%%A" (set "MESSEGE=%%A is not detected."&goto :fin)
 )
 if not exist "*.esd" (set "MESSEGE=No .esd files detected."&goto :fin)
 for %%p in ("bin\image%arch%.exe") do set "IMAGEX=%%~fp"
 for %%p in ("bin\DXTool_%arch%.exe") do set "DXTOOL=%%~fp"
+for %%p in ("bin\SxSExpand.exe") do set "SXS=%%~fp"
 set "tempdir=temp%random%"
-for /f "delims=" %%i in ('dir /b *.esd') do call :esdcab "%%i"
+for /f "delims=" %%i in ('dir /b /a:-d *.esd') do call :esdcab "%%i"
 set "MESSEGE=Done."
 goto :fin
 
@@ -29,6 +30,12 @@ echo.
 echo ============================================================
 echo Create: %pack%.cab
 echo ============================================================
+pushd "%tempdir%"
+md _sxs
+for /f %%a in ('dir /b /a:-d *.manifest') do ("%SXS%" %%a _sxs\%%a >nul)
+if exist "_sxs\*.manifest" move /y _sxs\* . >nul
+rd /s /q _sxs\
+popd
 start /HIGH /WAIT "" "%DXTOOL%" /CT "%tempdir%"
 ren %tempdir%.cab %pack%.cab
 rd /s /q "%tempdir%" >nul 2>&1
