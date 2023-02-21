@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v7.0
+@set uiv=v7.1
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -86,15 +86,18 @@ if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
 set "_Null=1>nul 2>nul"
 set "_err===== ERROR ===="
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
+set _blue=0
+if %winbuild% geq 9600 if %winbuild% lss 9606 set _blue=1
 set _cwmi=0
 for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
 wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
 )
 reg.exe query HKU\S-1-5-19 %_Null% || goto :E_Admin
-set "_oscdimg=%SysPath%\oscdimg.exe"
-set "_sbs=Microsoft\Windows\CurrentVersion\SideBySide\Configuration"
-set "_SxS=HKLM\SOFTWARE\%_sbs%"
+set "_SbS=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\SideBySide\Configuration"
 set "_CBS=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing"
+set "_Pkt=31bf3856ad364e35"
+set "_OurVer=6.3.9603.30600"
+set "_oscdimg=%SysPath%\oscdimg.exe"
 set "_log=%~dpn0"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
@@ -253,7 +256,7 @@ if exist "!target!\Windows\regedit.exe" set offline=1
 )
 if %offline%==0 if %wim%==0 if %dvd%==0 (if %_init%==1 (set "target=%SystemDrive%"&goto :check) else (set "MESSAGE=Specified location is not valid"&goto :E_Target))
 if %offline%==1 (
-dir /b /ad "!target!\Windows\servicing\Version\6.3.9600.*" %_Nul3% || (set "MESSAGE=Detected target offline image is not Windows 8.1"&goto :E_Target)
+dir /b /ad "!target!\Windows\servicing\Version\6.3.960*" %_Nul3% || (set "MESSAGE=Detected target offline image is not Windows 8.1"&goto :E_Target)
 set "mountdir=!target!"
 set arch=x86
 if exist "!target!\Windows\Servicing\Packages\*~amd64~~*.mum" set arch=x64
@@ -264,7 +267,7 @@ echo ============================================================
 echo Please wait...
 echo ============================================================
 cd /d "!targetpath!"
-dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 | find /i "Version : 6.3.9600" %_Nul1% || (set "MESSAGE=Detected wim version is not Windows 8.1"&goto :E_Target)
+dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 | find /i "Version : 6.3.960" %_Nul1% || (set "MESSAGE=Detected wim version is not Windows 8.1"&goto :E_Target)
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 ^| find /i "Architecture"') do set arch=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%targetname%" ^| find /i "Index"') do set imgcount=%%#
 for /L %%# in (1,1,!imgcount!) do (
@@ -281,7 +284,7 @@ echo Please wait...
 echo ============================================================
 copy /y nul "!target!\#.rw" %_Nul3% && (del /f /q "!target!\#.rw" %_Nul3%) || (set copytarget=1)
 cd /d "!target!"
-dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 | find /i "Version : 6.3.9600" %_Nul1% || (set "MESSAGE=Detected install.wim version is not Windows 8.1"&goto :E_Target)
+dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 | find /i "Version : 6.3.960" %_Nul1% || (set "MESSAGE=Detected install.wim version is not Windows 8.1"&goto :E_Target)
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:1 ^| find /i "Architecture"') do set arch=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" ^| find /i "Index"') do set imgcount=%%#
 for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"sources\boot.wim" ^| find /i "Index"') do set bootimg=%%#
@@ -297,15 +300,15 @@ if %_init%==1 (goto :check) else (goto :mainmenu)
 
 :check
 if /i "!target!"=="%SystemDrive%" (
-reg.exe query %_SxS% /v W81UIclean %_Nul3% && (set onlineclean=1&set online=1&set cleanup=1)
-reg.exe query %_SxS% /v W81UIrebase %_Nul3% && (set onlineclean=1&set online=1&set cleanup=1&set resetbase=1)
+reg.exe query %_SbS% /v W81UIclean %_Nul3% && (set onlineclean=1&set online=1&set cleanup=1)
+reg.exe query %_SbS% /v W81UIrebase %_Nul3% && (set onlineclean=1&set online=1&set cleanup=1&set resetbase=1)
 )
 if defined onlineclean goto :main2board
 if /i not "!dismroot!"=="dism.exe" if exist "!dismroot!" goto :mainmenu
 goto :checkadk
 
 :mainboard
-if %winbuild% neq 9600 if /i "!target!"=="%SystemDrive%" (%_Goto%)
+if %_blue% neq 1 if /i "!target!"=="%SystemDrive%" (%_Goto%)
 if %winbuild% lss 9600 if %_ADK% equ 0 (%_Goto%)
 if "!target!"=="" (%_Goto%)
 if "!repo!"=="" (%_Goto%)
@@ -341,8 +344,8 @@ if exist "%SystemRoot%\WinSxS\pending.xml" (
 set verb=0
 set "mountdir=!target!"
 set dismtarget=/online
-reg.exe delete %_SxS% /v W81UIclean /f %_Nul3%
-reg.exe delete %_SxS% /v W81UIrebase /f %_Nul3%
+reg.exe delete %_SbS% /v W81UIclean /f %_Nul3%
+reg.exe delete %_SbS% /v W81UIrebase /f %_Nul3%
 call :cleanup
 goto :fin
 )
@@ -371,17 +374,17 @@ goto :fin
 :igwim
 if %wim%==0 goto :igdvd
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
-call :mount "%targetname%"
+call :domount "%targetname%"
 if /i not "%targetname%"=="winre.wim" (if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%)
 goto :fin
 
 :igdvd
 if %dvd%==0 goto :fin
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
-call :mount sources\install.wim
+call :domount sources\install.wim
 if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%
 set keep=0&set imgcount=%bootimg%&set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
-call :mount sources\boot.wim
+call :domount sources\boot.wim
 xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
 if %_DNF%==1 if exist "!target!\sources\sxs\msil_microsoft.build.engine*3.5.9600.16384*" (rmdir /s /q "!target!\sources\sxs\" %_Nul1%)
 if %wim2esd%==0 goto :fin
@@ -411,6 +414,31 @@ reg.exe load HKLM\OFFSOFT "!mountdir!\Windows\System32\config\SOFTWARE" %_Nul1%
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKLM\OFFSOFT\Microsoft\Windows NT\CurrentVersion" /v EditionID') do set "CEdition=%%b"
 reg.exe unload HKLM\OFFSOFT %_Nul1%
 )
+if %online%==1 (
+set SOFTWARE=SOFTWARE
+set COMPONENTS=COMPONENTS
+) else (
+set SOFTWARE=uiSOFTWARE
+set COMPONENTS=uiCOMPONENTS
+)
+set "_SxS=HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide\Winners"
+set "_Cmp=HKLM\%COMPONENTS%\DerivedData\Components"
+if exist "!mountdir!\Windows\Servicing\Packages\*~amd64~~*.mum" (
+set "xBT=amd64"
+set "_EsuKey=%_SxS%\amd64_microsoft-windows-s..edsecurityupdatesai_%_Pkt%_none_0e8b36cfce2fb332"
+set "_EsuCom=amd64_microsoft-windows-s..edsecurityupdatesai_%_Pkt%_%_OurVer%_none_6022b34506a8b67a"
+set "_EsuIdn=4D6963726F736F66742D57696E646F77732D534C432D436F6D706F6E656E742D457874656E64656453656375726974795570646174657341492C2043756C747572653D6E65757472616C2C2056657273696F6E3D362E332E393630332E33303630302C205075626C69634B6579546F6B656E3D333162663338353661643336346533352C2050726F636573736F724172636869746563747572653D616D6436342C2076657273696F6E53636F70653D4E6F6E537853"
+set "_EsuHsh=423FEE4BEB5BCA64D89C7BCF0A69F494288B9A2D947C76A99C369A378B79D411"
+) else (
+set "xBT=x86"
+set "_EsuKey=%_SxS%\x86_microsoft-windows-s..edsecurityupdatesai_%_Pkt%_none_b26c9b4c15d241fc"
+set "_EsuCom=x86_microsoft-windows-s..edsecurityupdatesai_%_Pkt%_%_OurVer%_none_040417c14e4b4544"
+set "_EsuIdn=4D6963726F736F66742D57696E646F77732D534C432D436F6D706F6E656E742D457874656E64656453656375726974795570646174657341492C2043756C747572653D6E65757472616C2C2056657273696F6E3D362E332E393630332E33303630302C205075626C69634B6579546F6B656E3D333162663338353661643336346533352C2050726F636573736F724172636869746563747572653D7838362C2076657273696F6E53636F70653D4E6F6E537853"
+set "_EsuHsh=70FC6E62A198F5D98FDDE11A6E8D6C885E17C53FCFE1D927496351EADEB78E42"
+)
+set _EsuPkg=0
+if exist "!mountdir!\Windows\WinSxS\Manifests\%_EsuCom%.manifest"  set _EsuPkg=1
+if %_EsuPkg% equ 0 call :ESUadd %_Nul3%
 set allcount=0
 set _GDR=0
 set winpe=0
@@ -1061,6 +1089,41 @@ reg.exe unload HKLM\OFFUSR
 )
 goto :eof
 
+:ESUadd
+set "_EsuFnd=microsoft-w..-foundation_%_Pkt%_6.3.9600.16384_d1250fcb45c3a9e5"
+if /i "%xBT%"=="x86" (
+set "_EsuFnd=microsoft-w..-foundation_%_Pkt%_6.3.9600.16384_750674478d6638af"
+)
+if not exist "!Cab_Dir!\%_EsuCom%.manifest" (
+(echo ^<?xml version="1.0" encoding="UTF-8"?^>
+echo ^<assembly xmlns="urn:schemas-microsoft-com:asm.v3" manifestVersion="1.0" copyright="Copyright (c) Microsoft Corporation. All Rights Reserved."^>
+echo   ^<assemblyIdentity name="Microsoft-Windows-SLC-Component-ExtendedSecurityUpdatesAI" version="%_OurVer%" processorArchitecture="%xBT%" language="neutral" buildType="release" publicKeyToken="%_Pkt%" versionScope="nonSxS" /^>
+echo ^</assembly^>)>"!Cab_Dir!\%_EsuCom%.manifest"
+)
+icacls "!mountdir!\Windows\WinSxS\Manifests" /save "!Cab_Dir!\acl.txt"
+takeown /f "!mountdir!\Windows\WinSxS\Manifests" /A
+icacls "!mountdir!\Windows\WinSxS\Manifests" /grant:r "*S-1-5-32-544:(OI)(CI)(F)"
+copy /y "!Cab_Dir!\%_EsuCom%.manifest" "!mountdir!\Windows\WinSxS\Manifests\"
+icacls "!mountdir!\Windows\WinSxS\Manifests" /setowner *S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464
+icacls "!mountdir!\Windows\WinSxS" /restore "!Cab_Dir!\acl.txt"
+del /f /q "!Cab_Dir!\acl.txt"
+
+if %online%==0 reg load HKLM\%SOFTWARE% "!mountdir!\Windows\System32\Config\SOFTWARE"
+reg query HKLM\%COMPONENTS% 1>nul 2>nul || reg load HKLM\%COMPONENTS% "!mountdir!\Windows\System32\Config\COMPONENTS"
+reg delete "%_Cmp%\%_EsuCom%" /f
+reg add "%_Cmp%\%_EsuCom%" /f /v "c^!%_EsuFnd%" /t REG_BINARY /d ""
+reg add "%_Cmp%\%_EsuCom%" /f /v identity /t REG_BINARY /d "%_EsuIdn%"
+reg add "%_Cmp%\%_EsuCom%" /f /v S256H /t REG_BINARY /d "%_EsuHsh%"
+reg add "%_EsuKey%" /f /ve /d %_OurVer:~0,3%
+reg add "%_EsuKey%\%_OurVer:~0,3%" /f /ve /d %_OurVer%
+reg add "%_EsuKey%\%_OurVer:~0,3%" /f /v %_OurVer% /t REG_BINARY /d 01
+for /f "tokens=* delims=" %%# in ('reg query HKLM\%COMPONENTS%\DerivedData\VersionedIndex 2^>nul ^| findstr /i VersionedIndex') do reg delete "%%#" /f
+if %online%==0 (
+reg unload HKLM\%COMPONENTS%
+reg unload HKLM\%SOFTWARE%
+)
+exit /b
+
 :stacklimit
 echo ============================================================
 echo *** ATTENTION ***
@@ -1110,7 +1173,7 @@ if errorlevel 1 (exit) else (rem.)
 
 :: ###################################################################
 
-:mount
+:domount
 set "_wimfile=%~1"
 if %wim%==1 set "_wimpath=!targetpath!"
 if %dvd%==1 set "_wimpath=!target!"
@@ -1246,7 +1309,7 @@ goto :eof
 if %cleanup%==0 call :cleanmanual&goto :eof
 if %resetbase%==0 (set rValue=W81UIclean) else (set rValue=W81UIrebase)
 if exist "!mountdir!\Windows\WinSxS\pending.xml" (
-if %online%==1 reg.exe add %_SxS% /v %rValue% /t REG_DWORD /d 1 /f %_Nul1%&goto :eof
+if %online%==1 reg.exe add %_SbS% /v %rValue% /t REG_DWORD /d 1 /f %_Nul1%&goto :eof
 call :cleanmanual&goto :eof
 )
 if %resetbase%==0 (
@@ -1397,7 +1460,7 @@ echo Enter the path for one of supported targets:
 echo - Distribution ^(extracted folder, mounted iso/dvd/usb drive^)
 echo - WIM file ^(not mounted^)
 echo - Mounted directory, offline image drive letter
-if %winbuild% equ 9600 echo - Current OS / Enter %SystemDrive%
+if %_blue% equ 1 echo - Current OS / Enter %SystemDrive%
 echo.
 echo or just press 'Enter' to return to options menu
 echo ============================================================
@@ -1541,7 +1604,7 @@ if %autostart%==1 goto :mainboard
 @cls
 echo ==================================================================
 if /i "!target!"=="%SystemDrive%" (
-if %winbuild% neq 9600 (set "target="&echo [1] Select offline target) else (echo [1] Target ^(%arch%^): Current Online OS)
+if %_blue% neq 1 (set "target="&echo [1] Select offline target) else (echo [1] Target ^(%arch%^): Current Online OS)
 ) else (
 if /i "!target!"=="" (echo [1] Select offline target) else (echo [1] Target ^(%arch%^): "!target!")
 )
