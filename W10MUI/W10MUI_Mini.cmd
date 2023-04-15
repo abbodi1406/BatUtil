@@ -502,6 +502,10 @@ call set _PP64=!_PP64! /PackagePath:!LANGUAGE%%j!\update.mum
 if %wimbit%==32 if not defined _PP86 goto :E_ARCH
 if %wimbit%==64 if not defined _PP64 goto :E_ARCH
 
+if %_build% geq 19041 if %winbuild% lss 17133 if not exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+copy /y %SysPath%\slc.dll %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
+if /i not %xOS%==x86 copy /y %SystemRoot%\SysWOW64\slc.dll %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
+)
 for /L %%i in (1,1,%imgcount%) do (
 echo.
 echo ============================================================
@@ -634,6 +638,10 @@ echo Rebuild install.wim
 echo ============================================================
 !_dism2!:"!TMPDISM!" /Export-Image /SourceImageFile:"!WIMPATH!" /All /DestinationImageFile:"!TEMPDIR!\install.wim"
 if exist "!TEMPDIR!\install.wim" move /y "!TEMPDIR!\install.wim" "!WIMPATH!" %_Nul1%
+if %_build% geq 19041 if %winbuild% lss 17133 if exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+del /f /q %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
+if /i not %xOS%==x86 del /f /q %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
+)
 echo.
 echo ============================================================
 echo Remove temporary directories

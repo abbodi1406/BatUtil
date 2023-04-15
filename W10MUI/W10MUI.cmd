@@ -546,6 +546,10 @@ set _AszEdt=0
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 if exist "%SystemRoot%\temp\UpdateAgent.dll" del /f /q "%SystemRoot%\temp\UpdateAgent.dll" %_Nul3%
 if exist "%SystemRoot%\temp\Facilitator.dll" del /f /q "%SystemRoot%\temp\Facilitator.dll" %_Nul3%
+if %_build% geq 19041 if %winbuild% lss 17133 if not exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+copy /y %SysPath%\slc.dll %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
+if /i not %xOS%==x86 copy /y %SystemRoot%\SysWOW64\slc.dll %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
+)
 for /L %%i in (1,1,%imgcount%) do (
 echo.
 echo ============================================================
@@ -845,6 +849,10 @@ echo ============================================================
 if exist "!DVDDIR!\install.wim" move /y "!DVDDIR!\install.wim" "!DVDDIR!\sources" %_Nul1%
 if %NET35%==1 if exist "!DVDDIR!\sources\sxs\*netfx3*.cab" del /f /q "!DVDDIR!\sources\sxs\*netfx3*.cab" %_Nul3%
 xcopy "!DVDDIR!\efi\microsoft\boot\fonts\*" "!DVDDIR!\boot\fonts\" /chryi %_Nul3%
+if %_build% geq 19041 if %winbuild% lss 17133 if exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+del /f /q %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
+if /i not %xOS%==x86 del /f /q %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
+)
 
 if %SLIM% EQU 1 goto :proceed
 echo.

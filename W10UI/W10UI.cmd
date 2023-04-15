@@ -386,6 +386,7 @@ if %_init%==1 (goto :check) else (goto :mainmenu)
 
 :check
 if /i "!target!"=="%SystemDrive%" (
+if /i %xOS%==x86 (set arch=x86) else if /i %xOS%==amd64 (set arch=x64) else (set arch=arm64)
 set _build=%winbuild%
 reg.exe query %_SxS% /v W10UIclean %_Nul3% && (set onlineclean=1&set online=1&set cleanup=1)
 reg.exe query %_SxS% /v W10UIrebase %_Nul3% && (set onlineclean=1&set online=1&set cleanup=1&set resetbase=1)
@@ -657,12 +658,19 @@ if !skip!==1 (set /a _sum-=1&if %msuchk% equ 1 (set /a _msu-=1&goto :eof) else (
 :cab1proceed
 if %msuchk% equ 0 goto :eof
 set uupmsu=0
+set msuwim=0
 cd /d "!repo!"
-for /f "tokens=2 delims=: " %%# in ('expand.exe -d -f:*Windows*.cab !package! ^| findstr /i %kb%') do set kbcab=%%#
-expand.exe -d -f:*Windows*.psf !package! | findstr /i %arch%\.psf %_Nul3% && set uupmsu=1
+expand.exe -d -f:*Windows*.psf !package! %_Nul2% | findstr /i %arch%\.psf %_Nul3% && set uupmsu=1
+if %uupmsu% equ 0 if %_build% geq 21382 (
+dism.exe /English /List-Image /ImageFile:!package! /Index:1 %_Nul2% | findstr /i %arch%\.psf %_Nul3% && (set uupmsu=1&set msuwim=1) 
+)
+if %uupmsu% equ 0 for /f "tokens=2 delims=: " %%# in ('expand.exe -d -f:*Windows*.cab !package! %_Nul6% ^| findstr /i %kb%') do set kbcab=%%#
 cd /d "!_work!"
 set /a count+=1
-if %uupmsu% equ 1 goto :msu1
+if %uupmsu% equ 1 (
+if %_pwsh% equ 0 goto :eof
+goto :msu1
+)
 if %_embd% equ 0 (
 set "msucab=!msucab! %kbcab%"
 ) else (
@@ -678,11 +686,21 @@ cd /d "!_cabdir!"
 if %_embd% equ 0 if exist "%dest%\" rmdir /s /q "%dest%\" %_Nul3%
 if not exist "%dest%\chck\" mkdir "%dest%\chck"
 echo %count%/%_msu%: %package% [Combined UUP]
+if %msuwim% equ 0 (
 expand.exe -f:*Windows*.cab "!repo!\!package!" "%dest%\chck" %_Null%
-for /f "tokens=* delims=" %%# in ('dir /b /on "%dest%\chck\*Windows1*-KB*.cab"') do set "compkg=%%#
+expand.exe -f:SSU-*%arch%*.cab "!repo!\!package!" "%dest%\chck" %_Null%
+) else (
+for /f "tokens=1 delims=\" %%# in ('dism.exe /English /List-Image /ImageFile:"!repo!\!package!" /Index:1 ^| findstr /i /r "SSU-.* %arch%\.wim"') do powershell -nop -c "$f=[IO.File]::ReadAllText('!_batp!') -split ':wimmsu\:.*';iex ($f[1]);E '!repo!\!package!' '%%#' '%dest%\chck\%%#'"
+)
+:: dism.exe /English /Apply-Image /ImageFile:"!repo!\!package!" /Index:1 /ApplyDir:"%dest%\chck" /NoAcl:all %_Null%
+:: del /f /q "%dest%\chck\*.psf" %_Nul3%
+for /f "tokens=* delims=" %%# in ('dir /b /on "%dest%\chck\*Windows1*-KB*.*"') do set "compkg=%%#
+if %msuwim% equ 0 (
 expand.exe -f:update.mum "%dest%\chck\%compkg%" "%dest%" %_Null%
 expand.exe -f:%sss%_microsoft-updatetargeting-*os_*.manifest "%dest%\chck\%compkg%" "%dest%" %_Null%
-expand.exe -f:SSU-*%arch%*.cab "!repo!\!package!" "%dest%\chck" %_Null%
+) else (
+for /f "tokens=1 delims=\" %%# in ('dism.exe /English /List-Image /ImageFile:"%dest%\chck\%compkg%" /Index:1 ^| findstr /i /r "update.mum %sss%_microsoft-updatetargeting-.*os_"') do powershell -nop -c "$f=[IO.File]::ReadAllText('!_batp!') -split ':wimmsu\:.*';iex ($f[1]);E '%dest%\chck\%compkg%' '%%#' '%dest%\%%#'"
+)
 if exist "%dest%\chck\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "%dest%\chck\SSU-*%arch%*.cab"') do (set "compkg=%%#"&call :uupssu)
 rmdir /s /q "%dest%\chck\" %_Nul3%
 set msu_%dest%=1
@@ -2413,6 +2431,7 @@ if "!isodir!"=="" set "isodir=!_work!"
 call :DATEISO
 if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
 if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
+if not defined _date set "_date=000000-0000"
 if not defined isodate set "isodate=%_date:~2,6%-%_date:~8,4%"
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set isolab=!isolab:%%#=%%#!
@@ -2630,6 +2649,30 @@ Add-Type -Language CSharp -TypeDefinition @"
 ::Y9yi$tfwF)&?)z,[hd3#;|3.pasLrw2+esnP&7^?Fb0KDjm5#J&c!g|RI1bxRb)-b==iRfgQ}|3zN{iJ)+L?O-}TH6jgC(0GS?0y!BF2BiUtB!dm&Zv5yehfeaiPx
 ::@Ss.?EnxmYb_)2oz~XDyfe,xD{&S6Dm6d;p{d;2/s7[qoFN22Z{w@eX,;SO6QlQ(Fdl/syef/k^(xxZOT;?gdn,VE4$OY6szM8nMf;S=
 :embdbin:
+:: ============
+
+:wimmsu:
+function E($WimPath, $InnFile, $OutFile) {
+$DllPath = 'wimgapi.dll'
+$AssemblyBuilder = [AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1)
+$ModuleBuilder = $AssemblyBuilder.DefineDynamicModule(2, $False)
+$TypeBuilder = $ModuleBuilder.DefineType(0)
+[void]$TypeBuilder.DefinePInvokeMethod('WIMCreateFile', $DllPath, 'Public, Static', 1, [IntPtr], @([String], [UInt32], [Int32], [Int32], [Int32], [Int32].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+[void]$TypeBuilder.DefinePInvokeMethod('WIMLoadImage', $DllPath, 'Public, Static', 1, [IntPtr], @([IntPtr], [Int32]), 1, 3).SetImplementationFlags(128)
+[void]$TypeBuilder.DefinePInvokeMethod('WIMSetTemporaryPath', $DllPath, 'Public, Static', 1, [int], @([IntPtr], [String]), 1, 3)
+[void]$TypeBuilder.DefinePInvokeMethod('WIMExtractImagePath', $DllPath, 'Public, Static', 1, [int], @([IntPtr], [String], [String], [Int32]), 1, 3)
+[void]$TypeBuilder.DefinePInvokeMethod('WIMCloseHandle', $DllPath, 'Public, Static', 1, [int], @([IntPtr]), 1, 3)
+$WIMG = $TypeBuilder.CreateType()
+$hWim = 0
+$hImage = 0
+$hWim = $WIMG::WIMCreateFile($WimPath, "0x80000000", 3, "0x20000000", 0, [ref]$null)
+[void]$WIMG::WIMSetTemporaryPath($hWim, [Environment]::GetEnvironmentVariable('SystemDrive'))
+$hImage = $WIMG::WIMLoadImage($hWim, 1)
+[void]$WIMG::WIMExtractImagePath($hImage, $InnFile, $OutFile, 0)
+[void]$WIMG::WIMCloseHandle($hImage)
+[void]$WIMG::WIMCloseHandle($hWim)
+}
+:wimmsu:
 :: ============
 
 :EndDebug
