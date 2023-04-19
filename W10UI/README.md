@@ -182,11 +182,19 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 [WHDownloader](https://forums.mydigitallife.net/threads/44645)  
 [PSFExtractor / th1r5bvn23](https://www.betaworld.org/)  
 [SxSExpand](https://forums.mydigitallife.net/members/superbubble.250156/)  
-[Compressed2TXT](https://github.com/AveYo/Compressed2TXT)
+[DIR2ISO code, Compressed2TXT](https://github.com/AveYo)
+[msu wim Reflection code](https://github.com/ave9858)  
 
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.26:  
+- Added support for new msu wim files (LCU for builds 25336+)
+- Replaced embedded PSFExtractor.exe with Powershell code (external PSFExtractor.exe still supported)
+- Enhanced "Cleanup System Image" behavior for current online OS:  
+RunOnce_AfterRestart_DismCleanup.cmd script will be created on desktop  
+if above script is not executed, W10UI.cmd will prompt once to run or skip cleanup
 
 10.25:  
 - Changed integration routine for WinPE images:  
