@@ -1315,7 +1315,9 @@ del /f /q "!ENCRYPTEDESD!" %_Nul3%
 ren "!ENCRYPTEDESD!.bak" %ENCRYPTEDESDN%
 )
 popd
-if %_Debug% neq 0 (exit /b) else (echo Press 0 to exit.)
+if %_Debug% neq 0 exit /b
+if %AutoStart% neq 0 exit /b
+echo Press 0 to exit.
 choice /c 0 /n
 if errorlevel 1 (exit /b) else (rem.)
 
