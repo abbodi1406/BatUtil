@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.26
+@set uiv=v10.27
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -826,7 +826,7 @@ if exist "checker\*_netfx4*.manifest" findstr /i /m "Package_for_RollupFix" "che
 )
 if not defined _type (
 expand.exe -f:*_microsoft-windows-s..boot-firmwareupdate_*.manifest "!repo!\!package!" "checker" %_Null%
-if exist "checker\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" set "_type=[SecureBoot]"
+if exist "checker\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% || set "_type=[SecureBoot]"
 )
 set /a _fixSV=%_build%+1
 if not defined _type if %_build% geq 18362 (
@@ -1358,7 +1358,7 @@ if %verb%==1 (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /PackagePath:%dest%\update.mum"
 goto :eof
 )
-if exist "%dest%\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" (
+if exist "%dest%\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
 if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
 if %winbuild% lss 9600 (set /a _sum-=1&goto :eof)
 set secureboot=!secureboot! /PackagePath:"!repo!\!package!"

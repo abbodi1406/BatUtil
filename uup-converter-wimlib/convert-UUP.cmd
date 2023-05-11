@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v88
+@set uivr=v89
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -2122,7 +2122,7 @@ if exist "!dest!\*_netfx4*.manifest" findstr /i /m "Package_for_RollupFix" "!des
 )
 if not defined _type (
 expand.exe -f:*_microsoft-windows-s..boot-firmwareupdate_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
-if exist "!dest!\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" set "_type=[SecureBoot]"
+if exist "!dest!\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || set "_type=[SecureBoot]"
 )
 if not defined _type if %_build% geq 18362 (
 expand.exe -f:microsoft-windows-*enablement-package~*.mum "!_UUP!\%package%" "!dest!" %_Null%
@@ -2580,7 +2580,7 @@ if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" 
 set "safeos=!safeos! /PackagePath:!dest!\update.mum"
 goto :eof
 )
-if exist "!dest!\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" (
+if exist "!dest!\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
 if %winbuild% lss 9600 goto :eof
 set secureboot=!secureboot! /PackagePath:"!_UUP!\%package%"
