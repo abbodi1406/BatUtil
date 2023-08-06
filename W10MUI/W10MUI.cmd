@@ -255,6 +255,7 @@ set _ODext86=
 set _ODtra86=
 set _ODnetwork86=
 set _ODnickl86=
+set _ODzinc86=
 set _ODpaint86=
 set _ODnote86=
 set _ODpower86=
@@ -269,6 +270,7 @@ set _ODethernet86=
 set _ODwifi86=
 set _ODmedia86=
 set _ODwmi86=
+set _ODpfs86=
 if %_oa% neq 0 for /L %%j in (1,1,%_oa%) do (
 "!_7z!" x ".\ondemand\x86\!OAFILE%%j!" -o"!TEMPDIR!\FOD86\OAFILE%%j" * -r %_Null%
 pushd "!TEMPDIR!\FOD86\OAFILE%%j"
@@ -303,6 +305,9 @@ if %_lpver% geq 22567 (
 findstr /i /m Microsoft-Windows-MediaPlayer update.mum %_Nul3% && (set _ODnickl86=1&call set _ODmedia86=!_ODmedia86! /PackagePath:OAFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-WMIC-FoD update.mum %_Nul3% && (set _ODnickl86=1&call set _ODwmi86=!_ODwmi86! /PackagePath:OAFILE%%j\update.mum)
   )
+if %_lpver% geq 25346 (
+findstr /i /m Microsoft-Windows-ProjFS-OptionalFeature-FoD update.mum %_Nul3% && (set _ODzinc86=1&call set _ODpfs86=!_ODpfs86! /PackagePath:OAFILE%%j\update.mum)
+  )
 popd
 )
 set _ODbasic64=
@@ -316,6 +321,7 @@ set _ODext64=
 set _ODtra64=
 set _ODnetwork64=
 set _ODnickl64=
+set _ODzinc64=
 set _ODpaint64=
 set _ODnote64=
 set _ODpower64=
@@ -330,6 +336,7 @@ set _ODethernet64=
 set _ODwifi64=
 set _ODmedia64=
 set _ODwmi64=
+set _ODpfs64=
 if %_ob% neq 0 for /L %%j in (1,1,%_ob%) do (
 "!_7z!" x ".\ondemand\x64\!OBFILE%%j!" -o"!TEMPDIR!\FOD64\OBFILE%%j" * -r %_Null%
 pushd "!TEMPDIR!\FOD64\OBFILE%%j"
@@ -363,6 +370,9 @@ findstr /i /m Microsoft-Windows-InternetExplorer-Optional update.mum %_Nul3% && 
 if %_lpver% geq 22567 (
 findstr /i /m Microsoft-Windows-MediaPlayer update.mum %_Nul3% && (set _ODnickl64=1&call set _ODmedia64=!_ODmedia64! /PackagePath:OBFILE%%j\update.mum)
 findstr /i /m Microsoft-Windows-WMIC-FoD update.mum %_Nul3% && (set _ODnickl64=1&call set _ODwmi64=!_ODwmi64! /PackagePath:OBFILE%%j\update.mum)
+  )
+if %_lpver% geq 25346 (
+findstr /i /m Microsoft-Windows-ProjFS-OptionalFeature-FoD update.mum %_Nul3% && (set _ODzinc64=1&call set _ODpfs64=!_ODpfs64! /PackagePath:OAFILE%%j\update.mum)
   )
 popd
 )
@@ -577,6 +587,7 @@ if defined _ODext64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_
 if defined _ODtra64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64c.log" /Add-Package !_ODpmcppc64! !_ODpwsf64! !_ODword64! !_ODstep64! !_ODsnip64!
 if defined _ODnetwork64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64d.log" /Add-Package !_ODethernet64! !_ODwifi64!
 if defined _ODnickl64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64e.log" /Add-Package !_ODmedia64! !_ODwmi64!
+if defined _ODzinc64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64f.log" /Add-Package !_ODpfs64!
 popd
 )
 if /i !WIMARCH%%i!==x86 if exist "!TEMPDIR!\FOD86\OAFILE1\update.mum" (
@@ -587,6 +598,7 @@ if defined _ODext86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_
 if defined _ODtra86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86c.log" /Add-Package !_ODpmcppc86! !_ODpwsf86! !_ODword86! !_ODstep86! !_ODsnip86!
 if defined _ODnetwork86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86d.log" /Add-Package !_ODethernet86! !_ODwifi86!
 if defined _ODnickl86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86e.log" /Add-Package !_ODmedia86! !_ODwmi86!
+if defined _ODzinc86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86f.log" /Add-Package !_ODpfs86!
 popd
 )
 echo.

@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v7.1
+@set uiv=v7.2
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -1258,17 +1258,17 @@ for /f "tokens=3-6 delims=.() " %%i in ('powershell -nop -c "(gi '!mountdir!\Win
 goto :eof
 
 :boots
-  xcopy /CDRY "!mountdir!\sources" "!target!\sources\" %_Nul3%
-  del /f /q "!target!\sources\background.bmp" %_Nul3%
-  del /f /q "!target!\sources\xmllite.dll" %_Nul3%
-  del /f /q "!target!\efi\microsoft\boot\*noprompt.*" %_Nul3%
-  rem copy /y "!mountdir!\Windows\Boot\DVD\EFI\en-US\efisys.bin" "!target!\efi\microsoft\boot\" %_Nul1%
-  copy /y "!mountdir!\Windows\Boot\EFI\memtest.efi" "!target!\efi\microsoft\boot\" %_Nul1%
-  copy /y "!mountdir!\Windows\Boot\EFI\bootmgfw.efi" "!target!\efi\boot\%efifile%" %_Nul1%
-  copy /y "!mountdir!\Windows\Boot\EFI\bootmgr.efi" "!target!\" %_Nul1%
-  copy /y "!mountdir!\Windows\Boot\PCAT\bootmgr" "!target!\" %_Nul1%
-  copy /y "!mountdir!\Windows\Boot\PCAT\memtest.exe" "!target!\boot\" %_Nul1%
-  if exist "!target!\setup.exe" copy /y "!mountdir!\setup.exe" "!target!\" %_Nul1%
+xcopy /CDRY "!mountdir!\sources" "!target!\sources\" %_Nul3%
+del /f /q "!target!\sources\background.bmp" %_Nul3%
+del /f /q "!target!\sources\xmllite.dll" %_Nul3%
+del /f /q "!target!\efi\microsoft\boot\*noprompt.*" %_Nul3%
+rem copy /y "!mountdir!\Windows\Boot\DVD\EFI\en-US\efisys.bin" "!target!\efi\microsoft\boot\" %_Nul1%
+copy /y "!mountdir!\Windows\Boot\PCAT\bootmgr" "!target!\" %_Nul1%
+copy /y "!mountdir!\Windows\Boot\PCAT\memtest.exe" "!target!\boot\" %_Nul1%
+copy /y "!mountdir!\Windows\Boot\EFI\memtest.efi" "!target!\efi\microsoft\boot\" %_Nul1%
+copy /y "!mountdir!\Windows\Boot\EFI\bootmgfw.efi" "!target!\efi\boot\%efifile%" %_Nul1%
+copy /y "!mountdir!\Windows\Boot\EFI\bootmgr.efi" "!target!\" %_Nul1%
+if exist "!target!\setup.exe" copy /y "!mountdir!\setup.exe" "!target!\" %_Nul1%
 goto :eof
 
 :winre

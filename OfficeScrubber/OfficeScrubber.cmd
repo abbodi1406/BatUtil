@@ -88,12 +88,8 @@ set "_Local=%LocalAppData%"
 set "_cscript=cscript //Nologo //B"
 setlocal EnableDelayedExpansion
 pushd "!_work!"
-if not exist "%xBit%\cleanospp.exe" (
-set "msg=ERROR: required file cleanospp.exe is missing"
-goto :TheEnd
-)
-for %%# in (OffScrubC2R,OffScrub_O16msi,OffScrub_O15msi,OffScrub10,OffScrub07,OffScrub03) do (
-if not exist ".\%%#.vbs" (set "msg=ERROR: required file %%# is missing"&goto :TheEnd)
+for %%# in (OffScrubC2R.vbs,OffScrub_O16msi.vbs,OffScrub_O15msi.vbs,OffScrub10.vbs,OffScrub07.vbs,OffScrub03.vbs,CleanOffice.txt) do (
+if not exist ".\%%#" (set "msg=ERROR: required file %%# is missing"&goto :TheEnd)
 )
 set "_Nul1=1>nul"
 set "_Nul2=2>nul"
@@ -103,7 +99,7 @@ set "_Nul3=1>nul 2>nul"
 title Office Scrubber
 echo.
 echo ============================================================
-echo Detecting Office versions, please wait...
+echo Detecting Office versions, please wait . . .
 
 set OsppHook=1
 sc query osppsvc %_Nul3%
@@ -211,7 +207,7 @@ if %_er% EQU 5 goto :sOM14
 if %_er% EQU 4 goto :sOM15
 if %_er% EQU 3 goto :sOM16
 if %_er% EQU 2 goto :sOCTR
-if %_er% EQU 1 goto :mALL
+if %_er% EQU 1 set tOCTR=1&set tOM16=1&goto :mALL
 goto :Menu
 
 :mALL
@@ -242,8 +238,7 @@ if %winbuild% GEQ 10240 echo [8] Office UWP : %aOUWP%
 echo.
 echo -------
 echo Notice:
-echo It's recommended to only scrub detected versions {*}
-echo selecting all is not necessary and will take a long time.
+echo Manually selecting all is not necessary and will take a long time.
 echo.
 echo ============================================================
 choice /c 123456780 /n /m "Change menu options, or press 0 to Exit: "
@@ -267,8 +262,7 @@ goto :eof
 :sOALL
 call :Hdr
 echo.
-echo Uninstall Product Keys
-%xBit%\cleanospp.exe -PKey %_Nul3%
+echo Uninstalling Product Keys . . .
 call :cKMS %_Nul3%
 if %tOCTR% EQU 1 call :rOCTR
 if %tOUWP% EQU 1 if %_pwsh% EQU 1 call :rOUWP
@@ -326,16 +320,16 @@ goto :TheEnd
 :rOCTR
 if exist "!_file!" (
 echo.
-echo Execute OfficeClickToRun.exe
+echo Executing OfficeClickToRun.exe . . .
 %_Nul3% start "" /WAIT "!_file!" platform=%_plat% productstoremove=AllProducts displaylevel=False
 )
 if exist "!_fil2!" if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" (
 echo.
-echo Execute OfficeClickToRun.exe
+echo Executing OfficeClickToRun.exe . . .
 %_Nul3% start "" /WAIT "!_fil2!" platform=%_plat% productstoremove=AllProducts displaylevel=False
 )
 echo.
-echo Scrub Office C2R
+echo Scrubbing Office C2R . . .
 for %%A in (16,19,21) do call :cKpp %%A
 if %_O15CTR% EQU 1 call :cKpp 15
 %_Nul3% %_cscript% OffScrubC2R.vbs ALL /QUIET /OFFLINE
@@ -345,14 +339,14 @@ goto :eof
 
 :rOUWP
 echo.
-echo Remove Office UWP Apps
+echo Removing Office UWP Apps . . .
 %_Nul3% %_psc% "Get-AppXPackage -Name '*Microsoft.Office.Desktop*' | Foreach {Remove-AppxPackage $_.PackageFullName}"
 %_Nul3% %_psc% "Get-AppXProvisionedPackage -Online | Where DisplayName -Like '*Microsoft.Office.Desktop*' | Remove-AppXProvisionedPackage -Online"
 goto :eof
 
 :rOM16
 echo.
-echo Scrub Office 2016 MSI
+echo Scrubbing Office 2016 MSI . . .
 call :cKpp 16
 %_Nul3% %_cscript% OffScrub_O16msi.vbs %_para%
 %_Nul3% call :officeREG 16
@@ -360,7 +354,7 @@ goto :eof
 
 :rOM15
 echo.
-echo Scrub Office 2013 MSI
+echo Scrubbing Office 2013 MSI . . .
 call :cKpp 15
 %_Nul3% %_cscript% OffScrub_O15msi.vbs %_para%
 %_Nul3% call :officeREG 15
@@ -368,7 +362,7 @@ goto :eof
 
 :rOM14
 echo.
-echo Scrub Office 2010
+echo Scrubbing Office 2010 . . .
 call :cK14
 %_Nul3% %_cscript% OffScrub10.vbs %_para%
 %_Nul3% call :officeREG 14
@@ -376,27 +370,32 @@ goto :eof
 
 :rOM12
 echo.
-echo Scrub Office 2007
+echo Scrubbing Office 2007 . . .
 %_Nul3% %_cscript% OffScrub07.vbs %_para%
 %_Nul3% call :officeREG 12
 goto :eof
 
 :rOM11
 echo.
-echo Scrub Office 2003
+echo Scrubbing Office 2003 . . .
 %_Nul3% %_cscript% OffScrub03.vbs %_para%
 %_Nul3% call :officeREG 11
 goto :eof
 
 :cSPP
-%xBit%\cleanospp.exe %_Nul3%
+call :oppcln
 call :slmgr
+goto :eof
+
+:oppcln
+%_Nul3% powershell -ep unrestricted -nop -c "cd -Lit ($env:__CD__); $f=[IO.File]::ReadAllText('.\CleanOffice.txt') -split ':embed\:.*'; iex ($f[1])"
+title Office Scrubber
 goto :eof
 
 :slmgr
 if exist "%SysPath%\spp\store_test\2.0\tokens.dat" (
 echo.
-echo Refresh Windows Insider Preview Licenses
+echo Refresh Windows Insider Preview Licenses . . .
 %_cscript% %SysPath%\slmgr.vbs /rilc %_Nul3%
 if !ERRORLEVEL! NEQ 0 %_cscript% %SysPath%\slmgr.vbs /rilc %_Nul3%
 )
@@ -503,7 +502,7 @@ goto :eof
 :LcnsC
 call :Hdr
 echo.
-echo Clean vNext Licenses
+echo Cleaning vNext Licenses . . .
 %_Nul3% call :vNextDir
 %_Nul3% call :vNextREG
 set "msg=Done."
@@ -512,8 +511,7 @@ goto :TheEnd
 :KeysU
 call :Hdr
 echo.
-echo Uninstall Product Keys
-%xBit%\cleanospp.exe -PKey %_Nul3%
+echo Uninstalling Product Keys . . .
 for %%A in (15,16,19,21) do call :cKpp %%A
 set "msg=Done."
 goto :TheEnd
@@ -521,8 +519,8 @@ goto :TheEnd
 :LcnsR
 call :Hdr
 echo.
-echo Remove Office Licenses
-%xBit%\cleanospp.exe -Licenses %_Nul3%
+echo Removing Office Licenses . . .
+call :oppcln
 call :slmgr
 set "msg=Done."
 goto :TheEnd
@@ -530,7 +528,7 @@ goto :TheEnd
 :LcnsT
 call :Hdr
 echo.
-echo Reset Office C2R Licenses
+echo Resetting Office C2R Licenses . . .
 if %_O16CTR% equ 0 (
 set "msg=ERROR: No installed Office ClickToRun detected."
 goto :TheEnd
@@ -559,11 +557,11 @@ set "msg=ERROR: Could not detect originally installed Office Products."
 goto :TheEnd
 )
 echo.
-echo Remove Office Licenses
-%xBit%\cleanospp.exe -Licenses %_Nul3%
+echo Removing Office Licenses . . .
+call :oppcln
 call :slmgr
 echo.
-echo Install Office C2R Licenses
+echo Installing Office C2R Licenses . . .
 for %%a in (%_SKUs%) do (
 "!_Integrator!" /R /License PRIDName=%%a.16 PackageGUID="%_GUID%" PackageRoot="!_InstallRoot!" %_Nul1%
 )

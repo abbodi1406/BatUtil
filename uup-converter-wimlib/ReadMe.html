@@ -156,12 +156,19 @@
                 <br />
                 <li>
                     <b>LCUwinre</b><br /><br />
-                    Force updating winre.wim with Cumulative Update even if SafeOS update detected.
+                    Force updating winre.wim with Cumulative Update even if SafeOS update detected.<br />
+                    This option is auto enabled for Windows 11, Set this option to <strong>2</strong> to disable.
                 </li>
                 <br />
                 <li>
                     <b>UpdtBootFiles</b><br /><br />
-                    Update ISO boot files bootmgr/bootmgr.efi/efisys.bin with new files from Cumulative Update.
+                    Update ISO boot files bootmgr/memtest/efisys.bin with new files from Cumulative Update.<br /><br />
+                    note: to accommodate KB5025885 changes, the two files bootmgr.efi/bootmgfw.efi will be always updated regardless this option.
+                </li>
+                <br />
+                <li>
+                    <b>DisableUpdatingUpgrade</b><br /><br />
+                    Disable updating process optimization by using editions upgrade (Home>Pro / ServerStandard>ServerDatacenter), and do separate updating for each edition.
                 </li>
                 <br />
                 <li>
@@ -177,6 +184,10 @@
                 </li>
                 <br />
                 <li>
+                    <b>SkipLCUmsu</b><br /><br />
+                    Skip creating Cumulative Update MSU for builds 21382 to 25330 (LCU will be added using legacy cab+psf extraction).
+                </li>
+                <li>
                     <b>SkipEdge</b><br /><br />
                     Set option to <strong>1</strong> : Do not integrate Microsoft Edge Chromium with Feature Update Enablement Package or Cumulative Update.<br />
                     Set option to <strong>2</strong> : Skip Microsoft Edge Chromium with Cumulative Update via alternative workaround.<br /><br />
@@ -190,8 +201,11 @@
                 </li>
                 <br />
                 <li>
+                    <b>### Below options apply only for builds 22563 and later ###</b><br /><br />
+                </li>
+                <li>
                     <b>SkipApps</b><br /><br />
-                    Do not add Store Apps for builds 22563 and later.
+                    Do not add Store Apps.
                 </li>
                 <br />
                 <li>
@@ -206,8 +220,11 @@
                 <br />
                 <li>
                     <b>CustomList</b><br /><br />
-                    Enable using CustomAppsList.txt to pick and choose added Apps.<br /><br />
-                    If enabled, this option takes precedence over AppsLevel option.
+                    Enable using CustomAppsList.txt or CustomAppsList2.txt to pick and choose the added Apps.<br />
+                    If enabled, this option takes precedence over AppsLevel option.<br /><br />
+                    How to use:<br />
+                    You can either use <b>CustomAppsList.txt</b> directly, or copy/rename it to <b>CustomAppsList2.txt</b><br />
+                    Edit the choosen file, and remove <b>#</b> prefix in front the Apps you wish to add, and save the file.
                 </li>
             </ul>
             <hr />
@@ -256,6 +273,9 @@
                 </li>
                 <br />
                 <li><u>Integrate</u> updates mode for ARM64 UUP images only works on <u>Windows 11/10/8.1 Host OS</u>.
+                </li>
+                <br />
+                <li><u>Integrate</u> updates mode for Windows 11 builds 22567 and later require at least <u>Windows 10 v1607 Host OS</u>.
                 </li>
             </ul>
             <br />

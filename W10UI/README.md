@@ -189,6 +189,16 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 
 <details><summary>changelog</summary>
 
+10.30:  
+- Added workaround for using target image dpx.dll to extract updates cab files for builds 22000+
+- Suppress DISM cleanup output for builds 25380+
+
+10.29:  
+- ISO files bootmgr.efi/bootmgfw.efi will be always updated, regardless UpdtBootFiles option
+
+10.28:  
+- Added conditional support for SV2 beta builds 22631+
+
 10.27:  
 - Updated detection for separate Secure Boot updates
 
@@ -391,15 +401,15 @@ https://docs.microsoft.com/en-us/windows/deployment/update/media-dynamic-update
 7:7:  
 - x64 target on x86 host: Fix for unseen registry flush error.
 
-7:6:  
+7.6:  
 - x64 target on x86 host: Fix for wrong detection.
 
-7:5:  
+7.5:  
 - Code improvements and fixes.
 
 - Added option wim2esd to convert install.wim to install.esd (only for distribution target)
 
-7:4:  
+7.4:  
 - Detect and skip WinPE only updates for install.wim
 
 7.3:  

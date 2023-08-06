@@ -185,6 +185,9 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 7.2:  
+update ISO boot files bootmgr/bootmgr.efi from install.wim
+
 * 7.1:  
 added support for ESU Suppressor
 

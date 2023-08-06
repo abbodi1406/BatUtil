@@ -1,0 +1,51 @@
+@exit /b
+
+:embed:
+function UninstallLicenses($DllPath) {
+    $DynAssembly = New-Object System.Reflection.AssemblyName('Win32Lib')
+    $AssemblyBuilder = [AppDomain]::CurrentDomain.DefineDynamicAssembly($DynAssembly, [Reflection.Emit.AssemblyBuilderAccess]::Run)
+    $ModuleBuilder = $AssemblyBuilder.DefineDynamicModule('Win32Lib', $False)
+    $TypeBuilder = $ModuleBuilder.DefineType('sppc', 'Public, Class')
+    $DllImportConstructor = [Runtime.InteropServices.DllImportAttribute].GetConstructor(@([String]))
+    $FieldArray = [Reflection.FieldInfo[]] @([Runtime.InteropServices.DllImportAttribute].GetField('EntryPoint'))
+
+    $Open = $TypeBuilder.DefineMethod('SLOpen', [Reflection.MethodAttributes] 'Public, Static', [int], @([IntPtr].MakeByRefType()))
+    $Open.SetCustomAttribute((New-Object Reflection.Emit.CustomAttributeBuilder(
+                $DllImportConstructor,
+                @($DllPath),
+                $FieldArray,
+                @('SLOpen'))))
+
+    $GetSLIDList = $TypeBuilder.DefineMethod('SLGetSLIDList', [Reflection.MethodAttributes] 'Public, Static', [int], @([IntPtr], [int], [guid].MakeByRefType(), [int], [int].MakeByRefType(), [IntPtr].MakeByRefType()))
+    $GetSLIDList.SetCustomAttribute((New-Object Reflection.Emit.CustomAttributeBuilder(
+                $DllImportConstructor,
+                @($DllPath),
+                $FieldArray,
+                @('SLGetSLIDList'))))
+
+    $UninstallLicense = $TypeBuilder.DefineMethod('SLUninstallLicense', [Reflection.MethodAttributes] 'Public, Static', [int], @([IntPtr], [IntPtr]))
+    $UninstallLicense.SetCustomAttribute((New-Object Reflection.Emit.CustomAttributeBuilder(
+                $DllImportConstructor,
+                @($DllPath),
+                $FieldArray,
+                @('SLUninstallLicense'))))
+
+    $SPPC = $TypeBuilder.CreateType()
+    $Handle = [IntPtr]::Zero
+    $SPPC::SLOpen([ref]$handle) | Out-Null
+    $pnReturnIds = 0
+    $ppReturnIds = [IntPtr]::Zero
+
+    if (!$SPPC::SLGetSLIDList($handle, 0, [ref][guid]"0ff1ce15-a989-479d-af46-f275c6370663", 6, [ref]$pnReturnIds, [ref]$ppReturnIds)) {
+        foreach ($i in 0..($pnReturnIds - 1)) {
+            $SPPC::SLUninstallLicense($handle, [System.Int64]$ppReturnIds + [System.Int64]16 * $i) | Out-Null
+        }    
+    }
+}
+
+$OSPP = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform" -ErrorAction SilentlyContinue).Path
+if ($OSPP) {
+    UninstallLicenses($OSPP + "osppc.dll")
+}
+UninstallLicenses("sppc.dll")
+:embed:
