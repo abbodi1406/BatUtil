@@ -2213,10 +2213,10 @@ goto :eof
 
 :get_dpx
 if %_embd% equ 0 (
+echo.
 echo ============================================================
 echo Extracting dpx.dll file...
 echo ============================================================
-echo.
 )
 set _nat=0
 set _wow=0

@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v7.2
+@set uiv=v7.3
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -473,11 +473,12 @@ call :cleaner
 cd Baseline\
 set ssuver=0
 for /f %%# in ('dir /b "!mountdir!\Windows\servicing\Version"') do set ssuver=%%#
+if not exist "!mountdir!\Windows\servicing\packages\package_for_KB2919355_rtm*6.3*.mum" (set "package=%ssu1%"&set "dest=%ssu1%"&call :ssus)
 for /f "tokens=2 delims=-" %%# in ('dir /b /a:-d "*%arch%*.msu"') do (set "package=%%#"&set "dest=%%~n#"&call :ssul)
 set ssuver=0
 for /f %%# in ('dir /b "!mountdir!\Windows\servicing\Version"') do set ssuver=%%#
 if %ssuver% equ 0 goto :eof
-set "package=%ssu1%"&call :ssus
+set "package=%ssu1%"&set "dest=%ssu1%"&call :ssus
 goto :eof
 
 :ssul
@@ -485,11 +486,11 @@ for %%j in (%ssu1%,%baselinelist%) do if /i %%j==%package% goto :eof
 
 :ssus
 if not exist "*%package%*%arch%*.msu" goto :eof
-if exist "!mountdir!\Windows\servicing\packages\package_for_%package%_rtm*6.3*.mum" goto :eof
-if /i not %package%==%ssu1% (
-if not exist "!mountdir!\Windows\servicing\packages\package_for_KB2919355_rtm*6.3*.mum" goto :eof
-if not exist "!mountdir!\Windows\servicing\packages\package_for_KB2975061_rtm*6.3*.mum" if not exist "!mountdir!\Windows\servicing\packages\package_for_%ssu1%_rtm*6.3*.mum" goto :eof
-)
+if exist "!mountdir!\Windows\servicing\packages\package_for_%package%~*6.3*.mum" goto :eof
+:: if /i not %package%==%ssu1% (
+:: if not exist "!mountdir!\Windows\servicing\packages\package_for_KB2919355_rtm*6.3*.mum" goto :eof
+:: if not exist "!mountdir!\Windows\servicing\packages\package_for_KB2975061_rtm*6.3*.mum" if not exist "!mountdir!\Windows\servicing\packages\package_for_%ssu1%_rtm*6.3*.mum" goto :eof
+:: )
 if /i %package%==%ssu1% (
 if %ssuver:~4,4% equ 9600 if %ssuver:~9,5% gtr 17709 goto :eof
 if %ssuver:~4,4% gtr 9600 goto :eof
@@ -535,7 +536,7 @@ echo ============================================================
 echo.
 )
 set ldr=
-for %%# in (%baselinelist%) do (set "package=%%#"&set "dest=%%~n#"&call :baseline2)
+for %%# in (%baselinelist%) do (set "package=%%#"&set "dest=%%~n#"&call :base2line)
 if not defined ldr goto :eof
 if %verb%==1 (
 echo.
@@ -547,7 +548,7 @@ cd /d "!cab_dir!"
 %_dism2%:"!cab_dir!" %dismtarget% /Add-Package %ldr%
 goto :eof
 
-:baseline2
+:base2line
 if exist "!mountdir!\Windows\servicing\packages\package_for_%package%_rtm*6.3*.mum" goto :eof
 if exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" (
 if /i %package%==KB3003057 goto :eof

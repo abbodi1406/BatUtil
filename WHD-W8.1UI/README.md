@@ -185,6 +185,9 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 7.3:  
+fixed installing latest SSU for images without KB2919355
+
 * 7.2:  
 update ISO boot files bootmgr/bootmgr.efi from install.wim
 

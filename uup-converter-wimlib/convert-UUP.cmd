@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v92
+@set uivr=v93
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -249,8 +249,8 @@ if %_ADK% equ 1 set W10UI=1
 set "_wsr=Windows Server 2022"
 set "pub=_8wekyb3d8bbwe"
 set "_appBase=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,microsoft.windowscommunicationsapps%pub%,Microsoft.WindowsCalculator%pub%,Microsoft.Windows.Photos%pub%,Microsoft.WindowsMaps%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsFeedbackHub%pub%,Microsoft.Getstarted%pub%,Microsoft.WindowsAlarms%pub%"
-set "_appClnt=Microsoft.WindowsNotepad%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.Paint%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,Microsoft.People%pub%,Microsoft.ScreenSketch%pub%,Microsoft.MicrosoftStickyNotes%pub%,Microsoft.XboxIdentityProvider%pub%,Microsoft.XboxSpeechToTextOverlay%pub%,Microsoft.XboxGameOverlay%pub%"
-set "_appCodec=Microsoft.WebMediaExtensions%pub%,Microsoft.RawImageExtension%pub%,Microsoft.HEIFImageExtension%pub%,Microsoft.HEVCVideoExtension%pub%,Microsoft.VP9VideoExtensions%pub%,Microsoft.WebpImageExtension%pub%"
+set "_appClnt=Microsoft.WindowsNotepad%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.Paint%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,Microsoft.People%pub%,Microsoft.ScreenSketch%pub%,Microsoft.MicrosoftStickyNotes%pub%,Microsoft.XboxIdentityProvider%pub%,Microsoft.XboxSpeechToTextOverlay%pub%,Microsoft.XboxGameOverlay%pub%,OutlookForWindows%pub%"
+set "_appCodec=Microsoft.WebMediaExtensions%pub%,Microsoft.RawImageExtension%pub%,Microsoft.HEIFImageExtension%pub%,Microsoft.HEVCVideoExtension%pub%,Microsoft.VP9VideoExtensions%pub%,Microsoft.WebpImageExtension%pub%,Microsoft.DolbyAudioExtension%pub%"
 set "_appMedia=Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.WindowsSoundRecorder%pub%,Microsoft.GamingApp%pub%,Microsoft.XboxGamingOverlay%pub%,Microsoft.Xbox.TCUI%pub%,Microsoft.YourPhone%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt"
 set "_appPPIP=Microsoft.MicrosoftPowerBIForWindows%pub%,microsoft.microsoftskydrive%pub%,Microsoft.MicrosoftTeamsforSurfaceHub%pub%,MicrosoftCorporationII.MailforSurfaceHub%pub%,Microsoft.Whiteboard%pub%,Microsoft.SkypeApp_kzf8qxf38zg5c"
 set "_appMin1=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%"
@@ -528,6 +528,7 @@ if /i %arch%==arm64 if %winbuild% lss 9600 if %AddUpdates% equ 1 (
 if %_build% geq 17763 (set AddUpdates=2) else (set AddUpdates=0)
 )
 if %Cleanup% equ 0 set ResetBase=0
+if %AIO% neq 1 if %_count% leq 1 if /i "%editionid%"=="PPIPro" (set StartVirtual=0)
 if %_build% lss 17063 (set StartVirtual=0)
 if %_build% lss 17763 if %AddUpdates% equ 2 (set AddUpdates=1)
 if %_build% lss 17763 if %AddUpdates% equ 1 if %W10UI% equ 0 (set AddUpdates=0)
@@ -624,9 +625,19 @@ if %_build% geq 18890 (
 wimlib-imagex.exe extract "!MetadataESD!" 3 Windows\Boot\Fonts\* --dest-dir=ISOFOLDER\boot\fonts --no-acls --no-attributes %_Nul3%
 xcopy /CRY ISOFOLDER\boot\fonts\* ISOFOLDER\efi\microsoft\boot\fonts\ %_Nul3%
 )
-if exist ISOFOLDER\sources\ei.cfg (
+if %_build% lss 17063 if exist ISOFOLDER\sources\ei.cfg (
 if %AIO% equ 1 del /f /q ISOFOLDER\sources\ei.cfg %_Nul3%
 if %_count% gtr 1 del /f /q ISOFOLDER\sources\ei.cfg %_Nul3%
+)
+if %_build% geq 17063 (
+if exist "!_UUP!\ei.cfg" (copy /y "!_UUP!\ei.cfg" ISOFOLDER\sources\ei.cfg %_Nul3%) else if exist "ei.cfg" (copy /y "ei.cfg" ISOFOLDER\sources\ei.cfg %_Nul3%) 
+if exist "!_UUP!\pid.txt" (copy /y "!_UUP!\pid.txt" ISOFOLDER\sources\pid.txt %_Nul3%) else if exist "pid.txt" (copy /y "pid.txt" ISOFOLDER\sources\pid.txt %_Nul3%) 
+)
+if %AIO% neq 1 if %_count% leq 1 if /i "%editionid%"=="PPIPro" (
+(
+echo [PID]
+echo Value=XKCNC-J26Q9-KFHD2-FKTHY-KD72Y
+)>ISOFOLDER\sources\pid.txt
 )
 for /f "tokens=5-10 delims=: " %%G in ('wimlib-imagex.exe info "!MetadataESD!" 3 ^| find /i "Last Modification Time"') do (set mmm=%%G&set "isotime=%%H/%%L,%%I:%%J:%%K")
 for %%# in (Jan:01 Feb:02 Mar:03 Apr:04 May:05 Jun:06 Jul:07 Aug:08 Sep:09 Oct:10 Nov:11 Dec:12) do for /f "tokens=1,2 delims=:" %%A in ("%%#") do (
@@ -2416,7 +2427,8 @@ if defined servicingstack (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismSSU.log" /Add-Package %servicingstack%
 cmd /c exit /b !errorlevel!
-if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" if /i not "!=ExitCode!"=="800706be" if /i not "!=ExitCode!"=="800706ba" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" %_dism1% %dismtarget% /Get-Packages %_Null%
 if not defined overall call :cleanup
 )
 if not defined overall if not defined mpamfe goto :eof
@@ -2425,7 +2437,8 @@ if defined safeos if %SkipWinRE% equ 0 (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismWinPE.log" /Add-Package %safeos%
 cmd /c exit /b !errorlevel!
-if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" if /i not "!=ExitCode!"=="800706be" if /i not "!=ExitCode!"=="800706ba" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" %_dism1% %dismtarget% /Get-Packages %_Null%
 )
 if defined safeos if %SkipWinRE% equ 0 if %LCUwinre% neq 1 (
 set relite=1
@@ -2441,13 +2454,15 @@ if defined secureboot (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismSecureBoot.log" /Add-Package %secureboot%
 cmd /c exit /b !errorlevel!
-if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" if /i not "!=ExitCode!"=="800706be" if /i not "!=ExitCode!"=="800706ba" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" %_dism1% %dismtarget% /Get-Packages %_Null%
 )
 if defined ldr (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismUpdt.log" /Add-Package %ldr%
 cmd /c exit /b !errorlevel!
-if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" if /i not "!=ExitCode!"=="800706be" if /i not "!=ExitCode!"=="800706ba" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" %_dism1% %dismtarget% /Get-Packages %_Null%
 )
 if defined fupdt (
 set "_SxsKey=%_EdgKey%"
@@ -2498,7 +2513,8 @@ if not defined edge goto :eof
 if defined edge (
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismEdge.log" /Add-Package %edge%
 cmd /c exit /b !errorlevel!
-if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" if /i not "!=ExitCode!"=="800706be" if /i not "!=ExitCode!"=="800706ba" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" %_dism1% %dismtarget% /Get-Packages %_Null%
 )
 goto :eof
 
@@ -2512,7 +2528,8 @@ echo.&echo %%#
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\%_DsmLog%" /Add-Package /PackagePath:"!_UUP!\%%#"
 )
 cmd /c exit /b !errorlevel!
-if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" if /i not "!=ExitCode!"=="800706be" if /i not "!=ExitCode!"=="800706ba" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :errmount
+if /i not "!=ExitCode!"=="00000000" if /i not "!=ExitCode!"=="800f081e" %_dism1% %dismtarget% /Get-Packages %_Null%
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %SkipWinRE% equ 0 if %LCUwinre% equ 1 (
 set _clnwinpe=1
 set relite=1
@@ -3411,22 +3428,20 @@ set "_appSCore="
 set "_appAzure="
 pushd "!_UUP!\Apps"
 if exist "_AppsEditions.txt" for /f "tokens=* delims=" %%# in ('type _AppsEditions.txt') do set "%%#"
-if %_appsCustom% equ 0 (
-if %AppsLevel% gtr 0 (
+if %_appsCustom% equ 0 if %AppsLevel% gtr 0 (
 set "_appProf=%_appMin1%"
 set "_appProN=%_appMin1%"
 )
-if %AppsLevel% gtr 1 (
+if %_appsCustom% equ 0 if %AppsLevel% gtr 1 (
 set "_appProf=%_appProf%,%_appMin2%"
 set "_appProN=%_appProN%,%_appMin2%"
 )
-if %AppsLevel% gtr 2 (
+if %_appsCustom% equ 0 if %AppsLevel% gtr 2 (
 set "_appProf=%_appProf%,%_appMin3%"
 set "_appProN=%_appProN%,%_appMin3%"
 )
-if %AppsLevel% gtr 3 (
+if %_appsCustom% equ 0 if %AppsLevel% gtr 3 (
 set "_appProf=%_appProf%,%_appMin4%"
-)
 )
 set "_appList="
 for %%# in (Core,CoreCountrySpecific,CoreSingleLanguage,Professional,ProfessionalEducation,ProfessionalWorkstation,Education,Enterprise,EnterpriseG,EnterpriseS,ServerRdsh,IoTEnterprise,IoTEnterpriseS,CloudEdition,CloudEditionL) do (
