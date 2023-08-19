@@ -1899,8 +1899,10 @@ if defined isoupdate if not exist "!mountdir!\sources\setup.exe" if not exist "!
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!target!\sources\replacementmanifests\" %_Nul3%
   )
 )
-if exist "!mountdir!\Windows\System32\Recovery\winre.wim" attrib -S -H -I "!mountdir!\Windows\System32\Recovery\winre.wim" %_Nul3%
-if %winre%==1 if exist "!mountdir!\Windows\System32\Recovery\winre.wim" if not exist "!_work!\winre.wim" call :winre
+if exist "!mountdir!\Windows\System32\Recovery\winre.wim" (
+attrib -S -H -I "!mountdir!\Windows\System32\Recovery\winre.wim" %_Nul3%
+if %winre%==1 if not exist "!_work!\winre.wim" call :winre
+)
 if exist "!mountdir!\Windows\System32\Recovery\winre.wim" if exist "!_work!\winre.wim" (
 echo.
 echo ============================================================

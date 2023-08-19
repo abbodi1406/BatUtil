@@ -7,10 +7,10 @@ set WINPE=1
 set SLIM=1
 set NET35=0
 
-set WINPEPATH=
-
 set DEFAULTLANGUAGE=
 set MOUNTDIR=
+
+set WINPEPATH=
 
 :: enable debug mode
 set _Debug=0
@@ -32,8 +32,11 @@ exit /b
 )
 
 set "SysPath=%SystemRoot%\System32"
-if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
-set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set "Path=%SystemRoot%\System32;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\"
+if exist "%SystemRoot%\Sysnative\reg.exe" (
+set "SysPath=%SystemRoot%\Sysnative"
+set "Path=%SystemRoot%\Sysnative;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
+)
 set "xOS=amd64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xOS=arm64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xOS=x86"
@@ -51,7 +54,7 @@ reg.exe query HKU\S-1-5-19 %_Null% || goto :E_ADMIN
 set "_log=%~dpn0"
 set "WORKDIR=%~dp0"
 set "WORKDIR=%WORKDIR:~0,-1%"
-set "DVDDIR=%WORKDIR%\_DVD"
+set "DVDDIR=%WORKDIR%\_DVD10"
 set "TEMPDIR=%~d0\W10MUITEMP"
 set "TMPDISM=%TEMPDIR%\scratch"
 set "EXTRACTDIR=%TEMPDIR%\extract"
@@ -98,7 +101,7 @@ set "BOOTMOUNTDIR=%MOUNTDIR%\boot"
 set EAlang=(ja-jp,ko-kr,zh-cn,zh-hk,zh-tw)
 set bootmui=(appraiser.dll,arunres.dll,cmisetup.dll,compatctrl.dll,compatprovider.dll,dism.exe,dismapi.dll,dismcore.dll,dismprov.dll,folderprovider.dll,imagingprovider.dll,input.dll,logprovider.dll,mediasetupuimgr.dll,nlsbres.dll,pnpibs.dll,reagent.dll,rollback.exe,setup.exe,setupcompat.dll,setupcore.dll,setupmgr.dll,setupplatform.exe,setupprep.exe,smiengine.dll,spwizres.dll,upgloader.dll,uxlibres.dll,vhdprovider.dll,w32uires.dll,wdsclient.dll,wdsimage.dll,wimgapi.dll,wimprovider.dll,windlp.dll,winsetup.dll)
 
-:adkcheck
+:adk10
 set regKeyPathFound=1
 set wowRegKeyPathFound=1
 reg.exe query "HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 %_Nul3% || set wowRegKeyPathFound=0
@@ -115,28 +118,29 @@ if %wowRegKeyPathFound% equ 0 (
 for /f "skip=2 tokens=2*" %%i in ('reg.exe query "%regKeyPath%" /v KitsRoot10') do set "KitsRoot=%%j"
 set "WinPERoot=%KitsRoot%Assessment and Deployment Kit\Windows Preinstallation Environment"
 set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
-if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
-set "DISMRoot=%DandIRoot%\%xOS%\DISM\dism.exe"
+if exist "%DandIRoot%\x86\DISM\dism.exe" if /i %xOS%==arm64 (
+set "DISMRoot=%DandIRoot%\x86\DISM\dism.exe"
 goto :check
 )
-if /i %xOS%==arm64 if exist "%DandIRoot%\x86\DISM\dism.exe" (
-set "DISMRoot=%DandIRoot%\x86\DISM\dism.exe"
+if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
+set "DISMRoot=%DandIRoot%\%xOS%\DISM\dism.exe"
 goto :check
 )
 
 :skipadk
 set "DISMRoot=!WORKDIR!\dism\dism.exe"
 if /i %xOS%==amd64 set "DISMRoot=!WORKDIR!\dism\dism64\dism.exe"
-if %winbuild% geq 10240 set "DISMRoot=%SystemRoot%\System32\dism.exe"
+if %winbuild% GEQ 10240 set "DISMRoot=%SystemRoot%\System32\dism.exe"
 
 :check
 cd /d "!WORKDIR!"
 if "!WINPEPATH!"=="" (
 for /f %%# in ('dir /b /ad "WinPE\amd64\WinPE_OCs\*-*" %_Nul6%') do if exist "WinPE\amd64\WinPE_OCs\%%#\lp.cab" set "WinPERoot=!WORKDIR!\WinPE"
 for /f %%# in ('dir /b /ad "WinPE\x86\WinPE_OCs\*-*" %_Nul6%') do if exist "WinPE\x86\WinPE_OCs\%%#\lp.cab" set "WinPERoot=!WORKDIR!\WinPE"
+) else (
+for /f %%# in ('dir /b /ad "!WINPEPATH!\amd64\WinPE_OCs\*-*" %_Nul6%') do if exist "!WINPEPATH!\amd64\WinPE_OCs\%%#\lp.cab" set "WinPERoot=!WINPEPATH!"
+for /f %%# in ('dir /b /ad "!WINPEPATH!\x86\WinPE_OCs\*-*" %_Nul6%') do if exist "!WINPEPATH!\x86\WinPE_OCs\%%#\lp.cab" set "WinPERoot=!WINPEPATH!"
 )
-if not "!WINPEPATH!"=="" set "WinPERoot=!WINPEPATH!"
-if not exist "!WinPERoot!\amd64\WinPE_OCs\*" if not exist "!WinPERoot!\x86\WinPE_OCs\*" set WINPE=0
 if not exist "!_7z!" goto :E_BIN
 if not exist "!DISMRoot!" goto :E_BIN
 set _dism2="!DISMRoot!" /English /ScratchDir
@@ -219,17 +223,15 @@ set "OBFILE!count!=%%i"
 )
 set foundupdates=0
 if exist ".\Updates\W10UI.cmd" (
-if exist ".\Updates\SSU-*-*.cab" set foundupdates=1
-if exist ".\Updates\SSU-*-*.msu" set foundupdates=1
-if exist ".\Updates\*Windows1*-KB*.cab" set foundupdates=1
-if exist ".\Updates\*Windows1*-KB*.msu" set foundupdates=1
+if exist ".\Updates\SSU-*-*.*" set foundupdates=1
+if exist ".\Updates\*Windows1*-KB*.*" set foundupdates=1
 )
 
 for /L %%j in (1,1,%LANGUAGES%) do (
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!" langcfg.ini %_Nul1%
+"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!" langcfg.ini %_Null%
 for /f "tokens=2 delims==" %%i in ('type "!EXTRACTDIR!\langcfg.ini" ^| findstr /i "Language"') do set "LANGUAGE%%j=%%i"
 del /f /q "!EXTRACTDIR!\langcfg.ini"
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!" Microsoft-Windows-Common-Foundation-Package*10.*.mum %_Nul3%
+"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!" Microsoft-Windows-Common-Foundation-Package*~10.*.mum %_Null%
 if not exist "!EXTRACTDIR!\*.mum" set "ERRFILE=!LPFILE%%j!"&goto :E_LP
 for /f "tokens=7 delims=~." %%g in ('"dir "!EXTRACTDIR!\*.mum" /b" %_Nul6%') do set "LPBUILD%%j=%%g"
 for /f "tokens=3 delims=~" %%V in ('"dir "!EXTRACTDIR!\*.mum" /b" %_Nul6%') do set "LPARCH%%j=%%V"
@@ -240,143 +242,64 @@ if /i !LPARCH%%j!==amd64 (echo !LANGUAGE%%j!: 64-bit {x64} - !LPBUILD%%j!) else 
 set "WinpeOC%%j=!WinPERoot!\!LPARCH%%j!\WinPE_OCs"
 )
 for /L %%j in (1,1,%LANGUAGES%) do (
-if not exist "!WinpeOC%%j!\!LANGUAGE%%j!\lp.cab" set WINPE=0
+if not exist "!WinpeOC%%j!\!LANGUAGE%%j!\lp.cab" call set WINPE=0
 )
 set _lpver=%LPBUILD1%
 
-set _ODbasic86=
-set _ODfont86=
-set _ODhand86=
-set _ODocr86=
-set _ODspeech86=
-set _ODtts86=
-set _ODintl86=
-set _ODext86=
-set _ODtra86=
-set _ODnetwork86=
-set _ODnickl86=
-set _ODzinc86=
-set _ODpaint86=
-set _ODnote86=
-set _ODpower86=
-set _ODpmcppc86=
-set _ODpwsf86=
-set _ODword86=
-set _ODstep86=
-set _ODsnip86=
-set _ODnots86=
-set _ODieop86=
-set _ODethernet86=
-set _ODwifi86=
-set _ODmedia86=
-set _ODwmi86=
-set _ODpfs86=
-if %_oa% neq 0 for /L %%j in (1,1,%_oa%) do (
-"!_7z!" x ".\ondemand\x86\!OAFILE%%j!" -o"!TEMPDIR!\FOD86\OAFILE%%j" * -r %_Null%
-pushd "!TEMPDIR!\FOD86\OAFILE%%j"
-findstr /i /m Microsoft-Windows-LanguageFeatures-Basic update.mum %_Nul3% && call set _ODbasic86=!_ODbasic86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Fonts update.mum %_Nul3% && call set _ODfont86=!_ODfont86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Handwriting update.mum %_Nul3% && call set _ODhand86=!_ODhand86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-OCR update.mum %_Nul3% && call set _ODocr86=!_ODocr86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Speech update.mum %_Nul3% && call set _ODspeech86=!_ODspeech86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-TextToSpeech update.mum %_Nul3% && call set _ODtts86=!_ODtts86! /PackagePath:OAFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-InternationalFeatures update.mum %_Nul3% && call set _ODintl86=!_ODintl86! /PackagePath:OAFILE%%j\update.mum
-if %_lpver% geq 19041 (
-findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum %_Nul3% && (set _ODext86=1&call set _ODpaint86=!_ODpaint86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Notepad-FoD update.mum %_Nul3% && (set _ODext86=1&call set _ODnote86=!_ODnote86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum %_Nul3% && (set _ODext86=1&call set _ODpower86=!_ODpower86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODpmcppc86=!_ODpmcppc86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODpwsf86=!_ODpwsf86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-WordPad-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODword86=!_ODword86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-StepsRecorder update.mum %_Nul3% && (set _ODtra86=1&call set _ODstep86=!_ODstep86! /PackagePath:OAFILE%%j\update.mum)
-  )
-if %_lpver% geq 21277 (
-findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODext86=1&call set _ODnots86=!_ODnots86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum %_Nul3% && (set _ODtra86=1&call set _ODsnip86=!_ODsnip86! /PackagePath:OAFILE%%j\update.mum)
-  )
-if %_lpver% geq 21382 (
-findstr /i /m Microsoft-Windows-Ethernet-Client update.mum %_Nul3% && (set _ODnetwork86=1&call set _ODethernet86=!_ODethernet86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Wifi-Client update.mum %_Nul3% && (set _ODnetwork86=1&call set _ODwifi86=!_ODwifi86! /PackagePath:OAFILE%%j\update.mum)
-  )
-if %_lpver% geq 22000 (
-findstr /i /m Microsoft-Windows-InternetExplorer-Optional update.mum %_Nul3% && (set _ODext86=1&call set _ODieop86=!_ODieop86! /PackagePath:OAFILE%%j\update.mum)
-  )
-if %_lpver% geq 22567 (
-findstr /i /m Microsoft-Windows-MediaPlayer update.mum %_Nul3% && (set _ODnickl86=1&call set _ODmedia86=!_ODmedia86! /PackagePath:OAFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-WMIC-FoD update.mum %_Nul3% && (set _ODnickl86=1&call set _ODwmi86=!_ODwmi86! /PackagePath:OAFILE%%j\update.mum)
-  )
-if %_lpver% geq 25346 (
-findstr /i /m Microsoft-Windows-ProjFS-OptionalFeature-FoD update.mum %_Nul3% && (set _ODzinc86=1&call set _ODpfs86=!_ODpfs86! /PackagePath:OAFILE%%j\update.mum)
-  )
-popd
+for %%# in (
+basic font hand ocr speech tts intl 
+ext tra ntwrk nickl zinc paint note 
+power pmcppc pwsf word step snip nots 
+ieop ethernet wifi media wmi pfs 
+) do (
+set "_OD%%#86="
+set "_OD%%#64="
 )
-set _ODbasic64=
-set _ODfont64=
-set _ODhand64=
-set _ODocr64=
-set _ODspeech64=
-set _ODtts64=
-set _ODintl64=
-set _ODext64=
-set _ODtra64=
-set _ODnetwork64=
-set _ODnickl64=
-set _ODzinc64=
-set _ODpaint64=
-set _ODnote64=
-set _ODpower64=
-set _ODpmcppc64=
-set _ODpwsf64=
-set _ODword64=
-set _ODstep64=
-set _ODsnip64=
-set _ODnots64=
-set _ODieop64=
-set _ODethernet64=
-set _ODwifi64=
-set _ODmedia64=
-set _ODwmi64=
-set _ODpfs64=
-if %_ob% neq 0 for /L %%j in (1,1,%_ob%) do (
-"!_7z!" x ".\ondemand\x64\!OBFILE%%j!" -o"!TEMPDIR!\FOD64\OBFILE%%j" * -r %_Null%
-pushd "!TEMPDIR!\FOD64\OBFILE%%j"
-findstr /i /m Microsoft-Windows-LanguageFeatures-Basic update.mum %_Nul3% && call set _ODbasic64=!_ODbasic64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Fonts update.mum %_Nul3% && call set _ODfont64=!_ODfont64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Handwriting update.mum %_Nul3% && call set _ODhand64=!_ODhand64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-OCR update.mum %_Nul3% && call set _ODocr64=!_ODocr64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-Speech update.mum %_Nul3% && call set _ODspeech64=!_ODspeech64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-LanguageFeatures-TextToSpeech update.mum %_Nul3% && call set _ODtts64=!_ODtts64! /PackagePath:OBFILE%%j\update.mum
-findstr /i /m Microsoft-Windows-InternationalFeatures update.mum %_Nul3% && call set _ODintl64=!_ODintl64! /PackagePath:OBFILE%%j\update.mum
-if %_lpver% geq 19041 (
-findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum %_Nul3% && (set _ODext64=1&call set _ODpaint64=!_ODpaint64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Notepad-FoD update.mum %_Nul3% && (set _ODext64=1&call set _ODnote64=!_ODnote64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum %_Nul3% && (set _ODext64=1&call set _ODpower64=!_ODpower64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODpmcppc64=!_ODpmcppc64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODpwsf64=!_ODpwsf64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-WordPad-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODword64=!_ODword64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-StepsRecorder update.mum %_Nul3% && (set _ODtra64=1&call set _ODstep64=!_ODstep64! /PackagePath:OBFILE%%j\update.mum)
-  )
-if %_lpver% geq 21277 (
-findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODext64=1&call set _ODnots64=!_ODnots64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum %_Nul3% && (set _ODtra64=1&call set _ODsnip64=!_ODsnip64! /PackagePath:OBFILE%%j\update.mum)
-  )
-if %_lpver% geq 21382 (
-findstr /i /m Microsoft-Windows-Ethernet-Client update.mum %_Nul3% && (set _ODnetwork64=1&call set _ODethernet64=!_ODethernet64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-Wifi-Client update.mum %_Nul3% && (set _ODnetwork64=1&call set _ODwifi64=!_ODwifi64! /PackagePath:OBFILE%%j\update.mum)
-  )
-if %_lpver% geq 22000 (
-findstr /i /m Microsoft-Windows-InternetExplorer-Optional update.mum %_Nul3% && (set _ODext64=1&call set _ODieop64=!_ODieop64! /PackagePath:OBFILE%%j\update.mum)
-  )
-if %_lpver% geq 22567 (
-findstr /i /m Microsoft-Windows-MediaPlayer update.mum %_Nul3% && (set _ODnickl64=1&call set _ODmedia64=!_ODmedia64! /PackagePath:OBFILE%%j\update.mum)
-findstr /i /m Microsoft-Windows-WMIC-FoD update.mum %_Nul3% && (set _ODnickl64=1&call set _ODwmi64=!_ODwmi64! /PackagePath:OBFILE%%j\update.mum)
-  )
-if %_lpver% geq 25346 (
-findstr /i /m Microsoft-Windows-ProjFS-OptionalFeature-FoD update.mum %_Nul3% && (set _ODzinc64=1&call set _ODpfs64=!_ODpfs64! /PackagePath:OAFILE%%j\update.mum)
-  )
-popd
-)
+if %_oa% neq 0 for /L %%j in (1,1,%_oa%) do (call :setfod 86 OAFILE %%j&popd)
+if %_ob% neq 0 for /L %%j in (1,1,%_ob%) do (call :setfod 64 OBFILE %%j&popd)
+goto :contwork
 
+:setfod
+set "ofc=%2%3"
+"!_7z!" x ".\ondemand\x%1\!%2%3!" -o"!TEMPDIR!\FOD%1\!ofc!" * -r %_Null%
+pushd "!TEMPDIR!\FOD%1\!ofc!"
+findstr /i /m Microsoft-Windows-LanguageFeatures-Basic update.mum %_Nul3% && (call set _ODbasic%1=!_ODbasic%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-LanguageFeatures-Fonts update.mum %_Nul3% && (call set _ODfont%1=!_ODfont%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-LanguageFeatures-Handwriting update.mum %_Nul3% && (call set _ODhand%1=!_ODhand%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-LanguageFeatures-OCR update.mum %_Nul3% && (call set _ODocr%1=!_ODocr%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-LanguageFeatures-Speech update.mum %_Nul3% && (call set _ODspeech%1=!_ODspeech%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-LanguageFeatures-TextToSpeech update.mum %_Nul3% && (call set _ODtts%1=!_ODtts%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-InternationalFeatures update.mum %_Nul3% && (call set _ODintl%1=!_ODintl%1! /PackagePath:!ofc!\update.mum&goto :eof)
+if %_lpver% GEQ 19041 (
+findstr /i /m Microsoft-Windows-MSPaint-FoD update.mum %_Nul3% && (set _ODext%1=1&call set _ODpaint%1=!_ODpaint%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-Notepad-FoD update.mum %_Nul3% && (set _ODext%1=1&call set _ODnote%1=!_ODnote%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-PowerShell-ISE-FOD update.mum %_Nul3% && (set _ODext%1=1&call set _ODpower%1=!_ODpower%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-Printing-PMCPPC-FoD update.mum %_Nul3% && (set _ODtra%1=1&call set _ODpmcppc%1=!_ODpmcppc%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-Printing-WFS-FoD update.mum %_Nul3% && (set _ODtra%1=1&call set _ODpwsf%1=!_ODpwsf%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-WordPad-FoD update.mum %_Nul3% && (set _ODtra%1=1&call set _ODword%1=!_ODword%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-StepsRecorder update.mum %_Nul3% && (set _ODtra%1=1&call set _ODstep%1=!_ODstep%1! /PackagePath:!ofc!\update.mum&goto :eof)
+  )
+if %_lpver% GEQ 21277 (
+findstr /i /m Microsoft-Windows-Notepad-System-FoD update.mum %_Nul3% && (set _ODext%1=1&call set _ODnots%1=!_ODnots%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-SnippingTool-FoD update.mum %_Nul3% && (set _ODtra%1=1&call set _ODsnip%1=!_ODsnip%1! /PackagePath:!ofc!\update.mum&goto :eof)
+  )
+if %_lpver% GEQ 21382 (
+findstr /i /m Microsoft-Windows-Ethernet-Client update.mum %_Nul3% && (set _ODntwrk%1=1&call set _ODethernet%1=!_ODethernet%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-Wifi-Client update.mum %_Nul3% && (set _ODntwrk%1=1&call set _ODwifi%1=!_ODwifi%1! /PackagePath:!ofc!\update.mum&goto :eof)
+  )
+if %_lpver% GEQ 22000 (
+findstr /i /m Microsoft-Windows-InternetExplorer-Optional update.mum %_Nul3% && (set _ODext%1=1&call set _ODieop%1=!_ODieop%1! /PackagePath:!ofc!\update.mum&goto :eof)
+  )
+if %_lpver% GEQ 22567 (
+findstr /i /m Microsoft-Windows-MediaPlayer update.mum %_Nul3% && (set _ODnickl%1=1&call set _ODmedia%1=!_ODmedia%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-WMIC-FoD update.mum %_Nul3% && (set _ODnickl%1=1&call set _ODwmi%1=!_ODwmi%1! /PackagePath:!ofc!\update.mum&goto :eof)
+  )
+if %_lpver% GEQ 25346 (
+findstr /i /m Microsoft-Windows-ProjFS-OptionalFeature-FoD update.mum %_Nul3% && (set _ODzinc%1=1&call set _ODpfs%1=!_ODpfs%1! /PackagePath:!ofc!\update.mum&goto :eof)
+  )
+goto :eof
+
+:contwork
 echo.
 echo ============================================================
 echo Copy Distribution contents to work directory
@@ -398,20 +321,20 @@ for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfil
 for /f "tokens=4 delims=:. " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\install.wim" /index:1 ^| find /i "Version :"') do set _build=%%i
 if %_build% equ 18363 set _build=18362
 for %%# in (19042 19043 19044 19045 19046) do if %_build% equ %%# set _build=19041
-for %%# in (22622 22623 22624 22625 22626) do if %_build% equ %%# set _build=22621
+for %%# in (22622 22623 22624 22631 22632) do if %_build% equ %%# set _build=22621
 for %%# in (20349 20350 20351) do if %_build% equ %%# set _build=20348
 for /L %%j in (1,1,%LANGUAGES%) do (
 if not !LPBUILD%%j!==%_build% set "ERRFILE=!LPFILE%%j!"&goto :E_VER
 )
 if %WINPE%==1 for /L %%j in (1,1,%LANGUAGES%) do (
-"!_7z!" e "!WinpeOC%%j!\!LANGUAGE%%j!\lp.cab" -o"!EXTRACTDIR!" Microsoft-Windows-Common-Foundation-Package*%_build%*.mum %_Nul3%
-if not exist "!EXTRACTDIR!\*.mum" set WINPE=0
+"!_7z!" e "!WinpeOC%%j!\!LANGUAGE%%j!\lp.cab" -o"!EXTRACTDIR!" Microsoft-Windows-Common-Foundation-Package*%_build%*.mum %_Null%
+if not exist "!EXTRACTDIR!\*.mum" call set WINPE=0
 )
 if "%DEFAULTLANGUAGE%"=="" (
 for /f "tokens=1" %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\install.wim" /index:1 ^| find /i "Default"') do set "DEFAULTLANGUAGE=%%i"
 )
 for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\boot.wim" ^| findstr "Index"') do set BOOTCOUNT=%%i
-for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\boot.wim" /index:1 ^| find /i "Architecture"') do set BOOTARCH=%%i
+for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\boot.wim" /index:1 ^| find /i "Architecture"') do set "BOOTARCH=%%i"
 if /i %BOOTARCH%==x64 set BOOTARCH=amd64
 echo.
 echo ============================================================
@@ -433,12 +356,12 @@ if %errorlevel%==0 (set wimbit=32&set _label86=1)
 
 findstr /i /v "x86" "!TEMPDIR!\WIMARCH.txt" %_Nul1%
 if %errorlevel%==0 (
-if %_label86%==1 (set wimbit=dual) else (set wimbit=64)
+if %_label86%==1 (set wimbit=96) else (set wimbit=64)
 )
 echo Build: %_build%
 echo Count: %imgcount% Image^(s^)
-if %wimbit%==dual (echo Arch : Multi) else (echo Arch : %wimbit%-bit)
-if %wimbit%==dual set NET35=0
+if %wimbit%==96 (echo Arch : Multi) else (echo Arch : %wimbit%-bit)
+if %wimbit%==96 set NET35=0
 
 if %WINPE% NEQ 1 goto :extract
 set _PEM86=
@@ -451,56 +374,36 @@ set _PES64=
 set _PEX64=
 set _PEF64=
 set _PER64=
+set _sss=Client
+if %_build% equ 20348 set _sss=Server
+if %_build% equ 25398 set _sss=Server
 echo.
 echo ============================================================
 echo Set WinPE language packs paths
 echo ============================================================
 echo.
 if %wimbit%==32 for /L %%j in (1,1,%LANGUAGES%) do (
-if /i !LPARCH%%j!==x86 (
-echo !LANGUAGE%%j! / 32-bit
-call set _PEM86=!_PEM86! /PackagePath:!LANGUAGE%%j!\lp.cab /PackagePath:!LANGUAGE%%j!\WinPE-SRT_!LANGUAGE%%j!.cab
-call set _PES86=!_PES86! /PackagePath:!LANGUAGE%%j!\WinPE-Setup_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Setup-Client_!LANGUAGE%%j!.cab
-call set _PER86=!_PER86! /PackagePath:!LANGUAGE%%j!\WinPE-HTA_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Rejuv_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-StorageWMI_!LANGUAGE%%j!.cab
-call set _PEX86=!_PEX86! /PackagePath:!LANGUAGE%%j!\WinPE-EnhancedStorage_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Scripting_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-SecureStartup_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-WDS-Tools_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-WMI_!LANGUAGE%%j!.cab
- for %%G in %EAlang% do (
- if /i !LANGUAGE%%j!==%%G call set _PEF86=!_PEF86! /PackagePath:WinPE-FontSupport-%%G.cab
- )
-)
+if /i !LPARCH%%j!==x86 call :setpe %%j 86 32-bit
 )
 if %wimbit%==64 for /L %%j in (1,1,%LANGUAGES%) do (
-if /i !LPARCH%%j!==amd64 (
-echo !LANGUAGE%%j! / 64-bit
-call set _PEM64=!_PEM64! /PackagePath:!LANGUAGE%%j!\lp.cab /PackagePath:!LANGUAGE%%j!\WinPE-SRT_!LANGUAGE%%j!.cab
-call set _PES64=!_PES64! /PackagePath:!LANGUAGE%%j!\WinPE-Setup_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Setup-Client_!LANGUAGE%%j!.cab
-call set _PER64=!_PER64! /PackagePath:!LANGUAGE%%j!\WinPE-HTA_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Rejuv_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-StorageWMI_!LANGUAGE%%j!.cab
-call set _PEX64=!_PEX64! /PackagePath:!LANGUAGE%%j!\WinPE-EnhancedStorage_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Scripting_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-SecureStartup_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-WDS-Tools_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-WMI_!LANGUAGE%%j!.cab
- for %%G in %EAlang% do (
- if /i !LANGUAGE%%j!==%%G call set _PEF64=!_PEF64! /PackagePath:WinPE-FontSupport-%%G.cab
- )
+if /i !LPARCH%%j!==amd64 call :setpe %%j 64 64-bit
 )
+if %wimbit%==96 for /L %%j in (1,1,%LANGUAGES%) do (
+if /i !LPARCH%%j!==x86 call :setpe %%j 86 32-bit
+if /i !LPARCH%%j!==amd64 call :setpe %%j 64 64-bit
 )
-if %wimbit%==dual for /L %%j in (1,1,%LANGUAGES%) do (
-if /i !LPARCH%%j!==x86 (
-echo !LANGUAGE%%j! / 32-bit
-call set _PEM86=!_PEM86! /PackagePath:!LANGUAGE%%j!\lp.cab /PackagePath:!LANGUAGE%%j!\WinPE-SRT_!LANGUAGE%%j!.cab
-call set _PES86=!_PES86! /PackagePath:!LANGUAGE%%j!\WinPE-Setup_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Setup-Client_!LANGUAGE%%j!.cab
-call set _PER86=!_PER86! /PackagePath:!LANGUAGE%%j!\WinPE-HTA_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Rejuv_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-StorageWMI_!LANGUAGE%%j!.cab
-call set _PEX86=!_PEX86! /PackagePath:!LANGUAGE%%j!\WinPE-EnhancedStorage_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Scripting_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-SecureStartup_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-WDS-Tools_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-WMI_!LANGUAGE%%j!.cab
- for %%G in %EAlang% do (
- if /i !LANGUAGE%%j!==%%G call set _PEF86=!_PEF86! /PackagePath:WinPE-FontSupport-%%G.cab
- )
-) else (
-echo !LANGUAGE%%j! / 64-bit
-call set _PEM64=!_PEM64! /PackagePath:!LANGUAGE%%j!\lp.cab /PackagePath:!LANGUAGE%%j!\WinPE-SRT_!LANGUAGE%%j!.cab
-call set _PES64=!_PES64! /PackagePath:!LANGUAGE%%j!\WinPE-Setup_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Setup-Client_!LANGUAGE%%j!.cab
-call set _PER64=!_PER64! /PackagePath:!LANGUAGE%%j!\WinPE-HTA_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Rejuv_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-StorageWMI_!LANGUAGE%%j!.cab
-call set _PEX64=!_PEX64! /PackagePath:!LANGUAGE%%j!\WinPE-EnhancedStorage_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-Scripting_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-SecureStartup_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-WDS-Tools_!LANGUAGE%%j!.cab /PackagePath:!LANGUAGE%%j!\WinPE-WMI_!LANGUAGE%%j!.cab
- for %%G in %EAlang% do (
- if /i !LANGUAGE%%j!==%%G call set _PEF64=!_PEF64! /PackagePath:WinPE-FontSupport-%%G.cab
- )
+goto :extract
+
+:setpe
+echo !LANGUAGE%1! / %3
+call set _PEM%2=!_PEM%2! /PackagePath:!LANGUAGE%1!\lp.cab /PackagePath:!LANGUAGE%1!\WinPE-SRT_!LANGUAGE%1!.cab
+call set _PES%2=!_PES%2! /PackagePath:!LANGUAGE%1!\WinPE-Setup_!LANGUAGE%1!.cab /PackagePath:!LANGUAGE%1!\WinPE-Setup-%_sss%_!LANGUAGE%1!.cab
+call set _PEX%2=!_PEX%2! /PackagePath:!LANGUAGE%1!\WinPE-EnhancedStorage_!LANGUAGE%1!.cab /PackagePath:!LANGUAGE%1!\WinPE-Scripting_!LANGUAGE%1!.cab /PackagePath:!LANGUAGE%1!\WinPE-SecureStartup_!LANGUAGE%1!.cab /PackagePath:!LANGUAGE%1!\WinPE-WDS-Tools_!LANGUAGE%1!.cab /PackagePath:!LANGUAGE%1!\WinPE-WMI_!LANGUAGE%1!.cab
+call set _PER%2=!_PER%2! /PackagePath:!LANGUAGE%1!\WinPE-HTA_!LANGUAGE%1!.cab /PackagePath:!LANGUAGE%1!\WinPE-Rejuv_!LANGUAGE%1!.cab /PackagePath:!LANGUAGE%1!\WinPE-StorageWMI_!LANGUAGE%1!.cab
+for %%G in %EAlang% do if /i !LANGUAGE%1!==%%G (
+call set _PEF%2=!_PEF%2! /PackagePath:WinPE-FontSupport-%%G.cab
 )
-)
+goto :eof
 
 :extract
 set _PP86=
@@ -511,96 +414,68 @@ echo Extract language packs
 echo ============================================================
 echo.
 if %wimbit%==32 for /L %%j in (1,1,%LANGUAGES%) do (
-if /i !LPARCH%%j!==x86 (
-echo !LANGUAGE%%j! / 32-bit
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos %_Null%
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" *setup\sources -r %_Null%
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r %_Null%
-if not exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\*.mui" (robocopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources" "!EXTRACTDIR!\TEMP\!LANGUAGE%%j!" /E /MOVE %_Nul1%&robocopy "!EXTRACTDIR!\TEMP\!LANGUAGE%%j!" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!" /E /MOVE %_Nul1%) 
-call set _PP86=!_PP86! /PackagePath:!LANGUAGE%%j!\update.mum
-)
+if /i !LPARCH%%j!==x86 call :setlp %%j 86 32-bit
 )
 if %wimbit%==64 for /L %%j in (1,1,%LANGUAGES%) do (
-if /i !LPARCH%%j!==amd64 (
-echo !LANGUAGE%%j! / 64-bit
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos %_Null%
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" *setup\sources -r %_Null%
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r %_Null%
-if not exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\*.mui" (robocopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources" "!EXTRACTDIR!\TEMP\!LANGUAGE%%j!" /E /MOVE %_Nul1%&robocopy "!EXTRACTDIR!\TEMP\!LANGUAGE%%j!" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!" /E /MOVE %_Nul1%) 
-call set _PP64=!_PP64! /PackagePath:!LANGUAGE%%j!\update.mum
+if /i !LPARCH%%j!==amd64 call :setlp %%j 64 64-bit
 )
-)
-if %wimbit%==dual for /L %%j in (1,1,%LANGUAGES%) do (
-if /i !LPARCH%%j!==x86 (
-echo !LANGUAGE%%j! / 32-bit
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos %_Null%
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" *setup\sources -r %_Null%
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r %_Null%
-if not exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\*.mui" (robocopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources" "!EXTRACTDIR!\TEMP\!LANGUAGE%%j!" /E /MOVE %_Nul1%&robocopy "!EXTRACTDIR!\TEMP\!LANGUAGE%%j!" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!" /E /MOVE %_Nul1%) 
-call set _PP86=!_PP86! /PackagePath:!LANGUAGE%%j!\update.mum
-) else (
-echo !LANGUAGE%%j! / 64-bit
-"!_7z!" e ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" vofflps.rtf -r -aos %_Null%
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" *setup\sources -r %_Null%
-"!_7z!" x ".\langs\!LPFILE%%j!" -o"!TEMPDIR!\!LPARCH%%j!\!LANGUAGE%%j!" * -r %_Null%
-if not exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\*.mui" (robocopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources" "!EXTRACTDIR!\TEMP\!LANGUAGE%%j!" /E /MOVE %_Nul1%&robocopy "!EXTRACTDIR!\TEMP\!LANGUAGE%%j!" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!" /E /MOVE %_Nul1%) 
-call set _PP64=!_PP64! /PackagePath:!LANGUAGE%%j!\update.mum
-)
+if %wimbit%==96 for /L %%j in (1,1,%LANGUAGES%) do (
+if /i !LPARCH%%j!==x86 call :setlp %%j 86 32-bit
+if /i !LPARCH%%j!==amd64 call :setlp %%j 64 64-bit
 )
 if %wimbit%==32 if not defined _PP86 goto :E_ARCH
 if %wimbit%==64 if not defined _PP64 goto :E_ARCH
+goto :dowork
 
+:setlp
+set "_eal=!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!"
+echo !LANGUAGE%1! / %3
+"!_7z!" e ".\langs\!LPFILE%1!" -o"!_eal!" vofflps.rtf -r -aos %_Null%
+"!_7z!" x ".\langs\!LPFILE%1!" -o"!_eal!" *setup\sources -r %_Null%
+"!_7z!" x ".\langs\!LPFILE%1!" -o"!TEMPDIR!\!LPARCH%1!\!LANGUAGE%1!" * -r %_Null%
+if not exist "!_eal!\setup\sources\!LANGUAGE%1!\*.mui" (
+robocopy "!_eal!\setup\sources" "!EXTRACTDIR!\TEMP\!LANGUAGE%1!" /E /MOVE %_Nul1%
+robocopy "!EXTRACTDIR!\TEMP\!LANGUAGE%1!" "!_eal!\setup\sources\!LANGUAGE%1!" /E /MOVE %_Nul1%
+) 
+call set _PP%2=!_PP%2! /PackagePath:!LANGUAGE%1!\update.mum
+goto :eof
+
+:dowork
 set _actEP=0
 set _SrvEdt=0
 set _AszEdt=0
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 if exist "%SystemRoot%\temp\UpdateAgent.dll" del /f /q "%SystemRoot%\temp\UpdateAgent.dll" %_Nul3%
 if exist "%SystemRoot%\temp\Facilitator.dll" del /f /q "%SystemRoot%\temp\Facilitator.dll" %_Nul3%
-if %_build% geq 19041 if %winbuild% lss 17133 if not exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+if %_build% GEQ 19041 if %winbuild% lss 17133 if not exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
 copy /y %SysPath%\slc.dll %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
 if /i not %xOS%==x86 copy /y %SystemRoot%\SysWOW64\slc.dll %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
 )
-for /L %%i in (1,1,%imgcount%) do (
+set isomin=0
+for /L %%i in (1,1,%imgcount%) do set "_i=%%i"&call :doinstall
+goto :rewim
+
+:doinstall
 echo.
 echo ============================================================
-echo Mount install.wim - index %%i/%imgcount%
+echo Mount install.wim - index %_i%/%imgcount%
 echo ============================================================
-!_dism2!:"!TMPDISM!" /Mount-Wim /Wimfile:"!DVDDIR!\sources\install.wim" /Index:%%i /MountDir:"%INSTALLMOUNTDIR%"
+!_dism2!:"!TMPDISM!" /Mount-Wim /Wimfile:"!DVDDIR!\sources\install.wim" /Index:%_i% /MountDir:"%INSTALLMOUNTDIR%"
 if !errorlevel! neq 0 goto :E_MOUNT
 echo.
 echo ============================================================
-echo Add LPs to install.wim - index %%i/%imgcount%
+echo Add LPs to install.wim - index %_i%/%imgcount%
 echo ============================================================
-pushd "!TEMPDIR!\!WIMARCH%%i!"
-if defined _PP64 if /i !WIMARCH%%i!==amd64 (
+pushd "!TEMPDIR!\!WIMARCH%_i%!"
+if defined _PP64 if /i !WIMARCH%_i%!==amd64 (
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallLP64.log" /Add-Package !_PP64!
 )
-if defined _PP86 if /i !WIMARCH%%i!==x86 (
+if defined _PP86 if /i !WIMARCH%_i%!==x86 (
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallLP86.log" /Add-Package !_PP86!
 )
 popd
-if /i !WIMARCH%%i!==amd64 if exist "!TEMPDIR!\FOD64\OBFILE1\update.mum" (
-pushd "!TEMPDIR!\FOD64"
-if defined _ODbasic64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64a.log" /Add-Package !_ODbasic64!
-if defined _ODbasic64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64a.log" /Add-Package !_ODfont64! !_ODtts64! !_ODhand64! !_ODocr64! !_ODspeech64! !_ODintl64!
-if defined _ODext64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64b.log" /Add-Package !_ODpaint64! !_ODnote64! !_ODpower64! !_ODnots64! !_ODieop64!
-if defined _ODtra64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64c.log" /Add-Package !_ODpmcppc64! !_ODpwsf64! !_ODword64! !_ODstep64! !_ODsnip64!
-if defined _ODnetwork64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64d.log" /Add-Package !_ODethernet64! !_ODwifi64!
-if defined _ODnickl64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64e.log" /Add-Package !_ODmedia64! !_ODwmi64!
-if defined _ODzinc64 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD64f.log" /Add-Package !_ODpfs64!
-popd
-)
-if /i !WIMARCH%%i!==x86 if exist "!TEMPDIR!\FOD86\OAFILE1\update.mum" (
-pushd "!TEMPDIR!\FOD86"
-if defined _ODbasic86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86a.log" /Add-Package !_ODbasic86!
-if defined _ODbasic86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86a.log" /Add-Package !_ODfont86! !_ODtts86! !_ODhand86! !_ODocr86! !_ODspeech86! !_ODintl86!
-if defined _ODext86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86b.log" /Add-Package !_ODpaint86! !_ODnote86! !_ODpower86! !_ODnots86! !_ODieop86!
-if defined _ODtra86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86c.log" /Add-Package !_ODpmcppc86! !_ODpwsf86! !_ODword86! !_ODstep86! !_ODsnip86!
-if defined _ODnetwork86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86d.log" /Add-Package !_ODethernet86! !_ODwifi86!
-if defined _ODnickl86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86e.log" /Add-Package !_ODmedia86! !_ODwmi86!
-if defined _ODzinc86 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD86f.log" /Add-Package !_ODpfs86!
-popd
-)
+if /i !WIMARCH%_i%!==amd64 if exist "!TEMPDIR!\FOD64\OBFILE1\update.mum" call :addfod 64
+if /i !WIMARCH%_i%!==x86 if exist "!TEMPDIR!\FOD86\OAFILE1\update.mum" call :addfod 86
 echo.
 echo ============================================================
 echo Update language settings
@@ -608,16 +483,16 @@ echo ============================================================
 echo.
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE% /Quiet
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE% /Quiet
-if %%i==%imgcount% (
+if %_i%==%imgcount% (
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Gen-LangINI /Distribution:"!DVDDIR!" /Quiet
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Set-SetupUILang:%DEFAULTLANGUAGE% /Distribution:"!DVDDIR!" /Quiet
 )
-if %foundupdates%==1 call Updates\W10UI.cmd 1 "%INSTALLMOUNTDIR%" "!TMPUPDT!" "!DVDDIR!\sources"
+if %foundupdates% EQU 1 call Updates\W10UI.cmd 1 "%INSTALLMOUNTDIR%" "!TMPUPDT!" "!DVDDIR!\sources"
 if %_Debug% neq 0 @echo on
 cd /d "!WORKDIR!"
-if not defined isomaj for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
+if not defined isomaj for /f "tokens=6,7 delims=_." %%a in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%a.%%b&set isomaj=%%a&set isomin=%%b)
 if not defined isolab (
-if %_build% geq 15063 (call :detectLab isolab) else (call :legacyLab isolab)
+if %_build% GEQ 15063 (call :detectLab isolab) else (call :legacyLab isolab)
 )
 if not defined isodate if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
 for /f %%# in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Package_for_RollupFix*.mum"') do copy /y "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\%%#" %SystemRoot%\temp\update.mum %_Nul1%
@@ -631,220 +506,207 @@ if exist "%INSTALLMOUNTDIR%\Windows\system32\Facilitator.dll" if not exist "%Sys
 if %NET35%==1 if not exist "%INSTALLMOUNTDIR%\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" (
 echo.
 echo ============================================================
-echo Enable .NET Framework 3.5 - index %%i/%imgcount%
+echo Enable .NET Framework 3.5 - index %_i%/%imgcount%
 echo ============================================================
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUINetFx3.log" /Enable-Feature /Featurename:NetFx3 /All /LimitAccess /Source:"!DVDDIR!\sources\sxs"
 )
-if %%i==%imgcount% for /L %%j in (1,1,%LANGUAGES%) do (
-if /i !LANGUAGE%%j!==ja-jp xcopy "%INSTALLMOUNTDIR%\Windows\Boot\Fonts\*" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\" /chryi %_Nul1%&if exist "%INSTALLMOUNTDIR%\Windows\Fonts\meiryo.ttc" (copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\meiryo.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%)&if exist "%INSTALLMOUNTDIR%\Windows\Fonts\msgothic.ttc" (copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\msgothic.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%)
-if /i !LANGUAGE%%j!==ko-kr xcopy "%INSTALLMOUNTDIR%\Windows\Boot\Fonts\*" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\" /chryi %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\malgun.ttf" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&if exist "%INSTALLMOUNTDIR%\Windows\Fonts\gulim.ttc" (copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\gulim.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%)
-if /i !LANGUAGE%%j!==zh-cn xcopy "%INSTALLMOUNTDIR%\Windows\Boot\Fonts\*" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\" /chryi %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\msyh.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\mingliub.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\simsun.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\msyhl.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%
-if /i !LANGUAGE%%j!==zh-hk xcopy "%INSTALLMOUNTDIR%\Windows\Boot\Fonts\*" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\" /chryi %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\msjh.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\mingliub.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\simsun.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%
-if /i !LANGUAGE%%j!==zh-tw xcopy "%INSTALLMOUNTDIR%\Windows\Boot\Fonts\*" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\" /chryi %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\msjh.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\mingliub.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%&copy /y "%INSTALLMOUNTDIR%\Windows\Fonts\simsun.ttc" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!" %_Nul1%
+if %_i%==%imgcount% for /L %%j in (1,1,%LANGUAGES%) do (
+call :fontsEA %%j
 )
-if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" attrib -S -H -I "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" %_Nul3%
-if %WINPE%==1 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" if not exist "!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" (
-  echo.
-  echo ============================================================
-  echo Update winre.wim / !WIMARCH%%i!
-  echo ============================================================
-  echo.
-  mkdir "!TEMPDIR!\WR\!WIMARCH%%i!"
-  copy "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" "!TEMPDIR!\WR\!WIMARCH%%i!"
-  echo.
-  echo ============================================================
-  echo Mount winre.wim
-  echo ============================================================
-  !_dism2!:"!TMPDISM!" /Mount-Wim /Wimfile:"!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" /Index:1 /MountDir:"%WINREMOUNTDIR%"
-  if !errorlevel! neq 0 goto :E_MOUNT
-  echo.
-  echo ============================================================
-  echo Add LPs to winre.wim
-  echo ============================================================
-  call :SbS "%WINREMOUNTDIR%"
-  pushd "!WinPERoot!\!WIMARCH%%i!\WinPE_OCs"
-  if defined _PEM64 if /i !WIMARCH%%i!==amd64 (
-    !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP64.log" /Add-Package !_PEM64! !_PEF64!
-    !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP64.log" /Add-Package !_PER64!
-    if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP64.log" /Add-Package !_PEX64!
-  )
-  if defined _PEM86 if /i !WIMARCH%%i!==x86 (
-    !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP86.log" /Add-Package !_PEM86! !_PEF86!
-    !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP86.log" /Add-Package !_PER86!
-    if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP86.log" /Add-Package !_PEX86!
-  )
-  popd
-  echo.
-  echo ============================================================
-  echo Update language settings
-  echo ============================================================
-  echo.
-  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE% /Quiet
-  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE% /Quiet
-  if %foundupdates%==0 (
-  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup
-  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup /ResetBase
-  )
-  if %foundupdates%==1 call Updates\W10UI.cmd 1 "%WINREMOUNTDIR%" "!TMPUPDT!"
-  if %_Debug% neq 0 @echo on
-  cd /d "!WORKDIR!"
-  call :cleanmanual "%WINREMOUNTDIR%"
-  echo.
-  echo ============================================================
-  echo Unmount winre.wim
-  echo ============================================================
-  !_dism2!:"!TMPDISM!" /Unmount-Wim /MountDir:"%WINREMOUNTDIR%" /Commit
-  if !errorlevel! neq 0 goto :E_UNMOUNT
-  echo.
-  echo ============================================================
-  echo Rebuild winre.wim
-  echo ============================================================
-  !_dism2!:"!TMPDISM!" /Export-Image /SourceImageFile:"!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" /All /DestinationImageFile:"!EXTRACTDIR!\winre.wim"
-  if exist "!EXTRACTDIR!\winre.wim" move /y "!EXTRACTDIR!\winre.wim" "!TEMPDIR!\WR\!WIMARCH%%i!" %_Nul1%
+if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" (
+attrib -S -H -I "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" %_Nul3%
+if %WINPE%==1 if not exist "!TEMPDIR!\WR\!WIMARCH%_i%!\winre.wim" call :wimre %_i%
 )
-if %WINPE%==1 if exist "!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" (
+if exist "!TEMPDIR!\WR\!WIMARCH%_i%!\winre.wim" (
   echo.
   echo ============================================================
-  echo Add updated winre.wim to install.wim - index %%i/%imgcount%
+  echo Add updated winre.wim to install.wim - index %_i%/%imgcount%
   echo ============================================================
   echo.
-  copy /y "!TEMPDIR!\WR\!WIMARCH%%i!\winre.wim" "%INSTALLMOUNTDIR%\Windows\System32\Recovery"
+  copy /y "!TEMPDIR!\WR\!WIMARCH%_i%!\winre.wim" "%INSTALLMOUNTDIR%\Windows\System32\Recovery"
 )
 call :cleanmanual "%INSTALLMOUNTDIR%"
 echo.
 echo ============================================================
-echo Unmount install.wim - index %%i/%imgcount%
+echo Unmount install.wim - index %_i%/%imgcount%
 echo ============================================================
 !_dism2!:"!TMPDISM!" /Unmount-Wim /MountDir:"%INSTALLMOUNTDIR%" /Commit
 if !errorlevel! neq 0 goto :E_UNMOUNT
-)
+goto :eof
 
+:addfod
+pushd "!TEMPDIR!\FOD%1"
+if defined _ODbasic%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1a.log" /Add-Package !_ODbasic%1!
+if defined _ODbasic%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1a.log" /Add-Package !_ODfont%1! !_ODtts%1! !_ODhand%1! !_ODocr%1! !_ODspeech%1! !_ODintl%1!
+if defined _ODext%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1b.log" /Add-Package !_ODpaint%1! !_ODnote%1! !_ODpower%1! !_ODnots%1! !_ODieop%1!
+if defined _ODtra%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1c.log" /Add-Package !_ODpmcppc%1! !_ODpwsf%1! !_ODword%1! !_ODstep%1! !_ODsnip%1!
+if defined _ODntwrk%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1d.log" /Add-Package !_ODethernet%1! !_ODwifi%1!
+if defined _ODnickl%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1e.log" /Add-Package !_ODmedia%1! !_ODwmi%1!
+if defined _ODzinc%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1f.log" /Add-Package !_ODpfs%1!
+popd
+goto :eof
+
+:fontsEA
+set _yes=0
+for %%G in %EAlang% do if /i !LANGUAGE%1!==%%G (
+set _yes=1
+)
+if %_yes%==0 goto :eof
+set "_fnti=%INSTALLMOUNTDIR%\Windows\Boot\Fonts"
+set "_fntw=%INSTALLMOUNTDIR%\Windows\Fonts"
+set "_eal=!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!"
+if /i !LANGUAGE%1!==ja-jp xcopy "!_fnti!\*" "!_eal!\" /chryi %_Nul1%&copy /y "!_fntw!\meiryo.ttc" "!_eal!" %_Nul3%&copy /y "!_fntw!\msgothic.ttc" "!_eal!" %_Nul3%
+if /i !LANGUAGE%1!==ko-kr xcopy "!_fnti!\*" "!_eal!\" /chryi %_Nul1%&copy /y "!_fntw!\malgun.ttf" "!_eal!" %_Nul1%&copy /y "!_fntw!\gulim.ttc" "!_eal!" %_Nul3%
+if /i !LANGUAGE%1!==zh-cn xcopy "!_fnti!\*" "!_eal!\" /chryi %_Nul1%&copy /y "!_fntw!\msyh.ttc" "!_eal!" %_Nul1%&copy /y "!_fntw!\mingliub.ttc" "!_eal!" %_Nul1%&copy /y "!_fntw!\simsun.ttc" "!_eal!" %_Nul1%&copy /y "!_fntw!\msyhl.ttc" "!_eal!" %_Nul1%
+if /i !LANGUAGE%1!==zh-hk xcopy "!_fnti!\*" "!_eal!\" /chryi %_Nul1%&copy /y "!_fntw!\msjh.ttc" "!_eal!" %_Nul1%&copy /y "!_fntw!\mingliub.ttc" "!_eal!" %_Nul1%&copy /y "!_fntw!\simsun.ttc" "!_eal!" %_Nul1%
+if /i !LANGUAGE%1!==zh-tw xcopy "!_fnti!\*" "!_eal!\" /chryi %_Nul1%&copy /y "!_fntw!\msjh.ttc" "!_eal!" %_Nul1%&copy /y "!_fntw!\mingliub.ttc" "!_eal!" %_Nul1%&copy /y "!_fntw!\simsun.ttc" "!_eal!" %_Nul1%
+goto :eof
+
+:wimre
 echo.
 echo ============================================================
-echo Mount boot.wim - index 1/%BOOTCOUNT%
+echo Update winre.wim / !WIMARCH%1!
 echo ============================================================
-!_dism2!:"!TMPDISM!" /Mount-Wim /WimFile:"!DVDDIR!\sources\boot.wim" /Index:1 /MountDir:"%BOOTMOUNTDIR%"
+echo.
+mkdir "!TEMPDIR!\WR\!WIMARCH%1!"
+copy "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" "!TEMPDIR!\WR\!WIMARCH%1!"
+echo.
+echo ============================================================
+echo Mount winre.wim
+echo ============================================================
+!_dism2!:"!TMPDISM!" /Mount-Wim /Wimfile:"!TEMPDIR!\WR\!WIMARCH%1!\winre.wim" /Index:1 /MountDir:"%WINREMOUNTDIR%"
 if !errorlevel! neq 0 goto :E_MOUNT
+echo.
+echo ============================================================
+echo Add LPs to winre.wim
+echo ============================================================
+call :SbS "%WINREMOUNTDIR%"
+pushd "!WinPERoot!\!WIMARCH%1!\WinPE_OCs"
+if defined _PEM64 if /i !WIMARCH%1!==amd64 (
+  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP64.log" /Add-Package !_PEM64! !_PEF64!
+  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP64.log" /Add-Package !_PER64!
+  if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP64.log" /Add-Package !_PEX64!
+)
+if defined _PEM86 if /i !WIMARCH%1!==x86 (
+  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP86.log" /Add-Package !_PEM86! !_PEF86!
+  !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP86.log" /Add-Package !_PER86!
+  if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinreLP86.log" /Add-Package !_PEX86!
+)
+popd
+echo.
+echo ============================================================
+echo Update language settings
+echo ============================================================
+echo.
+!_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE% /Quiet
+!_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE% /Quiet
+if %foundupdates% NEQ 1 (
+!_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup
+!_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup /ResetBase
+)
+if %foundupdates% EQU 1 call Updates\W10UI.cmd 1 "%WINREMOUNTDIR%" "!TMPUPDT!"
+if %_Debug% neq 0 @echo on
+cd /d "!WORKDIR!"
+call :cleanmanual "%WINREMOUNTDIR%"
+echo.
+echo ============================================================
+echo Unmount winre.wim
+echo ============================================================
+!_dism2!:"!TMPDISM!" /Unmount-Wim /MountDir:"%WINREMOUNTDIR%" /Commit
+if !errorlevel! neq 0 goto :E_UNMOUNT
+echo.
+echo ============================================================
+echo Rebuild winre.wim
+echo ============================================================
+!_dism2!:"!TMPDISM!" /Export-Image /SourceImageFile:"!TEMPDIR!\WR\!WIMARCH%1!\winre.wim" /All /DestinationImageFile:"!EXTRACTDIR!\winre.wim"
+if exist "!EXTRACTDIR!\winre.wim" move /y "!EXTRACTDIR!\winre.wim" "!TEMPDIR!\WR\!WIMARCH%1!" %_Nul1%
+goto :eof
 
+:rewim
+for /L %%i in (1,1,%BOOTCOUNT%) do set "_i=%%i"&call :doboot
+goto :rebuild
+
+:doboot
+echo.
+echo ============================================================
+echo Mount boot.wim - index %_i%/%BOOTCOUNT%
+echo ============================================================
+!_dism2!:"!TMPDISM!" /Mount-Wim /WimFile:"!DVDDIR!\sources\boot.wim" /Index:%_i% /MountDir:"%BOOTMOUNTDIR%"
+if !errorlevel! neq 0 goto :E_MOUNT
+set _stp=0
+if exist "%BOOTMOUNTDIR%\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" set _stp=1
+set _rej=0
+if exist "%BOOTMOUNTDIR%\Windows\servicing\Packages\WinPE-Rejuv-Package~31bf3856ad364e35~*.mum" set _rej=1
 if %BOOTCOUNT%==1 if not exist "%BOOTMOUNTDIR%\sources\setup.exe" set SLIM=0
-if %WINPE%==1 (
-  echo.
-  echo ============================================================
-  echo Add LPs to boot.wim - index 1/%BOOTCOUNT%
-  echo ============================================================
-  call :SbS "%BOOTMOUNTDIR%"
-  pushd "!WinPERoot!\!BOOTARCH!\WinPE_OCs"
-  if defined _PEM64 if /i !BOOTARCH!==amd64 (
-    !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PEM64! !_PEF64!
-    if exist "%BOOTMOUNTDIR%\Windows\servicing\Packages\WinPE-Rejuv-Package~31bf3856ad364e35~*.mum" !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PER64!
-    if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PEX64!
-  )
-  if defined _PEM86 if /i !BOOTARCH!==x86 (
-    !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PEM86! !_PEF86!
-    if exist "%BOOTMOUNTDIR%\Windows\servicing\Packages\WinPE-Rejuv-Package~31bf3856ad364e35~*.mum" !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PER86!
-    if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PEX86!
-  )
-  popd
-  echo.
-  echo ============================================================
-  echo Update language settings
-  echo ============================================================
-  echo.
-  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE% /Quiet
-  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE% /Quiet
-  if %foundupdates%==0 (
-  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup
-  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup /ResetBase
-  )
-) else (
-  for /L %%j in (1,1,%LANGUAGES%) do (
-   if /i !LPARCH%%j!==!BOOTARCH! (
-    if not exist "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" mkdir "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!"
-    call :EAfonts %%j
-   )
+if not %WINPE%==1 (
+call :WIMman%_i%
+goto :contboot
+)
+echo.
+echo ============================================================
+echo Add LPs to boot.wim - index %_i%/%BOOTCOUNT%
+echo ============================================================
+call :SbS "%BOOTMOUNTDIR%"
+pushd "!WinPERoot!\!BOOTARCH!\WinPE_OCs"
+if defined _PEM64 if /i !BOOTARCH!==amd64 (
+  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PEM64! !_PEF64!
+  if %_i%==1 if %_rej% EQU 1 !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PER64!
+  if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PEX64!
+  if %_stp% EQU 1 (
+    !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PES64!
+    if %_build% GEQ 22557 call :MUIman
+  ) else (
+    if %_i%==2 call :WIMman%_i%
   )
 )
-if %foundupdates%==1 call Updates\W10UI.cmd 1 "%BOOTMOUNTDIR%" "!TMPUPDT!"
+if defined _PEM86 if /i !BOOTARCH!==x86 (
+  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PEM86! !_PEF86!
+  if %_i%==1 if %_rej% EQU 1 !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PER86!
+  if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PEX86!
+  if %_stp% EQU 1 (
+    !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PES86!
+    if %_build% GEQ 22557 call :MUIman
+  ) else (
+    if %_i%==2 call :WIMman%_i%
+  )
+)
+popd
+echo.
+echo ============================================================
+echo Update language settings
+echo ============================================================
+echo.
+!_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE% /Quiet
+!_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE% /Quiet
+if %_stp% EQU 1 (
+!_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Gen-LangINI /Distribution:"%BOOTMOUNTDIR%" /Quiet
+!_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Set-SetupUILang:%DEFAULTLANGUAGE% /Distribution:"%BOOTMOUNTDIR%" /Quiet
+)
+if %foundupdates% NEQ 1 (
+!_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup
+!_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup /ResetBase
+)
+if %_i%==2 if not %wimbit%==96 for /L %%j in (1,1,%LANGUAGES%) do (
+  xcopy "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\*.rtf" "!DVDDIR!\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
+  xcopy "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\*.rtf" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\" /chryi %_Nul3%
+  copy /y "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\vofflps.rtf" "!DVDDIR!\sources\!LANGUAGE%%j!\privacy.rtf" %_Nul3%
+)
+:contboot
+if %foundupdates% EQU 1 call Updates\W10UI.cmd 1 "%BOOTMOUNTDIR%" "!TMPUPDT!"
 if %_Debug% neq 0 @echo on
 cd /d "!WORKDIR!"
-if exist "%BOOTMOUNTDIR%\sources\setup.exe" copy /y "%BOOTMOUNTDIR%\sources\setup.exe" "!DVDDIR!\sources" %_Nul3%
+if exist "%BOOTMOUNTDIR%\sources\setup.exe" (
+if %_i%==1 copy /y "%BOOTMOUNTDIR%\sources\setup.exe" "!DVDDIR!\sources" %_Nul3%
+if %_i%==2 call :boots
+)
 call :cleanmanual "%BOOTMOUNTDIR%"
 echo.
 echo ============================================================
-echo Unmount boot.wim - index 1/%BOOTCOUNT%
+echo Unmount boot.wim - index %_i%/%BOOTCOUNT%
 echo ============================================================
 !_dism2!:"!TMPDISM!" /Unmount-Wim /MountDir:"%BOOTMOUNTDIR%" /Commit
 if !errorlevel! neq 0 goto :E_UNMOUNT
-
-if %BOOTCOUNT%==1 goto :rebuild
-echo.
-echo ============================================================
-echo Mount boot.wim - index 2/%BOOTCOUNT%
-echo ============================================================
-!_dism2!:"!TMPDISM!" /Mount-Wim /WimFile:"!DVDDIR!\sources\boot.wim" /Index:2 /MountDir:"%BOOTMOUNTDIR%"
-if !errorlevel! neq 0 goto :E_MOUNT
-
-if %WINPE%==1 (
-  echo.
-  echo ============================================================
-  echo Add LPs to boot.wim - index 2/%BOOTCOUNT%
-  echo ============================================================
-  call :SbS "%BOOTMOUNTDIR%"
-  pushd "!WinPERoot!\!BOOTARCH!\WinPE_OCs"
-  if defined _PEM64 if /i !BOOTARCH!==amd64 (
-    !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PEM64! !_PEF64!
-    if exist "%BOOTMOUNTDIR%\Windows\servicing\Packages\WinPE-Setup-Package~31bf3856ad364e35~*.mum" (
-      !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PES64!
-      if %_build% geq 22557 call :MUIman
-      ) else (
-      call :WIMman 2
-    )
-    if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP64.log" /Add-Package !_PEX64!
-  )
-  if defined _PEM86 if /i !BOOTARCH!==x86 (
-    !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PEM86! !_PEF86!
-    if exist "%BOOTMOUNTDIR%\Windows\servicing\Packages\WinPE-Setup-Package~31bf3856ad364e35~*.mum" (
-      !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PES86!
-      if %_build% geq 22557 call :MUIman
-      ) else (
-      call :WIMman 2
-    )
-    if !SLIM! NEQ 1 !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIbootLP86.log" /Add-Package !_PEX86!
-  )
-  popd
-  if not !wimbit!==dual for /L %%j in (1,1,%LANGUAGES%) do (
-    xcopy "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\*.rtf" "!DVDDIR!\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
-    xcopy "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\*.rtf" "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\" /chryi %_Nul3%
-  )
-  echo.
-  echo ============================================================
-  echo Update language settings
-  echo ============================================================
-  echo.
-  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE% /Quiet
-  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE% /Quiet
-  if exist "%BOOTMOUNTDIR%\Windows\servicing\Packages\WinPE-Setup-Package~31bf3856ad364e35~*.mum" (
-  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Gen-LangINI /Distribution:"%BOOTMOUNTDIR%" /Quiet
-  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /Set-SetupUILang:%DEFAULTLANGUAGE% /Distribution:"%BOOTMOUNTDIR%" /Quiet
-  )
-  if %foundupdates%==0 (
-  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup
-  !_dism2!:"!TMPDISM!" /Image:"%BOOTMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup /ResetBase
-  )
-) else (
-  call :WIMman 1
-)
-if %foundupdates%==1 call Updates\W10UI.cmd 1 "%BOOTMOUNTDIR%" "!TMPUPDT!"
-if %_Debug% neq 0 @echo on
-cd /d "!WORKDIR!"
-if exist "%BOOTMOUNTDIR%\sources\setup.exe" call :boots
-call :cleanmanual "%BOOTMOUNTDIR%"
-echo.
-echo ============================================================
-echo Unmount boot.wim - index 2/%BOOTCOUNT%
-echo ============================================================
-!_dism2!:"!TMPDISM!" /Unmount-Wim /MountDir:"%BOOTMOUNTDIR%" /Commit
-if !errorlevel! neq 0 goto :E_UNMOUNT
+goto :eof
 
 :rebuild
 echo.
@@ -861,12 +723,13 @@ echo ============================================================
 if exist "!DVDDIR!\install.wim" move /y "!DVDDIR!\install.wim" "!DVDDIR!\sources" %_Nul1%
 if %NET35%==1 if exist "!DVDDIR!\sources\sxs\*netfx3*.cab" del /f /q "!DVDDIR!\sources\sxs\*netfx3*.cab" %_Nul3%
 xcopy "!DVDDIR!\efi\microsoft\boot\fonts\*" "!DVDDIR!\boot\fonts\" /chryi %_Nul3%
-if %_build% geq 19041 if %winbuild% lss 17133 if exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+if %_build% GEQ 19041 if %winbuild% lss 17133 if exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
 del /f /q %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
 if /i not %xOS%==x86 del /f /q %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
 )
 
-if %SLIM% EQU 1 goto :proceed
+:dvdmui
+if %SLIM% EQU 1 goto :dvdslm
 echo.
 echo ============================================================
 echo Add language files to distribution
@@ -885,8 +748,8 @@ call :ISOmui %%j
 )
 )
 
-:proceed
-if %SLIM% NEQ 1 goto :dvd
+:dvdslm
+if %SLIM% NEQ 1 goto :fulldvd
 echo.
 echo ============================================================
 echo Cleanup ISO payload
@@ -917,7 +780,7 @@ move /y "!DVDDIR!\install.wim" "!DVDDIR!\sources" %_Nul3%
 move /y "!DVDDIR!\lang.ini" "!DVDDIR!\sources" %_Nul3%
 move /y "!DVDDIR!\setup.exe" "!DVDDIR!\sources" %_Nul3%
 
-:dvd
+:fulldvd
 call :DATEISO
 if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
 if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
@@ -926,7 +789,7 @@ for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set isolab=!isolab:%%#=%%#!
 )
 set _label=%isover%.%isodate%.%isolab%
-if %_SrvEdt% equ 1 (set _label=%_label%_SERVER) else (set _label=%_label%_CLIENT)
+if %_SrvEdt% EQU 1 (set _label=%_label%_SERVER) else (set _label=%_label%_CLIENT)
 if %wimbit%==32 (set archl=X86) else if %wimbit%==64 (set archl=X64) else (set archl=X86-X64)
 set DVDLABEL=%isover%_%archl%_MUI
 pushd "!DVDDIR!"
@@ -942,7 +805,7 @@ echo.
 echo ============================================================
 echo Create ISO file
 echo ============================================================
-if exist ".\efi\microsoft\boot\efisys.bin" (
+if exist "efi\microsoft\boot\efisys.bin" (
 "!WORKDIR!\dism\cdimage.exe" -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -l"%DVDLABEL%" . "%DVDISO%"
 call set errcode=!errorlevel!
 ) else (
@@ -980,7 +843,7 @@ if /i !langid!==sr-latn-rs set lang=sr-latn
 if /i !langid!==zh-cn set lang=cn
 if /i !langid!==zh-hk set lang=hk
 if /i !langid!==zh-tw set lang=tw
-if /i !langid!==zh-tw if %_build% geq 14393 set lang=ct
+if /i !langid!==zh-tw if %_build% GEQ 14393 set lang=ct
 if defined _mui (set "_mui=!_mui!_!lang!") else (set "_mui=!lang!")
 )
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
@@ -1043,8 +906,11 @@ if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-SV*Enab
     set /a _fixEP=%_build%+%%i
   )
 )
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixEP=22631"
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment5Enablement-Package~*.mum" set "_fixEP=22632"
 set "wnt=31bf3856ad364e35_10"
 if exist "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_31bf3856ad364e35_11.*.manifest" set "wnt=31bf3856ad364e35_11"
+if exist "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_31bf3856ad364e35_12.*.manifest" set "wnt=31bf3856ad364e35_12"
 if exist "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" (
 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
 if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
@@ -1060,6 +926,7 @@ if %uupmaj%==19045 if /i "%uuplab:~0,2%"=="vb" set uuplab=22h2%uuplab:~2%
 if %uupmaj%==19046 if /i "%uuplab:~0,2%"=="vb" set uuplab=23h2%uuplab:~2%
 if %uupmaj%==20349 if /i "%uuplab:~0,2%"=="fe" set uuplab=22h2%uuplab:~2%
 if %uupmaj%==20350 if /i "%uuplab:~0,2%"=="fe" set uuplab=23h2%uuplab:~2%
+if %uupmaj%==22631 if /i "%uuplab:~0,2%"=="ni" (echo %uuplab% | find /i "beta" %_Nul1% || set uuplab=23h2%uuplab:~2%)
 goto :eof
 
 :detectLab
@@ -1074,15 +941,19 @@ goto :eof
 
 :legacyLab
 for /f "tokens=5 delims=.( " %%# in ('powershell -nop -c "(gi '%INSTALLMOUNTDIR%\Windows\system32\ntoskrnl.exe').VersionInfo.FileVersion" %_Nul6%') do set "%1=%%#"
-:: reg.exe load HKLM\uiSOFTWARE "%INSTALLMOUNTDIR%\Windows\system32\config\SOFTWARE" %_Nul1%
-:: for /f "skip=2 tokens=6 delims=. " %%# in ('"reg.exe query "HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLabEx" %_Nul6%') do set "%1=%%#"
-:: reg.exe save HKLM\uiSOFTWARE "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE2" %_Nul1%
-:: reg.exe unload HKLM\uiSOFTWARE %_Nul1%
-:: move /y "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE2" "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE" %_Nul1%
+goto :eof
+
+:datemum
+set "mumfile=%SystemRoot%\temp\update.mum"
+set "chkfile=!mumfile:\=\\!"
+if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
+if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
+del /f /q %SystemRoot%\temp\*.mum
+set "%1=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 goto :eof
 
 :boots
-if exist "%BOOTMOUNTDIR%\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" xcopy /CRUY "%BOOTMOUNTDIR%\sources" "!DVDDIR!\sources\" %_Nul3%
+if %_stp% EQU 1 xcopy /CRUY "%BOOTMOUNTDIR%\sources" "!DVDDIR!\sources\" %_Nul3%
 del /f /q "!DVDDIR!\sources\background.bmp" %_Nul3%
 del /f /q "!DVDDIR!\sources\xmllite.dll" %_Nul3%
 if exist "!DVDDIR!\setup.exe" copy /y "%BOOTMOUNTDIR%\setup.exe" "!DVDDIR!\" %_Nul3%
@@ -1093,13 +964,195 @@ set isover=%uupver%
 set isolab=%uuplab%
 goto :eof
 
-:datemum
-set "mumfile=%SystemRoot%\temp\update.mum"
-set "chkfile=!mumfile:\=\\!"
-if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
-if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
-del /f /q %SystemRoot%\temp\*.mum
-set "%1=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
+:remove
+if exist "!DVDDIR!\" rmdir /s /q "!DVDDIR!\" %_Nul3%
+if exist "!TEMPDIR!\" rmdir /s /q "!TEMPDIR!\" %_Nul3%
+if exist "!MOUNTDIR!\" rmdir /s /q "!MOUNTDIR!\" %_Nul3%
+if exist "Updates\msucab.txt" (
+  for /f %%# in (Updates\msucab.txt) do (
+  if exist "Updates\*%%~#*x86*.msu" if exist "Updates\*%%~#*x86*.cab" del /f /q "Updates\*%%~#*x86*.cab" %_Nul3%
+  if exist "Updates\*%%~#*x64*.msu" if exist "Updates\*%%~#*x64*.cab" del /f /q "Updates\*%%~#*x64*.cab" %_Nul3%
+  )
+  del /f /q Updates\msucab.txt
+)
+goto :eof
+
+:cleanmanual
+if exist "%~1\Windows\WinSxS\ManifestCache\*.bin" (
+takeown /f "%~1\Windows\WinSxS\ManifestCache\*.bin" /A %_Nul3%
+icacls "%~1\Windows\WinSxS\ManifestCache\*.bin" /grant *S-1-5-32-544:F %_Nul3%
+del /f /q "%~1\Windows\WinSxS\ManifestCache\*.bin" %_Nul3%
+)
+if exist "%~1\Windows\WinSxS\Temp\PendingDeletes\*" (
+takeown /f "%~1\Windows\WinSxS\Temp\PendingDeletes\*" /A %_Null%
+icacls "%~1\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F %_Null%
+del /f /q "%~1\Windows\WinSxS\Temp\PendingDeletes\*" %_Null%
+)
+if exist "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" (
+takeown /f "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" /R /A %_Null%
+icacls "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" /grant *S-1-5-32-544:F /T %_Null%
+del /s /f /q "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" %_Null%
+)
+if exist "%~1\Windows\inf\*.log" (
+del /f /q "%~1\Windows\inf\*.log" %_Nul3%
+)
+for /f "tokens=* delims=" %%# in ('dir /b /ad "%~1\Windows\CbsTemp\" %_Nul6%') do rmdir /s /q "%~1\Windows\CbsTemp\%%#\" %_Nul3%
+del /s /f /q "%~1\Windows\CbsTemp\*" %_Nul3%
+goto :eof
+
+:ISOmui
+set "_eal=!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!"
+set "_dsl=!DVDDIR!\sources\!LANGUAGE%1!"
+set "_ssl=setup\sources\!LANGUAGE%1!"
+"!_7z!" e ".\langs\!LPFILE%1!" -o"!_eal!" bootsect.exe.mui -r -aos %_Null%
+"!_7z!" e ".\langs\!LPFILE%1!" -o"!_eal!" credits.rtf -r -aos %_Null%
+"!_7z!" e ".\langs\!LPFILE%1!" -o"!_eal!" oobe_help_opt_in_details.rtf -r -aos %_Null%
+if exist "!_eal!\bootsect.exe.mui" (xcopy "!_eal!\bootsect.exe.mui" "!DVDDIR!\boot\!LANGUAGE%1!\" /chryi %_Nul3%)
+xcopy "!_eal!\!_ssl!\*" "!_dsl!\" /cheryi %_Nul3%
+if exist "!_eal!\!_ssl!\cli\*.mui" xcopy "!_eal!\!_ssl!\cli\*.mui" "!_dsl!\" /chryi %_Nul3%
+if %_SrvEdt% EQU 1 if exist "!_eal!\!_ssl!\svr\*.mui" xcopy "!_eal!\!_ssl!\svr\*.mui" "!_dsl!\" /chryi %_Nul3%
+if %_AszEdt% EQU 1 if exist "!_eal!\!_ssl!\asz\*.mui" xcopy "!_eal!\!_ssl!\asz\*.mui" "!_dsl!\" /chryi %_Nul3%
+rmdir /s /q "!_dsl!\dlmanifests" %_Nul3%
+rmdir /s /q "!_dsl!\etwproviders" %_Nul3%
+rmdir /s /q "!_dsl!\replacementmanifests" %_Nul3%
+rmdir /s /q "!_dsl!\cli" %_Nul3%
+rmdir /s /q "!_dsl!\tdb" %_Nul3%
+rmdir /s /q "!_dsl!\asz" %_Nul3%
+rmdir /s /q "!_dsl!\svr" %_Nul3%
+mkdir "!DVDDIR!\sources\dlmanifests\!LANGUAGE%1!"
+mkdir "!DVDDIR!\sources\replacementmanifests\!LANGUAGE%1!"
+xcopy "!_eal!\!_ssl!\dlmanifests\microsoft-windows-iasserver-migplugin\*" "!DVDDIR!\sources\dlmanifests\microsoft-windows-iasserver-migplugin\!LANGUAGE%1!\" /chryi %_Nul3%
+xcopy "!_eal!\!_ssl!\dlmanifests\microsoft-windows-shmig-dl\*" "!DVDDIR!\sources\dlmanifests\microsoft-windows-shmig-dl\!LANGUAGE%1!\" /chryi %_Nul3%
+xcopy "!_eal!\!_ssl!\dlmanifests\microsoft-windows-storagemigration\*" "!DVDDIR!\sources\dlmanifests\microsoft-windows-storagemigration\!LANGUAGE%1!\" /chryi %_Nul3%
+xcopy "!_eal!\!_ssl!\dlmanifests\microsoft-windows-sxs\*" "!DVDDIR!\sources\dlmanifests\microsoft-windows-sxs\!LANGUAGE%1!\" /chryi %_Nul3%
+xcopy "!_eal!\!_ssl!\replacementmanifests\microsoft-windows-offlinefiles-core\*" "!DVDDIR!\sources\replacementmanifests\microsoft-windows-offlinefiles-core\!LANGUAGE%1!\" /chryi %_Nul3%
+xcopy "!_eal!\!_ssl!\replacementmanifests\microsoft-windows-shmig\*" "!DVDDIR!\sources\replacementmanifests\microsoft-windows-shmig\!LANGUAGE%1!\" /chryi %_Nul3%
+xcopy "!_eal!\!_ssl!\replacementmanifests\microsoft-windows-storagemigration\*" "!DVDDIR!\sources\replacementmanifests\microsoft-windows-storagemigration\!LANGUAGE%1!\" /chryi %_Nul3%
+xcopy "!_eal!\!_ssl!\replacementmanifests\microsoft-windows-sxs\*" "!DVDDIR!\sources\replacementmanifests\microsoft-windows-sxs\!LANGUAGE%1!\" /chryi %_Nul3%
+xcopy "!_eal!\!_ssl!\etwproviders\*" "!DVDDIR!\sources\etwproviders\!LANGUAGE%1!\" /chryi %_Nul3%
+xcopy "!_eal!\!_ssl!\etwproviders\*" "!DVDDIR!\support\logging\!LANGUAGE%1!\" /chryi %_Nul3%
+copy /y "!_eal!\credits.rtf" "!_dsl!" %_Nul3%
+copy /y "!_eal!\oobe_help_opt_in_details.rtf" "!_dsl!" %_Nul3%
+copy /y "!_eal!\vofflps.rtf" "!_dsl!" %_Nul3%
+copy /y "!_eal!\vofflps.rtf" "!_dsl!\privacy.rtf" %_Nul3%
+attrib -A -S -H -I "!_dsl!" /S /D %_Nul3%
+goto :eof
+
+:WIMman1
+for /L %%j in (1,1,%LANGUAGES%) do (
+  if /i !LPARCH%%j!==!BOOTARCH! (
+    if not exist "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" mkdir "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!"
+    call :EAfonts %%j
+  )
+)
+goto :eof
+
+:WIMman2
+  echo.
+  echo ============================================================
+  echo Copy language files to boot.wim - index 2
+  echo ============================================================
+  echo.
+copy /y "!DVDDIR!\sources\lang.ini" "%BOOTMOUNTDIR%\sources" %_Nul1%
+for /L %%j in (1,1,%LANGUAGES%) do (
+  if /i !LPARCH%%j!==!BOOTARCH! (
+    echo !LANGUAGE%%j!
+    if not exist "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" mkdir "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!"
+    copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\vofflps.rtf" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
+    copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\reagent.adml" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
+    for %%G in %bootmui% do (
+    copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\%%G.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
+    )
+    attrib -A -S -H -I "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" /S /D %_Nul1%
+    if not %WINPE%==1 call :EAfonts %%j
+  )
+)
+if %_build% GEQ 22557 call :MUIman
+goto :eof
+
+:MUIman
+for /L %%j in (1,1,%LANGUAGES%) do (
+  if /i !LPARCH%%j!==!BOOTARCH! if not exist "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\w32uires.dll.mui" (
+    if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
+    if %_SrvEdt% EQU 1 if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\svr\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\svr\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
+    if %_AszEdt% EQU 1 if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\asz\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\asz\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
+  )
+)
+goto :eof
+
+:EAfonts
+set _yes=0
+for %%G in %EAlang% do if /i !LANGUAGE%1!==%%G (
+set _yes=1
+)
+if %_yes%==0 goto :eof
+set "_eal=!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!"
+set "_fntb=%BOOTMOUNTDIR%\Windows\Boot\Fonts"
+set "_fntw=%BOOTMOUNTDIR%\Windows\Fonts"
+echo.
+echo ============================================================
+echo Add Font Support: !LANGUAGE%1!
+echo ============================================================
+echo.
+if /i !LANGUAGE%1!==ja-jp (
+if not exist "!_fntb!\jpn_boot.ttf" (
+icacls "!_fntb!" /save "!TEMPDIR!\AclFile" %_Nul3%&takeown /f "!_fntb!" %_Nul3%&icacls "!_fntb!" /grant *S-1-5-32-544:F %_Nul3%
+copy /y "!_eal!\jpn_boot.ttf" "!_fntb!" %_Nul3%&copy /y "!_eal!\meiryo_boot.ttf" "!_fntb!" %_Nul3%&copy /y "!_eal!\meiryon_boot.ttf" "!_fntb!" %_Nul3%
+icacls "!_fntb!" /setowner "NT Service\TrustedInstaller" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot" /restore "!TEMPDIR!\AclFile" %_Nul3%
+)
+reg.exe load HKLM\OFFLINE "%BOOTMOUNTDIR%\Windows\System32\config\SOFTWARE" %_Nul1%&reg.exe import "!WORKDIR!\dism\EA\ja-jp.reg" %_Nul1%&reg.exe unload HKLM\OFFLINE %_Nul1%
+copy /y "!_eal!\meiryo.ttc" "!_fntw!" %_Nul3%&copy /y "!_eal!\msgothic.ttc" "!_fntw!" %_Nul3%
+goto :eof
+)
+if /i !LANGUAGE%1!==ko-kr (
+if not exist "!_fntb!\kor_boot.ttf" (
+icacls "!_fntb!" /save "!TEMPDIR!\AclFile" %_Nul3%&takeown /f "!_fntb!" %_Nul3%&icacls "!_fntb!" /grant *S-1-5-32-544:F %_Nul3%
+copy /y "!_eal!\kor_boot.ttf" "!_fntb!" %_Nul3%&copy /y "!_eal!\malgunn_boot.ttf" "!_fntb!" %_Nul3%&copy /y "!_eal!\malgun_boot.ttf" "!_fntb!" %_Nul3%
+icacls "!_fntb!" /setowner "NT Service\TrustedInstaller" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot" /restore "!TEMPDIR!\AclFile" %_Nul3%
+)
+reg.exe load HKLM\OFFLINE "%BOOTMOUNTDIR%\Windows\System32\config\SOFTWARE" %_Nul1%&reg.exe import "!WORKDIR!\dism\EA\ko-kr.reg" %_Nul1%&reg.exe unload HKLM\OFFLINE %_Nul1%
+copy /y "!_eal!\malgun.ttf" "!_fntw!" %_Nul3%&copy /y "!_eal!\gulim.ttc" "!_fntw!" %_Nul3%
+goto :eof
+)
+if /i !LANGUAGE%1!==zh-cn (
+if not exist "!_fntb!\chs_boot.ttf" (
+icacls "!_fntb!" /save "!TEMPDIR!\AclFile" %_Nul3%&takeown /f "!_fntb!" %_Nul3%&icacls "!_fntb!" /grant *S-1-5-32-544:F %_Nul3%
+copy /y "!_eal!\chs_boot.ttf" "!_fntb!" %_Nul3%&copy /y "!_eal!\msyhn_boot.ttf" "!_fntb!" %_Nul3%&copy /y "!_eal!\msyh_boot.ttf" "!_fntb!" %_Nul3%
+icacls "!_fntb!" /setowner "NT Service\TrustedInstaller" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot" /restore "!TEMPDIR!\AclFile" %_Nul3%
+)
+reg.exe load HKLM\OFFLINE "%BOOTMOUNTDIR%\Windows\System32\config\SOFTWARE" %_Nul1%&reg.exe import "!WORKDIR!\dism\EA\zh-cn.reg" %_Nul1%&reg.exe unload HKLM\OFFLINE %_Nul1%
+copy /y "!_eal!\msyh.ttc" "!_fntw!" %_Nul3%&copy /y "!_eal!\msyhl.ttc" "!_fntw!" %_Nul3%&copy /y "!_eal!\mingliub.ttc" "!_fntw!" %_Nul3%&copy /y "!_eal!\simsun.ttc" "!_fntw!" %_Nul3%
+goto :eof
+)
+if /i !LANGUAGE%1!==zh-hk (
+if not exist "!_fntb!\cht_boot.ttf" (
+icacls "!_fntb!" /save "!TEMPDIR!\AclFile" %_Nul3%&takeown /f "!_fntb!" %_Nul3%&icacls "!_fntb!" /grant *S-1-5-32-544:F %_Nul3%
+copy /y "!_eal!\cht_boot.ttf" "!_fntb!" %_Nul3%&copy /y "!_eal!\msjhn_boot.ttf" "!_fntb!" %_Nul3%&copy /y "!_eal!\msjh_boot.ttf" "!_fntb!" %_Nul3%
+icacls "!_fntb!" /setowner "NT Service\TrustedInstaller" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot" /restore "!TEMPDIR!\AclFile" %_Nul3%
+)
+reg.exe load HKLM\OFFLINE "%BOOTMOUNTDIR%\Windows\System32\config\SOFTWARE" %_Nul1%&reg.exe import "!WORKDIR!\dism\EA\zh-hk.reg" %_Nul1%&reg.exe unload HKLM\OFFLINE %_Nul1%
+copy /y "!_eal!\msjh.ttc" "!_fntw!" %_Nul3%&copy /y "!_eal!\mingliub.ttc" "!_fntw!" %_Nul3%&copy /y "!_eal!\simsun.ttc" "!_fntw!" %_Nul3%
+goto :eof
+)
+if /i !LANGUAGE%1!==zh-tw (
+if not exist "!_fntb!\cht_boot.ttf" (
+icacls "!_fntb!" /save "!TEMPDIR!\AclFile" %_Nul3%&takeown /f "!_fntb!" %_Nul3%&icacls "!_fntb!" /grant *S-1-5-32-544:F %_Nul3%
+copy /y "!_eal!\cht_boot.ttf" "!_fntb!" %_Nul3%&copy /y "!_eal!\msjhn_boot.ttf" "!_fntb!" %_Nul3%&copy /y "!_eal!\msjh_boot.ttf" "!_fntb!" %_Nul3%
+icacls "!_fntb!" /setowner "NT Service\TrustedInstaller" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot" /restore "!TEMPDIR!\AclFile" %_Nul3%
+)
+reg.exe load HKLM\OFFLINE "%BOOTMOUNTDIR%\Windows\System32\config\SOFTWARE" %_Nul1%&reg.exe import "!WORKDIR!\dism\EA\zh-tw.reg" %_Nul1%&reg.exe unload HKLM\OFFLINE %_Nul1%
+copy /y "!_eal!\msjh.ttc" "!_fntw!" %_Nul3%&copy /y "!_eal!\mingliub.ttc" "!_fntw!" %_Nul3%&copy /y "!_eal!\simsun.ttc" "!_fntw!" %_Nul3%
+goto :eof
+)
+goto :eof
+
+:SbS
+set savr=1
+if %_build% GEQ 18362 set savr=3
+reg.exe load HKLM\TEMPWIM "%~1\Windows\System32\Config\SOFTWARE" %_Nul3%
+reg.exe add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v DisableComponentBackups /t REG_DWORD /d 1 /f %_Nul3%
+reg.exe add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d %savr% /f %_Nul3%
+reg.exe unload HKLM\TEMPWIM %_Nul3%
 goto :eof
 
 :E_BIN
@@ -1181,204 +1234,14 @@ if exist "Updates\msucab.txt" (
 )
 goto :END
 
-:remove
-if exist "!DVDDIR!\" rmdir /s /q "!DVDDIR!" %_Nul3%
-if exist "!TEMPDIR!\" rmdir /s /q "!TEMPDIR!\" %_Nul3%
-if exist "!MOUNTDIR!\" rmdir /s /q "!MOUNTDIR!\" %_Nul3%
-if exist "Updates\msucab.txt" (
-  for /f %%# in (Updates\msucab.txt) do (
-  if exist "Updates\*%%~#*x86*.msu" if exist "Updates\*%%~#*x86*.cab" del /f /q "Updates\*%%~#*x86*.cab" %_Nul3%
-  if exist "Updates\*%%~#*x64*.msu" if exist "Updates\*%%~#*x64*.cab" del /f /q "Updates\*%%~#*x64*.cab" %_Nul3%
-  )
-  del /f /q Updates\msucab.txt
-)
-goto :eof
-
-:cleanmanual
-if exist "%~1\Windows\WinSxS\ManifestCache\*.bin" (
-takeown /f "%~1\Windows\WinSxS\ManifestCache\*.bin" /A %_Nul3%
-icacls "%~1\Windows\WinSxS\ManifestCache\*.bin" /grant *S-1-5-32-544:F %_Nul3%
-del /f /q "%~1\Windows\WinSxS\ManifestCache\*.bin" %_Nul3%
-)
-if exist "%~1\Windows\WinSxS\Temp\PendingDeletes\*" (
-takeown /f "%~1\Windows\WinSxS\Temp\PendingDeletes\*" /A %_Nul3%
-icacls "%~1\Windows\WinSxS\Temp\PendingDeletes\*" /grant *S-1-5-32-544:F %_Nul3%
-del /f /q "%~1\Windows\WinSxS\Temp\PendingDeletes\*" %_Nul3%
-)
-if exist "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" (
-takeown /f "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" /R /A %_Nul3%
-icacls "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" /grant *S-1-5-32-544:F /T %_Nul3%
-del /s /f /q "%~1\Windows\WinSxS\Temp\TransformerRollbackData\*" %_Nul3%
-)
-if exist "%~1\Windows\inf\*.log" (
-del /f /q "%~1\Windows\inf\*.log" %_Nul3%
-)
-for /f "tokens=* delims=" %%# in ('dir /b /ad "%~1\Windows\CbsTemp\" %_Nul6%') do rmdir /s /q "%~1\Windows\CbsTemp\%%#\" %_Nul3%
-del /s /f /q "%~1\Windows\CbsTemp\*" %_Nul3%
-goto :eof
-
-:ISOmui
-"!_7z!" e ".\langs\!LPFILE%1!" -o"!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!" bootsect.exe.mui -r -aos %_Null%
-"!_7z!" e ".\langs\!LPFILE%1!" -o"!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!" credits.rtf -r -aos %_Null%
-"!_7z!" e ".\langs\!LPFILE%1!" -o"!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!" oobe_help_opt_in_details.rtf -r -aos %_Null%
-if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\bootsect.exe.mui" (xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\bootsect.exe.mui" "!DVDDIR!\boot\!LANGUAGE%1!\" /chryi %_Nul3%)
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\*" "!DVDDIR!\sources\!LANGUAGE%1!\" /cheryi %_Nul3%
-if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\cli\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\cli\*.mui" "!DVDDIR!\sources\!LANGUAGE%1!\" /chryi %_Nul3%
-if %_SrvEdt% equ 1 if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\svr\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\svr\*.mui" "!DVDDIR!\sources\!LANGUAGE%1!\" /chryi %_Nul3%
-if %_AszEdt% equ 1 if exist "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\asz\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\asz\*.mui" "!DVDDIR!\sources\!LANGUAGE%1!\" /chryi %_Nul3%
-rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\dlmanifests" %_Nul3%
-rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\etwproviders" %_Nul3%
-rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\replacementmanifests" %_Nul3%
-rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\tdb" %_Nul3%
-rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\asz" %_Nul3%
-rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\cli" %_Nul3%
-rmdir /s /q "!DVDDIR!\sources\!LANGUAGE%1!\svr" %_Nul3%
-mkdir "!DVDDIR!\sources\dlmanifests\!LANGUAGE%1!"
-mkdir "!DVDDIR!\sources\replacementmanifests\!LANGUAGE%1!"
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\dlmanifests\microsoft-windows-iasserver-migplugin\*" "!DVDDIR!\sources\dlmanifests\microsoft-windows-iasserver-migplugin\!LANGUAGE%1!\" /chryi %_Nul3%
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\dlmanifests\microsoft-windows-shmig-dl\*" "!DVDDIR!\sources\dlmanifests\microsoft-windows-shmig-dl\!LANGUAGE%1!\" /chryi %_Nul3%
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\dlmanifests\microsoft-windows-storagemigration\*" "!DVDDIR!\sources\dlmanifests\microsoft-windows-storagemigration\!LANGUAGE%1!\" /chryi %_Nul3%
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\dlmanifests\microsoft-windows-sxs\*" "!DVDDIR!\sources\dlmanifests\microsoft-windows-sxs\!LANGUAGE%1!\" /chryi %_Nul3%
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\replacementmanifests\microsoft-windows-offlinefiles-core\*" "!DVDDIR!\sources\replacementmanifests\microsoft-windows-offlinefiles-core\!LANGUAGE%1!\" /chryi %_Nul3%
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\replacementmanifests\microsoft-windows-shmig\*" "!DVDDIR!\sources\replacementmanifests\microsoft-windows-shmig\!LANGUAGE%1!\" /chryi %_Nul3%
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\replacementmanifests\microsoft-windows-storagemigration\*" "!DVDDIR!\sources\replacementmanifests\microsoft-windows-storagemigration\!LANGUAGE%1!\" /chryi %_Nul3%
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\replacementmanifests\microsoft-windows-sxs\*" "!DVDDIR!\sources\replacementmanifests\microsoft-windows-sxs\!LANGUAGE%1!\" /chryi %_Nul3%
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\etwproviders\*" "!DVDDIR!\sources\etwproviders\!LANGUAGE%1!\" /chryi %_Nul3%
-xcopy "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\setup\sources\!LANGUAGE%1!\etwproviders\*" "!DVDDIR!\support\logging\!LANGUAGE%1!\" /chryi %_Nul3%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\credits.rtf" "!DVDDIR!\sources\!LANGUAGE%1!" %_Nul3%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\oobe_help_opt_in_details.rtf" "!DVDDIR!\sources\!LANGUAGE%1!" %_Nul3%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\vofflps.rtf" "!DVDDIR!\sources\!LANGUAGE%1!" %_Nul3%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\vofflps.rtf" "!DVDDIR!\sources\!LANGUAGE%1!\privacy.rtf" %_Nul3%
-attrib -A -S -H -I "!DVDDIR!\sources\!LANGUAGE%1!" /S /D %_Nul3%
-goto :eof
-
-:WIMman
-if "%1"=="1" (
-  echo.
-  echo ============================================================
-  echo Add language files to boot.wim - index 2
-  echo ============================================================
-  echo.
-)
-copy /y "!DVDDIR!\sources\lang.ini" "%BOOTMOUNTDIR%\sources" %_Nul1%
-for /L %%j in (1,1,%LANGUAGES%) do (
-  if /i !LPARCH%%j!==!BOOTARCH! (
-    if "%1"=="1" echo !LANGUAGE%%j!
-    if not exist "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" mkdir "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!"
-    copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\vofflps.rtf" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
-    copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\reagent.adml" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
-    for %%G in %bootmui% do (
-    copy /y "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\%%G.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" %_Nul3%
-    )
-    attrib -A -S -H -I "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!" /S /D %_Nul1%
-  )
-)
-if %_build% geq 22557 call :MUIman
-if "%1"=="1" for /L %%j in (1,1,%LANGUAGES%) do (
-  if /i !LPARCH%%j!==!BOOTARCH! (
-    call :EAfonts %%j
-  )
-)
-goto :eof
-
-:MUIman
-for /L %%j in (1,1,%LANGUAGES%) do (
-  if /i !LPARCH%%j!==!BOOTARCH! if not exist "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\w32uires.dll.mui" (
-    if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\cli\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
-    if %_SrvEdt% equ 1 if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\svr\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\svr\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
-    if %_AszEdt% equ 1 if exist "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\asz\*.mui" xcopy "!EXTRACTDIR!\!LPARCH%%j!\!LANGUAGE%%j!\setup\sources\!LANGUAGE%%j!\asz\*.mui" "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\" /chryi %_Nul3%
-  )
-)
-goto :eof
-
-:EAfonts
-if /i !LANGUAGE%1!==ja-jp (
-echo.
-echo ============================================================
-echo Add Font Support: !LANGUAGE%1!
-echo ============================================================
-echo.
-if not exist "%BOOTMOUNTDIR%\Windows\Boot\Fonts\jpn_boot.ttf" (
-icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /save "!TEMPDIR!\AclFile" %_Nul3%&takeown /f "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /grant *S-1-5-32-544:F %_Nul3%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\jpn_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\meiryo_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\meiryon_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%
-icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /setowner "NT Service\TrustedInstaller" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot" /restore "!TEMPDIR!\AclFile" %_Nul3%
-)
-reg.exe load HKLM\OFFLINE "%BOOTMOUNTDIR%\Windows\System32\config\SOFTWARE" %_Nul1%&reg.exe import "!WORKDIR!\dism\EA\ja-jp.reg" %_Nul1%&reg.exe unload HKLM\OFFLINE %_Nul1%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\meiryo.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msgothic.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%
-)
-if /i !LANGUAGE%1!==ko-kr (
-echo.
-echo ============================================================
-echo Add Font Support: !LANGUAGE%1!
-echo ============================================================
-echo.
-if not exist "%BOOTMOUNTDIR%\Windows\Boot\Fonts\kor_boot.ttf" (
-icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /save "!TEMPDIR!\AclFile" %_Nul3%&takeown /f "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /grant *S-1-5-32-544:F %_Nul3%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\kor_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\malgunn_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\malgun_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%
-icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /setowner "NT Service\TrustedInstaller" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot" /restore "!TEMPDIR!\AclFile" %_Nul3%
-)
-reg.exe load HKLM\OFFLINE "%BOOTMOUNTDIR%\Windows\System32\config\SOFTWARE" %_Nul1%&reg.exe import "!WORKDIR!\dism\EA\ko-kr.reg" %_Nul1%&reg.exe unload HKLM\OFFLINE %_Nul1%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\malgun.ttf" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\gulim.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%
-)
-if /i !LANGUAGE%1!==zh-cn (
-echo.
-echo ============================================================
-echo Add Font Support: !LANGUAGE%1!
-echo ============================================================
-echo.
-if not exist "%BOOTMOUNTDIR%\Windows\Boot\Fonts\chs_boot.ttf" (
-icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /save "!TEMPDIR!\AclFile" %_Nul3%&takeown /f "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /grant *S-1-5-32-544:F %_Nul3%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\chs_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyhn_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyh_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%
-icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /setowner "NT Service\TrustedInstaller" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot" /restore "!TEMPDIR!\AclFile" %_Nul3%
-)
-reg.exe load HKLM\OFFLINE "%BOOTMOUNTDIR%\Windows\System32\config\SOFTWARE" %_Nul1%&reg.exe import "!WORKDIR!\dism\EA\zh-cn.reg" %_Nul1%&reg.exe unload HKLM\OFFLINE %_Nul1%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyh.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msyhl.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\mingliub.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\simsun.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%
-)
-if /i !LANGUAGE%1!==zh-hk (
-echo.
-echo ============================================================
-echo Add Font Support: !LANGUAGE%1!
-echo ============================================================
-echo.
-if not exist "%BOOTMOUNTDIR%\Windows\Boot\Fonts\cht_boot.ttf" (
-icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /save "!TEMPDIR!\AclFile" %_Nul3%&takeown /f "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /grant *S-1-5-32-544:F %_Nul3%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\cht_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjhn_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%
-icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /setowner "NT Service\TrustedInstaller" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot" /restore "!TEMPDIR!\AclFile" %_Nul3%
-)
-reg.exe load HKLM\OFFLINE "%BOOTMOUNTDIR%\Windows\System32\config\SOFTWARE" %_Nul1%&reg.exe import "!WORKDIR!\dism\EA\zh-hk.reg" %_Nul1%&reg.exe unload HKLM\OFFLINE %_Nul1%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\mingliub.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\simsun.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%
-)
-if /i !LANGUAGE%1!==zh-tw (
-echo.
-echo ============================================================
-echo Add Font Support: !LANGUAGE%1!
-echo ============================================================
-echo.
-if not exist "%BOOTMOUNTDIR%\Windows\Boot\Fonts\cht_boot.ttf" (
-icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /save "!TEMPDIR!\AclFile" %_Nul3%&takeown /f "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /grant *S-1-5-32-544:F %_Nul3%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\cht_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjhn_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh_boot.ttf" "%BOOTMOUNTDIR%\Windows\Boot\Fonts" %_Nul3%
-icacls "%BOOTMOUNTDIR%\Windows\Boot\Fonts" /setowner "NT Service\TrustedInstaller" %_Nul3%&icacls "%BOOTMOUNTDIR%\Windows\Boot" /restore "!TEMPDIR!\AclFile" %_Nul3%
-)
-reg.exe load HKLM\OFFLINE "%BOOTMOUNTDIR%\Windows\System32\config\SOFTWARE" %_Nul1%&reg.exe import "!WORKDIR!\dism\EA\zh-tw.reg" %_Nul1%&reg.exe unload HKLM\OFFLINE %_Nul1%
-copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\msjh.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\mingliub.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%&copy /y "!EXTRACTDIR!\!LPARCH%1!\!LANGUAGE%1!\simsun.ttc" "%BOOTMOUNTDIR%\Windows\Fonts" %_Nul3%
-)
-goto :eof
-
-:SbS
-set savr=1
-if %_build% geq 18362 set savr=3
-reg.exe load HKLM\TEMPWIM "%~1\Windows\System32\Config\SOFTWARE" %_Nul3%
-reg.exe add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v DisableComponentBackups /t REG_DWORD /d 1 /f %_Nul3%
-reg.exe add HKLM\TEMPWIM\Microsoft\Windows\CurrentVersion\SideBySide\Configuration /v SupersededActions /t REG_DWORD /d %savr% /f %_Nul3%
-reg.exe unload HKLM\TEMPWIM %_Nul3%
-goto :eof
-
 :END
 echo.
 echo ============================================================
 echo %MESSAGE%
 echo ============================================================
 echo.
-if %_Debug% neq 0 (exit /b) else (echo Press 0 to exit.)
+if %_Debug% neq 0 goto :eof
+echo.
+echo Press 0 to exit.
 choice /c 0 /n
-if errorlevel 1 (exit /b) else (rem.)
+if errorlevel 1 (goto :eof) else (rem.)
