@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.30
+@set uiv=v10.31
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -178,12 +178,16 @@ if %_Debug% equ 0 (
   set "_Pause="
   set "_Goto=exit /b"
 copy /y nul "!_work!\#.rw" %_Null% && (if exist "!_work!\#.rw" del /f /q "!_work!\#.rw") || (set "_log=!_dsk!\%~n0")
+set "_suf="
+if %_Debug% neq 0 if exist "!_log!_Debug.log" (
+set /a _suf=%random%
+)
 echo.
-echo Running in Debug Mode...
+echo Running W10UI %uiv% in Debug Mode...
 echo The window will be closed when finished
 @echo on
 @prompt $G
-@call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug.log"&del "!_log!_tmp.log"
+@call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug!_suf!.log"&del "!_log!_tmp.log"
 @title %ComSpec%
 @exit /b
 
@@ -279,11 +283,14 @@ set "mountdir=!mountdir!_%random%"
 set "winremount=!winremount!_%random%"
 set "_cabdir=!_cabdir!_%random%"
 if defined cmd_target if defined cmd_tmpdir if exist "!cmd_target!\Windows\regedit.exe" (
+if %_Debug% neq 0 echo "!cmd_target!"
 set "Target=!cmd_target!"
 set "_cabdir=!cmd_tmpdir!"
 set "repo=!_work!"
-if defined cmd_source if exist "!cmd_source!\sxs\*netfx3*.cab" set "Net35Source=!cmd_source!\sxs"
-if defined cmd_source if exist "!cmd_source!\setup.exe" set _offdu=1
+if defined cmd_source (
+if exist "!cmd_source!\sxs\*netfx3*.cab" set "Net35Source=!cmd_source!\sxs"
+if exist "!cmd_source!\setup.exe" set _offdu=1
+)
 set AutoStart=1
 set _embd=1
 )
@@ -458,8 +465,10 @@ net stop wuauserv %_Nul3%
 del /f /q %systemroot%\Logs\CBS\* %_Nul3%
 )
 if not exist "%_dLog%\" mkdir "%_dLog%" %_Nul3%
-if %_embd% equ 0 del /f /q %_dLog%\* %_Nul3%
-if %_embd% equ 0 del /f /q %systemroot%\Logs\MoSetup\* %_Nul3%
+if %_embd% equ 0 (
+del /f /q %_dLog%\* %_Nul3%
+del /f /q %systemroot%\Logs\MoSetup\* %_Nul3%
+)
 if defined onlineclean (
 if exist "%SystemRoot%\WinSxS\pending.xml" (
   echo.
@@ -515,12 +524,12 @@ if %_offdu%==1 if not exist "!_cabdir!\du\" (
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!cmd_source!\replacementmanifests\" %_Nul3%
 )
 if exist "!mountdir!\sources\setup.exe" if not exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" (
-  if not exist "!_cabdir!\du\" mkdir "!_cabdir!\du" %_Nul3%
-  if not exist "!_cabdir!\du\" for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
+  if not exist "!_cabdir!\du\" (
+  mkdir "!_cabdir!\du" %_Nul3%
+  for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
+  )
   robocopy "!_cabdir!\du" "!mountdir!\sources" /XL /XX /XO %_Nul3%
   if exist "!_cabdir!\du\*.ini" xcopy /CRY "!_cabdir!\du\*.ini" "!mountdir!\sources\" %_Nul3%
-  xcopy /CRUY "!_cabdir!\du" "!cmd_source!\" %_Nul3%
-  if exist "!_cabdir!\du\*.ini" xcopy /CRY "!_cabdir!\du\*.ini" "!cmd_source!\" %_Nul3%
 )
 goto :fin
 
@@ -648,9 +657,8 @@ if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" for /f "tokens=* del
 if exist "!repo!\*Windows1*-KB*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.cab"') do (call set /a _sum+=1)
 set count=0&set isoupdate=&set tmpcmp=
 if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :cab2)
-if exist "!repo!\*Windows1*-KB*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=%%~n#"&call :cab2)
-if defined tmpcmp if exist "!repo!\Windows10.0-*%arch%_inout.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\Windows10.0-*%arch%_inout.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=%%~n#"&call :cab2)
-if defined tmpcmp if exist "!repo!\Windows11.0-*%arch%_inout.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\Windows11.0-*%arch%_inout.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=%%~n#"&call :cab2)
+if exist "!repo!\*Windows1*-KB*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.cab"') do (echo %%~nx#|findstr /i /c:"_inout.cab" %_Nul1% || (set "pkgn=%%~n#"&set "package=%%#"&set "dest=%%~n#"&call :cab2))
+if exist "!repo!\Windows1*-KB*%arch%_inout.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\Windows1*-KB*%arch%_inout.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=%%~n#"&call :cab2)
 goto :eof
 
 :cab1def
@@ -708,8 +716,8 @@ goto :msu1
 if %_embd% equ 0 (
 set "msucab=!msucab! %kbcab%"
 ) else (
+findstr /i /m "%kbcab%" cabmsu.txt %_Nul3% || echo %kbcab%>>cabmsu.txt
 if exist "!repo!\%kbcab%" goto :eof
-if not exist "!repo!\%kbcab%" findstr /i /m "%kbcab%" cabmsu.txt %_Nul3% || echo %kbcab%>>cabmsu.txt
 )
 echo %count%/%_msu%: %package%
 %_exp% -f:*Windows*.cab "!repo!\!package!" "!repo!" %_Null%
@@ -916,29 +924,31 @@ for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "%dest%\chck\update.
 if "%kbupd%"=="" goto :eof
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
 dir /b /on "%dest%\chck\*Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
-if exist "!repo!\%_ufn%" goto :eof
+if not exist "!repo!\%_ufn%" (
+move /y "%dest%\chck\%compkg%" "!repo!\%_ufn%" %_Nul3%
+)
 if %_embd% equ 0 (
 set "uuppkg=!uuppkg! %_ufn%"
 ) else (
-if exist "!repo!\%_ufn%" (del /f /q "%dest%\chck\%compkg%"&goto :eof)
 findstr /i /m "%_ufn%" cmpcab.txt %_Nul3% || echo %_ufn%>>cmpcab.txt
+if exist "!repo!\%_ufn%" if exist "%dest%\chck\%compkg%" del /f /q "%dest%\chck\%compkg%"
 )
-move /y "%dest%\chck\%compkg%" "!repo!\%_ufn%" %_Nul3%
 goto :eof
 
 :inrenupd
 for /f "tokens=2 delims=-" %%V in ('echo %compkg%') do set kbupd=%%V
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
 echo %compkg%| findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
-if exist "!repo!\%_ufn%" goto :eof
+if not exist "!repo!\%_ufn%" (
 call set /a _sum+=1
+move /y "%dest%\%compkg%" "!repo!\%_ufn%" %_Nul3%
+)
 if %_embd% equ 0 (
 set "tmpcmp=!tmpcmp! %_ufn%"
 ) else (
-if exist "!repo!\%_ufn%" (del /f /q "%dest%\%compkg%"&goto :eof)
 findstr /i /m "%_ufn%" cmpcab.txt %_Nul3% || echo %_ufn%>>cmpcab.txt
+if exist "!repo!\%_ufn%" if exist "%dest%\%compkg%" del /f /q "%dest%\%compkg%"
 )
-move /y "%dest%\%compkg%" "!repo!\%_ufn%" %_Nul3%
 goto :eof
 
 :inrenssu
@@ -950,15 +960,16 @@ for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "%dest%\update.mum"'
 if "%kbupd%"=="" goto :eof
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
 dir /b /on "%dest%\Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
-if exist "!repo!\%_ufn%" goto :eof
+if not exist "!repo!\%_ufn%" (
 call set /a _sum+=1
+move /y "%dest%\%compkg%" "!repo!\%_ufn%" %_Nul3%
+)
 if %_embd% equ 0 (
 set "tmpcmp=!tmpcmp! %_ufn%"
 ) else (
-if exist "!repo!\%_ufn%" (del /f /q "%dest%\%compkg%"&goto :eof)
 findstr /i /m "%_ufn%" cmpcab.txt %_Nul3% || echo %_ufn%>>cmpcab.txt
+if exist "!repo!\%_ufn%" if exist "%dest%\%compkg%" del /f /q "%dest%\%compkg%"
 )
-move /y "%dest%\%compkg%" "!repo!\%_ufn%" %_Nul3%
 goto :eof
 
 :datemum
@@ -1097,17 +1108,17 @@ echo ============================================================
 if defined safeos (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismWinPE.log" /Add-Package %safeos%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 )
 if defined secureboot (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismSecureBoot.log" /Add-Package %secureboot%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 )
 if defined ldr (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismUpdt.log" /Add-Package %ldr%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 )
 if defined fupdt (
 set "_SxsKey=%_EdgKey%"
@@ -1167,7 +1178,7 @@ if defined lcumsu for %%# in (%lcumsu%) do (
 echo.&echo %%#
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_winre.log" /Add-Package /PackagePath:"!repo!\%%#"
 )
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 :cuboot
 if %doboot%==0 goto :cuinstall
 set callclean=1
@@ -1176,7 +1187,7 @@ if defined lcumsu for %%# in (%lcumsu%) do (
 echo.&echo %%#
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_boot.log" /Add-Package /PackagePath:"!repo!\%%#"
 )
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 :cuinstall
 if %doinstall%==0 goto :cuwd
 set callclean=1
@@ -1185,7 +1196,7 @@ if defined lcumsu for %%# in (%lcumsu%) do (
 echo.&echo %%#
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU.log" /Add-Package /PackagePath:"!repo!\%%#"
 )
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 if %_build% equ 14393 if %wimfiles% equ 1 call :MeltdownSpectre
 if not exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" goto :cuwd
 if %online%==1 goto :cuwd
@@ -1217,7 +1228,7 @@ echo ============================================================
 echo Installing EdgeChromium update...
 echo ============================================================
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismEdge.log" /Add-Package %edge%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 )
 goto :eof
 
@@ -1834,6 +1845,7 @@ if exist "!_cabdir!\cmpcab.txt" (
   del /f /q cmpcab.txt
   cd /d "!_work!"
 )
+if %_embd% neq 0 goto :eof
 if exist "!_cabdir!\" (
 echo.
 echo ============================================================
@@ -1899,8 +1911,10 @@ if defined isoupdate if not exist "!mountdir!\sources\setup.exe" if not exist "!
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!target!\sources\replacementmanifests\" %_Nul3%
   )
 )
-if exist "!mountdir!\Windows\System32\Recovery\winre.wim" attrib -S -H -I "!mountdir!\Windows\System32\Recovery\winre.wim" %_Nul3%
-if %winre%==1 if exist "!mountdir!\Windows\System32\Recovery\winre.wim" if not exist "!_work!\winre.wim" call :winre
+if exist "!mountdir!\Windows\System32\Recovery\winre.wim" (
+attrib -S -H -I "!mountdir!\Windows\System32\Recovery\winre.wim" %_Nul3%
+if %winre%==1 if not exist "!_work!\winre.wim" call :winre
+)
 if exist "!mountdir!\Windows\System32\Recovery\winre.wim" if exist "!_work!\winre.wim" (
 echo.
 echo ============================================================
@@ -2076,10 +2090,10 @@ reg.exe add HKLM\!ksub!\%_sbs% /v SupersededActions /t REG_DWORD /d %savr% /f %_
 reg.exe add HKLM\!ksub!\%_sbs% /v DisableComponentBackups /t REG_DWORD /d 1 /f %_Nul1%
 reg.exe unload HKLM\!ksub! %_Nul1%
 if %_Debug% equ 0 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 )
 if %_Debug% equ 0 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 call :cleanmanual
 goto :eof
 )
@@ -2116,7 +2130,7 @@ reg.exe unload HKLM\!ksub! %_Nul1%
 if /i %xOS%==x86 if /i not %arch%==x86 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup %_Nul8%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 ) else (
 echo.
 echo ============================================================
@@ -2132,9 +2146,9 @@ reg.exe unload HKLM\!ksub! %_Nul1%
 if /i %xOS%==x86 if /i not %arch%==x86 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
 if %online%==0 if %_build% geq 16299 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup %_Nul8%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase %_Nul8%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul1%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
 )
 call :cleanmanual
 goto :eof
@@ -2213,10 +2227,10 @@ goto :eof
 
 :get_dpx
 if %_embd% equ 0 (
+echo.
 echo ============================================================
 echo Extracting dpx.dll file...
 echo ============================================================
-echo.
 )
 set _nat=0
 set _wow=0

@@ -92,6 +92,8 @@ if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 1 for /f "tokens=2 delims==" 
 if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" set _drv=%SystemDrive%
 if "!MOUNTDIR!"=="" set "MOUNTDIR=%_drv%\W10MUIMOUNT"
+set "MOUNTDIR=%MOUNTDIR:"=%"
+if "%MOUNTDIR:~-1%"=="\" set "MOUNTDIR=%MOUNTDIR:~0,-1%"
 set "INSTALLMOUNTDIR=%MOUNTDIR%\install"
 set "WINREMOUNTDIR=%MOUNTDIR%\winre"
 set EAlang=(ja-jp,ko-kr,zh-cn,zh-hk,zh-tw)
@@ -440,8 +442,13 @@ echo ============================================================
 echo.
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE% /Quiet
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE% /Quiet
-if %foundupdates% EQU 1 call Updates\W10UI.cmd 1 "%INSTALLMOUNTDIR%" "!TMPUPDT!"
-if %_Debug% neq 0 @echo on
+set _keep=1
+if %_i%==%imgcount% (
+if exist "!TEMPDIR!\WR\!WIMARCH%_i%!\winre.wim" set _keep=0
+if not %WINPE%==1 set _keep=0
+)
+if %foundupdates% EQU 1 call Updates\W10UI.cmd %_keep% "%INSTALLMOUNTDIR%" "!TMPUPDT!"
+if %_Debug% neq 0 (@echo on) else (@echo off)
 cd /d "!WORKDIR!"
 if exist "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" (
 attrib -S -H -I "%INSTALLMOUNTDIR%\Windows\System32\Recovery\winre.wim" %_Nul3%
@@ -518,8 +525,10 @@ if %foundupdates% NEQ 1 (
 !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup
 !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup /ResetBase
 )
-if %foundupdates% EQU 1 call Updates\W10UI.cmd 1 "%WINREMOUNTDIR%" "!TMPUPDT!"
-if %_Debug% neq 0 @echo on
+set _keep=1
+if %imgcount%==1 set _keep=0
+if %foundupdates% EQU 1 call Updates\W10UI.cmd %_keep% "%WINREMOUNTDIR%" "!TMPUPDT!"
+if %_Debug% neq 0 (@echo on) else (@echo off)
 cd /d "!WORKDIR!"
 call :cleanmanual "%WINREMOUNTDIR%"
 echo.

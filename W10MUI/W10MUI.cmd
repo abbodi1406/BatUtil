@@ -95,6 +95,8 @@ if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 1 for /f "tokens=2 delims==" 
 if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" set _drv=%SystemDrive%
 if "!MOUNTDIR!"=="" set "MOUNTDIR=%_drv%\W10MUIMOUNT"
+set "MOUNTDIR=%MOUNTDIR:"=%"
+if "%MOUNTDIR:~-1%"=="\" set "MOUNTDIR=%MOUNTDIR:~0,-1%"
 set "INSTALLMOUNTDIR=%MOUNTDIR%\install"
 set "WINREMOUNTDIR=%MOUNTDIR%\winre"
 set "BOOTMOUNTDIR=%MOUNTDIR%\boot"
@@ -488,7 +490,7 @@ if %_i%==%imgcount% (
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Set-SetupUILang:%DEFAULTLANGUAGE% /Distribution:"!DVDDIR!" /Quiet
 )
 if %foundupdates% EQU 1 call Updates\W10UI.cmd 1 "%INSTALLMOUNTDIR%" "!TMPUPDT!" "!DVDDIR!\sources"
-if %_Debug% neq 0 @echo on
+if %_Debug% neq 0 (@echo on) else (@echo off)
 cd /d "!WORKDIR!"
 if not defined isomaj for /f "tokens=6,7 delims=_." %%a in ('dir /b /a:-d /od "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%a.%%b&set isomaj=%%a&set isomin=%%b)
 if not defined isolab (
@@ -605,7 +607,7 @@ if %foundupdates% NEQ 1 (
 !_dism2!:"!TMPDISM!" /Image:"%WINREMOUNTDIR%" /LogPath:"%_dLog%\MUIwinpeClean.log" /Cleanup-Image /StartComponentCleanup /ResetBase
 )
 if %foundupdates% EQU 1 call Updates\W10UI.cmd 1 "%WINREMOUNTDIR%" "!TMPUPDT!"
-if %_Debug% neq 0 @echo on
+if %_Debug% neq 0 (@echo on) else (@echo off)
 cd /d "!WORKDIR!"
 call :cleanmanual "%WINREMOUNTDIR%"
 echo.
@@ -692,8 +694,10 @@ if %_i%==2 if not %wimbit%==96 for /L %%j in (1,1,%LANGUAGES%) do (
   copy /y "%BOOTMOUNTDIR%\sources\!LANGUAGE%%j!\vofflps.rtf" "!DVDDIR!\sources\!LANGUAGE%%j!\privacy.rtf" %_Nul3%
 )
 :contboot
-if %foundupdates% EQU 1 call Updates\W10UI.cmd 1 "%BOOTMOUNTDIR%" "!TMPUPDT!"
-if %_Debug% neq 0 @echo on
+set _keep=1
+if %_i%==%BOOTCOUNT% set _keep=0
+if %foundupdates% EQU 1 call Updates\W10UI.cmd %_keep% "%BOOTMOUNTDIR%" "!TMPUPDT!"
+if %_Debug% neq 0 (@echo on) else (@echo off)
 cd /d "!WORKDIR!"
 if exist "%BOOTMOUNTDIR%\sources\setup.exe" (
 if %_i%==1 copy /y "%BOOTMOUNTDIR%\sources\setup.exe" "!DVDDIR!\sources" %_Nul3%
