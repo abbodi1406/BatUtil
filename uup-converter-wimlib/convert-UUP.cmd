@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v93
+@set uivr=v94
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -149,7 +149,14 @@ set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
 set _drv=%~d0
 set "_cabdir=%_drv%\W10UIuup"
-if "%_work:~0,2%"=="\\" set "_cabdir=%~dp0temp\W10UIuup"
+set _UNC=0
+if "%_work:~0,2%"=="\\" (
+set _UNC=1
+) else (
+net use %_drv% %_Null%
+if not errorlevel 1 set _UNC=1
+)
+if %_UNC% EQU 1 set "_cabdir=%~dp0temp\W10UIuup"
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
 set psfnet=0
@@ -1137,9 +1144,8 @@ if %revmaj%==19042 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 if %revmaj%==19043 if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
 if %revmaj%==19044 if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
 if %revmaj%==19045 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
-if %revmaj%==19046 if /i "%branch:~0,2%"=="vb" set branch=23h2%branch:~2%
 if %revmaj%==20349 if /i "%branch:~0,2%"=="fe" set branch=22h2%branch:~2%
-if %revmaj%==20350 if /i "%branch:~0,2%"=="fe" set branch=23h2%branch:~2%
+if %revmaj%==22631 if /i "%branch:~0,2%"=="ni" (echo %branch% | find /i "beta" %_Nul1% || set branch=23h2%branch:~2%)
 if %uupmin% lss %revmin% (
 set uupver=%revver%
 set uupmin=%revmin%
@@ -1657,20 +1663,16 @@ if %uupmaj%==19045 (
 if /i "%xdubranch:~0,2%"=="vb" set xdubranch=22h2%xdubranch:~2%
 if %xduver:~0,5%==19041 set xduver=19045%xduver:~5%
 )
-if %uupmaj%==19046 (
-if /i "%xdubranch:~0,2%"=="vb" set xdubranch=23h2%xdubranch:~2%
-if %xduver:~0,5%==19041 set xduver=19046%xduver:~5%
-)
 if %uupmaj%==20349 (
 if /i "%xdubranch:~0,2%"=="fe" set xdubranch=22h2%xdubranch:~2%
 if %xduver:~0,5%==20348 set xduver=20349%xduver:~5%
 )
-if %uupmaj%==20350 (
-if /i "%xdubranch:~0,2%"=="fe" set xdubranch=23h2%xdubranch:~2%
-if %xduver:~0,5%==20348 set xduver=20350%xduver:~5%
-)
 if %uupmaj%==%_fixSV% if %_build% geq 21382 (
 if %xduver:~0,5%==%_build% set xduver=%_fixSV%%xduver:~5%
+)
+if %uupmaj%==22631 (
+if /i "%xdubranch:~0,2%"=="ni" (echo %xdubranch% | find /i "beta" %_Nul1% || set xdubranch=23h2%xdubranch:~2%)
+if %xduver:~0,5%==22621 set xduver=22631%xduver:~5%
 )
 set _label=%xduver%.%xdudate%.%xdubranch%
 call :setlabel
@@ -1694,9 +1696,7 @@ if exist "!_cabdir!\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=
 if exist "!_cabdir!\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!_cabdir!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
 if exist "!_cabdir!\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
-if exist "!_cabdir!\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=19046"
 if exist "!_cabdir!\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
-if exist "!_cabdir!\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
 if exist "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
   for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
@@ -1706,8 +1706,7 @@ if exist "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "token
   )
 )
 if exist "!_cabdir!\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
-if exist "!_cabdir!\Microsoft-Windows-SV2Moment5Enablement-Package~*.mum" set "_fixSV=22632"&set "_fixEP=22632"
-if exist "!_cabdir!\Microsoft-Windows-SV2Moment6Enablement-Package~*.mum" set "_fixSV=22633"&set "_fixEP=22633"
+if exist "!_cabdir!\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
 set tmpcmp=
 if %_build% geq 21382 if exist "!_UUP!\*Windows1*-KB*.msu" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\*Windows1*-KB*.msu"') do (set "packn=%%~n#"&set "packf=%%#"&call :external_msu)
 if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\SSU-*-*.cab"') do (set "packn=%%~n#"&set "packf=%%#"&call :external_cab)
@@ -1887,9 +1886,8 @@ if %uupmaj%==19042 if /i "%branch:~0,2%"=="vb" set branch=20h2%branch:~2%
 if %uupmaj%==19043 if /i "%branch:~0,2%"=="vb" set branch=21h1%branch:~2%
 if %uupmaj%==19044 if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
 if %uupmaj%==19045 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
-if %uupmaj%==19046 if /i "%branch:~0,2%"=="vb" set branch=23h2%branch:~2%
 if %uupmaj%==20349 if /i "%branch:~0,2%"=="fe" set branch=22h2%branch:~2%
-if %uupmaj%==20350 if /i "%branch:~0,2%"=="fe" set branch=23h2%branch:~2%
+if %uupmaj%==22631 if /i "%branch:~0,2%"=="ni" (echo %branch% | find /i "beta" %_Nul1% || set branch=23h2%branch:~2%)
 
 set _label=%uupver%.%isodate%.%branch%
 call :setlabel
@@ -2047,23 +2045,18 @@ if /i "%isobranch:~0,2%"=="vb" set isobranch=22h2%isobranch:~2%
 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
 if %iduver:~0,5%==19041 set iduver=19045%iduver:~5%
 )
-if %isomaj%==19046 (
-if /i "%isobranch:~0,2%"=="vb" set isobranch=23h2%isobranch:~2%
-if /i "%branch:~0,2%"=="vb" set branch=23h2%branch:~2%
-if %iduver:~0,5%==19041 set iduver=19046%iduver:~5%
-)
 if %isomaj%==20349 (
 if /i "%isobranch:~0,2%"=="fe" set isobranch=22h2%isobranch:~2%
 if /i "%branch:~0,2%"=="fe" set branch=22h2%branch:~2%
 if %iduver:~0,5%==20348 set iduver=20349%iduver:~5%
 )
-if %isomaj%==20350 (
-if /i "%isobranch:~0,2%"=="fe" set isobranch=23h2%isobranch:~2%
-if /i "%branch:~0,2%"=="fe" set branch=23h2%branch:~2%
-if %iduver:~0,5%==20348 set iduver=20350%iduver:~5%
-)
 if %isomaj%==%_fixSV% if %_build% geq 21382 (
 if %iduver:~0,5%==%_build% set iduver=%_fixSV%%iduver:~5%
+)
+if %isomaj%==22631 (
+if /i "%isobranch:~0,2%"=="ni" (echo %isobranch% | find /i "beta" %_Nul1% || set isobranch=23h2%isobranch:~2%)
+if /i "%branch:~0,2%"=="ni" (echo %branch% | find /i "beta" %_Nul1% || set branch=23h2%branch:~2%)
+if %iduver:~0,5%==22621 set iduver=22631%iduver:~5%
 )
 set _label=%isover%.%isodate%.%isobranch%
 if /i not "%branch%"=="WinBuild" if /i not "%branch%"=="GitEnlistment" if /i not "%idudate%"=="winpbld" (set _label=%iduver%.%idudate%.%branch%)
@@ -2214,9 +2207,7 @@ if exist "!dest!\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=190
 if exist "!dest!\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!dest!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
 if exist "!dest!\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
-if exist "!dest!\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=19046"
 if exist "!dest!\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
-if exist "!dest!\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
 if exist "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
   for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
@@ -2226,8 +2217,7 @@ if exist "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3
   )
 )
 if exist "!dest!\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
-if exist "!dest!\Microsoft-Windows-SV2Moment5Enablement-Package~*.mum" set "_fixSV=22632"&set "_fixEP=22632"
-if exist "!dest!\Microsoft-Windows-SV2Moment6Enablement-Package~*.mum" set "_fixSV=22633"&set "_fixEP=22633"
+if exist "!dest!\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
 if %_build% geq 18362 if exist "!dest!\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[Enablement / EdgeChromium]"
