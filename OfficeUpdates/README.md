@@ -2,7 +2,7 @@
 
 * An automated script to install MSI-based Office updates directly from global exe or cab files
 
-* Support Office 2010 SP2, Office 2013 SP1, Office 2016
+* Support Office 2007 + SP3, Office 2010 + SP2, Office 2013 + SP1, Office 2016
 
 * You can obtain the update files from [WHDownloader](https://forums.mydigitallife.net/threads/44645) or [Microsoft Docs](https://docs.microsoft.com/en-us/officeupdates)
 

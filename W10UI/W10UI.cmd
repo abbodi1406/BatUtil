@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.31
+@set uiv=v10.32
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -850,9 +850,7 @@ if exist "checker\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19
 if exist "checker\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "checker\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
 if exist "checker\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
-if exist "checker\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=19046"
 if exist "checker\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
-if exist "checker\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "checker\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
 if exist "checker\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "checker\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
   for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
@@ -861,8 +859,7 @@ if exist "checker\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=
   )
 )
 if exist "checker\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixEP=22631"
-if exist "checker\Microsoft-Windows-SV2Moment5Enablement-Package~*.mum" set "_fixEP=22632"
-if exist "checker\Microsoft-Windows-SV2Moment6Enablement-Package~*.mum" set "_fixEP=22633"
+if exist "checker\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=22631"
 if %_build% geq 18362 if exist "checker\*enablement-package*.mum" (
 %_exp% -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[Enablement / EdgeChromium]"
@@ -1959,9 +1956,7 @@ if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-20H2Enablement
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=19046"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-ASOSFe23H2Enablement-Package~*.mum" set "_fixEP=20350"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
   for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
@@ -1969,8 +1964,7 @@ if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-
   )
 )
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixEP=22631"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment5Enablement-Package~*.mum" set "_fixEP=22632"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment6Enablement-Package~*.mum" set "_fixEP=22633"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=22631"
 set "wnt=31bf3856ad364e35_10"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_31bf3856ad364e35_11.*.manifest" set "wnt=31bf3856ad364e35_11"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_31bf3856ad364e35_12.*.manifest" set "wnt=31bf3856ad364e35_12"
@@ -1986,9 +1980,8 @@ if %uupmaj%==19042 if /i "%uuplab:~0,2%"=="vb" set uuplab=20h2%uuplab:~2%
 if %uupmaj%==19043 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h1%uuplab:~2%
 if %uupmaj%==19044 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h2%uuplab:~2%
 if %uupmaj%==19045 if /i "%uuplab:~0,2%"=="vb" set uuplab=22h2%uuplab:~2%
-if %uupmaj%==19046 if /i "%uuplab:~0,2%"=="vb" set uuplab=23h2%uuplab:~2%
 if %uupmaj%==20349 if /i "%uuplab:~0,2%"=="fe" set uuplab=22h2%uuplab:~2%
-if %uupmaj%==20350 if /i "%uuplab:~0,2%"=="fe" set uuplab=23h2%uuplab:~2%
+if %uupmaj%==22631 if /i "%uuplab:~0,2%"=="ni" (echo %uuplab% | find /i "beta" %_Nul1% || set uuplab=23h2%uuplab:~2%)
 goto :eof
 
 :detectLab

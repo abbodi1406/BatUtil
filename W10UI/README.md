@@ -189,6 +189,9 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 
 <details><summary>changelog</summary>
 
+10.32:  
+- Updated detection for Windows 11 23H2 Enablement Package
+
 10.31:  
 - Fixed Windows 10 Combined LCU integration for install.wim when used via W10MUI
 

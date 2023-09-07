@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v63
+@set uivr=v64
 @echo off
 :: ### Auto processing option ###
 :: 1 - create ISO with install.wim
@@ -668,12 +668,12 @@ if %revmaj%==19045 (
 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
 if %uupver:~0,5%==19041 set uupver=19045%uupver:~5%
 )
-if %revmaj%==19046 (
-if /i "%branch:~0,2%"=="vb" set branch=23h2%branch:~2%
-if %uupver:~0,5%==19041 set uupver=19046%uupver:~5%
-)
 if %uupmaj%==%_fixSV% if %_build% geq 21382 (
 if %uupver:~0,5%==%_build% set uupver=%_fixSV%%uupver:~5%
+)
+if %revmaj%==22631 (
+if /i "%branch:~0,2%"=="ni" set branch=23h2%branch:~2%
+if %uupver:~0,5%==22621 set uupver=22631%uupver:~5%
 )
 if %uupmin% lss %revmin% (
 set uupver=%revver%
@@ -701,6 +701,7 @@ rmdir /s /q bin\temp\
 
 set _rfr=refresh
 set _rsr=release_svc_%_rfr%
+if %revmaj%==22631 (set _label=%revver%.%_time%.23h2_%_rsr%&set branch=23h2_%_rsr%)
 if %revver%==22621.1702 (set _label=22621.1702.230505-1222.ni_%_rsr%&set branch=ni_%_rsr%&set ISOnameESD=0)
 if %revver%==22621.525 (set _label=22621.525.220925-0207.ni_%_rsr%&set branch=ni_%_rsr%&set ISOnameESD=0)
 if %revver%==22621.382 (set _label=22621.382.220806-0833.ni_%_rsr%&set branch=ni_%_rsr%&set ISOnameESD=0)
