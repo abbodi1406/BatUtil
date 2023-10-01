@@ -185,6 +185,14 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 7.4:  
+- Fixed detection for already installed Rollup  
+- Enhanced detection for already installed SSU 2022-04 and later  
+- Added detection for required SSU version (for ESU updates)  
+- Enhanced "Cleanup System Image" behavior for current online OS:  
+RunOnce_AfterRestart_DismCleanup.cmd script will be created on desktop  
+if above script is not executed, WHD-W81UI.cmd will prompt once to run or skip cleanup
+
 * 7.3:  
 fixed installing latest SSU for images without KB2919355
 
