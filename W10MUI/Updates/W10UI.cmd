@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.35
+@set uiv=v10.36
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -303,15 +303,23 @@ if not "!mountdir!"=="!mountdir: =!" set "mountdir=!mountdir: =!"
 set "mountdir=!mountdir!_%random%"
 set "winremount=!winremount!_%random%"
 set "_cabdir=!_cabdir!_%random%"
+set cmd_repo=1
 if defined cmd_target if defined cmd_tmpdir if exist "!cmd_target!\Windows\regedit.exe" (
+if not "!repo!"=="!_work!" (if not exist "!repo!\*Windows1*-KB*.*" if not exist "!repo!\SSU-*-*.*" set "repo=!_work!")
+if not exist "!repo!\*Windows1*-KB*.*" if not exist "!repo!\SSU-*-*.*" set cmd_repo=0
+)
+if defined cmd_target if defined cmd_tmpdir if exist "!cmd_target!\Windows\regedit.exe" if %cmd_repo%==1 (
 if %_Debug% neq 0 echo "!cmd_target!"
 set "Target=!cmd_target!"
 set "_cabdir=!cmd_tmpdir!"
-set "repo=!_work!"
-if defined cmd_source (
-if exist "!cmd_source!\sxs\*netfx3*.cab" set "Net35Source=!cmd_source!\sxs"
-if exist "!cmd_source!\setup.exe" set _offdu=1
-)
+if defined cmd_source if exist "!cmd_source!\setup.exe" (
+  if exist "!cmd_source!\sxs\*netfx3*.cab" set "Net35Source=!cmd_source!\sxs"
+  set _offdu=1
+  cd /d "!cmd_source!"
+  cd ..
+  set "cmd_dvd=!cd!"
+  cd /d "!_work!"
+  )
 set AutoStart=1
 set _embd=1
 )
@@ -324,6 +332,7 @@ echo.
 rmdir /s /q "!_cabdir!\" %_Nul1%
 )
 set _init=1
+if %_Debug% equ 0 if %autostart% neq 0 set "_Goto=exit /b"
 
 :checktarget
 set tmpssu=
@@ -535,6 +544,23 @@ goto :fin
 if %offline%==0 goto :igwim
 call :doupdate
 if %net35%==1 call :enablenet35
+if %_offdu%==1 if not exist "!_cabdir!\cmd_dvd\#.tag" (
+  mkdir "!_cabdir!\cmd_dvd" %_Nul3%
+  copy /y nul "!_cabdir!\cmd_dvd\#.tag" %_Nul3%
+  if %UpdtBootFiles% equ 1 (
+  if exist "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" if exist "!cmd_dvd!\efi\microsoft\boot\winsipolicy.p7b" copy /y "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" "!cmd_dvd!\efi\microsoft\boot\" %_Nul3%
+  if exist "!mountdir!\Windows\Boot\EFI\CIPolicies\" if exist "!cmd_dvd!\efi\microsoft\boot\cipolicies\" xcopy /CERY "!mountdir!\Windows\Boot\EFI\CIPolicies" "!cmd_dvd!\efi\microsoft\boot\cipolicies\" %_Nul3%
+  for %%i in (efisys.bin,efisys_noprompt.bin) do if exist "!mountdir!\Windows\Boot\DVD\EFI\en-US\%%i" (copy /y "!mountdir!\Windows\Boot\DVD\EFI\en-US\%%i" "!cmd_dvd!\efi\microsoft\boot\" %_Nul1%)
+  if /i not %arch%==arm64 (
+    copy /y "!mountdir!\Windows\Boot\PCAT\bootmgr" "!cmd_dvd!\" %_Nul1%
+    copy /y "!mountdir!\Windows\Boot\EFI\memtest.efi" "!cmd_dvd!\efi\microsoft\boot\" %_Nul1%
+    copy /y "!mountdir!\Windows\Boot\PCAT\memtest.exe" "!cmd_dvd!\boot\" %_Nul1%
+    )
+  )
+  if exist "!cmd_dvd!\efi\boot\bootmgfw.efi" copy /y "!mountdir!\Windows\Boot\EFI\bootmgfw.efi" "!cmd_dvd!\efi\boot\bootmgfw.efi" %_Nul1%
+  copy /y "!mountdir!\Windows\Boot\EFI\bootmgfw.efi" "!cmd_dvd!\efi\boot\%efifile%" %_Nul1%
+  copy /y "!mountdir!\Windows\Boot\EFI\bootmgr.efi" "!cmd_dvd!\" %_Nul1%
+)
 if not defined isoupdate goto :fin
 if %_offdu%==1 if not exist "!_cabdir!\du\" (
   mkdir "!_cabdir!\du" %_Nul3%
@@ -888,7 +914,7 @@ if exist "checker\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19
 if exist "checker\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
 if exist "checker\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
 if exist "checker\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
-if exist "checker\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "checker\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
+if exist "checker\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "checker\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum"') do (
   for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
     set /a _fixEP=%_build%+%%i
     )
@@ -896,6 +922,7 @@ if exist "checker\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=
 )
 if exist "checker\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixEP=22631"
 if exist "checker\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=22631"
+if exist "checker\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixEP=22635"
 if %_build% geq 18362 if exist "checker\*enablement-package*.mum" (
 %_exp% -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[Enablement / EdgeChromium]"
@@ -1913,11 +1940,16 @@ cd /d "!_cabdir!"
 call :doupdate
 if %net35%==1 call :enablenet35
 if %dvd%==1 (
-if not defined isomaj for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
 if not defined isolab if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 if %_build% geq 15063 (call :detectLab isolab) else (call :legacyLab isolab)
-if %UpdtBootFiles% equ 1 if exist "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" if exist "!target!\efi\microsoft\boot\winsipolicy.p7b" copy /y "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" "!target!\efi\microsoft\boot\" %_Nul3%
-if %UpdtBootFiles% equ 1 if exist "!mountdir!\Windows\Boot\EFI\CIPolicies\" if exist "!target!\efi\microsoft\boot\cipolicies\" xcopy /CERY "!mountdir!\Windows\Boot\EFI\CIPolicies" "!target!\efi\microsoft\boot\cipolicies\" %_Nul3%
+if %UpdtBootFiles% equ 1 (
+  if exist "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" if exist "!target!\efi\microsoft\boot\winsipolicy.p7b" copy /y "!mountdir!\Windows\Boot\EFI\winsipolicy.p7b" "!target!\efi\microsoft\boot\" %_Nul3%
+  if exist "!mountdir!\Windows\Boot\EFI\CIPolicies\" if exist "!target!\efi\microsoft\boot\cipolicies\" xcopy /CERY "!mountdir!\Windows\Boot\EFI\CIPolicies" "!target!\efi\microsoft\boot\cipolicies\" %_Nul3%
+  )
+)
+if not defined isomaj (
+for /f "tokens=6,7 delims=_." %%i in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
+if %_build% geq 15063 (call :detectRev)
 )
 if %_actEP% equ 0 if exist "!mountdir!\Windows\Servicing\Packages\microsoft-windows-*enablement-package~*.mum" if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" call :detectEP
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
@@ -2000,9 +2032,8 @@ goto :eof
 
 :detectEP
 set uupmaj=
-set _fixEP=0
 set _actEP=1
-set /a _fixSV=%_build%+1
+if %_fixEP% equ 0 (
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-1909Enablement-Package~*.mum" set "_fixEP=18363"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
@@ -2010,13 +2041,15 @@ if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H2Enablement
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum"') do (
   for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
     set /a _fixEP=%_build%+%%i
   )
 )
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixEP=22631"
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=22631"
+if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixEP=22635"
+)
 set "wnt=31bf3856ad364e35_10"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_31bf3856ad364e35_11.*.manifest" set "wnt=31bf3856ad364e35_11"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_31bf3856ad364e35_12.*.manifest" set "wnt=31bf3856ad364e35_12"
@@ -2026,14 +2059,39 @@ if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "!moun
 )
 if not defined uupmaj goto :eof
 if not defined uuplab (if defined isolab (set "uuplab=%isolab%") else (call :detectLab uuplab))
-if %uupmaj%==18363 if /i "%uuplab:~0,4%"=="19h1" set uuplab=19h2%uuplab:~4%
-if %uupmaj%==19041 if /i "%uuplab:~0,2%"=="vb" set uuplab=20h1%uuplab:~2%
-if %uupmaj%==19042 if /i "%uuplab:~0,2%"=="vb" set uuplab=20h2%uuplab:~2%
-if %uupmaj%==19043 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h1%uuplab:~2%
-if %uupmaj%==19044 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h2%uuplab:~2%
-if %uupmaj%==19045 if /i "%uuplab:~0,2%"=="vb" set uuplab=22h2%uuplab:~2%
-if %uupmaj%==20349 if /i "%uuplab:~0,2%"=="fe" set uuplab=22h2%uuplab:~2%
-if %uupmaj%==22631 if /i "%uuplab:~0,2%"=="ni" (echo %uuplab% | find /i "beta" %_Nul1% || set uuplab=23h2%uuplab:~2%)
+call :fixLab %uupmaj% %uuplab% uuplab
+goto :eof
+
+:fixLab
+set "_tl=%2"
+if %1==18363 if /i "%_tl:~0,4%"=="19h1" set _tl=19h2%_tl:~4%
+if %1==19041 if /i "%_tl:~0,2%"=="vb" set _tl=20h1%_tl:~2%
+if %1==19042 if /i "%_tl:~0,2%"=="vb" set _tl=20h2%_tl:~2%
+if %1==19043 if /i "%_tl:~0,2%"=="vb" set _tl=21h1%_tl:~2%
+if %1==19044 if /i "%_tl:~0,2%"=="vb" set _tl=21h2%_tl:~2%
+if %1==19045 if /i "%_tl:~0,2%"=="vb" set _tl=22h2%_tl:~2%
+if %1==20349 if /i "%_tl:~0,2%"=="fe" set _tl=22h2%_tl:~2%
+if %1==22631 if /i "%_tl:~0,2%"=="ni" (echo %_tl% | find /i "beta" %_Nul1% || set _tl=23h2%_tl:~2%)
+set "%3=%_tl%"
+goto :eof
+
+:detectRev
+set _fixEP=0
+set /a _fixSV=%_build%+1
+set "_tikey=HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
+reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
+for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r ".*\.OS"') do set "_oskey=%%#"
+for /f "skip=2 tokens=5,6 delims=. " %%A in ('reg.exe query "%_oskey%" /v Version') do if %%A gtr !isomaj! (
+  set isover=%%A.%%B
+  set isomaj=%%A
+  set isomin=%%B
+  set "_fixSV=!isomaj!"&set "_fixEP=!isomaj!"
+  for /f "skip=2 tokens=2*" %%I in ('reg.exe query "%_oskey%" /v Branch') do set "isolab=%%J"
+  call :fixLab !isomaj! !isolab! isolab
+)
+reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" %_Nul1%
+reg.exe unload HKLM\uiSOFTWARE %_Nul1%
+move /y "!mountdir!\Windows\System32\Config\SOFTWARE2" "!mountdir!\Windows\System32\Config\SOFTWARE" %_Nul1%
 goto :eof
 
 :detectLab
@@ -2583,7 +2641,7 @@ set keep=1
 goto :mainmenu
 
 :mainmenu
-if %autostart%==1 goto :mainboard
+if %autostart% neq 0 goto :mainboard
 @cls
 echo ====================== W10UI %uiv% =======================
 if /i "!target!"=="%SystemDrive%" (

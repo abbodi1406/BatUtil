@@ -192,6 +192,11 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 
 <details><summary>changelog</summary>
 
+10.36:  
+- Improved iso label accuracy for Enablement Package fake builds
+- Fixed accidental endless loop when AutoStart=1 and Target/Repo are not detected
+- Update boot files when W10UI.cmd is called from W10MUI.cmd
+
 10.35:  
 - Fixed wimlib issue with boot.wim
 - Changed "UseWimlib" default state to OFF
