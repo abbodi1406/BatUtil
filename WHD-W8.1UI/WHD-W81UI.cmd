@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v7.4
+@set uiv=v7.5
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -473,9 +473,9 @@ set _EsuPkg=0
 if exist "!mountdir!\Windows\WinSxS\Manifests\%_EsuCom%.manifest"  set _EsuPkg=1
 if %_EsuPkg% equ 0 call :ESUadd %_Nul3%
 if not exist "!mountdir!\Windows\WinSxS\Manifests\%_EsuCom%.manifest"  (
+echo.
 echo %_err%
 echo Failed installing ESU Suppressor
-echo.
 )
 set allcount=0
 set _GDR=0
@@ -1149,6 +1149,7 @@ reg.exe unload HKLM\OFFUSR
 goto :eof
 
 :ESUadd
+if not exist "!Cab_Dir!\" mkdir "!Cab_Dir!"
 set "_EsuFnd=microsoft-w..-foundation_%_Pkt%_6.3.9600.16384_d1250fcb45c3a9e5"
 if /i "%xBT%"=="x86" (
 set "_EsuFnd=microsoft-w..-foundation_%_Pkt%_6.3.9600.16384_750674478d6638af"

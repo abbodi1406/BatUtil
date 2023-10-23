@@ -185,6 +185,9 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 7.5:  
+fixed installing ESU Suppressor for online OS
+
 * 7.4:  
 - Fixed detection for already installed Rollup  
 - Enhanced detection for already installed SSU 2022-04 and later  
