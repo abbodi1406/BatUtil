@@ -185,6 +185,10 @@ after installing the OS, you need to run it as administrator, it will be self-de
 
 ## Changelog:
 
+* 7.6:  
+fixed creating RunOnce_AfterRestart_DismCleanup.cmd for online OS  
+skip update KB3179574 for non Enterprise / Server editions
+
 * 7.5:  
 fixed installing ESU Suppressor for online OS
 

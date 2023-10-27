@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v94
+@set uivr=v96
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -80,6 +80,11 @@ set SkipApps=0
 :: 3 / level 2 + Terminal, App Installer, Widgets, Mail
 :: 4 / level 3 + Media apps (Music, Video, Codecs, Phone Link) / not for N editions
 set AppsLevel=0
+
+:: # Control preference for Apps which are available as stubs
+:: 0 / install as stub app
+:: 1 / install as full app
+set StubAppsFull=0
 
 :: Enable using CustomAppsList.txt or CustomAppsList2.txt to pick and choose added Apps (takes precedence over AppsLevel)
 :: CustomAppsList2.txt will be used if detected
@@ -256,9 +261,9 @@ if %_ADK% equ 1 set W10UI=1
 set "_wsr=Windows Server 2022"
 set "pub=_8wekyb3d8bbwe"
 set "_appBase=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,microsoft.windowscommunicationsapps%pub%,Microsoft.WindowsCalculator%pub%,Microsoft.Windows.Photos%pub%,Microsoft.WindowsMaps%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsFeedbackHub%pub%,Microsoft.Getstarted%pub%,Microsoft.WindowsAlarms%pub%"
-set "_appClnt=Microsoft.WindowsNotepad%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.Paint%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,Microsoft.People%pub%,Microsoft.ScreenSketch%pub%,Microsoft.MicrosoftStickyNotes%pub%,Microsoft.XboxIdentityProvider%pub%,Microsoft.XboxSpeechToTextOverlay%pub%,Microsoft.XboxGameOverlay%pub%,OutlookForWindows%pub%"
+set "_appClnt=Microsoft.WindowsNotepad%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.Paint%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,Microsoft.People%pub%,Microsoft.ScreenSketch%pub%,Microsoft.MicrosoftStickyNotes%pub%,Microsoft.XboxIdentityProvider%pub%,Microsoft.XboxSpeechToTextOverlay%pub%,Microsoft.XboxGameOverlay%pub%,OutlookForWindows%pub%,MicrosoftTeams%pub%"
 set "_appCodec=Microsoft.WebMediaExtensions%pub%,Microsoft.RawImageExtension%pub%,Microsoft.HEIFImageExtension%pub%,Microsoft.HEVCVideoExtension%pub%,Microsoft.VP9VideoExtensions%pub%,Microsoft.WebpImageExtension%pub%,Microsoft.DolbyAudioExtension%pub%"
-set "_appMedia=Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.WindowsSoundRecorder%pub%,Microsoft.GamingApp%pub%,Microsoft.XboxGamingOverlay%pub%,Microsoft.Xbox.TCUI%pub%,Microsoft.YourPhone%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt"
+set "_appMedia=Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.WindowsSoundRecorder%pub%,Microsoft.GamingApp%pub%,Microsoft.XboxGamingOverlay%pub%,Microsoft.Xbox.TCUI%pub%,Microsoft.YourPhone%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt,Microsoft.Windows.DevHome%pub%"
 set "_appPPIP=Microsoft.MicrosoftPowerBIForWindows%pub%,microsoft.microsoftskydrive%pub%,Microsoft.MicrosoftTeamsforSurfaceHub%pub%,MicrosoftCorporationII.MailforSurfaceHub%pub%,Microsoft.Whiteboard%pub%,Microsoft.SkypeApp_kzf8qxf38zg5c"
 set "_appMin1=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%"
 set "_appMin2=Microsoft.Windows.Photos%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsNotepad%pub%,Microsoft.Paint%pub%"
@@ -356,6 +361,7 @@ AutoExit
 DisableUpdatingUpgrade
 SkipApps
 AppsLevel
+StubAppsFull
 CustomList
 ) do (
 call :ReadINI %%#
@@ -571,6 +577,7 @@ AutoExit
 DisableUpdatingUpgrade
 SkipApps
 AppsLevel
+StubAppsFull
 CustomList
 ) do (
 if !%%#! neq 0 set _configured=1
@@ -609,6 +616,7 @@ if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge %S
 if %_build% geq 22563 if %W10UI% neq 0 (
 if %SkipApps% neq 0 echo SkipApps
 if %AppsLevel% neq 0 echo AppsLevel %AppsLevel%
+if %StubAppsFull% neq 0 echo StubAppsFull
 if %_appsCustom% neq 0 echo CustomAppsList
 )
 if %_runIPA% equ 1 call :appx_sort
@@ -784,6 +792,7 @@ AutoExit
 DisableUpdatingUpgrade
 SkipApps
 AppsLevel
+StubAppsFull
 CustomList
 ) do (
 if !%%#! neq 0 set _configured=1
@@ -817,6 +826,7 @@ if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge %S
 if %_build% geq 22563 if %W10UI% neq 0 (
 if %SkipApps% neq 0 echo SkipApps
 if %AppsLevel% neq 0 echo AppsLevel %AppsLevel%
+if %StubAppsFull% neq 0 echo StubAppsFull
 if %_appsCustom% neq 0 echo CustomAppsList
 )
 if %_runIPA% equ 1 call :appx_sort
@@ -1698,7 +1708,7 @@ if exist "!_cabdir!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=
 if exist "!_cabdir!\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
 if exist "!_cabdir!\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
 if exist "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
-if exist "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
+if exist "!_cabdir!\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!_cabdir!\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum"') do (
   for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
     set /a _fixSV=%_build%+%%i
     set /a _fixEP=%_build%+%%i
@@ -1707,6 +1717,7 @@ if exist "!_cabdir!\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "token
 )
 if exist "!_cabdir!\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
 if exist "!_cabdir!\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
+if exist "!_cabdir!\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22635"
 set tmpcmp=
 if %_build% geq 21382 if exist "!_UUP!\*Windows1*-KB*.msu" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\*Windows1*-KB*.msu"') do (set "packn=%%~n#"&set "packf=%%#"&call :external_msu)
 if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /os "!_UUP!\SSU-*-*.cab"') do (set "packn=%%~n#"&set "packf=%%#"&call :external_cab)
@@ -2209,7 +2220,7 @@ if exist "!dest!\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=190
 if exist "!dest!\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
 if exist "!dest!\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
 if exist "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
-if exist "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum"') do (
+if exist "!dest!\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!dest!\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum"') do (
   for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
     set /a _fixSV=%_build%+%%i
     set /a _fixEP=%_build%+%%i
@@ -2218,6 +2229,7 @@ if exist "!dest!\Microsoft-Windows-SV*Enablement-Package~*.mum" for /f "tokens=3
 )
 if exist "!dest!\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
 if exist "!dest!\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
+if exist "!dest!\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22635"
 if %_build% geq 18362 if exist "!dest!\*enablement-package*.mum" (
 expand.exe -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[Enablement / EdgeChromium]"
@@ -3128,8 +3140,8 @@ xcopy /CIDRY "%_mount%\Windows\Boot\PCAT\bootmgr" "%_target%\" %_Nul3%
 xcopy /CIDRY "%_mount%\Windows\Boot\PCAT\memtest.exe" "%_target%\boot\" %_Nul3%
 xcopy /CIDRY "%_mount%\Windows\Boot\EFI\memtest.efi" "%_target%\efi\microsoft\boot\" %_Nul3%
 )
-if exist "%_mount%\Windows\Boot\EFI\winsipolicy.p7b" if exist "%_target%\efi\microsoft\boot\winsipolicy.p7b" xcopy /CEDRY "%_mount%\Windows\Boot\EFI\winsipolicy.p7b" "%_target%\efi\microsoft\boot\winsipolicy.p7b" %_Nul3%
-if exist "%_mount%\Windows\Boot\EFI\CIPolicies\" if exist "%_target%\efi\microsoft\boot\cipolicies\" xcopy /CEDRY "%_mount%\Windows\Boot\EFI\CIPolicies\*" "%_target%\efi\microsoft\boot\cipolicies\" %_Nul3%
+if exist "%_mount%\Windows\Boot\EFI\winsipolicy.p7b" if exist "%_target%\efi\microsoft\boot\winsipolicy.p7b" xcopy /CIDRY "%_mount%\Windows\Boot\EFI\winsipolicy.p7b" "%_target%\efi\microsoft\boot\" %_Nul3%
+if exist "%_mount%\Windows\Boot\EFI\CIPolicies\" if exist "%_target%\efi\microsoft\boot\cipolicies\" xcopy /CEDRY "%_mount%\Windows\Boot\EFI\CIPolicies" "%_target%\efi\microsoft\boot\cipolicies\" %_Nul3%
 )
 if exist "%_target%\efi\boot\bootmgfw.efi" xcopy /CIDRY "%_mount%\Windows\Boot\EFI\bootmgfw.efi" "%_target%\efi\boot\bootmgfw.efi" %_Nul3%
 xcopy /CIDRY "%_mount%\Windows\Boot\EFI\bootmgfw.efi" "%_target%\efi\boot\!efifile!" %_Nul3%
@@ -3166,9 +3178,9 @@ mkdir bin\temp\pmcppc %_Nul3%
 for /f %%# in ('dir /b /a:-d "!_UUP!\*Microsoft-Windows-Printing-PMCPPC-FoD-Package*.*"') do (
 if /i "%%~x#"==".cab" (expand.exe -f:* "!_UUP!\%%#" bin\temp\pmcppc\ %_Nul3%) else (wimlib-imagex.exe apply "!_UUP!\%%#" 1 bin\temp\pmcppc\ --no-acls --no-attributes %_Nul3%)
 )
-7z.exe e "%_www%" -o.\bin\temp\pmcppc %1\Windows\servicing\Packages\Microsoft-Windows-Printing-PMCPPC-FoD-Package~%_Pkt%~*~%langid%~*.* %1\Windows\WinSxS\Manifests\*_microsoft-windows-p..oyment-languagepack_*.manifest %1\Windows\WinSxS\Manifests\*_microsoft-windows-p..ui-pmcppc.resources_*.manifest %_Nul3%
+7z.exe e "%_www%" -o.\bin\temp\pmcppc %1\Windows\servicing\Packages\Microsoft-Windows-Printing-PMCPPC-FoD-Package~%_Pkt%~*~%langid%~*.* %1\Windows\WinSxS\Manifests\*_microsoft-windows-p..oyment-languagepack_*.manifest %1\Windows\WinSxS\Manifests\*_microsoft-windows-p..ui-pmcppc.resources_*.manifest -aoa %_Nul3%
 for /f %%# in ('dir /b /a:-d "bin\temp\pmcppc\*_microsoft-windows-p..ui-pmcppc.resources_*.manifest"') do (
-7z.exe e "%_www%" -o.\bin\temp\pmcppc\%%~n# %1\Windows\WinSxS\%%~n#\* %_Nul3%
+7z.exe e "%_www%" -o.\bin\temp\pmcppc\%%~n# %1\Windows\WinSxS\%%~n#\* -aoa %_Nul3%
 )
 mkdir bin\temp\sxs %_Nul3%
 for /f %%a in ('dir /b /a:-d "bin\temp\pmcppc\*.manifest"') do SxSExpand.exe "!_work!\bin\temp\pmcppc\%%a" "bin\temp\sxs\%%a" %_Nul3%
@@ -3345,10 +3357,9 @@ if exist "_tmpMD\" rmdir /s /q "_tmpMD\" %_Nul3%
 mkdir "_tmpMD"
 expand.exe -f:*TargetCompDB_* "%_mdf%" _tmpMD %_Null%
 expand.exe -r -f:*.xml "_tmpMD\*.cab" _tmpMD %_Null%
-for /f "delims=" %%# in ('dir /b /a:-d "_tmpMD\*TargetCompDB_App_*.xml" %_Nul6%') do copy /y _tmpMD\%%# .\CompDB_App.xml %_Nul1%
-if not exist "CompDB_App.xml" (
+if not exist "_tmpMD\*TargetCompDB_App_*.xml" (
 echo.
-echo CompDB_App.xml file is not found, skip operation.
+echo CompDB_App.xml file is missing, skip operation.
 rmdir /s /q "_tmpMD\" %_Nul3%
 popd
 set _IPA=0
@@ -3360,10 +3371,16 @@ type nul>AppsList.xml
 for %%# in (Core,CoreCountrySpecific,CoreSingleLanguage,Professional,ProfessionalEducation,ProfessionalWorkstation,Education,Enterprise,EnterpriseG,EnterpriseS,ServerRdsh,IoTEnterprise,IoTEnterpriseS,CloudEdition,CloudEditionL) do if exist _tmpMD\*CompDB_%%#_*.xml (
 >>AppsList.xml (find /i "PreinstalledApps" _tmpMD\*CompDB_%%#_*.xml | find /v "-")
 )
+for /f "delims=" %%# in ('dir /b /a:-d "_tmpMD\*TargetCompDB_App_Moment_*.xml" %_Nul6%') do (
+>>AppsList.xml (find /i "PreinstalledApps" _tmpMD\%%# | find /i "Optional")
+)
 >>AppsList.xml echo ^</Client^>
 >>AppsList.xml echo ^<CoreN^>
 for %%# in (CoreN,ProfessionalN,ProfessionalEducationN,ProfessionalWorkstationN,EducationN,EnterpriseN,EnterpriseGN,EnterpriseSN,CloudEditionN,CloudEditionLN) do if exist _tmpMD\*CompDB_%%#_*.xml (
 >>AppsList.xml (find /i "PreinstalledApps" _tmpMD\*CompDB_%%#_*.xml | find /v "-")
+)
+for /f "delims=" %%# in ('dir /b /a:-d "_tmpMD\*TargetCompDB_App_Moment_*.xml" %_Nul6%') do (
+>>AppsList.xml (find /i "PreinstalledApps" _tmpMD\%%# | find /i "Optional")
 )
 >>AppsList.xml echo ^</CoreN^>
 >>AppsList.xml echo ^<Team^>
@@ -3387,12 +3404,18 @@ for %%# in (Standard,Datacenter,Turbine) do if exist _tmpMD\*CompDB_Server%%#_*.
 )
 >>AppsList.xml echo ^</ServerFull^>
 >>AppsList.xml echo ^</Apps^>
-rmdir /s /q "_tmpMD\" %_Nul3%
-type nul>_AppsEditions.txt
 copy /y "!_work!\bin\CompDB_App.txt" . %_Nul3%
+type nul>_AppsFilesList.csv
+>>_AppsFilesList.csv echo File_Prefix;Target_Path
+for /f "delims=" %%# in ('dir /b /a:-d "_tmpMD\*TargetCompDB_App_*.xml" %_Nul6%') do (
+copy /y _tmpMD\%%# .\CompDB_App.xml %_Nul1%
 %_Nul3% powershell -ep unrestricted -nop -c "Set-Location -LiteralPath '!_UUP!'; $f=[IO.File]::ReadAllText('.\CompDB_App.txt') -split ':embed\:.*'; iex ($f[1])"
+)
+type nul>_AppsEditions.txt
+%_Nul3% powershell -ep unrestricted -nop -c "Set-Location -LiteralPath '!_UUP!'; $f=[IO.File]::ReadAllText('.\CompDB_App.txt') -split ':embed\:.*'; iex ($f[2])"
 if exist "Apps\*_8wekyb3d8bbwe" move /y _AppsEditions.txt Apps\ %_Nul1%
 del /f /q AppsList.xml CompDB_App.* %_Nul3%
+rmdir /s /q "_tmpMD\" %_Nul3%
 popd
 goto :eof
 
@@ -3453,6 +3476,7 @@ if %winbuild% geq 19040 set _appWay=1
 if %_ADK% equ 1 if %apiver% geq 19040 set _appWay=1
 if not exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set _appWay=0
 if %winbuild% LSS 9600 if not exist "%SystemRoot%\servicing\Packages\Microsoft-Windows-PowerShell-WTR-Package~*.mum" set _appWay=0
+if not exist "!_work!\bin\APAP.exe" set _appWay=0
 del /f /q AppsToAdd.txt %_Null%
 if exist "MSIXFramework\*" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "MSIXFramework\*.*x"') do (
   if %_appWay% equ 0 (
@@ -3467,7 +3491,7 @@ if %_appWay% equ 0 goto :wimappx
 if not exist "AppsToAdd.txt" goto :wimappx
 copy /y "!_work!\bin\APAP.exe" . %_Nul3%
 copy /y "!_work!\bin\Microsoft.Dism.dll" . %_Nul3%
-APAP.exe "%_mount%" "%_dLog%\DismAppx.log" "!_cabdir!"
+APAP.exe "%_mount%" "%_dLog%\DismAppx.log" "!_cabdir!" "%StubAppsFull%"
 del /f /q AppsToAdd.txt APAP.exe Microsoft.Dism.dll %_Nul3%
 :wimappx
 popd
@@ -3490,7 +3514,10 @@ if %_appWay% neq 0 (
 goto :eof
 )
 set "_stub="
-if exist "%_pfn%\AppxMetadata\Stub\*.*x" set "_stub=/StubPackageOption:InstallStub"
+if exist "%_pfn%\AppxMetadata\Stub\*.*x" (
+set "_stub=/StubPackageOption:InstallStub"
+if %StubAppsFull% neq 0 set "_stub=/StubPackageOption:InstallFull"
+)
 echo %_pfn%
 %_Nul1% %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismAppx.log" /Add-ProvisionedAppxPackage /PackagePath:"%_pfn%\%_main%" /LicensePath:"%_pfn%\License.xml" /Region:all %_stub%
 goto :eof

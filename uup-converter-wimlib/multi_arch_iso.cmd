@@ -624,6 +624,9 @@ if %revmaj%==22631 (
 if /i "%branch:~0,2%"=="ni" (echo %branch% | find /i "beta" %_Nul1% || set branch=23h2%branch:~2%)
 if %uupver:~0,5%==22621 set uupver=22631%uupver:~5%
 )
+if %revmaj%==22635 (
+if %uupver:~0,5%==22621 set uupver=22635%uupver:~5%
+)
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 del /f /q bin\temp\*.mum %_Nul3%
 wimlib-imagex.exe extract "%ISOdir%\sources\%WIMFILE%" 1 Windows\Servicing\Packages\Package_for_RollupFix*.mum --dest-dir=.\bin\temp --no-acls --no-attributes %_rrr% %_Nul3%

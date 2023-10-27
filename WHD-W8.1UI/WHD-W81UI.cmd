@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v7.5
+@set uiv=v7.6
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -395,6 +395,7 @@ if /i %arch%==x64 (set efifile=bootx64.efi&set sss=amd64) else (set efifile=boot
 :igonline
 if %online%==0 goto :igoffline
 call :doupdate
+call :cleanup
 goto :fin
 
 :igoffline
@@ -447,6 +448,9 @@ reg.exe load HKLM\OFFSOFT "!mountdir!\Windows\System32\config\SOFTWARE" %_Nul1%
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKLM\OFFSOFT\Microsoft\Windows NT\CurrentVersion" /v EditionID') do set "CEdition=%%b"
 reg.exe unload HKLM\OFFSOFT %_Nul1%
 )
+set _KB3179574=0
+echo %CEdition% | findstr /i /b Enterprise %_Nul1% && set _KB3179574=1
+echo %CEdition% | findstr /i /b Server %_Nul1% && set _KB3179574=1
 if %online%==1 (
 set SOFTWARE=SOFTWARE
 set COMPONENTS=COMPONENTS
@@ -881,6 +885,7 @@ if /i %kb%==KB3140185 (if not exist "!mountdir!\Windows\servicing\packages\Micro
 if /i %kb%==KB2894852 (if not exist "!mountdir!\Windows\Microsoft.NET\Framework\v2.0.50727\ngen.exe" set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB2973201 (if /i not "%CEdition%"=="ProfessionalWMC" set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB2978742 (if /i not "%CEdition%"=="ProfessionalWMC" set /a _sum-=1&set /a _msu-=1&goto :eof)
+if /i %kb%==KB3179574 (if /i not "%_KB3179574%"=="1" set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB3172729 (if %winbuild% lss 9600 set /a _sum-=1&set /a _msu-=1&goto :eof)
 if /i %kb%==KB4502496 (if %winbuild% lss 9600 set /a _sum-=1&set /a _msu-=1&goto :eof)
 if exist "!mountdir!\Windows\servicing\Packages\*WinPE-LanguagePack*.mum" if %winpe% equ 0 (
