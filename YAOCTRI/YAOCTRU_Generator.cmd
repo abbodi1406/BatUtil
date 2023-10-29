@@ -15,7 +15,7 @@ set "uLanguage="
 set "uChannel="
 
 :: level
-:: Win7, Default (Win 11/10/8.1)
+:: Win7, Win81, Default (Win 11/10)
 set "uLevel="
 
 :: bitness
@@ -237,11 +237,18 @@ set "dms=https://mrodevicemgr.officeapps.live.com/mrodevicemgrsvc/api/v2/C2RRele
 pushd "!_temp!"
 if exist "C2R*.json" del /f /q "C2R*.json"
 if /i "!uLevel!"=="Win7" (
-1>nul 2>nul powershell -nop -c "%_psc% (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1.0','C2R0.json')"
+set "ulvl=_W7"
+1>nul 2>nul powershell -nop -c "%_psc% (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1','C2R0.json')"
+) else if /i "!uLevel!"=="Win81" (
+set "ulvl=_W81"
+1>nul 2>nul powershell -nop -c "%_psc% (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.3','C2R0.json')"
 ) else (
-1>nul 2>nul powershell -nop -c "%_psc% (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%','C2R0.json'); (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1.0','C2R7.json')"
+1>nul 2>nul powershell -nop -c "%_psc% (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%','C2R0.json'); (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.1','C2R7.json'); (New-Object Net.WebClient).DownloadFile('%dms%?audienceFFN=%ffn%&osver=Client|6.3','C2R8.json')"
 )
-if /i "!uLevel!"=="Default" if exist "C2R7.json" del /f /q "C2R7.json"
+if /i "!uLevel!"=="Default" (
+if exist "C2R7.json" del /f /q "C2R7.json"
+if exist "C2R8.json" del /f /q "C2R8.json"
+)
 if not exist "C2R0.json" (
 echo.
 echo %line%
@@ -259,9 +266,13 @@ goto :eof
 )
 for /f "tokens=2 delims=:, " %%G in ('findstr /i AvailableBuild C2R0.json') do set "vvv0=%%~G"
 for /f "tokens=2-6 delims=:/ " %%G in ('findstr /i TimestampUtc C2R0.json') do set "utc0=%%I-%%~G-%%H %%J:%%K
-if exist "C2R7.json" (
+if exist "C2R7.json" findstr /i /c:"Custom Win" C2R7.json 1>nul && (
 for /f "tokens=2 delims=:, " %%G in ('findstr /i AvailableBuild C2R7.json') do set "vvv7=%%~G"
 for /f "tokens=2-6 delims=:/ " %%G in ('findstr /i TimestampUtc C2R7.json') do set "utc7=%%I-%%~G-%%H %%J:%%K
+)
+if exist "C2R8.json" findstr /i /c:"Custom Win" C2R8.json 1>nul && (
+for /f "tokens=2 delims=:, " %%G in ('findstr /i AvailableBuild C2R8.json') do set "vvv8=%%~G"
+for /f "tokens=2-6 delims=:/ " %%G in ('findstr /i TimestampUtc C2R8.json') do set "utc8=%%I-%%~G-%%H %%J:%%K
 )
 if not defined vvv0 (
 echo.
@@ -279,9 +290,15 @@ for /L %%# in (9,1,10) do if /i "!chn!"=="!chn%%#!" set _a86=0
 if %vvv0:~5,5% lss 14026 set _a64=0
 if %vvv0:~5,5% lss 14326 set _ext=0
 if defined uLevel set "vvv=%vvv0%"&set "utc=%utc0%"&set "inpt=%otpt%"&goto :POSTout
-if not defined vvv7 set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
+if not defined vvv7 if not defined vvv8 set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
+set _a86=0&set _a64=0
+if not defined vvv7 goto :skip7
 if %vvv7:~5,5% gtr %vvv0:~5,5% set "vvv0=%vvv7%"&set "utc0=%utc7%"
-if "%vvv0%" equ "%vvv7%" set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
+if not defined vvv8 if "%vvv0%" equ "%vvv7%" set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
+if defined vvv8 if "%vvv0%" equ "%vvv7%" if "%vvv0%" equ "%vvv8%" (set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS)
+:skip7
+if not defined vvv8 goto :WIN
+if %vvv8:~5,5% gtr %vvv0:~5,5% set "vvv0=%vvv8%"&set "utc0=%utc8%"
 
 :WIN
 cls
@@ -294,15 +311,24 @@ echo %line%
 echo.
 echo Selected channel offer different builds per OS level:
 echo.
+if defined vvv8 (
+echo. 1. build: %vvv0% [Windows 11/10]
+echo. 2. build: %vvv8% [Windows 8.1]
+) else (
 echo. 1. build: %vvv0% [Windows 11/10/8.1]
-echo. 2. build: %vvv7% [Windows 7]
+)
+echo. 3. build: %vvv7% [Windows 7]
 echo %line%
 echo.
 set /p inpt= ^> Enter Build option number, and press "Enter": 
 if "%inpt%"=="" goto :eof
-for /l %%i in (1,1,2) do (if %inpt%==%%i set verified=1)
+if %inpt%==1 set verified=1
+if defined vvv8 if %inpt%==2 set verified=1
+if %inpt%==3 set verified=1
 if %verified%==0 goto :WIN
-if %inpt%==1 (set "vvv=%vvv0%"&set "utc=%utc0%") else (set "vvv=%vvv7%"&set "utc=%utc7%")
+if %inpt%==1 (set "vvv=%vvv0%"&set "utc=%utc0%"&set "ulvl=")
+if defined vvv8 if %inpt%==2 (set "vvv=%vvv8%"&set "utc=%utc8%"&set "ulvl=_W81"&set _a86=0&set _a64=0)
+if %inpt%==3 (set "vvv=%vvv7%"&set "utc=%utc7%"&set "ulvl=_W7"&set _a86=0&set _a64=0)
 
 :BITNESS
 cls
@@ -318,7 +344,7 @@ echo.
 echo. 1. 32-bit [x86]
 echo. 2. 64-bit [x64]
 echo. 3. Dual   [x64 and x86]
-echo.
+if %_a86%==1 echo.
 if %_a86%==1 echo. 4. Windows 11/10 ARM64 [x86 Emulation]
 if %_a64%==1 echo. 5. Windows 11/10 ARM64 [x64 Emulation]
 echo %line%
@@ -408,7 +434,7 @@ echo %line%
 echo.
 echo. 1. Aria2 script ^| https://aria2.github.io/
 echo. 2. Wget script  ^| https://eternallybored.org/misc/wget/
-echo. 3. cURL script  ^| https://curl.haxx.se/windows/
+echo. 3. cURL script  ^| https://curl.se/windows/
 echo. 4. Text file
 echo %line%
 echo.
@@ -422,7 +448,7 @@ if /i %arc%==x64arm64 if %_a64%==0 if %_a86%==1 set "arc=x86arm64"
 if /i %arc%==x64arm64 if %_a64%==0 if %_a86%==0 (
 echo.
 echo %line%
-echo ERROR: selected channel and version do not support ARM64
+echo ERROR: ARM64 is not supported for selected channel and version
 echo %line%
 echo.
 echo Press any key to exit.
@@ -432,9 +458,9 @@ goto :eof
 set "url=https://officecdn.microsoft.com/db/%ffn%/Office/Data"
 set "stp=https://officecdn.microsoft.com/db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/Office/Data"
 set oar=%arc%
-set "tag=%vvv%_%oar%_%lang%_%chn%"
-if %full%==0 set "tag=%vvv%_%oar%_%lang%_LangPack_%chn%"
-if %proof%==1 set "tag=%vvv%_%oar%_%lang%_Proofing_%chn%"
+set "tag=%vvv%_%oar%_%lang%_%chn%%ulvl%"
+if %full%==0 set "tag=%vvv%_%oar%_%lang%_LangPack_%chn%%ulvl%"
+if %proof%==1 set "tag=%vvv%_%oar%_%lang%_Proofing_%chn%%ulvl%"
 set dual=0
 if /i %arc%==x86x64 (set "arc=x86"&set "bit=32"&set dual=1)
 set chpe=0

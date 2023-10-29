@@ -192,6 +192,9 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 
 <details><summary>changelog</summary>
 
+10.37:  
+- Fixed CIM_DataFile powershell.exe commands (used if wmic.exe is not installed)
+
 10.36:  
 - Improved iso label accuracy for Enablement Package fake builds
 - Fixed accidental endless loop when AutoStart=1 and Target/Repo are not detected

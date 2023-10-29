@@ -46,7 +46,7 @@ https://eternallybored.org/misc/wget/
 
 3. cURL script (curl.exe)  
 https://skanthak.homepage.t-online.de/curl.html
-https://curl.haxx.se/windows/
+https://curl.se/windows/
 
 Windows 11 and Windows 10 version 1803 or later already contain curl.exe by default
 
@@ -162,14 +162,16 @@ ______________________________
 
 ## Available Builds Level
 
-* Since the support for Windows 7 had ended on 2020-01-14, Office C2R on Windows 7 will only receive security updates until January 2023
+* Official support for Windows 7/8.1 ended January 2023
 
-* Because of that, almost all Office channels will offer a specific build targeted for Windows 7
+* Because of that, most Office channels will offer a specific build targeted for Windows 7/8.1
 
-* You cannot choose a build targeted for Windows 11/10/8.1 to be installed on Windows 7
+* You cannot choose a build targeted for Windows 11/10 to be installed on Windows 7/8.1,  
+or build targeted for Windows 8.1 to be installed on Windows 7
 
 * For more information:  
-https://docs.microsoft.com/DeployOffice/windows-7-support
+https://learn.microsoft.com/deployoffice/endofsupport/windows-7-support  
+https://learn.microsoft.com/deployoffice/endofsupport/windows-81-support
 
 ______________________________
 
@@ -237,6 +239,7 @@ if not specified, "Default" will be used
 
 supported values:  
 Default  
+Win81  
 Win7
 
 - uBitness
