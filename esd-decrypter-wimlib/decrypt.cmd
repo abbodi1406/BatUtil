@@ -483,10 +483,7 @@ goto :InstallWim
 if %SkipISO% neq 0 (
   ren ISOFOLDER %DVDISO%
   echo.
-  echo %line%
-  echo Done. You chose not to create iso file.
-  echo %line%
-  echo.
+  set qmsg=Finished. You chose not to create iso file.
   goto :QUIT
 )
 echo.
@@ -501,6 +498,7 @@ cdimage.exe -bootdata:1#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -
 set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 goto :E_ISO
 echo.
+set qmsg=Finished.
 goto :QUIT
 
 :ESDWIM
@@ -541,8 +539,7 @@ set _rtrn=RetWIM
 goto :InstallWim
 :RetWIM
 echo.
-echo Done.
-echo.
+set qmsg=Finished.
 goto :QUIT
 
 :InstallWim
@@ -672,7 +669,7 @@ if %uupmaj%==%_fixSV% if %_build% geq 21382 (
 if %uupver:~0,5%==%_build% set uupver=%_fixSV%%uupver:~5%
 )
 if %revmaj%==22631 (
-if /i "%branch:~0,2%"=="ni" set branch=23h2%branch:~2%
+if /i "%branch:~0,2%"=="ni" set branch=23h2_ni%branch:~2%
 if %uupver:~0,5%==22621 set uupver=22631%uupver:~5%
 )
 if %uupmin% lss %revmin% (
@@ -701,7 +698,8 @@ rmdir /s /q bin\temp\
 
 set _rfr=refresh
 set _rsr=release_svc_%_rfr%
-if %revmaj%==22631 (set _label=%revver%.%_time%.23h2_%_rsr%&set branch=23h2_%_rsr%)
+if %revmaj%==22631 (set _label=%revver%.%_time%.23h2_ni_%_rsr%&set branch=23h2_ni_%_rsr%)
+if %revver%==22631.2428 (set _label=22631.2428.231001-0608.23h2_ni_%_rsr%&set branch=23h2_ni_%_rsr%&set ISOnameESD=0)
 if %revver%==22621.1702 (set _label=22621.1702.230505-1222.ni_%_rsr%&set branch=ni_%_rsr%&set ISOnameESD=0)
 if %revver%==22621.525 (set _label=22621.525.220925-0207.ni_%_rsr%&set branch=ni_%_rsr%&set ISOnameESD=0)
 if %revver%==22621.382 (set _label=22621.382.220806-0833.ni_%_rsr%&set branch=ni_%_rsr%&set ISOnameESD=0)
@@ -1314,10 +1312,11 @@ del /f /q "!ENCRYPTEDESD!" %_Nul3%
 ren "!ENCRYPTEDESD!.bak" %ENCRYPTEDESDN%
 )
 popd
+if defined qmsg echo %qmsg%
 if %_Debug% neq 0 exit /b
 if %AutoStart% neq 0 exit /b
-echo Press 0 to exit.
-choice /c 0 /n
+echo Press 0 or q to exit.
+choice /c 0Q /n
 if errorlevel 1 (exit /b) else (rem.)
 
 ----- Begin wsf script --->

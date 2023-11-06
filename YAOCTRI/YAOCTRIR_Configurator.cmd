@@ -15,6 +15,16 @@ set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
+for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
+if %winbuild% lss 7601 goto :E_Win
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
+set _pwsh=1
+for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
+if %_cwmi% equ 0 if %_pwsh% equ 0 goto :E_WMI
+reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
 set "xOS=x64"
 set "_ComSpec=%SystemRoot%\System32\cmd.exe"
 set "_Common=%CommonProgramFiles%"
@@ -32,14 +42,12 @@ set "_file=%_target%\OfficeClickToRun.exe"
 set "_temp=%temp%"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
-reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
 set "_ini=%~dp0"
 for /f "skip=2 tokens=2*" %%a in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%SystemDrive%\Users\Public\Desktop\desktop.ini" set "_dsk=%SystemDrive%\Users\Public\Desktop"
+
+@title Office Click-to-Run Configurator - Retail
 setlocal EnableDelayedExpansion
-for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
-if %winbuild% lss 7601 goto :E_Win
-title Office Click-to-Run Configurator - Retail
 set lpid=(ar-SA,bg-BG,cs-CZ,da-DK,de-DE,el-GR,en-US,es-ES,et-EE,fi-FI,fr-FR,he-IL,hr-HR,hu-HU,it-IT,ja-JP,ko-KR,lt-LT,lv-LV,nb-NO,nl-NL,pl-PL,pt-BR,pt-PT,ro-RO,ru-RU,sk-SK,sl-SI,sr-Latn-RS,sv-SE,th-TH,tr-TR,uk-UA,zh-CN,zh-TW,hi-IN,id-ID,kk-KZ,MS-MY,vi-VN,en-GB,es-MX,fr-CA)
 set lcid=(1025,1026,1029,1030,1031,1032,1033,3082,1061,1035,1036,1037,1050,1038,1040,1041,1042,1063,1062,1044,1043,1045,1046,2070,1048,1049,1051,1060,9242,1053,1054,1055,1058,2052,1028,1081,1057,1087,1086,1066,2057,2058,3084)
 set bits=(32,64)
@@ -1421,8 +1429,8 @@ goto :MenuFinal
 
 :MenuFinal2
 cls
-if %winbuild% lss 22483 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
-if %winbuild% geq 22483 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
+if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
+if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
 copy /y nul "!_work!\#.rw" 1>nul 2>nul && (if exist "!_work!\#.rw" del /f /q "!_work!\#.rw") || (set "_ini=!_dsk!")
 
 (
@@ -1503,10 +1511,10 @@ echo exit /b
 
 set "CTRexe=1"
 set "cfile=!_file:\=\\!"
-if exist "!_file!" if %winbuild% lss 22483 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
+if exist "!_file!" if %_cwmi% equ 1 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
-if exist "!_file!" if %winbuild% geq 22483 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfile!''').Version"') do (
+if exist "!_file!" if %_cwmi% equ 0 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfile!''').Version"') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
 call :StopService 1>nul 2>nul

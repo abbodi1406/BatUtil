@@ -26,6 +26,16 @@ set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
+for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
+if %winbuild% lss 7601 goto :E_Win
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
+set _pwsh=1
+for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
+if %_cwmi% equ 0 if %_pwsh% equ 0 goto :E_WMI
+reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
 set "xOS=x64"
 set "_ComSpec=%SystemRoot%\System32\cmd.exe"
 set "_Common=%CommonProgramFiles%"
@@ -43,11 +53,9 @@ set "_file=%_target%\OfficeClickToRun.exe"
 set "_temp=%temp%"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
-reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
+
+@title Office Click-to-Run Installer - Retail
 setlocal EnableDelayedExpansion
-for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
-if %winbuild% lss 7601 goto :E_Win
-title Office Click-to-Run Installer - Retail
 set _updt=True
 set _eula=True
 set _icon=False
@@ -347,10 +355,10 @@ echo exit /b
 for /f "tokens=3 delims=." %%# in ('echo %CTRver%') do set verchk=%%#
 set "CTRexe=1"
 set "cfile=!_file:\=\\!"
-if exist "!_file!" if %winbuild% lss 22483 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
+if exist "!_file!" if %_cwmi% equ 1 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
-if exist "!_file!" if %winbuild% geq 22483 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfile!''').Version"') do (
+if exist "!_file!" if %_cwmi% equ 0 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfile!''').Version"') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
 call :StopService 1>nul 2>nul

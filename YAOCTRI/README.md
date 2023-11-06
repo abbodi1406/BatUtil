@@ -19,7 +19,7 @@
 * There are two flavors available of the scripts:
 
 - YAOCTRI - Volume  
-install volume products for Office 2021/2019, in addition to Microsoft 365 Enterprise (O365ProPlus) and Office Mondo 2016
+install volume products for Office 2024/2021/2019, in addition to Microsoft 365 Enterprise (O365ProPlus) and Office Mondo 2016
 
 - YAOCTRIR - Retail  
 install retail products for Microsoft 365 / Office 2021/2019/2016 Suites, in addition to Office 2021/2019 Single Apps
@@ -33,7 +33,7 @@ it also creates configuration ini files, with the ability to start the installat
 - Installer.cmd  
 the secondary script which is only used to execute the installation, depending on the already created the configuration ini file
 
-* Office LTSC is a branding for the volume licensing of Office 2021, both are the same product
+* Office LTSC is a branding for the volume licensing of Office 2024/2021
 
 * Project and Visio products are not available for the following languages by design:  
 bg-BG, et-EE, hr-HR, lt-LT, lv-LV, sr-Latn-RS, th-TH, hi-IN, id-ID, kk-KZ, MS-MY, vi-VN, en-GB, es-MX, fr-CA
@@ -155,16 +155,18 @@ then, you can execute this in command prompt as administrator to update Office:
 
 ______________________________
 
-## Windows 7 Limited Support
+## Windows 7/8.1 Limited Support
 
-* Since the support for Windows 7 had ended on 2020-01-14, Office C2R on Windows 7 will only receive security updates until January 2023
+* Official support for Windows 7/8.1 ended January 2023
 
-* Because of that, almost all Office channels will offer a specific build targeted for Windows 7
+* Because of that, most Office channels will offer a specific build targeted for Windows 7/8.1
 
-* You cannot choose a build targeted for Windows 11/10/8.1 to be installed on Windows 7
+* You cannot choose a build targeted for Windows 11/10 to be installed on Windows 7/8.1,  
+or build targeted for Windows 8.1 to be installed on Windows 7
 
 * For more information:  
-https://docs.microsoft.com/DeployOffice/windows-7-support
+https://learn.microsoft.com/deployoffice/endofsupport/windows-7-support  
+https://learn.microsoft.com/deployoffice/endofsupport/windows-81-support
 
 ______________________________
 

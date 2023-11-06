@@ -26,6 +26,16 @@ set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
+for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
+if %winbuild% lss 7601 goto :E_Win
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
+set _pwsh=1
+for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
+if %_cwmi% equ 0 if %_pwsh% equ 0 goto :E_WMI
+reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
 set "xOS=x64"
 set "_ComSpec=%SystemRoot%\System32\cmd.exe"
 set "_Common=%CommonProgramFiles%"
@@ -43,11 +53,9 @@ set "_file=%_target%\OfficeClickToRun.exe"
 set "_temp=%temp%"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
-reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
+
+@title Office Click-to-Run Installer - Volume
 setlocal EnableDelayedExpansion
-for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
-if %winbuild% lss 7601 goto :E_Win
-title Office Click-to-Run Installer - Volume
 set _updt=True
 set _eula=True
 set _icon=False
@@ -199,6 +207,7 @@ if not defined _suite goto :sku
 
 if %winbuild% lss 10240 (
 if /i "%_suite%"=="O365ProPlusRetail" set _suit2=MondoVolume
+if /i "%_suite%"=="ProPlus2024Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2024Volume)
 if /i "%_suite%"=="ProPlus2021Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2021Volume)
 if /i "%_suite%"=="Standard2021Volume" (set _suite=StandardRetail&set _suit2=Standard2021Volume)
 if /i "%_suite%"=="ProPlus2019Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2019Volume)
@@ -209,6 +218,7 @@ if /i "%_suite%"=="O365ProPlusRetail" set _suit2=MondoVolume
 )
 
 set "_products=%_suite%.16_%CTRlng%_x-none"
+if /i "%_suite%"=="ProPlus2024Volume" set _pkey0=2TDPW-NDQ7G-FMG99-DXQ7M-TX3T2
 if /i "%_suite%"=="ProPlus2021Volume" set _pkey0=FXYTK-NJJ8C-GB6DW-3DYQT-6F7TH
 if /i "%_suite%"=="Standard2021Volume" set _pkey0=KDX7X-BNVR8-TXXGX-4Q7Y8-78VT3
 if /i "%_suite%"=="ProPlus2019Volume" set _pkey0=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP
@@ -217,6 +227,7 @@ if /i "%_suite%"=="MondoVolume" set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
 
 if defined _suit2 (
 set "_licenses=%_suit2%"
+if /i "%_suit2%"=="ProPlus2024Volume" set _pkey0=2TDPW-NDQ7G-FMG99-DXQ7M-TX3T2
 if /i "%_suit2%"=="ProPlus2021Volume" set _pkey0=FXYTK-NJJ8C-GB6DW-3DYQT-6F7TH
 if /i "%_suit2%"=="Standard2021Volume" set _pkey0=KDX7X-BNVR8-TXXGX-4Q7Y8-78VT3
 if /i "%_suit2%"=="ProPlus2019Volume" set _pkey0=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP
@@ -269,11 +280,13 @@ if /i "%%J"=="ProjectPro2021Volume" (set /a kk+=1&set _pkey!kk!=FTNWT-C6WBT-8HMG
 if /i "%%J"=="ProjectStd2021Volume" (set /a kk+=1&set _pkey!kk!=J2JDC-NJCYY-9RGQ4-YXWMH-T3D4T)
 if /i "%%J"=="VisioPro2021Volume" (set /a kk+=1&set _pkey!kk!=KNH8D-FGHT4-T8RK3-CTDYJ-K2HT4)
 if /i "%%J"=="VisioStd2021Volume" (set /a kk+=1&set _pkey!kk!=MJVNY-BYWPY-CWV6J-2RKRT-4M8QG)
+if /i "%%J"=="ProjectPro2024Volume" (set /a kk+=1&set _pkey!kk!=D9GTG-NP7DV-T6JP3-B6B62-JB89R)
+if /i "%%J"=="VisioPro2024Volume" (set /a kk+=1&set _pkey!kk!=YW66X-NH62M-G6YFP-B7KCT-WXGKQ)
 )
 
 if %winbuild% lss 10240 if %_base% equ 0 for %%J in (%_skus%) do (
 set _tmp=%%J
-if /i "!_tmp:~-10!"=="2019Volume" (call set _tmp=!_tmp:~0,-10!Retail) else if /i "!_tmp:~-10!"=="2021Volume" (call set _tmp=!_tmp:~0,-10!Retail) else (call set _tmp=!_tmp:~0,-6!Retail)
+if /i "!_tmp:~-10!"=="2019Volume" (call set _tmp=!_tmp:~0,-10!Retail) else if /i "!_tmp:~-10!"=="2021Volume" (call set _tmp=!_tmp:~0,-10!Retail) else if /i "!_tmp:~-10!"=="2024Volume" (call set _tmp=!_tmp:~0,-10!Retail) else (call set _tmp=!_tmp:~0,-6!Retail)
   if defined _products (set "_products=!_products!^|!_tmp!.16_%CTRlng%_x-none") else (set "_products=!_tmp!.16_%CTRlng%_x-none")
   if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! !_tmp!.excludedapps.16=onedrive") else (set "_exclude1d=!_tmp!.excludedapps.16=onedrive"))
 )
@@ -362,10 +375,10 @@ echo exit /b
 for /f "tokens=3 delims=." %%# in ('echo %CTRver%') do set verchk=%%#
 set "CTRexe=1"
 set "cfile=!_file:\=\\!"
-if exist "!_file!" if %winbuild% lss 22483 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
+if exist "!_file!" if %_cwmi% equ 1 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
-if exist "!_file!" if %winbuild% geq 22483 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfile!''').Version"') do (
+if exist "!_file!" if %_cwmi% equ 0 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfile!''').Version"') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
 call :StopService 1>nul 2>nul
@@ -477,12 +490,18 @@ goto :TheEnd
 
 :E_Admin
 echo %_err%
-echo Right click on this script and select 'Run as administrator'
+echo This script require administrator privileges.
 goto :TheEnd
 
 :E_Win
 echo %_err%
 echo Windows 7 SP1 is the minimum supported OS.
+goto :TheEnd
+
+:E_WMI
+echo %_err%
+echo WMIC.exe or Windows PowerShell is required for this script to work.
+goto :TheEnd
 
 :TheEnd
 if %_silent% EQU 1 goto :eof

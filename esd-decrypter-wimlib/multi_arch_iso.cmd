@@ -485,12 +485,12 @@ set ERRORTEMP=%ERRORLEVEL%
 if %ERRORTEMP% neq 0 (
   ren ISOFOLDER %DVDISO%
   echo.
-  echo Errors were reported during ISO creation.
-  echo.
+  set qmsg=Errors were reported during ISO creation.
   goto :QUIT
 )
 rmdir /s /q ISOFOLDER\
 echo.
+set qmsg=Finished.
 goto :QUIT
 
 :dSETUP
@@ -621,7 +621,7 @@ if %revmaj% geq %_build% if %_build% geq 21382 (
 if %uupver:~0,5%==%_build% set uupver=%revmaj%%uupver:~5%
 )
 if %revmaj%==22631 (
-if /i "%branch:~0,2%"=="ni" (echo %branch% | find /i "beta" %_Nul1% || set branch=23h2%branch:~2%)
+if /i "%branch:~0,2%"=="ni" (echo %branch% | find /i "beta" %_Nul1% || set branch=23h2_ni%branch:~2%)
 if %uupver:~0,5%==22621 set uupver=22631%uupver:~5%
 )
 if %revmaj%==22635 (
@@ -755,9 +755,10 @@ if exist bin\temp\ rmdir /s /q bin\temp\
 if exist ISOx64\ rmdir /s /q ISOx64\
 if exist ISOx86\ rmdir /s /q ISOx86\
 popd
+if defined qmsg echo %qmsg%
 if %_Debug% neq 0 exit /b
-echo Press 0 to exit.
-choice /c 0 /n
+echo Press 0 or q to exit.
+choice /c 0Q /n
 if errorlevel 1 (exit /b) else (rem.)
 
 ----- Begin wsf script --->
