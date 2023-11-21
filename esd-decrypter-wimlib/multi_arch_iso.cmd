@@ -23,26 +23,35 @@ set Preserve=0
 
 set "_Null=1>nul 2>nul"
 
+set quedit=
 set _elev=
 set _args=
 set _args=%*
 if not defined _args goto :NoProgArgs
 if "%~1"=="" set "_args="&goto :NoProgArgs
-if "%~1"=="-elevated" set _elev=1&set "_args="&goto :NoProgArgs
-if "%~5"=="-elevated" set _elev=1
+for %%# in (%*) do (
+if /i "%%~#"=="-elevated" (set _elev=1)
+if /i "%%~#"=="-qedit" (set quedit=1&reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 1 /f >nul)
+)
 
 :NoProgArgs
-set "SysPath=%SystemRoot%\System32"
-if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
-set "xOS=%PROCESSOR_ARCHITECTURE%"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
-  set "xOS=%PROCESSOR_ARCHITEW6432%"
-  )
-)
+:: @color 07
+set "xOS=amd64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xOS=arm64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xOS=x86"
+if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
+if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
 set "xDS=bin\bin64;bin"
 if /i not %xOS%==amd64 set "xDS=bin"
+set "SysPath=%SystemRoot%\System32"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-set "_err===== ERROR ===="
+if exist "%SystemRoot%\Sysnative\reg.exe" (
+set "SysPath=%SystemRoot%\Sysnative"
+set "Path=%xDS%;%SystemRoot%\Sysnative;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
+)
+set "_err=echo: &echo ==== ERROR ===="
+set "_psc=powershell -nop -c"
+set winbuild=1
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 set _cwmi=0
 for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
@@ -50,23 +59,31 @@ wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "Com
 )
 set _pwsh=1
 for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
-if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PS
+if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
+2>nul %_psc% $ExecutionContext.SessionState.LanguageMode | find /i "Full" 1>nul || set _pwsh=0
+if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PWS
 
+set _uac=-elevated
 %_Null% reg.exe query HKU\S-1-5-19 && (
   goto :Passed
   ) || (
   if defined _elev goto :E_Admin
 )
 
-set _PSarg="""%~f0""" -elevated
-if defined _args set _PSarg="""%~f0""" %_args:"="""% -elevated
+if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
+reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 0 /f >nul
+set _uac=-elevated -qedit
+)
+
+set _PSarg="""%~f0""" %_uac%
+if defined _args set _PSarg="""%~f0""" %_args:"="""% %_uac%
 set _PSarg=%_PSarg:'=''%
 
-(%_Null% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" -elevated) && (
+(%_Null% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %_uac%) && (
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Null% powershell -nop -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
+  %_Null% %_psc% "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
@@ -74,12 +91,18 @@ set _PSarg=%_PSarg:'=''%
 )
 
 :Passed
+set "_batf=%~f0"
 set "_log=%~dpn0"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
 setlocal EnableDelayedExpansion
+if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
+reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 0 /f >nul
+start cmd.exe /c ""!_batf!" %* -qedit"
+exit /b
+)
 
 if %_Debug% equ 0 (
   set "_Nul1=1>nul"
@@ -106,7 +129,7 @@ echo Running in Debug Mode...
 echo The window will be closed when finished
 @echo on
 @prompt $G
-@call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug.log"&del "!_log!_tmp.log"
+@call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug.log"&del /f /q "!_log!_tmp.log"
 @color 07
 @title %ComSpec%
 @exit /b
@@ -118,7 +141,7 @@ set _file=(7z.dll,7z.exe,bcdedit.exe,bfi.exe,cdimage.exe,libwim-15.dll,offlinere
 for %%# in %_file% do (
 if not exist ".\bin\%%#" (set _bin=%%#&goto :E_Bin)
 )
-set ERRORTEMP=
+set ERRTEMP=
 set "ramdiskoptions={7619dcc8-fafe-11d9-b411-000476eba25f}"
 set combine=0
 set custom=0
@@ -190,8 +213,7 @@ set "_iso1=%_iso1:"=%"
 if not exist "%_iso1%" set _erriso=1
 if /i not "%_iso1:~-4%"==".iso" set _erriso=1
 if %_erriso% equ 1 (
-echo.
-echo %_err%
+%_err%
 echo Specified path is not a valid ISO file
 echo.
 %_Contn%&%_Pause%
@@ -212,8 +234,7 @@ set "_iso2=%_iso2:"=%"
 if not exist "%_iso2%" set _erriso=1
 if /i not "%_iso2:~-4%"==".iso" set _erriso=1
 if %_erriso% equ 1 (
-echo.
-echo %_err%
+%_err%
 echo Specified path is not a valid ISO file
 echo.
 %_Contn%&%_Pause%
@@ -240,7 +261,7 @@ if %_iso64% equ 0 if %_iso86% equ 1 (set "MESSAGE=could not detect x64 ISO file"
 if %_Debug% neq 0 if %AutoStart% equ 0 set AutoStart=2
 if %AutoStart% equ 1 (set combine=1&set custom=1&if %_iso64% equ 1 (goto :dISO) else (goto :dCheck))
 if %AutoStart% equ 2 (if %_iso64% equ 1 (goto :dISO) else (goto :dCheck))
-color 1F
+@color 1F
 @cls
 echo %line%
 echo. Sources:
@@ -263,6 +284,7 @@ goto :DUALMENU
 
 :dISO
 @cls
+call :checkQE
 echo.
 echo %line%
 echo Extracting ISO files . . .
@@ -271,15 +293,18 @@ echo.
 set "ISOdir1=ISOx64"
 set "ISOdir2=ISOx86"
 echo "!ISOfile1!"
-if exist %ISOdir1%\ rmdir /s /q %ISOdir1%\
-7z.exe x "!ISOfile1!" -o%ISOdir1% * -r %_Nul1%
+if exist !ISOdir1!\ rmdir /s /q !ISOdir1!\
+7z.exe x "!ISOfile1!" -o!ISOdir1! * -r %_Nul1%
 echo.
 echo "!ISOfile2!"
-if exist %ISOdir2%\ rmdir /s /q %ISOdir2%\
-7z.exe x "!ISOfile2!" -o%ISOdir2% * -r %_Nul1%
+if exist !ISOdir2!\ rmdir /s /q !ISOdir2!\
+7z.exe x "!ISOfile2!" -o!ISOdir2! * -r %_Nul1%
 
 :dCheck
-if %_iso64% equ 0 @cls
+if %_iso64% equ 0 (
+@cls
+call :checkQE
+)
 echo.
 echo %line%
 echo Checking distributions Info . . .
@@ -481,15 +506,13 @@ cdimage.exe -bootdata:2#p0,e,b"ISOFOLDER\boot\etfsboot.com"#pEF,e,b"ISOFOLDER\ef
 ) else (
 cdimage.exe -b"ISOFOLDER\boot\etfsboot.com" -o -m -u2 -udfver102 -t%isotime% -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
 )
-set ERRORTEMP=%ERRORLEVEL%
-if %ERRORTEMP% neq 0 (
+set ERRTEMP=%ERRORLEVEL%
+if %ERRTEMP% neq 0 (
   ren ISOFOLDER %DVDISO%
-  echo.
   set qmsg=Errors were reported during ISO creation.
   goto :QUIT
 )
 rmdir /s /q ISOFOLDER\
-echo.
 set qmsg=Finished.
 goto :QUIT
 
@@ -541,19 +564,24 @@ if /i !ISOedition%1!==Education (IF !ISOvol%1!==1 (set DVDLABEL%1=CEDA&set DVDIS
 if /i !ISOedition%1!==EducationN (IF !ISOvol%1!==1 (set DVDLABEL%1=CEDNA&set DVDISO%1=EDUCATIONN_VOL) else (set DVDLABEL%1=CEDNA&set DVDISO%1=EDUCATIONN_RET))
 if /i !ISOedition%1!==Enterprise set DVDLABEL%1=CENA&set DVDISO%1=ENTERPRISE_VOL
 if /i !ISOedition%1!==EnterpriseN set DVDLABEL%1=CENNA&set DVDISO%1=ENTERPRISEN_VOL
-if /i !ISOedition%1!==Cloud set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_OEM
-if /i !ISOedition%1!==CloudN set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_OEM
-if /i !ISOedition%1!==PPIPro set DVDLABEL%1=CPPIA&set DVDISO%1=PPIPRO_OEM
 if /i !ISOedition%1!==EnterpriseG set DVDLABEL%1=CEGA&set DVDISO%1=ENTERPRISEG_VOL
 if /i !ISOedition%1!==EnterpriseGN set DVDLABEL%1=CEGNA&set DVDISO%1=ENTERPRISEGN_VOL
 if /i !ISOedition%1!==EnterpriseS set DVDLABEL%1=CES&set DVDISO%1=ENTERPRISES_VOL
 if /i !ISOedition%1!==EnterpriseSN set DVDLABEL%1=CESNN&set DVDISO%1=ENTERPRISESN_VOL
+if /i !ISOedition%1!==ServerRdsh set DVDLABEL%1=CEV&set DVDISO%1=MULTISESSION_VOL
 if /i !ISOedition%1!==ProfessionalEducation (if !ISOvol%1!==1 (set DVDLABEL%1=CPREA&set DVDISO%1=PROEDUCATION_VOL) else (set DVDLABEL%1=CPREA&set DVDISO%1=PROEDUCATION_OEMRET))
 if /i !ISOedition%1!==ProfessionalEducationN (if !ISOvol%1!==1 (set DVDLABEL%1=CPRENA&set DVDISO%1=PROEDUCATIONN_VOL) else (set DVDLABEL%1=CPRENA&set DVDISO%1=PROEDUCATIONN_OEMRET))
 if /i !ISOedition%1!==ProfessionalWorkstation (if !ISOvol%1!==1 (set DVDLABEL%1=CPRWA&set DVDISO%1=PROWORKSTATION_VOL) else (set DVDLABEL%1=CPRWA&set DVDISO%1=PROWORKSTATION_OEMRET))
 if /i !ISOedition%1!==ProfessionalWorkstationN (if !ISOvol%1!==1 (set DVDLABEL%1=CPRWNA&set DVDISO%1=PROWORKSTATIONN_VOL) else (set DVDLABEL%1=CPRWNA&set DVDISO%1=PROWORKSTATIONN_OEMRET))
 if /i !ISOedition%1!==ProfessionalSingleLanguage set DVDLABEL%1=CPRSLA&set DVDISO%1=PROSINGLELANGUAGE_OEM
 if /i !ISOedition%1!==ProfessionalCountrySpecific set DVDLABEL%1=CPRCHA&set DVDISO%1=PROCHINA_OEM
+if /i !ISOedition%1!==IoTEnterprise set DVDLABEL%1=IOTEN&set DVDISO%1=IOTENTERPRISE_OEMRET
+if /i !ISOedition%1!==IoTEnterpriseS set DVDLABEL%1=IOTES&set DVDISO%1=IOTENTERPRISES_OEMRET
+if /i !ISOedition%1!==IoTEnterpriseK set DVDLABEL%1=IOTENK&set DVDISO%1=IOTENTERPRISEK_OEMRET
+if /i !ISOedition%1!==IoTEnterpriseSK set DVDLABEL%1=IOTESK&set DVDISO%1=IOTENTERPRISESK_OEMRET
+if /i !ISOedition%1!==PPIPro set DVDLABEL%1=CPPIA&set DVDISO%1=PPIPRO_OEM
+if /i !ISOedition%1!==Cloud set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_OEM
+if /i !ISOedition%1!==CloudN set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_OEM
 if /i !ISOedition%1!==CloudEdition (if !ISOvol%1!==1 (set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_VOL) else (set DVDLABEL%1=CWCA&set DVDISO%1=CLOUD_OEMRET))
 if /i !ISOedition%1!==CloudEditionN (if !ISOvol%1!==1 (set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_VOL) else (set DVDLABEL%1=CWCNNA&set DVDISO%1=CLOUDN_OEMRET))
 if !ISOmulti%1! geq 2 (
@@ -659,7 +687,7 @@ exit /b
 set "mumfile=%SystemRoot%\temp\update.mum"
 set "chkfile=!mumfile:\=\\!"
 if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
-if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!chkfile!''').LastModified"') do set "mumdate=%%#"
+if %_cwmi% equ 0 for /f %%# in ('%_psc% "([WMI]'CIM_DataFile.Name=''!chkfile!''').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "%1=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 exit /b
@@ -685,10 +713,10 @@ if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "nam
 if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr4!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
 )
 if %_cwmi% equ 0 (
-if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfvr1!''').Version"') do set /a "_svr1=%%a"
-if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfvr2!''').Version"') do set /a "_svr2=%%a"
-if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfvr3!''').Version"') do set /a "_svr3=%%a"
-if exist "!_fvr4!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfvr4!''').Version"') do set /a "_svr4=%%a"
+if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr1!''').Version"') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr2!''').Version"') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr3!''').Version"') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr4!''').Version"') do set /a "_svr4=%%a"
 )
 set "_chk=!_fvr1!"
 if %chkmin% equ %_svr1% set "_chk=!_fvr1!"&goto :prephostsetup
@@ -716,38 +744,51 @@ if %_svr4% gtr %_svr2% if %_svr4% gtr %_svr3% set "_chk=!_fvr4!"
 del /f /q "!_fvr1!" "!_fvr2!" "!_fvr3!" "!_fvr4!" %_Nul3%
 exit /b
 
-:E_Admin
-echo %_err%
-echo This script require administrator privileges.
-echo To do so, right click on this script and select 'Run as administrator'
+:checkQE
+if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
+echo ### WARNING ###
 echo.
-if %_Debug% neq 0 exit /b
-echo Press any key to exit.
-pause >nul
+echo Console "Quick Edit Mode" is active.
+echo Do not left-click with the mouse cursor inside the console window,
+echo or else the operation execution will hang until a key is pressed.
+echo.
+)
 exit /b
 
-:E_PS
-echo %_err%
-echo wmic.exe or Windows PowerShell is required for this script to work.
-echo.
+:E_Admin
+%_err%
+echo This script require administrator privileges.
+echo To do so, right click on this script and select 'Run as administrator'
+if "%_uac%"=="-elevated -qedit" (
+reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 1 /f >nul
+)
+goto :E_Exit
+
+:E_PWS
+%_err%
+echo Windows PowerShell is not detected or not properly responding.
+echo It is required for this script to work.
+goto :E_Exit
+
+:E_Exit
 if %_Debug% neq 0 exit /b
+echo.
 echo Press any key to exit.
 pause >nul
 exit /b
 
 :E_Bin
-echo %_err%
+%_err%
 echo Required file %_bin% is missing.
 echo.
 goto :QUIT
 
 :E_MSG
-echo.
-echo %line%
-echo %_err%
+:: @color 47
+%_err%
 echo %MESSAGE%
 echo.
-echo.
+goto :QUIT
 
 :QUIT
 if exist ISOFOLDER\ rmdir /s /q ISOFOLDER\
@@ -755,8 +796,8 @@ if exist bin\temp\ rmdir /s /q bin\temp\
 if exist ISOx64\ rmdir /s /q ISOx64\
 if exist ISOx86\ rmdir /s /q ISOx86\
 popd
-if defined qmsg echo %qmsg%
 if %_Debug% neq 0 exit /b
+if defined qmsg echo.&echo %qmsg%
 echo Press 0 or q to exit.
 choice /c 0Q /n
 if errorlevel 1 (exit /b) else (rem.)

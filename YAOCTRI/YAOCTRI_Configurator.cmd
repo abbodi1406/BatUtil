@@ -433,7 +433,7 @@ set _O2019=1
 set _O2021=1
 set _O2024=1
 if %verchk% lss 14026 set _O2021=0
-if %verchk% lss 17102 set _O2024=0
+if %verchk% lss 17101 set _O2024=0
 expand.exe -f:*.xml "!CTRsource!\Office\Data\%CTRvcab%" "!_temp!." >nul
 find /i "Word2019Volume" "!_temp!\VersionDescriptor.xml" 1>nul 2>nul || set _O2019=0
 for /f "tokens=3 delims=<= " %%# in ('find /i "DeliveryMechanism" "!_temp!\VersionDescriptor.xml" 2^>nul') do set "FFNRoot=%%~#"
