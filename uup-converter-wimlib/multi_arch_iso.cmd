@@ -60,7 +60,6 @@ wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "Com
 set _pwsh=1
 for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
 if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
-2>nul %_psc% $ExecutionContext.SessionState.LanguageMode | find /i "Full" 1>nul || set _pwsh=0
 if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PWS
 
 set _uac=-elevated

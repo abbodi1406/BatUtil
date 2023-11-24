@@ -136,7 +136,6 @@ wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "Com
 set _pwsh=1
 for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
 if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
-2>nul %_psc% $ExecutionContext.SessionState.LanguageMode | find /i "Full" 1>nul || set _pwsh=0
 call :pr_color
 if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PWS
 
@@ -3110,23 +3109,19 @@ if !errorlevel! neq 0 (
 %_dism1% /Unmount-Wim /MountDir:"%_mount%" /Discard
 %_dism1% /Cleanup-Wim %_Nul3%
 )
-:: %_dism2%:"!_cabdir!" /Unmount-Wim /MountDir:"%_mount%" /Discard
 if /i %_nnn%==winre.wim goto :crDsc
 
 :crHome
 if %_inx% neq %iHome% goto :crProf
 if %StartVirtual% equ 0 goto :crProf
 call :V_Ext Home
-:: call set /a _imgi+=1
 
 :crProf
 if %uProf% equ 0 goto :crProN
 if %_inx% neq %iHome% goto :crProN
 call :dk_color1 %Gray% "=== Creating Edition: Pro" 4
-:: %_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:"%_www%" /Index:%iHome% /MountDir:"%_mount%" %_Supp%
 %_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismCore2Pro.log" /Set-Edition:Professional /Channel:Retail
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
-:: %_dism2%:"!_cabdir!" /Unmount-Image /MountDir:"%_mount%" /Commit /Append
 call set /a _imgi+=1
 call set ddesc="%_wtx% Pro"
 wimlib-imagex.exe info "%_www%" !_imgi! !ddesc! !ddesc! --image-property DISPLAYNAME=!ddesc! --image-property DISPLAYDESCRIPTION=!ddesc! --image-property FLAGS=Professional %_Nul3%
@@ -3137,10 +3132,8 @@ call :V_Ext Prof
 if %uProN% equ 0 goto :crSDC
 if %_inx% neq %iHomN% goto :crSDC
 call :dk_color1 %Gray% "=== Creating Edition: Pro N" 4
-:: %_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:"%_www%" /Index:%iHomN% /MountDir:"%_mount%" %_Supp%
 %_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismCoreN2ProN.log" /Set-Edition:ProfessionalN /Channel:Retail
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
-:: %_dism2%:"!_cabdir!" /Unmount-Image /MountDir:"%_mount%" /Commit /Append
 call set /a _imgi+=1
 call set ddesc="%_wtx% Pro N"
 wimlib-imagex.exe info "%_www%" !_imgi! !ddesc! !ddesc! --image-property DISPLAYNAME=!ddesc! --image-property DISPLAYDESCRIPTION=!ddesc! --image-property FLAGS=ProfessionalN %_Nul3%
@@ -3151,10 +3144,8 @@ call :V_Ext ProN
 if %uSDC% equ 0 goto :crSDD
 if %_inx% neq %iSSC% goto :crSDD
 call :dk_color1 %Gray% "=== Creating Edition: Datacenter Core" 4
-:: %_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:"%_www%" /Index:%iSSC% /MountDir:"%_mount%" %_Supp%
 %_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismSrvSc2SrvDc.log" /Set-Edition:ServerDatacenterCor /Channel:Retail
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
-:: %_dism2%:"!_cabdir!" /Unmount-Image /MountDir:"%_mount%" /Commit /Append
 call set /a _imgi+=1
 call set cname="%_wsr% ServerDatacenterCore"
 call set dname="%_wsr% Datacenter"
@@ -3165,10 +3156,8 @@ wimlib-imagex.exe info "%_www%" !_imgi! !cname! !cname! --image-property DISPLAY
 if %uSDD% equ 0 goto :crEnd
 if %_inx% neq %iSSD% goto :crEnd
 call :dk_color1 %Gray% "=== Creating Edition: Datacenter" 4
-:: %_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:"%_www%" /Index:%iSSD% /MountDir:"%_mount%" %_Supp%
 %_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismSrvSf2SrvDf.log" /Set-Edition:ServerDatacenter /Channel:Retail
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
-:: %_dism2%:"!_cabdir!" /Unmount-Image /MountDir:"%_mount%" /Commit /Append
 call set /a _imgi+=1
 call set cname="%_wsr% ServerDatacenter"
 call set dname="%_wsr% Datacenter (Desktop Experience)"
@@ -3665,7 +3654,6 @@ if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('%_psc% "(([
 if /i not "%_ntf%"=="NTFS" (
 set "_mount=%SystemDrive%\MountUUP"
 )
-:: set "_ln3============================================================="
 set "_ln2=____________________________________________________________"
 set "_ln1=________________________________________________"
 goto :eof
