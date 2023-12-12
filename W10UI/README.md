@@ -187,10 +187,20 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 [SxSExpand](https://forums.mydigitallife.net/members/superbubble.250156/)  
 [DIR2ISO code, Compressed2TXT](https://github.com/AveYo)
 [msu wim Reflection code](https://github.com/ave9858)  
+[WinSxS Suppressors](https://github.com/asdcorp/haveSxS)  
 
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.38:  
+- Fixed processing SSU-*.cab from normally-named SSU msu
+- Changed 22631 iso label to 23h2_ni_release
+- Changed finish prompt to "Press 9 or q to exit"
+- Added detection for Net35 sxs folder from W10UI.cmd root, or updates repo folder
+- Added SupplementalServicing suppressor for builds 14393+ < 19041
+- Added ExtendedSecurityUpdates suppressor for builds 17763+ < 20348 (theoretical)
+- Added EdgeChromium suppressor for builds 17134+ < 20348 if SkipEdge=1
 
 10.37:  
 - Fixed CIM_DataFile powershell.exe commands (used if wmic.exe is not installed)

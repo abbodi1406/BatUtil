@@ -739,7 +739,7 @@ if /i %EditionID%==ServerRdsh (
 %_Nul3% reg.exe add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c powershell -ep unrestricted -nop -c \"Set-CimInstance -Query 'Select * from Win32_UserAccount WHERE SID LIKE ''S-1-5-21-%%-500''' -Property @{Disabled=0}\" &exit /b 0 "
 )
 %_Nul3% reg.exe unload HKLM\SYS
-%_Nul3% reg.exe save HKLM\SOF .\bin\temp\SOFTWARE2
+%_Nul3% reg.exe save HKLM\SOF .\bin\temp\SOFTWARE2 /y
 %_Nul3% reg.exe unload HKLM\SOF
 %_Nul3% move /y .\bin\temp\SOFTWARE2 .\bin\temp\SOFTWARE
 type nul>bin\temp\virtual.txt

@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.37
+@set uiv=v10.38
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -117,6 +117,7 @@ if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
 if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
 set "_Null=1>nul 2>nul"
 set "_err===== ERROR ===="
+set winbuild=1
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 set _cwmi=0
 for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
@@ -157,12 +158,15 @@ if not defined _sdr (if defined _adr%%# set "_sdr=%%#:")
 )
 if not defined _sdr set psfnet=0
 set "_Pkt=31bf3856ad364e35"
-set "_EsuCmp=microsoft-client-li..pplementalservicing"
+set "_OurVer=25.10.0.0"
+set "_SupCmp=microsoft-client-li..pplementalservicing"
 set "_EdgCmp=microsoft-windows-e..-firsttimeinstaller"
 set "_CedCmp=microsoft-windows-edgechromium"
-set "_EsuIdn=Microsoft-Client-Licensing-SupplementalServicing"
+set "_EsuCmp=microsoft-windows-s..edsecurityupdatesai"
+set "_SupIdn=Microsoft-Client-Licensing-SupplementalServicing"
 set "_EdgIdn=Microsoft-Windows-EdgeChromium-FirstTimeInstaller"
 set "_CedIdn=Microsoft-Windows-EdgeChromium"
+set "_EsuIdn=Microsoft-Windows-SLC-Component-ExtendedSecurityUpdatesAI"
 setlocal EnableDelayedExpansion
 
 if %_Debug% equ 0 (
@@ -514,6 +518,7 @@ if exist "%SystemRoot%\WinSxS\pending.xml" (
   )
 set verb=0
 set "mountdir=!target!"
+set "mumtarget=!target!"
 set dismtarget=/online
 set _build=%winbuild%
 reg.exe delete %_SxS% /v W10UIclean /f %_Nul3%
@@ -768,7 +773,9 @@ expand.exe -d -f:*Windows*.psf !package! %_Nul2% | findstr /i %arch%\.psf %_Nul3
 if %uupmsu% equ 0 if %_build% geq 21382 (
 dism.exe /English /List-Image /ImageFile:!package! /Index:1 %_Nul2% | findstr /i %arch%\.psf %_Nul3% && (set uupmsu=1&set msuwim=1) 
 )
+set kbcab=
 if %uupmsu% equ 0 for /f "tokens=2 delims=: " %%# in ('expand.exe -d -f:*Windows*.cab !package! %_Nul6% ^| findstr /i %kb%') do set kbcab=%%#
+if /i "%kbcab%"=="No" if %uupmsu% equ 0 for /f "tokens=2 delims=: " %%# in ('expand.exe -d -f:SSU-*.cab !package! %_Nul6% ^| findstr /i %kb%') do set kbcab=%%#
 cd /d "!_work!"
 set /a count+=1
 if %uupmsu% equ 1 (
@@ -783,6 +790,14 @@ if exist "!repo!\%kbcab%" goto :eof
 )
 echo %count%/%_msu%: %package%
 %_exp% -f:*Windows*.cab "!repo!\!package!" "!repo!" %_Null%
+set _sfn=%package:~0,-4%.cab
+if not exist "!repo!\%kbcab%" (
+mkdir "!_cabdir!\check"
+%_exp% -f:SSU-*%arch%*.cab "!repo!\!package!" "!_cabdir!\check" %_Null%
+for /f %%# in ('dir /b "!_cabdir!\check\*.cab"') do copy /y "!_cabdir!\check\%%#" "!repo!\%_sfn%" %_Nul3%
+set "tmpssu=!tmpssu! %_sfn%"
+rmdir /s /q "!_cabdir!\check\"
+)
 goto :eof
 
 :msu1
@@ -906,23 +921,9 @@ if exist "checker\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" findstr
 set /a _fixSV=%_build%+1
 if not defined _type if %_build% geq 18362 (
 %_exp% -f:microsoft-windows-*enablement-package~*.mum "!repo!\!package!" "checker" %_Null%
-if exist "checker\microsoft-windows-*enablement-package~*.mum" set "_type=[Enablement]"
-if exist "checker\Microsoft-Windows-1909Enablement-Package~*.mum" set "_fixEP=18363"
-if exist "checker\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
-if exist "checker\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
-if exist "checker\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "checker\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
-if exist "checker\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
-if exist "checker\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
-if exist "checker\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "checker\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum"') do (
-  for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
-    set /a _fixEP=%_build%+%%i
-    )
-  )
+call :EKB1 "checker" _type [Enablement]
 )
-if exist "checker\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixEP=22631"
-if exist "checker\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=22631"
-if exist "checker\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixEP=22635"
+call :EKB2 "checker"
 if %_build% geq 18362 if exist "checker\*enablement-package*.mum" (
 %_exp% -f:*_microsoft-windows-e..-firsttimeinstaller_*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_type=[Enablement / EdgeChromium]"
@@ -984,6 +985,7 @@ for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "%dest%\chck\update.
 if "%kbupd%"=="" goto :eof
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
 dir /b /on "%dest%\chck\*Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
+dir /b /on "%dest%\chck\*Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows12\." %_Nul1% && set _ufn=Windows12.0-%kbupd%-%arch%_inout.cab
 if not exist "!repo!\%_ufn%" (
 move /y "%dest%\chck\%compkg%" "!repo!\%_ufn%" %_Nul3%
 )
@@ -999,6 +1001,7 @@ goto :eof
 for /f "tokens=2 delims=-" %%V in ('echo %compkg%') do set kbupd=%%V
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
 echo %compkg%| findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
+echo %compkg%| findstr /i "Windows12\." %_Nul1% && set _ufn=Windows12.0-%kbupd%-%arch%_inout.cab
 if not exist "!repo!\%_ufn%" (
 call set /a _sum+=1
 move /y "%dest%\%compkg%" "!repo!\%_ufn%" %_Nul3%
@@ -1020,6 +1023,7 @@ for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "%dest%\update.mum"'
 if "%kbupd%"=="" goto :eof
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
 dir /b /on "%dest%\Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
+dir /b /on "%dest%\Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows12\." %_Nul1% && set _ufn=Windows12.0-%kbupd%-%arch%_inout.cab
 if not exist "!repo!\%_ufn%" (
 call set /a _sum+=1
 move /y "%dest%\%compkg%" "!repo!\%_ufn%" %_Nul3%
@@ -1071,21 +1075,36 @@ set "_Wnn=HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide\Winners"
 set "_Cmp=HKLM\%COMPONENTS%\DerivedData\Components"
 if exist "!mumtarget!\Windows\Servicing\Packages\*~arm64~~*.mum" (
 set "xBT=arm64"
-set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0a035f900ca87ee9"
+set "_EsuCom=arm64_%_EsuCmp%_%_Pkt%_%_OurVer%_none_e55ca6c027a999a2"
+set "_SupCom=arm64_%_SupCmp%_%_Pkt%_%_OurVer%_none_8b15303df56a09af"
+set "_CedCom=arm64_%_CedCmp%_%_Pkt%_%_OurVer%_none_7cb088037a42a80b"
+set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0e8b3f09ce2fa7ce"
+set "_SupKey=%_Wnn%\arm64_%_SupCmp%_%_Pkt%_none_0a035f900ca87ee9"
 set "_EdgKey=%_Wnn%\arm64_%_EdgCmp%_%_Pkt%_none_1e5e2b2c8adcf701"
 set "_CedKey=%_Wnn%\arm64_%_CedCmp%_%_Pkt%_none_df3eefecc502346d"
 ) else if exist "!mumtarget!\Windows\Servicing\Packages\*~amd64~~*.mum" (
 set "xBT=amd64"
-set "_EsuKey=%_Wnn%\amd64_%_EsuCmp%_%_Pkt%_none_0a0357560ca88a4d"
+set "_EsuCom=amd64_%_EsuCmp%_%_Pkt%_%_OurVer%_none_e55c9e8627a9a506"
+set "_SupCom=amd64_%_SupCmp%_%_Pkt%_%_OurVer%_none_8b152803f56a1513"
+set "_CedCom=amd64_%_CedCmp%_%_Pkt%_%_OurVer%_none_7cb07fc97a42b36f"
+set "_EsuKey=%_Wnn%\amd64_%_EsuCmp%_%_Pkt%_none_0e8b36cfce2fb332"
+set "_SupKey=%_Wnn%\amd64_%_SupCmp%_%_Pkt%_none_0a0357560ca88a4d"
 set "_EdgKey=%_Wnn%\amd64_%_EdgCmp%_%_Pkt%_none_1e5e22f28add0265"
 set "_CedKey=%_Wnn%\amd64_%_CedCmp%_%_Pkt%_none_df3ee7b2c5023fd1"
 ) else (
 set "xBT=x86"
-set "_EsuKey=%_Wnn%\x86_%_EsuCmp%_%_Pkt%_none_ade4bbd2544b1917"
+set "_EsuCom=x86_%_EsuCmp%_%_Pkt%_%_OurVer%_none_893e03026f4c33d0"
+set "_SupCom=x86_%_SupCmp%_%_Pkt%_%_OurVer%_none_2ef68c803d0ca3dd"
+set "_CedCom=x86_%_CedCmp%_%_Pkt%_%_OurVer%_none_2091e445c1e54239"
+set "_EsuKey=%_Wnn%\x86_%_EsuCmp%_%_Pkt%_none_b26c9b4c15d241fc"
+set "_SupKey=%_Wnn%\x86_%_SupCmp%_%_Pkt%_none_ade4bbd2544b1917"
 set "_EdgKey=%_Wnn%\x86_%_EdgCmp%_%_Pkt%_none_c23f876ed27f912f"
 set "_CedKey=%_Wnn%\x86_%_CedCmp%_%_Pkt%_none_83204c2f0ca4ce9b"
 )
 for /f "tokens=4,5,6 delims=_" %%H in ('dir /b "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-foundation_*.manifest"') do set "_Fnd=microsoft-w..-foundation_%_Pkt%_%%H_%%~nJ"
+if %_build% geq 14393 if %_build% lss 19041 if not exist "!mumtarget!\Windows\WinSxS\Manifests\%_SupCom%.manifest" call :Latent _Sup %_Nul3%
+if %_build% geq 17763 if %_build% lss 20348 if not exist "!mumtarget!\Windows\WinSxS\Manifests\%_EsuCom%.manifest" call :Latent _Esu %_Nul3%
+if %_build% geq 17134 if %_build% lss 20348 if not exist "!mumtarget!\Windows\WinSxS\Manifests\%_CedCom%.manifest" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if not exist "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_%_CedCmp%_*.manifest" if %SkipEdge% equ 1 call :Latent _Ced %_Nul3%
 set lcumsu=
 set mpamfe=
 set servicingstack=
@@ -1105,20 +1124,10 @@ set cupdt=
 set dupdt=
 set overall=
 set lcupkg=
-set LTSC=0
 set discard=0
 set discardre=0
 set ldr=&set listc=0&set list=1&set AC=100
 set _sum=0
-if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
-if %_build% neq 14393 if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-PPIProEdition~*.mum" set LTSC=1
-if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-EnterpriseS*Edition~*.mum" set LTSC=1
-if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-IoTEnterpriseS*Edition~*.mum" set LTSC=1
-if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set LTSC=1
-if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-Server*ACorEdition~*.mum" set LTSC=0
-if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-Server*NanoEdition~*.mum" set LTSC=0
-if exist "!mumtarget!\Windows\Servicing\Packages\Microsoft-Windows-ServerAzureStackHCI*Edition~*.mum" set LTSC=0
-)
 if exist "!repo!\*Windows1*-KB*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.cab"') do (call set /a _sum+=1))
 if %_build% geq 21382 if exist "!repo!\*Windows1*-KB*%arch%*.msu" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.msu"') do if defined msu_%%~n# (call set /a _sum+=1))
 if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %online%==0 if exist "!repo!\*defender-dism*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%arch%*.cab"') do (call set /a _sum+=1))
@@ -1137,7 +1146,7 @@ if %online%==0 if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-Langu
 reg.exe load HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 if %winbuild% lss 15063 if /i %arch%==arm64 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul1%
 if %winbuild% lss 9600 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul1%
-reg.exe save HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE2" %_Nul1%
+reg.exe save HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
 reg.exe unload HKLM\%SOFTWARE% %_Nul1%
 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
@@ -1189,11 +1198,11 @@ set "_DsmLog=DismEdge.log"
 for %%# in (%fupdt%) do (set "dest=%%~n#"&call :pXML)
 )
 if defined supdt (
-set "_SxsKey=%_EsuKey%"
-set "_SxsCmp=%_EsuCmp%"
-set "_SxsIdn=%_EsuIdn%"
+set "_SxsKey=%_SupKey%"
+set "_SxsCmp=%_SupCmp%"
+set "_SxsIdn=%_SupIdn%"
 set "_SxsCF=64"
-set "_DsmLog=DismESU.log"
+set "_DsmLog=DismaSupSvc.log"
 for %%# in (%supdt%) do (set "dest=%%~n#"&call :pXML)
 )
 if defined cupdt (
@@ -1207,9 +1216,9 @@ for %%# in (%cupdt%) do (set "dest=%%~n#"&call :pXML)
 set _dualSxS=
 if defined dupdt (
 set _dualSxS=1
-set "_SxsKey=%_EsuKey%"
-set "_SxsCmp=%_EsuCmp%"
-set "_SxsIdn=%_EsuIdn%"
+set "_SxsKey=%_SupKey%"
+set "_SxsCmp=%_SupCmp%"
+set "_SxsIdn=%_SupIdn%"
 set "_SxsCF=64"
 set "_DsmLog=DismLCUs.log"
 for %%# in (%dupdt%) do (set "dest=%%~n#"&call :pXML)
@@ -1380,9 +1389,9 @@ findstr /i /m "Package_for_WindowsExperienceFeaturePack" "%dest%\update.mum" %_N
   if "!fxupd!"=="0" (set /a _sum-=1&goto :eof)
   )
 )
-set "wnt=31bf3856ad364e35_10"
-if exist "%dest%\%sss%_microsoft-updatetargeting-*os_31bf3856ad364e35_11.*.manifest" set "wnt=31bf3856ad364e35_11"
-if exist "%dest%\%sss%_microsoft-updatetargeting-*os_31bf3856ad364e35_12.*.manifest" set "wnt=31bf3856ad364e35_12"
+set "wnt=%_Pkt%_10"
+if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%_Pkt%_11.*.manifest" set "wnt=%_Pkt%_11"
+if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%_Pkt%_12.*.manifest" set "wnt=%_Pkt%_12"
 if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" if not defined uupmaj (
 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
 if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
@@ -1484,14 +1493,8 @@ if %xmsu% equ 1 (
   ) else (
   set "netlcu=!netlcu! /PackagePath:%dest%\update.mum"
   )
-if exist "%dest%\*_%_EsuCmp%_*.manifest" if not exist "%dest%\*_%_CedCmp%_*.manifest" if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
-if exist "%dest%\*_%_CedCmp%_*.manifest" if not exist "%dest%\*_%_EsuCmp%_*.manifest" if %SkipEdge% equ 1 (set "cupdt=!cupdt! !package!"&goto :eof)
+if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 1 if not exist "!mumtarget!\Windows\WinSxS\Manifests\%_CedCom%.manifest" (set "cupdt=!cupdt! !package!"&goto :eof)
 if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 2 call :deEdge
-if exist "%dest%\*_%_EsuCmp%_*.manifest" if exist "%dest%\*_%_CedCmp%_*.manifest" (
-  if %SkipEdge% neq 1 if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
-  if %SkipEdge% equ 1 if %LTSC% equ 0 (set "dupdt=!dupdt! !package!"&goto :eof)
-  if %SkipEdge% equ 1 if %LTSC% equ 1 (set "cupdt=!cupdt! !package!"&goto :eof)
-  )
 set "cumulative=!cumulative! /PackagePath:%dest%\update.mum"
 goto :eof
 )
@@ -1499,8 +1502,7 @@ if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 if %verb%==1 set "ldr=!ldr! /PackagePath:%dest%\update.mum"
 goto :eof
 )
-if exist "%dest%\*_%_EsuCmp%_*.manifest" if %LTSC% equ 0 (set "supdt=!supdt! !package!"&goto :eof)
-if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 1 (set "cupdt=!cupdt! !package!"&goto :eof)
+if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 1 if not exist "!mumtarget!\Windows\WinSxS\Manifests\%_CedCom%.manifest" (set "cupdt=!cupdt! !package!"&goto :eof)
 if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 2 call :deEdge
 set "ldr=!ldr! /PackagePath:%dest%\update.mum"
 goto :eof
@@ -1527,7 +1529,12 @@ for %%# in (inver_aa inver_bl inver_mj inver_mn kbver_aa kbver_bl kbver_mj kbver
 for /f %%I in ('dir /b /od "!mumcheck!"') do set _pkg=%%~nI
 for /f "tokens=4-7 delims=~." %%H in ('echo %_pkg%') do set "inver_aa=%%H"&set "inver_bl=%%I"&set "inver_mj=%%J"&set "inver_mn=%%K"
 mkdir "!_cabdir!\check"
-if /i "%package:~-4%"==".msu" (%_exp% -f:*Windows*.cab "!repo!\!package!" "!_cabdir!\check" %_Nul3%) else (copy /y "!repo!\!package!" "!_cabdir!\check" %_Nul3%)
+if /i "%package:~-4%"==".msu" (
+%_exp% -f:*Windows*.cab "!repo!\!package!" "!_cabdir!\check" %_Nul3%
+if not exist "!_cabdir!\check\*.cab" %_exp% -f:SSU-*%arch%*.cab "!repo!\!package!" "!_cabdir!\check" %_Nul3%
+) else (
+copy /y "!repo!\!package!" "!_cabdir!\check" %_Nul3%
+)
 %_exp% -f:update.mum "!_cabdir!\check\*.cab" "!_cabdir!\check" %_Null%
 if not exist "!_cabdir!\check\*.mum" (set skip=1&rmdir /s /q "!_cabdir!\check\"&goto :eof)
 :: self note: do not add " at the end
@@ -1637,6 +1644,44 @@ echo.^</unattend^>
 )>>%1.xml
 goto :eof
 
+:Latent
+set "_InCom=!%1Com!"
+set "_InKey=!%1Key!"
+set "_InIdn=!%1Idn!"
+if not exist "!_CabDir!\" mkdir "!_CabDir!"
+if not exist "!_CabDir!\%_InCom%.manifest" (
+(echo ^<?xml version="1.0" encoding="UTF-8" standalone="yes"?^>
+echo ^<assembly xmlns="urn:schemas-microsoft-com:asm.v3" manifestVersion="1.0" copyright="Copyright (c) Microsoft Corporation. All Rights Reserved."^>
+echo   ^<assemblyIdentity name="%_InIdn%" version="%_OurVer%" processorArchitecture="%xBT%" language="neutral" buildType="release" publicKeyToken="%_Pkt%" versionScope="nonSxS" /^>
+echo ^</assembly^>)>"!_CabDir!\%_InCom%.manifest"
+)
+set "_InIdt="
+set "_psin=%_InIdn%, Culture=neutral, Version=%_OurVer%, PublicKeyToken=%_Pkt%, ProcessorArchitecture=%xBT%, versionScope=NonSxS"
+for /f "tokens=* delims=" %%# in ('powershell -nop -c "[BitConverter]::ToString([Text.Encoding]::ASCII.GetBytes($env:_psin)) -replace '-'"') do set "_InIdt=%%#"
+if not defined _InIdt exit /b
+set "_InHsh="
+for /f "tokens=* delims=" %%# in ('powershell -nop -c "[BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash(([IO.StreamReader]'!_CabDir!\%_InCom%.manifest').BaseStream)) -replace '-'"') do set "_InHsh=%%#"
+if not defined _InHsh exit /b
+icacls "!mumtarget!\Windows\WinSxS\Manifests" /save "!_CabDir!\acl.txt"
+takeown /f "!mumtarget!\Windows\WinSxS\Manifests" /A
+icacls "!mumtarget!\Windows\WinSxS\Manifests" /grant:r "*S-1-5-32-544:(OI)(CI)(F)"
+copy /y "!_CabDir!\%_InCom%.manifest" "!mumtarget!\Windows\WinSxS\Manifests\"
+icacls "!mumtarget!\Windows\WinSxS\Manifests" /setowner *S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464
+icacls "!mumtarget!\Windows\WinSxS" /restore "!_CabDir!\acl.txt"
+del /f /q "!_CabDir!\acl.txt"
+if %online%==0 reg.exe load HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE"
+reg.exe query HKLM\%COMPONENTS% 1>nul 2>nul || reg.exe load HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS"
+reg.exe delete "%_Cmp%\%_InCom%" /f 1>nul 2>nul
+reg.exe add "%_Cmp%\%_InCom%" /f /v "c^!%_Fnd%" /t REG_BINARY /d ""
+reg.exe add "%_Cmp%\%_InCom%" /f /v identity /t REG_BINARY /d "%_InIdt%"
+reg.exe add "%_Cmp%\%_InCom%" /f /v S256H /t REG_BINARY /d "%_InHsh%"
+reg.exe add "%_Cmp%\%_InCom%" /f /v CF /t REG_DWORD /d "64"
+reg.exe add "%_InKey%" /f /ve /d %_OurVer:~0,5%
+reg.exe add "%_InKey%\%_OurVer:~0,5%" /f /ve /d %_OurVer%
+reg.exe add "%_InKey%\%_OurVer:~0,5%" /f /v %_OurVer% /t REG_BINARY /d 01
+for /f "tokens=* delims=" %%# in ('reg.exe query HKLM\%COMPONENTS%\DerivedData\VersionedIndex %_Nul6% ^| findstr /i VersionedIndex') do reg.exe delete "%%#" /f
+goto :EndChk
+
 :Suppress
 for /f %%# in ('dir /b /a:-d "%dest%\%xBT%_%_SxsCmp%_*.manifest"') do set "_SxsCom=%%~n#"
 for /f "tokens=4 delims=_" %%# in ('echo %_SxsCom%') do set "_SxsVer=%%#"
@@ -1654,7 +1699,7 @@ reg.exe query "%_Cmp%\%_SxsCom%" %_Nul3% && goto :Winner
 for /f "skip=1 tokens=* delims=" %%# in ('certutil -hashfile "%dest%\%_SxsCom%.manifest" SHA256^|findstr /i /v CertUtil') do set "_SxsSha=%%#"
 set "_SxsSha=%_SxsSha: =%"
 set "_psin=%_SxsIdn%, Culture=neutral, Version=%_SxsVer%, PublicKeyToken=%_Pkt%, ProcessorArchitecture=%xBT%, versionScope=NonSxS"
-for /f "tokens=* delims=" %%# in ('powershell -nop -c "$str = '%_psin%'; [BitConverter]::ToString([Text.Encoding]::ASCII.GetBytes($str))-replace'-'" %_Nul6%') do set "_SxsHsh=%%#"
+for /f "tokens=* delims=" %%# in ('powershell -nop -c "$str = '%_psin%'; [BitConverter]::ToString([Text.Encoding]::ASCII.GetBytes($str)) -replace '-'" %_Nul6%') do set "_SxsHsh=%%#"
 %_Nul3% reg.exe add "%_Cmp%\%_SxsCom%" /f /v "c^!%_Fnd%" /t REG_BINARY /d ""
 %_Nul3% reg.exe add "%_Cmp%\%_SxsCom%" /f /v identity /t REG_BINARY /d "%_SxsHsh%"
 %_Nul3% reg.exe add "%_Cmp%\%_SxsCom%" /f /v S256H /t REG_BINARY /d "%_SxsSha%"
@@ -1713,8 +1758,8 @@ reg.exe add "%_SxsKey%" /f /ve /d %pv_os% %_Nul3%
 :EndChk
 if %online%==0 (
 if /i %xOS%==x86 if /i not %arch%==x86 (
-  reg.exe save HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE2" %_Nul1%
-  reg.exe query HKLM\%COMPONENTS% %_Nul3% && reg.exe save HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS2" %_Nul1%
+  reg.exe save HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
+  reg.exe query HKLM\%COMPONENTS% %_Nul3% && reg.exe save HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS2" /y %_Nul1%
   )
 reg.exe unload HKLM\%SOFTWARE% %_Nul3%
 reg.exe unload HKLM\%COMPONENTS% %_Nul3%
@@ -1754,8 +1799,10 @@ if %wim%==1 if not defined net35source for %%# in ("!target!") do (
   if exist "!_wimpath!\sxs\*netfx3*.cab" set "net35source=!_wimpath!\sxs"
   )
 )
+if not defined net35source if exist "!_work!\sxs\*netfx3*.cab" set "net35source=!_work!\sxs"
+if not defined net35source if exist "!repo!\sxs\*netfx3*.cab" set "net35source=!repo!\sxs"
 if not defined net35source (echo.&echo .NET 3.5 feature: source folder not defined or detected&goto :eof)
-if not exist "!net35source!\*.cab" (echo.&echo .NET 3.5 feature: source cab file not found or detected&goto :eof)
+if not exist "!net35source!\*netfx3*.cab" (echo.&echo .NET 3.5 feature: source cab file not found or detected&goto :eof)
 echo.
 echo ============================================================
 echo Adding .NET Framework 3.5 feature...
@@ -1870,6 +1917,7 @@ for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "!_cabdir!\check\upd
 if "%kbssu%"=="" (rmdir /s /q "!_cabdir!\check\"&goto :eof)
 set _sfn=Windows10.0-%kbssu%-%arch%.cab
 if %_build% geq 22563 set _sfn=Windows11.0-%kbssu%-%arch%.cab
+if exist "!repo!\*Windows12.0-KB*.cab" set _sfn=Windows12.0-%kbssu%-%arch%.cab
 if /i "%ssupkg:~-4%"==".msu" (
 %_exp% -f:*%arch%*.cab "%ssupkg%" "!_cabdir!\check" %_Null%
 for /f %%# in ('dir /b "!_cabdir!\check\*.cab"') do copy /y "!_cabdir!\check\%%#" %_sfn% %_Nul3%
@@ -2034,25 +2082,12 @@ goto :eof
 set uupmaj=
 set _actEP=1
 if %_fixEP% equ 0 (
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-1909Enablement-Package~*.mum" set "_fixEP=18363"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum"') do (
-  for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
-    set /a _fixEP=%_build%+%%i
-  )
+call :EKB1 "!mountdir!\Windows\Servicing\Packages" _actEP 1
+call :EKB2 "!mountdir!\Windows\Servicing\Packages"
 )
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixEP=22631"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=22631"
-if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixEP=22635"
-)
-set "wnt=31bf3856ad364e35_10"
-if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_31bf3856ad364e35_11.*.manifest" set "wnt=31bf3856ad364e35_11"
-if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_31bf3856ad364e35_12.*.manifest" set "wnt=31bf3856ad364e35_12"
+set "wnt=%_Pkt%_10"
+if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_%_Pkt%_11.*.manifest" set "wnt=%_Pkt%_11"
+if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_%_Pkt%_12.*.manifest" set "wnt=%_Pkt%_12"
 if exist "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" (
 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
 if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /od "!mountdir!\Windows\WinSxS\Manifests\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
@@ -2062,16 +2097,38 @@ if not defined uuplab (if defined isolab (set "uuplab=%isolab%") else (call :det
 call :fixLab %uupmaj% %uuplab% uuplab
 goto :eof
 
+:EKB1
+if exist "%~1\microsoft-windows-*enablement-package~*.mum" set "%2=%3"
+if exist "%~1\Microsoft-Windows-1909Enablement-Package~*.mum" set "_fixEP=18363"
+if exist "%~1\Microsoft-Windows-20H2Enablement-Package~*.mum" set "_fixEP=19042"
+if exist "%~1\Microsoft-Windows-21H1Enablement-Package~*.mum" set "_fixEP=19043"
+if exist "%~1\Microsoft-Windows-21H2Enablement-Package~*.mum" set "_fixEP=19044"
+if exist "%~1\Microsoft-Windows-22H2Enablement-Package~*.mum" set "_fixEP=19045"
+if exist "%~1\Microsoft-Windows-ASOSFe22H2Enablement-Package~*.mum" set "_fixEP=20349"
+if exist "%~1\Microsoft-Windows-SV*Enablement-Package~*.mum" set "_fixEP=%_fixSV%"
+if exist "%~1\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum" for /f "tokens=3 delims=-" %%a in ('dir /b /a:-d /od "%~1\Microsoft-Windows-SV2Moment*Enablement-Package~*.mum"') do (
+  for /f "tokens=3 delims=eEtT" %%i in ('echo %%a') do (
+    set /a _fixSV=%_build%+%%i
+    set /a _fixEP=%_build%+%%i
+  )
+)
+goto :eof
+
+:EKB2
+if exist "%~1\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
+if exist "%~1\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
+if exist "%~1\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixSV=22635"&set "_fixEP=22635"
+goto :eof
+
 :fixLab
 set "_tl=%2"
 if %1==18363 if /i "%_tl:~0,4%"=="19h1" set _tl=19h2%_tl:~4%
-if %1==19041 if /i "%_tl:~0,2%"=="vb" set _tl=20h1%_tl:~2%
 if %1==19042 if /i "%_tl:~0,2%"=="vb" set _tl=20h2%_tl:~2%
 if %1==19043 if /i "%_tl:~0,2%"=="vb" set _tl=21h1%_tl:~2%
 if %1==19044 if /i "%_tl:~0,2%"=="vb" set _tl=21h2%_tl:~2%
 if %1==19045 if /i "%_tl:~0,2%"=="vb" set _tl=22h2%_tl:~2%
 if %1==20349 if /i "%_tl:~0,2%"=="fe" set _tl=22h2%_tl:~2%
-if %1==22631 if /i "%_tl:~0,2%"=="ni" (echo %_tl% | find /i "beta" %_Nul1% || set _tl=23h2%_tl:~2%)
+if %1==22631 if /i "%_tl:~0,2%"=="ni" (echo %_tl% | find /i "beta" %_Nul1% || set _tl=23h2_ni%_tl:~2%)
 set "%3=%_tl%"
 goto :eof
 
@@ -2089,7 +2146,7 @@ for /f "skip=2 tokens=5,6 delims=. " %%A in ('reg.exe query "%_oskey%" /v Versio
   for /f "skip=2 tokens=2*" %%I in ('reg.exe query "%_oskey%" /v Branch') do set "isolab=%%J"
   call :fixLab !isomaj! !isolab! isolab
 )
-reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" %_Nul1%
+reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
 reg.exe unload HKLM\uiSOFTWARE %_Nul1%
 move /y "!mountdir!\Windows\System32\Config\SOFTWARE2" "!mountdir!\Windows\System32\Config\SOFTWARE" %_Nul1%
 goto :eof
@@ -2099,7 +2156,7 @@ set "_tikey=HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\Targeting
 reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
 for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r ".*\.OS"') do set "_oskey=%%#"
 for /f "skip=2 tokens=2*" %%A in ('reg.exe query "%_oskey%" /v Branch') do set "%1=%%B"
-reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" %_Nul1%
+reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
 reg.exe unload HKLM\uiSOFTWARE %_Nul1%
 move /y "!mountdir!\Windows\System32\Config\SOFTWARE2" "!mountdir!\Windows\System32\Config\SOFTWARE" %_Nul1%
 goto :eof
@@ -2108,7 +2165,7 @@ goto :eof
 for /f "tokens=5 delims=.( " %%# in ('powershell -nop -c "(gi '!mountdir!\Windows\system32\ntoskrnl.exe').VersionInfo.FileVersion" %_Nul6%') do set "%1=%%#"
 :: reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
 :: for /f "skip=2 tokens=6 delims=. " %%# in ('"reg.exe query "HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLabEx" %_Nul6%') do set "%1=%%#"
-:: reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" %_Nul1%
+:: reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
 :: reg.exe unload HKLM\uiSOFTWARE %_Nul1%
 :: move /y "!mountdir!\Windows\System32\Config\SOFTWARE2" "!mountdir!\Windows\System32\Config\SOFTWARE" %_Nul1%
 goto :eof
@@ -2229,7 +2286,7 @@ reg.exe add HKLM\%ksub%\%_sbs% /v DisableResetbase /t REG_DWORD /d 1 /f %_Nul1%
 reg.exe add HKLM\%ksub%\%_sbs% /v SupersededActions /t REG_DWORD /d %savc% /f %_Nul1%
 )
 if %online%==0 (
-if /i %xOS%==x86 if /i not %arch%==x86 reg.exe save HKLM\%ksub% "!mumtarget!\Windows\System32\Config\SOFTWARE2" %_Nul1%
+if /i %xOS%==x86 if /i not %arch%==x86 reg.exe save HKLM\%ksub% "!mumtarget!\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
 reg.exe unload HKLM\!ksub! %_Nul1%
 if /i %xOS%==x86 if /i not %arch%==x86 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
@@ -2245,7 +2302,7 @@ reg.exe add HKLM\%ksub%\%_sbs% /v DisableResetbase /t REG_DWORD /d 0 /f %_Nul1%
 reg.exe add HKLM\%ksub%\%_sbs% /v SupersededActions /t REG_DWORD /d %savr% /f %_Nul1%
 )
 if %online%==0 (
-if /i %xOS%==x86 if /i not %arch%==x86 reg.exe save HKLM\%ksub% "!mumtarget!\Windows\System32\Config\SOFTWARE2" %_Nul1%
+if /i %xOS%==x86 if /i not %arch%==x86 reg.exe save HKLM\%ksub% "!mumtarget!\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
 reg.exe unload HKLM\!ksub! %_Nul1%
 if /i %xOS%==x86 if /i not %arch%==x86 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
@@ -2282,6 +2339,7 @@ del /s /f /q "!mumtarget!\Windows\CbsTemp\*" %_Nul3%
 goto :eof
 
 :onlinepending
+if exist "!_dsk!\RunOnce_AfterRestart_DismCleanup.cmd" goto :eof
 if %resetbase%==0 (set rValue=W10UIclean) else (set rValue=W10UIrebase)
 reg.exe add %_SxS% /v !rValue! /t REG_DWORD /d 1 /f %_Nul1%
 (
@@ -2317,7 +2375,7 @@ echo dism.exe /Online /Cleanup-Image /StartComponentCleanup /ResetBase
 echo ^)
 echo ^(goto^) 2^>nul ^&del /f /q %%0 ^&exit /b
 )>"W10Cln.cmd"
-move /y "W10Cln.cmd" "!_dsk!\RunOnce_AfterRestart_DismCleanup.cmd"
+move /y "W10Cln.cmd" "!_dsk!\RunOnce_AfterRestart_DismCleanup.cmd" %_Nul1%
 goto :eof
 
 :MeltdownSpectre
@@ -2441,10 +2499,10 @@ echo.
 echo ============================================================
 echo ERROR: Could not mount or unmount WIM image
 echo ============================================================
-echo.
-echo Press 9 to exit.
 if %_Debug% neq 0 goto :EndDebug
-choice /c 9 /n
+echo.
+echo Press 9 or q to exit.
+choice /c 9Q /n
 if errorlevel 1 (exit) else (rem.)
 
 :E_Admin
@@ -2830,8 +2888,8 @@ if %_embd% neq 0 goto :eof
 if %autostart% neq 0 goto :eof
 if %_Debug% neq 0 goto :eof
 echo.
-echo Press 9 to exit.
-choice /c 9 /n
+echo Press 9 or q to exit.
+choice /c 9Q /n
 if errorlevel 1 (goto :eof) else (rem.)
 
 $:DIR2ISO: #,# [PARAMS] directory file.iso
