@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v97
+@set uivr=v98
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -58,7 +58,7 @@ set ForceDism=0
 :: Change to 1 to keep converted Reference ESDs
 set RefESD=0
 
-:: Change to 1 to skip creating Cumulative Update MSU for builds 21382 to 25330
+:: Change to 1 to skip creating Cumulative Update MSU for builds 21382 - 25330
 set SkipLCUmsu=0
 
 :: Change to 1 for not integrating EdgeChromium with Enablement Package or Cumulative Update
@@ -67,6 +67,18 @@ set SkipEdge=0
 
 :: Change to 1 to exit the process on completion without prompt
 set AutoExit=0
+
+:: ### Drivers Options ###
+
+:: Change to 1 to add drivers to install.wim and boot.wim / winre.wim
+set AddDrivers=0
+
+:: custom folder path for drivers - default is "Drivers" folder next to the script
+:: the folder must contain subfolder for each drivers target:
+:: ALL   / drivers will be added to all wim files
+:: OS    / drivers will be added to install.wim only
+:: WinPE / drivers will be added to boot.wim / winre.wim only
+set "Drv_Source=\Drivers"
 
 :: ### Store Apps for builds 22563 and later ###
 
@@ -91,6 +103,8 @@ set StubAppsFull=0
 set CustomList=0
 
 :: ###################################################################
+
+set DeleteSource=0
 
 set "_Null=1>nul 2>nul"
 set DisableWimRebuilds=0
@@ -285,6 +299,7 @@ StartVirtual
 SkipISO
 SkipWinRE
 LCUwinre
+DisableUpdatingUpgrade
 UpdtBootFiles
 wim2esd
 wim2swm
@@ -293,7 +308,8 @@ RefESD
 SkipLCUmsu
 SkipEdge
 AutoExit
-DisableUpdatingUpgrade
+AddDrivers
+Drv_Source
 SkipApps
 AppsLevel
 StubAppsFull
@@ -301,6 +317,7 @@ CustomList
 ) do (
 call :ReadINI %%#
 )
+findstr /b /i vDeleteSource ConvertConfig.ini %_Nul1% && for /f "tokens=2 delims==" %%# in ('findstr /b /i vDeleteSource ConvertConfig.ini') do set "DeleteSource=%%#"
 goto :proceed
 
 :ReadINI
@@ -330,6 +347,17 @@ set _pmcppc=0
 if exist "!_UUP!\*Microsoft-Windows-Printing-PMCPPC-FoD-Package*.cab" set _pmcppc=1
 if exist "!_UUP!\*Microsoft-Windows-Printing-PMCPPC-FoD-Package*.esd" set _pmcppc=1
 dir /b /ad "!_UUP!\*Package*" %_Nul3% && set EXPRESS=1
+if "!Drv_Source!"=="\Drivers" set "Drv_Source=!_work!\Drivers"
+set "DrvSrcALL="
+set "DrvSrcOS="
+set "DrvSrcPE="
+if %AddDrivers% neq 0 if %W10UI% neq 0 if exist "!Drv_Source!\" (
+pushd "!Drv_Source!"
+if exist ALL\ dir /b /s "ALL\*.inf" %_Nul3% && set "DrvSrcALL=!Drv_Source!\ALL"
+if exist OS\ dir /b /s "OS\*.inf" %_Nul3% && set "DrvSrcOS=!Drv_Source!\OS"
+if exist WinPE\ dir /b /s "WinPE\*.inf" %_Nul3% && set "DrvSrcPE=!Drv_Source!\WinPE"
+popd
+)
 for %%# in (
 Core,CoreN,CoreSingleLanguage,CoreCountrySpecific
 Professional,ProfessionalN,ProfessionalEducation,ProfessionalEducationN,ProfessionalWorkstation,ProfessionalWorkstationN
@@ -337,7 +365,8 @@ Education,EducationN,Enterprise,EnterpriseN,EnterpriseG,EnterpriseGN,EnterpriseS
 PPIPro,IoTEnterprise,IoTEnterpriseK,IoTEnterpriseS,IoTEnterpriseSK
 Cloud,CloudN,CloudE,CloudEN,CloudEdition,CloudEditionN,CloudEditionL,CloudEditionLN
 Starter,StarterN,ProfessionalCountrySpecific,ProfessionalSingleLanguage
-ServerStandardCore,ServerStandard,ServerDatacenterCore,ServerDatacenter,ServerAzureStackHCICor,ServerTurbineCor,ServerTurbine
+ServerStandardCore,ServerStandard,ServerDatacenterCore,ServerDatacenter,ServerTurbineCore,ServerTurbine,ServerAzureStackHCICor
+WNC
 ) do (
 if exist "!_UUP!\%%#_*.esd" (dir /b /a:-d "!_UUP!\%%#_*.esd">>temp\uups_esd.txt %_Nul2%) else if exist "!_UUP!\MetadataESD_%%#_*.esd" (dir /b /a:-d "!_UUP!\MetadataESD_%%#_*.esd">>temp\uups_esd.txt %_Nul2%)
 )
@@ -531,6 +560,7 @@ StartVirtual
 SkipISO
 SkipWinRE
 LCUwinre
+DisableUpdatingUpgrade
 UpdtBootFiles
 wim2esd
 wim2swm
@@ -539,11 +569,12 @@ RefESD
 SkipLCUmsu
 SkipEdge
 AutoExit
-DisableUpdatingUpgrade
+AddDrivers
 SkipApps
 AppsLevel
 StubAppsFull
 CustomList
+DeleteSource
 ) do (
 if !%%#! neq 0 set _configured=1
 )
@@ -556,18 +587,22 @@ call :dk_color1 %Blue% "=== Configured Options . . ." 4 5
   if %Cleanup% neq 0 if %ResetBase% neq 0 echo ResetBase
   )
   if %AddUpdates% neq 0 if %NetFx3% neq 0 echo NetFx3
-  if %StartVirtual% neq 0 echo StartVirtual
+  if %StartVirtual% neq 0 (
+  echo StartVirtual
+  if %DeleteSource% neq 0 echo DeleteSource
+  )
   for %%# in (
   SkipISO
   SkipWinRE
   LCUwinre
+  DisableUpdatingUpgrade
   UpdtBootFiles
   wim2esd
   wim2swm
   ForceDism
   RefESD
   AutoExit
-  DisableUpdatingUpgrade
+  AddDrivers
   ) do (
   if !%%#! neq 0 echo %%#
   )
@@ -644,7 +679,7 @@ if exist "!_cabdir!\" (
 if %AddUpdates% equ 1 if %_updexist% equ 1 call :dk_color1 %Blue% "=== Removing temporary files . . ." 4
 rmdir /s /q "!_cabdir!\" %_Nul3%
 )
-if %_extVirt% equ 1 (
+if %_extVirt% equ 1 if %DeleteSource% neq 1 (
 set DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%MULTI_%archl%FRE_%langid%
 )
 if %StartVirtual% neq 0 if %_SrvESD% equ 0 if %_extVirt% equ 0 (
@@ -712,13 +747,14 @@ Cleanup
 ResetBase
 SkipWinRE
 LCUwinre
+DisableUpdatingUpgrade
 wim2esd
 wim2swm
 RefESD
 SkipLCUmsu
 SkipEdge
 AutoExit
-DisableUpdatingUpgrade
+AddDrivers
 SkipApps
 AppsLevel
 StubAppsFull
@@ -737,11 +773,12 @@ call :dk_color1 %Blue% "=== Configured Options . . ." 4 5
   for %%# in (
   SkipWinRE
   LCUwinre
+  DisableUpdatingUpgrade
   wim2esd
   wim2swm
   RefESD
   AutoExit
-  DisableUpdatingUpgrade
+  AddDrivers
   ) do (
   if !%%#! neq 0 echo %%#
   )
@@ -1127,6 +1164,7 @@ if %_build% geq 22621 set _ddv=DV9
 if %AIO% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%MULTI_%archl%FRE_%langid%&exit /b
 if %_count% gtr 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%MULTI_%archl%FRE_%langid%&exit /b
 
+:virtlabel
 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%%editionid%_RET_%archl%FRE_%langid%
 if %_SrvESD% equ 1 set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%-%editionid%_RET_%archl%FRE_%langid%
 if /i %editionid%==Core set DVDLABEL=CCRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CORE_OEMRET_%archl%FRE_%langid%&exit /b
@@ -1158,9 +1196,9 @@ if /i %editionid%==ServerStandard (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_
 if /i %editionid%==ServerStandardCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%STANDARDCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%STANDARDCORE_OEMRET_%archl%FRE_%langid%))&exit /b
 if /i %editionid%==ServerDatacenter (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%DATACENTER_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%DATACENTER_OEMRET_%archl%FRE_%langid%))&exit /b
 if /i %editionid%==ServerDatacenterCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%DATACENTERCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%DATACENTERCORE_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerAzureStackHCICor set DVDLABEL=SASH_%archl%FRE_%langid%_DV5&set DVDISO=%_label%AZURESTACKHCI_RET_%archl%FRE_%langid%&exit /b
 if /i %editionid%==ServerTurbine (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_DV5&set DVDISO=%_label%TURBINE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_DV5&set DVDISO=%_label%TURBINE_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerTurbineCor (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_DV5&set DVDISO=%_label%TURBINECOR_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_DV5&set DVDISO=%_label%TURBINECOR_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerTurbineCore (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_DV5&set DVDISO=%_label%TURBINECOR_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_DV5&set DVDISO=%_label%TURBINECOR_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerAzureStackHCICor set DVDLABEL=SASH_%archl%FRE_%langid%_DV5&set DVDISO=%_label%AZURESTACKHCI_RET_%archl%FRE_%langid%&exit /b
 exit /b
 
 :fixBranch
@@ -1310,15 +1348,20 @@ for /f "tokens=3 delims=<>" %%# in ('find /i "<DEFAULT>" bin\info.txt') do set "
 for /f "tokens=3 delims=<>" %%# in ('find /i "<EDITIONID>" bin\info.txt') do set "edition%1=%%#"
 for /f "tokens=3 delims=<>" %%# in ('find /i "<ARCH>" bin\info.txt') do (if %%# equ 0 (set "arch%1=x86") else if %%# equ 9 (set "arch%1=x64") else (set "arch%1=arm64"))
 for /f "tokens=3 delims=<>" %%# in ('find /i "<NAME>" bin\info.txt') do set "_oname%1=%%#"
+for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info.txt') do set _obuild%1=%%#
 set "_wtx=Windows 10"
 find /i "<NAME>" bin\info.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "_wtx=Windows 11")
 find /i "<NAME>" bin\info.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "_wtx=Windows 12")
 echo !edition%1!|findstr /i /b "Server" %_Nul3% && (set _SrvESD=1&set _ESDSrv%1=1)
 set "_wsr=Windows Server 2022"
-if !_ESDSrv%1! equ 1 find /i "<NAME>" bin\info.txt %_Nul2% | find /i " 2025" %_Nul1% && (set "_wsr=Windows Server 2025")
+if !_ESDSrv%1! equ 1 (
+find /i "<NAME>" bin\info.txt %_Nul2% | find /i " 2025" %_Nul1% && (set "_wsr=Windows Server 2025")
+if !_obuild%1! geq 26010 (set "_wsr=Windows Server 2025")
+)
 if !_ESDSrv%1! equ 1 findstr /i /c:"Server Core" bin\info.txt %_Nul3% && (
 if /i "!edition%1!"=="ServerStandard" set "edition%1=ServerStandardCore"
 if /i "!edition%1!"=="ServerDatacenter" set "edition%1=ServerDatacenterCore"
+if /i "!edition%1!"=="ServerTurbine" set "edition%1=ServerTurbineCore"
 )
 set uLang=0
 for %%# in (ru-ru,zh-cn,zh-tw,zh-hk) do if /i !langid%1!==%%# set uLang=1
@@ -1359,13 +1402,13 @@ if %uLang% equ 1 for %%# in (
 "ServerRdsh:%_wtx% Enterprise multi-session"
 "Starter:%_wtx% Starter"
 "StarterN:%_wtx% Starter N"
-"ServerStandardCore:%_wsr% Standard"
+"ServerStandardCore:%_wsr% Standard (Core)"
 "ServerStandard:%_wsr% Standard (Desktop Experience)"
-"ServerDatacenterCore:%_wsr% Datacenter"
+"ServerDatacenterCore:%_wsr% Datacenter (Core)"
 "ServerDatacenter:%_wsr% Datacenter (Desktop Experience)"
-"ServerAzureStackHCICor:Azure Stack HCI"
-"ServerTurbineCor:%_wsr% Datacenter Azure Edition"
+"ServerTurbineCore:%_wsr% Datacenter Azure Edition (Core)"
 "ServerTurbine:%_wsr% Datacenter Azure Edition (Desktop Experience)"
+"ServerAzureStackHCICor:Azure Stack HCI"
 ) do for /f "tokens=1,2 delims=:" %%A in ("%%~#") do (
 if !edition%1!==%%A set "_oname%1=%%B"
 )
@@ -2090,11 +2133,15 @@ if %_extsafe% equ 1 (
 expand.exe -f:*_microsoft-windows-sysreset_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (set "_type=[SafeOS DU]"&set uwinpe=1)
 )
-if %_extsafe% equ 1 if not exist "!dest!\*_microsoft-windows-sysreset_*.manifest" (
+if %_extsafe% equ 1 if not defined _type (
+%_exp% -f:*_microsoft-windows-winpe_tools_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_microsoft-windows-winpe_tools_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (set "_type=[SafeOS DU]"&set uwinpe=1)
+)
+if %_extsafe% equ 1 if not defined _type (
 expand.exe -f:*_microsoft-windows-winre-tools_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*_microsoft-windows-winre-tools_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (set "_type=[SafeOS DU]"&set uwinpe=1)
 )
-if %_extsafe% equ 1 if not exist "!dest!\*_microsoft-windows-sysreset_*.manifest" (
+if %_extsafe% equ 1 if not defined _type (
 expand.exe -f:*_microsoft-windows-i..dsetup-rejuvenation_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (set "_type=[SafeOS DU]"&set uwinpe=1)
 )
@@ -2605,12 +2652,16 @@ if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" go
 set "safeos=!safeos! /PackagePath:!dest!\update.mum"
 goto :eof
 )
-if exist "!dest!\*_microsoft-windows-winre-tools_*.manifest" if not exist "!dest!\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (
+if exist "!dest!\*_microsoft-windows-winpe_tools_*.manifest" if not exist "!dest!\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (
+set "safeos=!safeos! /PackagePath:!dest!\update.mum"
+goto :eof
+)
+if exist "!dest!\*_microsoft-windows-winre-tools_*.manifest" if not exist "!dest!\*_microsoft-windows-sysreset_*.manifest" if not exist "!dest!\*_microsoft-windows-winpe_tools_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (
 if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" goto :eof
 set "safeos=!safeos! /PackagePath:!dest!\update.mum"
 goto :eof
 )
-if exist "!dest!\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" if not exist "!dest!\*_microsoft-windows-sysreset_*.manifest" if not exist "!dest!\*_microsoft-windows-winre-tools_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (
+if exist "!dest!\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" if not exist "!dest!\*_microsoft-windows-sysreset_*.manifest" if not exist "!dest!\*_microsoft-windows-winpe_tools_*.manifest" if not exist "!dest!\*_microsoft-windows-winre-tools_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (
 if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" goto :eof
 set "safeos=!safeos! /PackagePath:!dest!\update.mum"
 goto :eof
@@ -2984,9 +3035,11 @@ find /i "<NAME>" bin\info%iCorN%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (
 set "_wsr=Windows Server 2022"
 if %iSRSC% neq 0 (
 find /i "<NAME>" bin\info%iSRSC%.txt %_Nul2% | find /i " 2025" %_Nul1% && (set "_wsr=Windows Server 2025")
+if %_build% geq 26010 (set "_wsr=Windows Server 2025")
 )
 if %iSRSD% neq 0 (
 find /i "<NAME>" bin\info%iSRSD%.txt %_Nul2% | find /i " 2025" %_Nul1% && (set "_wsr=Windows Server 2025")
+if %_build% geq 26010 (set "_wsr=Windows Server 2025")
 )
 del /f /q bin\info*.txt
 if /i %_nnn%==winre.wim (
@@ -3038,6 +3091,17 @@ if defined indices for %%# in (%indices%) do (set "_inx=%%#"&call :dowork)
 :appxdo
 set isappx=1
 if defined indexes for %%# in (%indexes%) do (set "_inx=%%#"&call :dowork)
+if %_extVirt% equ 0 goto :eof
+if %DeleteSource% neq 1 goto :eof
+call :dk_color1 %Blue% "=== Deleting Source Edition{s} . . ." 4 5
+if %_didProf% equ 1 call :dDelete Professional
+if %_didProN% equ 1 call :dDelete ProfessionalN
+if %_didHome% equ 1 call :dDelete Core
+for /f "tokens=3 delims=: " %%# in ('imagex /info "%_www%" ^|findstr /i /b /c:"Image Count"') do set finalimages=%%#
+if %finalimages% gtr 1 goto :eof
+for /f "tokens=3 delims=<>" %%# in ('imagex /info "%_www%" 1 ^| find /i "<EDITIONID>"') do set editionid=%%#
+set AIO=0&set _count=0
+call :virtlabel
 goto :eof
 
 :dowork
@@ -3057,7 +3121,7 @@ call :appx_wim
 %_dism2%:"!_cabdir!" /Commit-Wim /MountDir:"%_mount%"
 call :dk_color1 %Gray% "=== Adding Updates . . ." 4
 )
-if /i not %_nnn%==winre.wim if %_upgr% equ 1 if %_pmcppc% equ 1 if %_build% geq 19041 if not exist "%_mount%\Windows\Servicing\Packages\Microsoft-Windows-Printing-PMCPPC-FoD-Package*.mum" call :pmcppcwim
+if /i not %_nnn%==winre.wim if %_build% geq 19041 if %_upgr% equ 1 if %_pmcppc% equ 1 if not exist "%_mount%\Windows\Servicing\Packages\Microsoft-Windows-Printing-PMCPPC-FoD-Package*.mum" call :pmcppcwim
 call :updatewim
 if defined mounterr goto :eof
 if %NetFx3% equ 1 if %dvd% equ 1 call :enablenet35
@@ -3103,6 +3167,17 @@ call :appx_wim
 if %_upgr% equ 1 if %_pmcppc% equ 1 if not exist "%_mount%\Windows\Servicing\Packages\Microsoft-Windows-Printing-PMCPPC-FoD-Package*.mum" call :pmcppcwim
 
 :doProceed
+if %AddDrivers% equ 0 goto :doCommit
+if /i %_nnn%==winre.wim (
+if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
+if defined DrvSrcPE %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcPE!" /Recurse
+goto :doCommit
+)
+call :dk_color1 %Gray% "=== Adding Drivers . . ." 4 5
+if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
+if defined DrvSrcOS %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.log" /Add-Driver /Driver:"!DrvSrcOS!" /Recurse
+
+:doCommit
 %_dism2%:"!_cabdir!" /Commit-Wim /MountDir:"%_mount%"
 if !errorlevel! neq 0 (
 %_dism1% /Image:"%_mount%" /Get-Packages %_Null%
@@ -3114,7 +3189,7 @@ if /i %_nnn%==winre.wim goto :crDsc
 :crHome
 if %_inx% neq %iHome% goto :crProf
 if %StartVirtual% equ 0 goto :crProf
-call :V_Ext Home
+set _didHome=1&call :V_Ext Home
 
 :crProf
 if %uProf% equ 0 goto :crProN
@@ -3126,7 +3201,7 @@ call set /a _imgi+=1
 call set ddesc="%_wtx% Pro"
 wimlib-imagex.exe info "%_www%" !_imgi! !ddesc! !ddesc! --image-property DISPLAYNAME=!ddesc! --image-property DISPLAYDESCRIPTION=!ddesc! --image-property FLAGS=Professional %_Nul3%
 if %StartVirtual% equ 0 goto :crProN
-call :V_Ext Prof
+set _didProf=1&call :V_Ext Prof
 
 :crProN
 if %uProN% equ 0 goto :crSDC
@@ -3138,7 +3213,7 @@ call set /a _imgi+=1
 call set ddesc="%_wtx% Pro N"
 wimlib-imagex.exe info "%_www%" !_imgi! !ddesc! !ddesc! --image-property DISPLAYNAME=!ddesc! --image-property DISPLAYDESCRIPTION=!ddesc! --image-property FLAGS=ProfessionalN %_Nul3%
 if %StartVirtual% equ 0 goto :crSDC
-call :V_Ext ProN
+set _didProN=1&call :V_Ext ProN
 
 :crSDC
 if %uSDC% equ 0 goto :crSDD
@@ -3148,7 +3223,7 @@ call :dk_color1 %Gray% "=== Creating Edition: Datacenter Core" 4
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
 call set /a _imgi+=1
 call set cname="%_wsr% ServerDatacenterCore"
-call set dname="%_wsr% Datacenter"
+call set dname="%_wsr% Datacenter (Core)"
 call set ddesc="(Recommended) This option omits most of the Windows graphical environment. Manage with a command prompt and PowerShell, or remotely with Windows Admin Center or other tools."
 wimlib-imagex.exe info "%_www%" !_imgi! !cname! !cname! --image-property DISPLAYNAME=!dname! --image-property DISPLAYDESCRIPTION=!ddesc! --image-property FLAGS=ServerDatacenterCore %_Nul3%
 
@@ -3167,8 +3242,8 @@ wimlib-imagex.exe info "%_www%" !_imgi! !cname! !cname! --image-property DISPLAY
 :crEnd
 if %_SrvESD% equ 1 goto :crDsc
 if %StartVirtual% equ 0 goto :crDsc
-if %uProf% equ 0 if %_inx% equ %iEntr% call :V_Ext Prof
-if %uProN% equ 0 if %_inx% equ %iEntN% call :V_Ext ProN
+if %uProf% equ 0 if %_inx% equ %iEntr% (set _didProf=1&call :V_Ext Prof)
+if %uProN% equ 0 if %_inx% equ %iEntN% (set _didProN=1&call :V_Ext ProN)
 
 :crDsc
 %_dism2%:"!_cabdir!" /Unmount-Wim /MountDir:"%_mount%" /Discard
@@ -3203,6 +3278,18 @@ if !errorlevel! neq 0 (
   (echo.&echo Failed installing %%~n#)>>"!logerr!"
   )
 )
+goto :eof
+
+:dDelete
+for /f "tokens=3 delims=: " %%# in ('imagex /info "%_www%" ^|findstr /i /b /c:"Image Count"') do set vimages=%%#
+for /l %%# in (1,1,%vimages%) do imagex /info "%_www%" %%# >bin\info%%#.txt 2>&1
+for /L %%# in (1,1,%vimages%) do (
+find /i "<EDITIONID>%1</EDITIONID>" bin\info%%#.txt %_Nul3% && (
+  echo %1
+  wimlib-imagex.exe delete "%_www%" %%# --soft %_Nul3%
+  )
+)
+del /f /q bin\info*.txt %_Nul3%
 goto :eof
 
 :cleanup
@@ -3408,12 +3495,12 @@ for %%# in (PPIPro) do if exist _tmpMD\*CompDB_%%#_*.xml (
 )
 >>AppsList.xml echo ^</Team^>
 >>AppsList.xml echo ^<ServerAzure^>
-for %%# in (AzureStackHCICor,TurbineCor) do if exist _tmpMD\*CompDB_Server%%#_*.xml (
+for %%# in (AzureStackHCICor) do if exist _tmpMD\*CompDB_Server%%#_*.xml (
 >>AppsList.xml (find /i "PreinstalledApps" _tmpMD\*CompDB_Server%%#_*.xml | find /v "-")
 )
 >>AppsList.xml echo ^</ServerAzure^>
 >>AppsList.xml echo ^<ServerCore^>
-for %%# in (Standard,Datacenter) do if exist _tmpMD\*CompDB_Server%%#Core_*.xml (
+for %%# in (Standard,Datacenter,Turbine) do if exist _tmpMD\*CompDB_Server%%#Core_*.xml (
 >>AppsList.xml (find /i "PreinstalledApps" _tmpMD\*CompDB_Server%%#Core_*.xml | find /v "-")
 )
 >>AppsList.xml echo ^</ServerCore^>
@@ -3483,10 +3570,10 @@ for %%# in (CoreN,ProfessionalN,ProfessionalEducationN,ProfessionalWorkstationN,
 if /i "%_edtn%"=="%%#" set "_appList=%_appProN%"
 )
 if /i "%_edtn%"=="PPIPro" set "_appList=%_appTeam%"
-for %%# in (AzureStackHCICor,TurbineCor) do (
+for %%# in (AzureStackHCICor) do (
 if /i "%_edtn%"=="%%#" set "_appList=%_appAzure%"
 )
-for %%# in (ServerStandard,ServerDatacenter,Turbine) do (
+for %%# in (ServerStandard,ServerDatacenter,ServerTurbine) do (
 if /i "%_edtn%"=="%%#" (if exist "%mumtarget%\Windows\Servicing\Packages\Microsoft-Windows-Server*CorEdition~*.mum" (set "_appList=%_appSCore%") else (set "_appList=%_appSFull%"))
 )
 set _appWay=0
@@ -3645,7 +3732,6 @@ set _reMSU=0
 set _IPA=0
 set _runIPA=0
 set _appsCustom=0
-set _extVirt=0
 set _initial=0
 set "_mount=%_drv%\MountUUP"
 set "_ntf=NTFS"
@@ -3656,6 +3742,10 @@ set "_mount=%SystemDrive%\MountUUP"
 )
 set "_ln2=____________________________________________________________"
 set "_ln1=________________________________________________"
+set _extVirt=0
+set _didProf=0
+set _didProN=0
+set _didHome=0
 goto :eof
 
 :checkadk

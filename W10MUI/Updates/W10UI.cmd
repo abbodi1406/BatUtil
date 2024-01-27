@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.38
+@set uiv=v10.39
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -20,7 +20,7 @@ set "DismRoot=dism.exe"
 :: enable .NET 3.5 feature
 set Net35=1
 
-:: optional, specify custom "folder" path for microsoft-windows-netfx3-ondemand-package.cab
+:: optional, custom "folder" path for microsoft-windows-netfx3-ondemand-package.cab
 set "Net35Source="
 
 :: Cleanup OS images to "compress" superseded components (might take long time to complete)
@@ -56,6 +56,18 @@ set AutoStart=0
 :: detect and use wimlib-imagex.exe for exporting wim files instead dism.exe
 set UseWimlib=0
 
+:: ### Options for wim or distribution target only ###
+
+:: add drivers to install.wim and boot.wim / winre.wim
+set AddDrivers=0
+
+:: custom folder path for drivers - default is "Drivers" folder next to the script
+:: the folder must contain subfolder for each drivers target:
+:: ALL   / drivers will be added to all wim files
+:: OS    / drivers will be added to install.wim only
+:: WinPE / drivers will be added to boot.wim / winre.wim only
+set "Drv_Source=\Drivers"
+
 :: ### Options for distribution target only ###
 
 :: convert install.wim to install.esd
@@ -67,7 +79,7 @@ set wim2esd=0
 set wim2swm=0
 
 :: create new iso file
-:: require Win10 ADK, or place oscdimg.exe or cdimage.exe next to the script, or inside bin folder
+:: require either of: Win10 ADK, oscdimg.exe, cdimage.exe, Windows Powershell
 set ISO=1
 
 :: folder path for iso file, leave it blank to create ISO in the script current directory
@@ -235,6 +247,8 @@ iso
 isodir
 delete_source
 autostart
+adddrivers
+drv_source
 ) do (
 call :ReadINI %%#
 )
@@ -264,6 +278,8 @@ if "%UseWimlib%"=="" set UseWimlib=1
 if "%ISO%"=="" set ISO=1
 if "%AutoStart%"=="" set AutoStart=0
 if "%Delete_Source%"=="" set Delete_Source=0
+if "%AddDrivers%"=="" set AddDrivers=0
+if "%Drv_Source%"=="" set "Drv_Source=\Drivers"
 if "%wim2esd%"=="" set wim2esd=0
 if "%wim2swm%"=="" set wim2swm=0
 set _wlib=0
@@ -275,6 +291,17 @@ if %UseWimlib% equ 1 if %_wlib% equ 0 (
 if exist "wimlib-imagex.exe" set _wlib=1&set _wimlib="!_work!\wimlib-imagex.exe"
 if exist "bin\wimlib-imagex.exe" set _wlib=1&set _wimlib="!_work!\bin\wimlib-imagex.exe"
 if /i %xOS%==amd64 if exist "bin\bin64\wimlib-imagex.exe" set _wlib=1&set _wimlib="!_work!\bin\bin64\wimlib-imagex.exe"
+)
+if "!Drv_Source!"=="\Drivers" set "Drv_Source=!_work!\Drivers"
+set "DrvSrcALL="
+set "DrvSrcOS="
+set "DrvSrcPE="
+if %AddDrivers% neq 0 if exist "!Drv_Source!\" (
+cd /d "!Drv_Source!"
+if exist ALL\ dir /b /s "ALL\*.inf" %_Nul3% && set "DrvSrcALL=!Drv_Source!\ALL"
+if exist OS\ dir /b /s "OS\*.inf" %_Nul3% && set "DrvSrcOS=!Drv_Source!\OS"
+if exist WinPE\ dir /b /s "WinPE\*.inf" %_Nul3% && set "DrvSrcPE=!Drv_Source!\WinPE"
+cd /d "!_work!"
 )
 set _ADK=0
 set "showdism=Host OS"
@@ -538,6 +565,9 @@ set "target=!_work!\DVD10UI"
 )
 call :extract
 if %_sum%==0 goto :fin
+if %_build% geq 22000 (
+if %LCUwinre% equ 2 (set LCUwinre=0) else (set LCUwinre=1)
+)
 
 :igonline
 if %online%==0 goto :igoffline
@@ -892,11 +922,15 @@ if %_extsafe%==1 (
 %_exp% -f:*_microsoft-windows-sysreset_*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% || set "_type=[SafeOS DU]"
 )
-if %_extsafe%==1 if not exist "checker\*_microsoft-windows-sysreset_*.manifest" (
+if %_extsafe%==1 if not defined _type (
+%_exp% -f:*_microsoft-windows-winpe_tools_*.manifest "!repo!\!package!" "checker" %_Null%
+if exist "checker\*_microsoft-windows-winpe_tools_*.manifest" findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% || set "_type=[SafeOS DU]"
+)
+if %_extsafe%==1 if not defined _type (
 %_exp% -f:*_microsoft-windows-winre-tools_*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_microsoft-windows-winre-tools_*.manifest" findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% || set "_type=[SafeOS DU]"
 )
-if %_extsafe%==1 if not exist "checker\*_microsoft-windows-sysreset_*.manifest" (
+if %_extsafe%==1 if not defined _type (
 %_exp% -f:*_microsoft-windows-i..dsetup-rejuvenation_*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% || set "_type=[SafeOS DU]"
 )
@@ -1228,7 +1262,7 @@ set doboot=0
 set doinstall=0
 if defined cumulative if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 if %verb%==0 if %LCUwinre%==1 set dowinre=1
-if %verb%==1 if %_build% neq 14393 set doboot=1
+if %verb%==1 set doboot=1
 )
 if defined cumulative if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 if %verb%==1 set doinstall=1
@@ -1435,13 +1469,18 @@ if %verb%==1 (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /PackagePath:%dest%\update.mum"
 goto :eof
 )
-if exist "%dest%\*_microsoft-windows-winre-tools_*.manifest" if not exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
+if exist "%dest%\*_microsoft-windows-winpe_tools_*.manifest" if not exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
+if %verb%==1 (set /a _sum-=1&goto :eof)
+set "safeos=!safeos! /PackagePath:%dest%\update.mum"
+goto :eof
+)
+if exist "%dest%\*_microsoft-windows-winre-tools_*.manifest" if not exist "%dest%\*_microsoft-windows-sysreset_*.manifest" if not exist "%dest%\*_microsoft-windows-winpe_tools_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
 if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" (set /a _sum-=1&goto :eof)
 if %verb%==1 (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /PackagePath:%dest%\update.mum"
 goto :eof
 )
-if exist "%dest%\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" if not exist "%dest%\*_microsoft-windows-sysreset_*.manifest" if not exist "%dest%\*_microsoft-windows-winre-tools_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
+if exist "%dest%\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" if not exist "%dest%\*_microsoft-windows-sysreset_*.manifest" if not exist "%dest%\*_microsoft-windows-winpe_tools_*.manifest" if not exist "%dest%\*_microsoft-windows-winre-tools_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
 if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" (set /a _sum-=1&goto :eof)
 if %verb%==1 (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /PackagePath:%dest%\update.mum"
@@ -2036,6 +2075,7 @@ echo ============================================================
 echo.
 copy /y "!_work!\winre.wim" "!mountdir!\Windows\System32\Recovery\"
 )
+if %AddDrivers%==1 call :doDrv
 echo.
 echo ============================================================
 echo Unmounting %_wimfile% - index %%#/%imgcount%
@@ -2216,6 +2256,7 @@ goto :eof
   if %errorlevel% neq 0 goto :E_MOUNT
   cd /d "!_cabdir!"
   call :doupdate winre
+  if %AddDrivers%==1 call :reDrv
   if !discardre!==1 (
   %_dism2%:"!_cabdir!" /Unmount-Wim /MountDir:"!winremount!" /Discard
   if !errorlevel! neq 0 goto :E_MOUNT
@@ -2234,6 +2275,37 @@ goto :eof
   )
   set "mumtarget=!mumtargeb!"
   set dismtarget=/image:"!mountdir!"
+goto :eof
+
+:doDrv
+if exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+if not defined DrvSrcALL if not defined DrvSrcPE goto :eof
+) else (
+if not defined DrvSrcALL if not defined DrvSrcOS goto :eof
+)
+echo.
+echo ============================================================
+echo Adding drivers...
+echo ============================================================
+if exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
+if defined DrvSrcPE %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcPE!" /Recurse
+) else (
+if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
+if defined DrvSrcOS %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.log" /Add-Driver /Driver:"!DrvSrcOS!" /Recurse
+)
+if !discard!==1 (
+%_dism2%:"!_cabdir!" /Commit-Wim /MountDir:"!mountdir!"
+)
+goto :eof
+
+:reDrv
+if not defined DrvSrcALL if not defined DrvSrcPE goto :eof
+if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinRE.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
+if defined DrvSrcPE %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinRE.log" /Add-Driver /Driver:"!DrvSrcPE!" /Recurse
+if !discardre!==1 (
+%_dism2%:"!_cabdir!" /Commit-Wim /MountDir:"!winremount!"
+)
 goto :eof
 
 :cleanup
@@ -2940,11 +3012,9 @@ $DirectoryName = $CabFile.Substring(0, $CabFile.LastIndexOf('.'))
 $PSFFile = $DirectoryName + ".psf"
 $null = [IO.Directory]::CreateDirectory($DirectoryName)
 $DeltaList = G  $DirectoryName
-$AssemblyBuilder = [AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1)
-$ModuleBuilder = $AssemblyBuilder.DefineDynamicModule(2, $False)
-$TypeBuilder = $ModuleBuilder.DefineType(0)
-[void]$TypeBuilder.DefinePInvokeMethod('ApplyDeltaW', 'msdelta.dll', 'Public, Static', 1, [int], @([Int64], [String], [String], [String]), 1, 3)
-$MSD = $TypeBuilder.CreateType()
+$TB = [AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1).DefineDynamicModule(2, $False).DefineType(0)
+[void]$TB.DefinePInvokeMethod('ApplyDeltaW', 'msdelta.dll', 'Public, Static', 1, [int], @([Int64], [String], [String], [String]), 1, 3)
+$MSD = $TB.CreateType()
 $PSFFileStream = [IO.File]::OpenRead([IO.Path]::GetFullPath($PSFFile))
 $cwd = [IO.Path]::GetFullPath($DirectoryName)
 [Environment]::CurrentDirectory = $cwd
@@ -2979,15 +3049,23 @@ $null = [IO.Directory]::Delete("000", $True)
 :wimmsu:
 function E($WimPath, $InnFile, $OutFile) {
 $DllPath = 'wimgapi.dll'
-$AssemblyBuilder = [AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1)
-$ModuleBuilder = $AssemblyBuilder.DefineDynamicModule(2, $False)
-$TypeBuilder = $ModuleBuilder.DefineType(0)
-[void]$TypeBuilder.DefinePInvokeMethod('WIMCreateFile', $DllPath, 'Public, Static', 1, [IntPtr], @([String], [UInt32], [Int32], [Int32], [Int32], [Int32].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-[void]$TypeBuilder.DefinePInvokeMethod('WIMLoadImage', $DllPath, 'Public, Static', 1, [IntPtr], @([IntPtr], [Int32]), 1, 3).SetImplementationFlags(128)
-[void]$TypeBuilder.DefinePInvokeMethod('WIMSetTemporaryPath', $DllPath, 'Public, Static', 1, [int], @([IntPtr], [String]), 1, 3)
-[void]$TypeBuilder.DefinePInvokeMethod('WIMExtractImagePath', $DllPath, 'Public, Static', 1, [int], @([IntPtr], [String], [String], [Int32]), 1, 3)
-[void]$TypeBuilder.DefinePInvokeMethod('WIMCloseHandle', $DllPath, 'Public, Static', 1, [int], @([IntPtr]), 1, 3)
-$WIMG = $TypeBuilder.CreateType()
+$TB = [AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1).DefineDynamicModule(2, $False).DefineType(0)
+$FN = @(
+'WIMCreateFile;IntPtr;String, UInt32, Int32, Int32, Int32, Int32#Ref;128',
+'WIMLoadImage;IntPtr;IntPtr, Int32;128',
+'WIMSetTemporaryPath;int;IntPtr, String;0',
+'WIMExtractImagePath;int;IntPtr, String, String, Int32;0',
+'WIMCloseHandle;int;IntPtr;0'
+)
+foreach ($str in $FN) {
+$m=$str -split ';'
+$r=$m[1] -as [Type]
+$f=$m[3] -as [int]
+$p = [Collections.ArrayList]@()
+$m[2] -split ', ' | % { $i = $_ -split '#'; if ($null -eq $i[1]) {$p += ($_ -as [type])} else {$p += (($i[0] -as [type]).MakeByRefType())} }
+[void]$TB.DefinePInvokeMethod($m[0], $DllPath, 22, 1, $r, $p, 1, 3).SetImplementationFlags($f)
+}
+$WIMG = $TB.CreateType()
 $hWim = 0
 $hImage = 0
 $hWim = $WIMG::WIMCreateFile($WimPath, "0x80000000", 3, "0x20000000", 0, [ref]$null)

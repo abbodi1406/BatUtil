@@ -63,7 +63,7 @@ avoid using them with the script and install them manually
 
 * Press zero '0' to start the process
 
-* At the end, Press 9 to exit, or close the windows with red X button
+* At the end, Press 9 or q to exit, or close the windows with red X button
 
 ## Options:
 
@@ -162,6 +162,25 @@ the option will also auto exit at the end without prompt
 * UseWimlib  
 detect and use wimlib-imagex.exe for exporting wim files instead dism.exe
 
+* AddDrivers  
+add drivers to install.wim and boot.wim / winre.wim  
+> this is basic feature support, and should be used only with tested working compatible drivers.  
+it is ment for simple and boot critical drivers (chipsets, disk controllers, LAN/WiFi..), to allow easier installation, not for large drivers, or drivers that may break setup.  
+it will not check or verify drivers, it simply point DISM towards the drivers folders.
+
+How To Use:
+
+enable "AddDrivers" option
+
+place the drivers you want to add inside the proper subfolder:  
+> ALL   / drivers will be added to all wim files  
+OS    / drivers will be added to install.wim only  
+WinPE / drivers will be added to boot.wim / winre.wim only
+
+* Drv_Source  
+optional, specify different source folder path for drivers  
+the folder must contain subfolder for each drivers target, as explained above.
+
 - Note: Do not change the structure of W10UI.ini, just set your options after the equal sign `=`
 
 - To restore old behavior and change options by editing the script, simply detele W10UI.ini file
@@ -192,6 +211,10 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.39:  
+- Implemented basic support to Add Drivers to install.wim and boot.wim / winre.wim
+- Updated detection for SafeOS DU
 
 10.38:  
 - Fixed processing SSU-*.cab from normally-named SSU msu

@@ -202,6 +202,23 @@
                 </li>
                 <br />
                 <li>
+                    <b>AddDrivers</b><br /><br />
+                    Add drivers to install.wim and boot.wim / winre.wim<br />
+                    this is basic feature support, and should be used only with tested working compatible drivers.<br /><br />
+                    * How To Use:<br />
+                    - enable the option<br />
+                    - place the drivers you want to add inside the proper subfolder:<br />
+                    <code>ALL: drivers will be added to all wim files<br />
+                    OS: drivers will be added to install.wim only<br />
+                    WinPE: drivers will be added to boot.wim / winre.wim only</code><br /><br />
+                    * Optionally, you can specify different source folder path for drivers, using option <b>Drv_Source</b><br />
+                    the folder must contain subfolder for each drivers target, as explained above.<br /><br />
+                    * The option will only works alongside integrating Updates or Apps.<br /><br />
+                    * The option will not check or verify drivers, it simply point DISM towards the drivers folders.<br /><br />
+                    * The option is ment for simple and boot critical drivers (chipsets, disk controllers, LAN/WiFi..), to allow easier installation, not for large drivers, or drivers that may break setup.
+                </li>
+                <br />
+                <li>
                     <b>### Below options apply only for builds 22563 and later ###</b><br /><br />
                 </li>
                 <li>
