@@ -23,15 +23,16 @@ set Preserve=0
 
 set "_Null=1>nul 2>nul"
 
-set quedit=
+set qerel=
 set _elev=
-set _args=
-set _args=%*
+set "_args="
+set "_args=%~1"
 if not defined _args goto :NoProgArgs
 if "%~1"=="" set "_args="&goto :NoProgArgs
+set "_args="
 for %%# in (%*) do (
 if /i "%%~#"=="-elevated" (set _elev=1)
-if /i "%%~#"=="-qedit" (set quedit=1&reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 1 /f >nul)
+if /i "%%~#"=="-qedit" (set qerel=1)
 )
 
 :NoProgArgs
@@ -60,7 +61,6 @@ wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "Com
 set _pwsh=1
 for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
 if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
-2>nul %_psc% $ExecutionContext.SessionState.LanguageMode | find /i "Full" 1>nul || set _pwsh=0
 if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PWS
 
 set _uac=-elevated
@@ -70,13 +70,7 @@ set _uac=-elevated
   if defined _elev goto :E_Admin
 )
 
-if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
-reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 0 /f >nul
-set _uac=-elevated -qedit
-)
-
 set _PSarg="""%~f0""" %_uac%
-if defined _args set _PSarg="""%~f0""" %_args:"="""% %_uac%
 set _PSarg=%_PSarg:'=''%
 
 (%_Null% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %_uac%) && (
@@ -91,6 +85,22 @@ set _PSarg=%_PSarg:'=''%
 )
 
 :Passed
+if %winbuild% LSS 10586 (
+reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul && set qerel=1
+)
+if defined qerel goto :skipQE
+if %_pwsh% EQU 0 goto :skipQE
+set _PSarg="""%~f0""" -qedit
+set _PSarg=%_PSarg:'=''%
+set "d1=$t=[AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1).DefineDynamicModule(2, $False).DefineType(0);"
+set "d2=$t.DefinePInvokeMethod('GetStdHandle', 'kernel32.dll', 22, 1, [IntPtr], @([Int32]), 1, 3).SetImplementationFlags(128);"
+set "d3=$t.DefinePInvokeMethod('SetConsoleMode', 'kernel32.dll', 22, 1, [Boolean], @([IntPtr], [Int32]), 1, 3).SetImplementationFlags(128);"
+set "d4=$k=$t.CreateType(); $b=$k::SetConsoleMode($k::GetStdHandle(-10), 0x0080);"
+setlocal EnableDelayedExpansion
+%_psc% "!d1! !d2! !d3! !d4! & cmd.exe '/c' '!_PSarg!'" &exit /b
+exit /b
+
+:skipQE
 set "_batf=%~f0"
 set "_log=%~dpn0"
 set "_work=%~dp0"
@@ -98,11 +108,6 @@ set "_work=%_work:~0,-1%"
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
 setlocal EnableDelayedExpansion
-if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
-reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 0 /f >nul
-start cmd.exe /c ""!_batf!" %* -qedit"
-exit /b
-)
 
 if %_Debug% equ 0 (
   set "_Nul1=1>nul"
@@ -204,7 +209,7 @@ setlocal DisableDelayedExpansion
 set _erriso=0
 set _iso1=
 echo %line%
-echo Enter / Paste the complete path to 1st ISO file
+echo Enter the full path to 1st ISO file
 echo %line%
 echo.
 set /p _iso1=
@@ -225,7 +230,7 @@ set _erriso=0
 set _iso2=
 echo.
 echo %line%
-echo Enter / Paste the complete path to 2nd ISO file
+echo Enter the full path to 2nd ISO file
 echo %line%
 echo.
 set /p _iso2=
@@ -745,7 +750,7 @@ del /f /q "!_fvr1!" "!_fvr2!" "!_fvr3!" "!_fvr4!" %_Nul3%
 exit /b
 
 :checkQE
-if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
+if not defined qerel reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
 echo ### WARNING ###
 echo.
 echo Console "Quick Edit Mode" is active.
@@ -759,9 +764,6 @@ exit /b
 %_err%
 echo This script require administrator privileges.
 echo To do so, right click on this script and select 'Run as administrator'
-if "%_uac%"=="-elevated -qedit" (
-reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 1 /f >nul
-)
 goto :E_Exit
 
 :E_PWS
@@ -796,6 +798,7 @@ if exist bin\temp\ rmdir /s /q bin\temp\
 if exist ISOx64\ rmdir /s /q ISOx64\
 if exist ISOx86\ rmdir /s /q ISOx86\
 popd
+@color 07
 if %_Debug% neq 0 exit /b
 if defined qmsg echo.&echo %qmsg%
 echo Press 0 or q to exit.
@@ -805,22 +808,18 @@ if errorlevel 1 (exit /b) else (rem.)
 ----- Begin wsf script --->
 <package>
    <job id="ELAV">
-       <script language="VBScript">
-           Set strArg=WScript.Arguments.Named
-           If Not strArg.Exists("File") Then
-               Wscript.Echo "Switch /File:<File> is missing."
-               WScript.Quit 1
-           End If
-           Set strRdlproc = CreateObject("WScript.Shell").Exec("rundll32 kernel32,Sleep")
-           With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & strRdlproc.ProcessId & "'")
-               With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & .ParentProcessId & "'")
-                   If InStr (.CommandLine, WScript.ScriptName) <> 0 Then
-                       strLine = Mid(.CommandLine, InStr(.CommandLine , "/File:") + Len(strArg("File")) + 8)
-                   End If
-               End With
-               .Terminate
-           End With
-          CreateObject("Shell.Application").ShellExecute "cmd.exe", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & strLine & chr(34), "", "runas", 1
-       </script>
+      <script language="VBScript">
+         Set strArg=WScript.Arguments.Named
+         Set strRdlproc = CreateObject("WScript.Shell").Exec("rundll32 kernel32,Sleep")
+         With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & strRdlproc.ProcessId & "'")
+            With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & .ParentProcessId & "'")
+               If InStr (.CommandLine, WScript.ScriptName) <> 0 Then
+                  strLine = Mid(.CommandLine, InStr(.CommandLine , "/File:") + Len(strArg("File")) + 8)
+               End If
+            End With
+            .Terminate
+         End With
+         CreateObject("Shell.Application").ShellExecute "cmd.exe", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & strLine & chr(34), "", "runas", 1
+      </script>
    </job>
 </package>

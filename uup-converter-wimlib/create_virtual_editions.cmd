@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v97
+@set uivr=v100
 @echo off
 :: ### Creation Method ###
 ::
@@ -49,7 +49,8 @@ if %DisableWimRebuilds% equ 1 set "_wrb=rem."
 
 set _uupc=0
 set _Debug=0
-set quedit=
+set _type=
+set qerel=
 set _elev=
 set _args=
 set _args=%*
@@ -61,7 +62,7 @@ goto :NoProgArgs
 
 :parseArgs
 if "%~1"=="-elevated" (set _elev=1&exit /b)
-if "%~1"=="-qedit" (set quedit=1&reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 1 /f >nul&exit /b)
+if "%~1"=="-qedit" (set qerel=1&exit /b)
 echo %~1|findstr /i "autoswm autowim autoesd manuswm manuwim manuesd extdism" >nul && (set "_type=%~1"&exit /b)
 echo %~1|findstr \/ >nul && (set "_exTP1=%~1"&exit /b)
 echo %~1|findstr :  >nul && (set "_exTP2=%~1"&exit /b)
@@ -104,11 +105,6 @@ set _uac=-elevated
   if defined _elev goto :E_Admin
 )
 
-if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
-reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 0 /f >nul
-set _uac=-elevated -qedit
-)
-
 set _PSarg="""%~f0""" %_uac%
 if defined _args set _PSarg="""%~f0""" %_args:"="""% %_uac%
 set _PSarg=%_PSarg:'=''%
@@ -125,17 +121,30 @@ set _PSarg=%_PSarg:'=''%
 )
 
 :Passed
+if defined _type goto :skipQE
+if %winbuild% LSS 10586 (
+reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul && set qerel=1
+)
+if defined qerel goto :skipQE
+if %_pwsh% EQU 0 goto :skipQE
+set _PSarg="""%~f0""" -qedit
+if defined _args set _PSarg="""%~f0""" %_args:"="""% -qedit
+set _PSarg=%_PSarg:'=''%
+set "d1=$t=[AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1).DefineDynamicModule(2, $False).DefineType(0);"
+set "d2=$t.DefinePInvokeMethod('GetStdHandle', 'kernel32.dll', 22, 1, [IntPtr], @([Int32]), 1, 3).SetImplementationFlags(128);"
+set "d3=$t.DefinePInvokeMethod('SetConsoleMode', 'kernel32.dll', 22, 1, [Boolean], @([IntPtr], [Int32]), 1, 3).SetImplementationFlags(128);"
+set "d4=$k=$t.CreateType(); $b=$k::SetConsoleMode($k::GetStdHandle(-10), 0x0080);"
+setlocal EnableDelayedExpansion
+%_psc% "!d1! !d2! !d3! !d4! & cmd.exe '/c' '!_PSarg!'" &exit /b
+exit /b
+
+:skipQE
 set "logerr=%~dp0ErrorLog_V_%random%.txt"
 set "_batf=%~f0"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
 set _vdrv=%~d0
 setlocal EnableDelayedExpansion
-if not defined _type if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
-reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 0 /f >nul
-start cmd.exe /c ""!_batf!" %* -qedit"
-exit /b
-)
 pushd "!_work!"
 if exist "convert-UUP.cmd" (
 for /f "tokens=2 delims==" %%# in ('findstr /i /b /c:"set _Debug" "convert-UUP.cmd"') do if not defined _udbg set _udbg=%%#
@@ -288,7 +297,7 @@ if %_Debug% neq 0 goto :dCheck
 set _erriso=0
 set ISOfile=
 echo.
-echo Enter / Paste the complete path to ISO file
+echo Enter the full path to ISO file
 echo %_ln1%
 echo.
 set /p ISOfile=
@@ -1257,7 +1266,7 @@ if not "%8"=="" echo:
 exit /b
 
 :checkQE
-if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
+if not defined qerel reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
 call :dk_color1 %Red% "### WARNING ###"
 echo.
 echo Console "Quick Edit Mode" is active.
@@ -1272,9 +1281,6 @@ exit /b
 %_err%
 echo This script require administrator privileges.
 echo To do so, right click on this script and select 'Run as administrator'
-if "%_uac%"=="-elevated -qedit" (
-reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 1 /f >nul
-)
 goto :E_Exit
 
 :E_PWS
@@ -1343,22 +1349,18 @@ if errorlevel 1 (exit /b) else (rem.)
 ----- Begin wsf script --->
 <package>
    <job id="ELAV">
-       <script language="VBScript">
-           Set strArg=WScript.Arguments.Named
-           If Not strArg.Exists("File") Then
-               Wscript.Echo "Switch /File:<File> is missing."
-               WScript.Quit 1
-           End If
-           Set strRdlproc = CreateObject("WScript.Shell").Exec("rundll32 kernel32,Sleep")
-           With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & strRdlproc.ProcessId & "'")
-               With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & .ParentProcessId & "'")
-                   If InStr (.CommandLine, WScript.ScriptName) <> 0 Then
-                       strLine = Mid(.CommandLine, InStr(.CommandLine , "/File:") + Len(strArg("File")) + 8)
-                   End If
-               End With
-               .Terminate
-           End With
-          CreateObject("Shell.Application").ShellExecute "cmd.exe", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & strLine & chr(34), "", "runas", 1
-       </script>
+      <script language="VBScript">
+         Set strArg=WScript.Arguments.Named
+         Set strRdlproc = CreateObject("WScript.Shell").Exec("rundll32 kernel32,Sleep")
+         With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & strRdlproc.ProcessId & "'")
+            With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & .ParentProcessId & "'")
+               If InStr (.CommandLine, WScript.ScriptName) <> 0 Then
+                  strLine = Mid(.CommandLine, InStr(.CommandLine , "/File:") + Len(strArg("File")) + 8)
+               End If
+            End With
+            .Terminate
+         End With
+         CreateObject("Shell.Application").ShellExecute "cmd.exe", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & strLine & chr(34), "", "runas", 1
+      </script>
    </job>
 </package>

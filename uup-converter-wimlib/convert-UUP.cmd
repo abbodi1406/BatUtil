@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v98
+@set uivr=v100
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -47,6 +47,7 @@ set SkipWinRE=0
 set LCUwinre=0
 
 :: Change to 1 to disable updating process optimization by using editions upgrade (Home>Pro / ServerStandard>ServerDatacenter)
+:: auto enabled for builds 26000 and later, change to 2 to disable
 set DisableUpdatingUpgrade=0
 
 :: Change to 1 to update ISO boot files bootmgr/memtest/efisys.bin from Cumulative Update
@@ -112,15 +113,16 @@ set "_wrb="
 if %DisableWimRebuilds% equ 1 set "_wrb=rem."
 
 set _UUP=
-set quedit=
+set qerel=
 set _elev=
 set "_args="
 set "_args=%~1"
 if not defined _args goto :NoProgArgs
 if "%~1"=="" set "_args="&goto :NoProgArgs
+set "_args="
 for %%# in (%*) do (
 if /i "%%~#"=="-elevated" (set _elev=1
-) else if /i "%%~#"=="-qedit" (set quedit=1&reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 1 /f >nul
+) else if /i "%%~#"=="-qedit" (set qerel=1
 ) else (set "_args=%%~#")
 )
 
@@ -160,13 +162,8 @@ set _uac=-elevated
   if defined _elev goto :E_Admin
 )
 
-if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
-reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 0 /f >nul
-set _uac=-elevated -qedit
-)
-
 set _PSarg="""%~f0""" %_uac%
-if defined _args set _PSarg="""%~f0""" %_args:"="""% %_uac%
+if defined _args set _PSarg="""%~f0""" """%_args%""" %_uac%
 set _PSarg=%_PSarg:'=''%
 
 (%_Null% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %* %_uac%) && (
@@ -181,6 +178,23 @@ set _PSarg=%_PSarg:'=''%
 )
 
 :Passed
+if %winbuild% LSS 10586 (
+reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul && set qerel=1
+)
+if defined qerel goto :skipQE
+if %_pwsh% EQU 0 goto :skipQE
+set _PSarg="""%~f0""" -qedit
+if defined _args set _PSarg="""%~f0""" """%_args%""" -qedit
+set _PSarg=%_PSarg:'=''%
+set "d1=$t=[AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1).DefineDynamicModule(2, $False).DefineType(0);"
+set "d2=$t.DefinePInvokeMethod('GetStdHandle', 'kernel32.dll', 22, 1, [IntPtr], @([Int32]), 1, 3).SetImplementationFlags(128);"
+set "d3=$t.DefinePInvokeMethod('SetConsoleMode', 'kernel32.dll', 22, 1, [Boolean], @([IntPtr], [Int32]), 1, 3).SetImplementationFlags(128);"
+set "d4=$k=$t.CreateType(); $b=$k::SetConsoleMode($k::GetStdHandle(-10), 0x0080);"
+setlocal EnableDelayedExpansion
+%_psc% "!d1! !d2! !d3! !d4! & cmd.exe '/c' '!_PSarg!'" &exit /b
+exit /b
+
+:skipQE
 set "logerr=%~dp0ErrorLog_%random%.txt"
 set "_batf=%~f0"
 set "_log=%~dpn0"
@@ -202,11 +216,6 @@ call :preVars
 setlocal EnableDelayedExpansion
 if exist "!_work!\UUPs\*.esd" set "_UUP=!_work!\UUPs"
 if defined _args if exist "!_args!\*.esd" set "_UUP=!_args!"
-if not defined _args if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
-reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 0 /f >nul
-start cmd.exe /c ""!_batf!" %* -qedit"
-exit /b
-)
 
 if %_Debug% equ 0 (
   set "_Nul1=1>nul"
@@ -257,7 +266,7 @@ setlocal DisableDelayedExpansion
 @cls
 set _UUP=
 echo.
-echo Enter / Paste the path to UUP source directory
+echo Enter the path to UUP source directory
 echo %_ln1%
 echo.
 set /p _UUP=
@@ -537,10 +546,12 @@ if %_build% lss 17763 if %AddUpdates% equ 1 (set Cleanup=1)
 if %_build% geq 22000 (
 if %LCUwinre% equ 2 (set LCUwinre=0) else (set LCUwinre=1)
 )
-:: if %_build% geq 22621 (
-:: if %DisableUpdatingUpgrade% equ 2 (set DisableUpdatingUpgrade=0) else (set DisableUpdatingUpgrade=1)
-:: )
-if %_build% geq 25380 if %Cleanup% equ 0 set DisableUpdatingUpgrade=1
+if %_build% geq 25380 (
+if %Cleanup% equ 0 set DisableUpdatingUpgrade=1
+)
+if %_build% geq 26000 (
+if %DisableUpdatingUpgrade% equ 2 (set DisableUpdatingUpgrade=0) else (set DisableUpdatingUpgrade=1)
+)
 if %WIMFILE%==install.wim (
 if %AddUpdates% neq 1 if %wim2esd% equ 1 (set WIMFILE=install.esd)
 )
@@ -585,6 +596,8 @@ call :dk_color1 %Blue% "=== Configured Options . . ." 4 5
   if %AddUpdates% equ 1 (
   if %Cleanup% neq 0 echo Cleanup
   if %Cleanup% neq 0 if %ResetBase% neq 0 echo ResetBase
+  if %LCUwinre% neq 0 echo LCUwinre
+  if %DisableUpdatingUpgrade% neq 0 echo DisableUpdatingUpgrade
   )
   if %AddUpdates% neq 0 if %NetFx3% neq 0 echo NetFx3
   if %StartVirtual% neq 0 (
@@ -594,8 +607,6 @@ call :dk_color1 %Blue% "=== Configured Options . . ." 4 5
   for %%# in (
   SkipISO
   SkipWinRE
-  LCUwinre
-  DisableUpdatingUpgrade
   UpdtBootFiles
   wim2esd
   wim2swm
@@ -722,10 +733,12 @@ if %_build% lss 17763 if %AddUpdates% equ 1 (set Cleanup=1)
 if %_build% geq 22000 (
 if %LCUwinre% equ 2 (set LCUwinre=0) else (set LCUwinre=1)
 )
-:: if %_build% geq 22621 (
-:: if %DisableUpdatingUpgrade% equ 2 (set DisableUpdatingUpgrade=0) else (set DisableUpdatingUpgrade=1)
-:: )
-if %_build% geq 25380 if %Cleanup% equ 0 set DisableUpdatingUpgrade=1
+if %_build% geq 25380 (
+if %Cleanup% equ 0 set DisableUpdatingUpgrade=1
+)
+if %_build% geq 26000 (
+if %DisableUpdatingUpgrade% equ 2 (set DisableUpdatingUpgrade=0) else (set DisableUpdatingUpgrade=1)
+)
 if %WIMFILE%==install.wim (
 if %AddUpdates% neq 1 if %wim2esd% equ 1 (set WIMFILE=install.esd)
 )
@@ -769,11 +782,11 @@ call :dk_color1 %Blue% "=== Configured Options . . ." 4 5
   echo AddUpdates %AddUpdates%
   if %Cleanup% neq 0 echo Cleanup
   if %Cleanup% neq 0 if %ResetBase% neq 0 echo ResetBase
+  if %LCUwinre% neq 0 echo LCUwinre
+  if %DisableUpdatingUpgrade% neq 0 echo DisableUpdatingUpgrade
   )
   for %%# in (
   SkipWinRE
-  LCUwinre
-  DisableUpdatingUpgrade
   wim2esd
   wim2swm
   RefESD
@@ -938,7 +951,7 @@ if not exist "%_mount%\" mkdir "%_mount%"
 %_dism1% /Quiet /Mount-Wim /Wimfile:ISOFOLDER\sources\boot.wim /Index:1 /MountDir:"%_mount%" %_Nul3%
 set ERRTEMP=%ERRORLEVEL%
 if %ERRTEMP% neq 0 (
-%_dism1% /Image:"%_mount%" /Get-Packages %_Null%
+%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
 %_dism1% /Unmount-Wim /MountDir:"%_mount%" /Discard %_Nul3%
 %_dism1% /Cleanup-Wim %_Nul3%
 rmdir /s /q "%_mount%\"
@@ -952,7 +965,7 @@ if !errorlevel! neq 0 (
 %_dism1% /Quiet /Unmount-Wim /MountDir:"%_mount%" /Commit
 set ERRTEMP=%ERRORLEVEL%
 if %ERRTEMP% neq 0 (
-%_dism1% /Image:"%_mount%" /Get-Packages %_Null%
+%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
 %_dism1% /Unmount-Wim /MountDir:"%_mount%" /Discard %_Nul3%
 %_dism1% /Cleanup-Wim %_Nul3%
 rmdir /s /q "%_mount%\"
@@ -1079,6 +1092,10 @@ if %_build% geq 22563 if exist "!_UUP!\*.AggregatedMetadata*.cab" (
 if exist "!_UUP!\*.*xbundle" set _IPA=1
 if exist "!_UUP!\*.appx" set _IPA=1
 if exist "!_UUP!\Apps\*_8wekyb3d8bbwe" set _IPA=1
+)
+if %_build% geq 22621 if exist "!_UUP!\*Edge*.wim" (
+set _wimEdge=1
+if not exist "!_UUP!\Edge.wim" for /f %%# in ('dir /b /a:-d "!_UUP!\*Edge*.wim"') do rename "!_UUP!\%%#" Edge.wim %_Nul3%
 )
 set _dpx=0
 if %_updexist% equ 1 if %_build% geq 22000 if exist "%SysPath%\ucrtbase.dll" if exist "!_UUP!\*DesktopDeployment*.cab" (
@@ -1402,11 +1419,11 @@ if %uLang% equ 1 for %%# in (
 "ServerRdsh:%_wtx% Enterprise multi-session"
 "Starter:%_wtx% Starter"
 "StarterN:%_wtx% Starter N"
-"ServerStandardCore:%_wsr% Standard (Core)"
+"ServerStandardCore:%_wsr% Standard"
 "ServerStandard:%_wsr% Standard (Desktop Experience)"
-"ServerDatacenterCore:%_wsr% Datacenter (Core)"
+"ServerDatacenterCore:%_wsr% Datacenter"
 "ServerDatacenter:%_wsr% Datacenter (Desktop Experience)"
-"ServerTurbineCore:%_wsr% Datacenter Azure Edition (Core)"
+"ServerTurbineCore:%_wsr% Datacenter Azure Edition"
 "ServerTurbine:%_wsr% Datacenter Azure Edition (Desktop Experience)"
 "ServerAzureStackHCICor:Azure Stack HCI"
 ) do for /f "tokens=1,2 delims=:" %%A in ("%%~#") do (
@@ -2134,7 +2151,7 @@ expand.exe -f:*_microsoft-windows-sysreset_*.manifest "!_UUP!\%package%" "!dest!
 if exist "!dest!\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (set "_type=[SafeOS DU]"&set uwinpe=1)
 )
 if %_extsafe% equ 1 if not defined _type (
-%_exp% -f:*_microsoft-windows-winpe_tools_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+expand.exe -f:*_microsoft-windows-winpe_tools_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*_microsoft-windows-winpe_tools_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (set "_type=[SafeOS DU]"&set uwinpe=1)
 )
 if %_extsafe% equ 1 if not defined _type (
@@ -2382,7 +2399,7 @@ if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 reg.exe load HKLM\%SOFTWARE% "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 if %winbuild% lss 15063 if /i %arch%==arm64 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul1%
 if %winbuild% lss 9600 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul1%
-reg.exe save HKLM\%SOFTWARE% "%mumtarget%\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
+reg.exe save HKLM\%SOFTWARE% "%mumtarget%\Windows\System32\Config\SOFTWARE2" %_Nul1%
 reg.exe unload HKLM\%SOFTWARE% %_Nul1%
 move /y "%mumtarget%\Windows\System32\Config\SOFTWARE2" "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
@@ -2534,7 +2551,7 @@ goto :%_gobk%
 set _ec=0
 set "_ic=%~1"
 if /i not "!_ic!"=="00000000" if /i not "!_ic!"=="800f081e" if /i not "!_ic!"=="800706be" if /i not "!_ic!"=="800706ba" set _ec=1
-if /i not "!_ic!"=="00000000" if /i not "!_ic!"=="800f081e" if !_ec!==0 %_dism1% %dismtarget% /Get-Packages %_Null%
+if /i not "!_ic!"=="00000000" if /i not "!_ic!"=="800f081e" if !_ec!==0 %_dism1% %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
 goto :eof
 
 :errmount
@@ -2543,7 +2560,7 @@ set "msgerr=Dism.exe operation failed"
 call :dk_color1 %Red% "%msgerr%. Discarding . . ." 4
 if defined idpkg set "msgerr=Dism.exe failed adding %idpkg% update{s}"
 (echo.&echo %msgerr%)>>"!logerr!"
-%_dism1% %dismtarget% /Get-Packages %_Null%
+%_dism1% %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
 %_dism1% /Unmount-Wim /MountDir:"%_mount%" /Discard
 %_dism1% /Cleanup-Wim %_Nul3%
 goto :eof
@@ -2925,8 +2942,8 @@ reg.exe add "%_SxsKey%" /f /ve /d %pv_os% %_Nul3%
 
 :EndChk
 if /i %xOS%==x86 if /i not %arch%==x86 (
-  reg.exe save HKLM\%SOFTWARE% "%mumtarget%\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
-  reg.exe query HKLM\%COMPONENTS% %_Nul3% && reg.exe save HKLM\%COMPONENTS% "%mumtarget%\Windows\System32\Config\COMPONENTS2" /y %_Nul1%
+  reg.exe save HKLM\%SOFTWARE% "%mumtarget%\Windows\System32\Config\SOFTWARE2" %_Nul1%
+  reg.exe query HKLM\%COMPONENTS% %_Nul3% && reg.exe save HKLM\%COMPONENTS% "%mumtarget%\Windows\System32\Config\COMPONENTS2" %_Nul1%
 )
 reg.exe unload HKLM\%SOFTWARE% %_Nul3%
 reg.exe unload HKLM\%COMPONENTS% %_Nul3%
@@ -3108,13 +3125,20 @@ goto :eof
 if /i not %_nnn%==winre.wim call :dk_color1 %Gray% "=== Servicing Index: %_inx%" 4
 %_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:"%_www%" /Index:%_inx% /MountDir:"%_mount%"
 if !errorlevel! neq 0 (
-%_dism1% /Image:"%_mount%" /Get-Packages %_Null%
+%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
 %_dism1% /Unmount-Wim /MountDir:"%_mount%" /Discard
 %_dism1% /Cleanup-Wim %_Nul3%
 goto :eof
 )
 if defined isappx goto :doappx
 
+if /i not %_nnn%==winre.wim if %_wimEdge% equ 1 if %SkipEdge% equ 0 (
+call :dk_color1 %Gray% "=== Adding Microsoft Edge . . ." 4
+%_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismEdgeWim.log" /Add-Edge /SupportPath:"!_UUP!"
+if !errorlevel! neq 0 (
+  (echo.&echo Failed adding Edge.wim)>>"!logerr!"
+  )
+)
 if /i not %_nnn%==winre.wim if %_runIPA% equ 1 (
 call :dk_color1 %Gray% "=== Adding Apps . . ." 4 5
 call :appx_wim
@@ -3162,25 +3186,33 @@ if exist "%_mount%\Windows\system32\Facilitator.dll" if not exist "%SystemRoot%\
 goto :doProceed
 
 :doappx
+if %_wimEdge% equ 1 if %SkipEdge% equ 0 (
+call :dk_color1 %Gray% "=== Adding Microsoft Edge . . ." 4
+%_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismEdgeWim.log" /Add-Edge /SupportPath:"!_UUP!"
+if !errorlevel! neq 0 (
+  (echo.&echo Failed adding Edge.wim)>>"!logerr!"
+  )
+)
 call :dk_color1 %Gray% "=== Adding Apps . . ." 4 5
 call :appx_wim
 if %_upgr% equ 1 if %_pmcppc% equ 1 if not exist "%_mount%\Windows\Servicing\Packages\Microsoft-Windows-Printing-PMCPPC-FoD-Package*.mum" call :pmcppcwim
 
 :doProceed
 if %AddDrivers% equ 0 goto :doCommit
+if not defined DrvSrcALL if not defined DrvSrcPE if not defined DrvSrcOS goto :doCommit
 if /i %_nnn%==winre.wim (
 if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
 if defined DrvSrcPE %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcPE!" /Recurse
 goto :doCommit
 )
-call :dk_color1 %Gray% "=== Adding Drivers . . ." 4 5
+call :dk_color1 %Gray% "=== Adding Drivers . . ." 4
 if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
 if defined DrvSrcOS %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.log" /Add-Driver /Driver:"!DrvSrcOS!" /Recurse
 
 :doCommit
 %_dism2%:"!_cabdir!" /Commit-Wim /MountDir:"%_mount%"
 if !errorlevel! neq 0 (
-%_dism1% /Image:"%_mount%" /Get-Packages %_Null%
+%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
 %_dism1% /Unmount-Wim /MountDir:"%_mount%" /Discard
 %_dism1% /Cleanup-Wim %_Nul3%
 )
@@ -3223,7 +3255,7 @@ call :dk_color1 %Gray% "=== Creating Edition: Datacenter Core" 4
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
 call set /a _imgi+=1
 call set cname="%_wsr% ServerDatacenterCore"
-call set dname="%_wsr% Datacenter (Core)"
+call set dname="%_wsr% Datacenter"
 call set ddesc="(Recommended) This option omits most of the Windows graphical environment. Manage with a command prompt and PowerShell, or remotely with Windows Admin Center or other tools."
 wimlib-imagex.exe info "%_www%" !_imgi! !cname! !cname! --image-property DISPLAYNAME=!dname! --image-property DISPLAYDESCRIPTION=!ddesc! --image-property FLAGS=ServerDatacenterCore %_Nul3%
 
@@ -3319,7 +3351,7 @@ reg.exe add HKLM\%ksub%\%_SxsCfg% /v SupersededActions /t REG_DWORD /d %savr% /f
 reg.exe add HKLM\%ksub%\%_SxsCfg% /v DisableResetbase /t REG_DWORD /d 1 /f %_Nul1%
 reg.exe add HKLM\%ksub%\%_SxsCfg% /v SupersededActions /t REG_DWORD /d %savc% /f %_Nul1%
 )
-if /i %xOS%==x86 if /i not %arch%==x86 reg.exe save HKLM\%ksub% "%mumtarget%\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
+if /i %xOS%==x86 if /i not %arch%==x86 reg.exe save HKLM\%ksub% "%mumtarget%\Windows\System32\Config\SOFTWARE2" %_Nul1%
 reg.exe unload HKLM\%ksub% %_Nul1%
 if /i %xOS%==x86 if /i not %arch%==x86 move /y "%mumtarget%\Windows\System32\Config\SOFTWARE2" "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 ) else (
@@ -3533,7 +3565,7 @@ for /f "tokens=3 delims==:" %%# in ('"offlinereg.exe "%mumtarget%\Windows\System
 if not defined _edtn (
 reg.exe load HKLM\OFFSOFT "%mumtarget%\Windows\System32\config\SOFTWARE" %_Nul1%
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKLM\OFFSOFT\Microsoft\Windows NT\CurrentVersion" /v EditionID') do set "_edtn=%%b"
-if /i %xOS%==x86 reg.exe save HKLM\OFFSOFT "%mumtarget%\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
+if /i %xOS%==x86 reg.exe save HKLM\OFFSOFT "%mumtarget%\Windows\System32\Config\SOFTWARE2" %_Nul1%
 reg.exe unload HKLM\OFFSOFT %_Nul1%
 if /i %xOS%==x86 move /y "%mumtarget%\Windows\System32\Config\SOFTWARE2" "%mumtarget%\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
@@ -3542,7 +3574,7 @@ if %_appsCustom% neq 0 for /f "eol=# tokens=*" %%a in ('type %_appsFile%') do se
 set "_appProf=%_appBase%,%_appClnt%,%_appCodec%,%_appMedia%"
 set "_appProN=%_appBase%,%_appClnt%"
 set "_appTeam=%_appBase%,%_appCodec%,%_appPPIP%"
-set "_appSFull=Microsoft.SecHealthUI%pub%"
+set "_appSFull=Microsoft.SecHealthUI%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.WindowsFeedbackHub%pub%"
 set "_appSCore="
 set "_appAzure="
 pushd "!_UUP!\Apps"
@@ -3581,9 +3613,11 @@ if %winbuild% geq 19040 set _appWay=1
 if %_ADK% equ 1 if %apiver% geq 19040 set _appWay=1
 if not exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set _appWay=0
 if %winbuild% LSS 9600 if not exist "%SystemRoot%\servicing\Packages\Microsoft-Windows-PowerShell-WTR-Package~*.mum" set _appWay=0
-if not exist "!_work!\bin\APAP.exe" set _appWay=0
+if not exist "!_work!\bin\APAP.*" set _appWay=0
+set _addFrmk=1
+if exist "%mumtarget%\Windows\Servicing\Packages\Microsoft-Windows-Server*CorEdition~*.mum" if "%_appList%"=="" set _addFrmk=0
 del /f /q AppsToAdd.txt %_Null%
-if exist "MSIXFramework\*" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "MSIXFramework\*.*x"') do (
+if %_addFrmk% equ 1 if exist "MSIXFramework\*" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "MSIXFramework\*.*x"') do (
   if %_appWay% equ 0 (
   echo %%~n#
   %_Nul1% %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismAppx.log" /Add-ProvisionedAppxPackage /PackagePath:"MSIXFramework\%%#" /SkipLicense
@@ -3594,13 +3628,15 @@ if exist "MSIXFramework\*" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "MSIX
 if defined _appList for %%# in (%_appList%) do call :appx_add "%%#"
 if %_appWay% equ 0 goto :wimappx
 if not exist "AppsToAdd.txt" goto :wimappx
-copy /y "!_work!\bin\APAP.exe" . %_Nul3%
+copy /y "!_work!\bin\APAP.*" . %_Nul3%
 copy /y "!_work!\bin\Microsoft.Dism.dll" . %_Nul3%
+:: %_psc% "cd -Lit ($env:__CD__); $f=[IO.File]::ReadAllText('.\APAP.txt') -split ':embed\:.*'; iex ($f[1]); ATA '%_mount%' '%_dLog%\DismAppx.log' '!_cabdir!' %StubAppsFull%"
 APAP.exe "%_mount%" "%_dLog%\DismAppx.log" "!_cabdir!" "%StubAppsFull%"
-del /f /q AppsToAdd.txt APAP.exe Microsoft.Dism.dll %_Nul3%
+del /f /q AppsToAdd.txt APAP.* Microsoft.Dism.dll %_Nul3%
 :wimappx
 popd
 if %_appsCustom% neq 0 for /f "eol=# tokens=*" %%a in ('type %_appsFile%') do set "cal_%%a="
+%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
 goto :eof
 
 :appx_add
@@ -3733,6 +3769,7 @@ set _IPA=0
 set _runIPA=0
 set _appsCustom=0
 set _initial=0
+set _wimEdge=0
 set "_mount=%_drv%\MountUUP"
 set "_ntf=NTFS"
 if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
@@ -3833,7 +3870,7 @@ if not "%8"=="" echo:
 exit /b
 
 :checkQE
-if not defined quedit reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
+if not defined qerel reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
 call :dk_color1 %Red% "### WARNING ###"
 echo.
 echo Console "Quick Edit Mode" is active.
@@ -3847,9 +3884,6 @@ exit /b
 %_err%
 echo This script require administrator privileges.
 echo To do so, right click on this script and select 'Run as administrator'
-if "%_uac%"=="-elevated -qedit" (
-reg.exe add HKCU\Console /v QuickEdit /t REG_DWORD /d 1 /f >nul
-)
 goto :E_Exit
 
 :E_PWS
@@ -3927,22 +3961,18 @@ if errorlevel 1 (exit /b) else (rem.)
 ----- Begin wsf script --->
 <package>
    <job id="ELAV">
-       <script language="VBScript">
-           Set strArg=WScript.Arguments.Named
-           If Not strArg.Exists("File") Then
-               Wscript.Echo "Switch /File:<File> is missing."
-               WScript.Quit 1
-           End If
-           Set strRdlproc = CreateObject("WScript.Shell").Exec("rundll32 kernel32,Sleep")
-           With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & strRdlproc.ProcessId & "'")
-               With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & .ParentProcessId & "'")
-                   If InStr (.CommandLine, WScript.ScriptName) <> 0 Then
-                       strLine = Mid(.CommandLine, InStr(.CommandLine , "/File:") + Len(strArg("File")) + 8)
-                   End If
-               End With
-               .Terminate
-           End With
-          CreateObject("Shell.Application").ShellExecute "cmd.exe", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & strLine & chr(34), "", "runas", 1
-       </script>
+      <script language="VBScript">
+         Set strArg=WScript.Arguments.Named
+         Set strRdlproc = CreateObject("WScript.Shell").Exec("rundll32 kernel32,Sleep")
+         With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & strRdlproc.ProcessId & "'")
+            With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & .ParentProcessId & "'")
+               If InStr (.CommandLine, WScript.ScriptName) <> 0 Then
+                  strLine = Mid(.CommandLine, InStr(.CommandLine , "/File:") + Len(strArg("File")) + 8)
+               End If
+            End With
+            .Terminate
+         End With
+         CreateObject("Shell.Application").ShellExecute "cmd.exe", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & strLine & chr(34), "", "runas", 1
+      </script>
    </job>
 </package>
