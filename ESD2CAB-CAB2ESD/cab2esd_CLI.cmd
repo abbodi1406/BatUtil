@@ -4,6 +4,8 @@ set compress=MAX
 :: set compress=LZMS
 
 title CAB -^> ESD
+set unattend=0
+if not "%~1"=="" set unattend=1
 cd /d "%~dp0"
 if /i "%PROCESSOR_ARCHITECTURE%" equ "AMD64" (set "arch=x64") else (set "arch=x86")
 for %%A in (image%arch%.exe,cabarc.exe) do (
@@ -15,6 +17,7 @@ for %%p in ("bin\cabarc.exe") do set "CABARC=%%~fp"
 set "tempdir=temp%random%"
 for /f "delims=" %%i in ('dir /b *.cab') do call :cabesd "%%i"
 set "MESSEGE=Done."
+SET ERRORTEMP=0
 goto :fin
 
 :cabesd
@@ -42,11 +45,14 @@ goto :eof
 :fin
 cd /d "%~dp0"
 rd /s /q "%tempdir%" >nul 2>&1
+IF NOT DEFINED ERRORTEMP SET ERRORTEMP=1
 echo.
 echo ============================================================
 echo %MESSEGE%
 echo ============================================================
 echo.
+if %unattend% neq 1 (
 echo Press any key to exit...
 pause >nul
-exit
+)
+exit /b %ERRORTEMP%

@@ -212,6 +212,16 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 
 <details><summary>changelog</summary>
 
+10.41:  
+- Fix to skip Package_for_SafeOSDU for boot.wim
+
+10.40:  
+- Detect Package_for_SafeOSDU (26080+)
+- Detect and skip HotPatchUpdate for offline target (26058+)
+- Skip LCU for winre.wim (26052+)
+- Remove WinPE-Rejuv-Package from boot.wim if LCU is added (26052+)
+- Only reinstall highest LCU after NetFx3 feature (26052+)
+
 10.39:  
 - Implemented basic support to Add Drivers to install.wim and boot.wim / winre.wim
 - Updated detection for SafeOS DU

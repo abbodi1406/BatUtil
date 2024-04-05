@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.39
+@set uiv=v10.41
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -34,6 +34,8 @@ set ResetBase=0
 set WinRE=1
 
 :: Force updating winre.wim with Cumulative Update regardless if SafeOS update detected
+:: auto enabled for builds 22000-26050, change to 2 to disable
+:: ignored and auto disabled for builds 26052 and later
 set LCUwinre=0
 
 :: update ISO boot files bootmgr/memtest/efisys.bin from Cumulative Update
@@ -567,6 +569,7 @@ call :extract
 if %_sum%==0 goto :fin
 if %_build% geq 22000 (
 if %LCUwinre% equ 2 (set LCUwinre=0) else (set LCUwinre=1)
+if %_build% geq 26052 (set LCUwinre=0)
 )
 
 :igonline
@@ -834,6 +837,15 @@ goto :eof
 cd /d "!_cabdir!"
 if %_embd% equ 0 if exist "%dest%\" rmdir /s /q "%dest%\" %_Nul3%
 if not exist "%dest%\chck\" mkdir "%dest%\chck"
+if %msuwim% equ 1 if %online%==0 (
+for /f "tokens=1 delims=\" %%# in ('dism.exe /English /List-Image /ImageFile:"!repo!\!package!" /Index:1 ^| findstr /i /r ".*AggregatedMetadata\.cab"') do powershell -nop -c "$f=[IO.File]::ReadAllText('!_batp!') -split ':wimmsu\:.*';iex ($f[1]);E '!repo!\!package!' '%%#' '%dest%\chck\%%#'"
+for /f "tokens=* delims=" %%# in ('dir /b /on "%dest%\chck\*AggregatedMetadata.cab" %_Nul6%') do (%_exp% -f:HotpatchCompDB*.cab "%dest%\chck\%%#" "%dest%\chck" %_Null%)
+)
+if exist "%dest%\chck\HotpatchCompDB*.cab" (
+echo Not Supported: %package% [HotPatchUpdate]
+rmdir /s /q "%dest%\chck\" %_Nul3%
+goto :eof
+)
 echo %count%/%_msu%: %package% [Combined UUP]
 if %msuwim% equ 0 (
 %_exp% -f:*Windows*.cab "!repo!\!package!" "%dest%\chck" %_Null%
@@ -913,12 +925,13 @@ goto :eof
 )
 set _extsafe=0
 set "_type="
-if %_build% geq 17763 findstr /i /m "WinPE" "checker\update.mum" %_Nul3% && (
+findstr /i /m "Package_for_SafeOSDU" "checker\update.mum" %_Nul3% && set "_type=[SafeOS DU]"
+if not defined _type if %_build% geq 17763 findstr /i /m "WinPE" "checker\update.mum" %_Nul3% && (
 %_Nul3% findstr /i /m "Edition\"" "checker\update.mum"
 if errorlevel 1 (set "_type=[WinPE]"&set _extsafe=1)
 )
 if not defined _type set _extsafe=1
-if %_extsafe%==1 (
+if %_extsafe%==1 if not defined _type (
 %_exp% -f:*_microsoft-windows-sysreset_*.manifest "!repo!\!package!" "checker" %_Null%
 if exist "checker\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "checker\update.mum" %_Nul3% || set "_type=[SafeOS DU]"
 )
@@ -1211,17 +1224,17 @@ echo ============================================================
 if defined safeos (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismWinPE.log" /Add-Package %safeos%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 )
 if defined secureboot (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismSecureBoot.log" /Add-Package %secureboot%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 )
 if defined ldr (
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismUpdt.log" /Add-Package %ldr%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 )
 if defined fupdt (
 set "_SxsKey=%_EdgKey%"
@@ -1281,16 +1294,19 @@ if defined lcumsu for %%# in (%lcumsu%) do (
 echo.&echo %%#
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_winre.log" /Add-Package /PackagePath:"!repo!\%%#"
 )
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 :cuboot
 if %doboot%==0 goto :cuinstall
 set callclean=1
 if defined cumulative %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_boot.log" /Add-Package %cumulative%
+if defined lcumsu if %_build% geq 26052 if exist "!mumtarget!\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" for /f "delims=" %%# in ('dir /b /a:-d "!mumtarget!\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum"') do (
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Remove-Package /PackageName:%%~n#
+)
 if defined lcumsu for %%# in (%lcumsu%) do (
 echo.&echo %%#
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_boot.log" /Add-Package /PackagePath:"!repo!\%%#"
 )
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 :cuinstall
 if %doinstall%==0 goto :cuwd
 set callclean=1
@@ -1299,7 +1315,7 @@ if defined lcumsu for %%# in (%lcumsu%) do (
 echo.&echo %%#
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU.log" /Add-Package /PackagePath:"!repo!\%%#"
 )
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 if %_build% equ 14393 if %wimfiles% equ 1 call :MeltdownSpectre
 if not exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" goto :cuwd
 if %online%==1 goto :cuwd
@@ -1331,7 +1347,7 @@ echo ============================================================
 echo Installing EdgeChromium update...
 echo ============================================================
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismEdge.log" /Add-Package %edge%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 )
 goto :eof
 
@@ -1463,6 +1479,12 @@ if exist "%dest%\*enablement-package*.mum" if %SkipEdge% equ 1 (set "fupdt=!fupd
 if not exist "%dest%\*enablement-package*.mum" set "edge=!edge! /PackagePath:%dest%\update.mum"
 goto :eof
 )
+if exist "%dest%\update.mum" findstr /i /m "Package_for_SafeOSDU" "%dest%\update.mum" %_Nul3% && (
+if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" (set /a _sum-=1&goto :eof)
+if %verb%==1 (set /a _sum-=1&goto :eof)
+set "safeos=!safeos! /PackagePath:%dest%\update.mum"
+goto :eof
+)
 if exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
 if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" (set /a _sum-=1&goto :eof)
 if %verb%==1 (set /a _sum-=1&goto :eof)
@@ -1527,7 +1549,7 @@ if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
   )
 if %xmsu% equ 1 (
   set "lcumsu=!lcumsu! !package!"
-  set "netmsu=!netmsu! !package!"
+  set "netmsu=!package!"
   goto :eof
   ) else (
   set "netlcu=!netlcu! /PackagePath:%dest%\update.mum"
@@ -1876,10 +1898,15 @@ if defined netroll set "netxtr=%netroll%"
 if defined netlcu set "netxtr=%netxtr% %netlcu%"
 if defined netmsu (
 if defined netxtr %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netxtr%
-for %%# in (%netmsu%) do %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package /PackagePath:"!repo!\%%#"
-) else if defined netlcu (
+for %%# in (%netmsu%) do (
+  echo.&echo Reinstalling %%#
+  %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package /PackagePath:"!repo!\%%#"
+  )
+)
+if not defined netmsu if defined netlcu (
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netroll% %netlcu%
-) else (
+)
+if not defined netmsu if not defined netlcu (
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netroll% %cumulative%
 )
 if defined lcupkg call :ReLCU
@@ -2326,10 +2353,10 @@ reg.exe add HKLM\!ksub!\%_sbs% /v SupersededActions /t REG_DWORD /d %savr% /f %_
 reg.exe add HKLM\!ksub!\%_sbs% /v DisableComponentBackups /t REG_DWORD /d 1 /f %_Nul1%
 reg.exe unload HKLM\!ksub! %_Nul1%
 if %_Debug% equ 0 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 )
 if %_Debug% equ 0 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 call :cleanmanual
 goto :eof
 )
@@ -2341,6 +2368,7 @@ call :cleanmanual&goto :eof
 set "_Nul8="
 if %_build% geq 25380 (
 set "_Nul8=1>nul 2>nul"
+set "_Nul8="
 )
 if %online%==0 (
 set ksub=SOFTWIM
@@ -2363,7 +2391,7 @@ reg.exe unload HKLM\!ksub! %_Nul1%
 if /i %xOS%==x86 if /i not %arch%==x86 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup %_Nul8%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 ) else (
 echo.
 echo ============================================================
@@ -2379,9 +2407,9 @@ reg.exe unload HKLM\!ksub! %_Nul1%
 if /i %xOS%==x86 if /i not %arch%==x86 move /y "!mumtarget!\Windows\System32\Config\SOFTWARE2" "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul1%
 )
 if %online%==0 if %_build% geq 16299 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup %_Nul8%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase %_Nul8%
-if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /Get-Packages %_Nul3%
+if !errorlevel! equ 1726 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Nul3%
 )
 call :cleanmanual
 goto :eof
@@ -2552,8 +2580,8 @@ if defined tmpssu (
   for %%# in (%tmpssu%) do del /f /q "!repo!\%%~#" %_Nul3%
   set tmpssu=
 )
-dism.exe /Image:"!winremount!" /Get-Packages %_Null%
-dism.exe /Image:"!mountdir!" /Get-Packages %_Null%
+dism.exe /Image:"!winremount!" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
+dism.exe /Image:"!mountdir!" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
 dism.exe /Unmount-Wim /MountDir:"!winremount!" /Discard %_Nul3%
 dism.exe /Unmount-Wim /MountDir:"!mountdir!" /Discard
 dism.exe /Cleanup-Mountpoints %_Nul3%

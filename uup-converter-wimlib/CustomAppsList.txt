@@ -1,4 +1,10 @@
-### UWP Store applications, for integration into builds 22563 and later
+### This file allows you to customize which Microsoft Store Apps are installed
+### during the UUP to ISO conversion process.
+###
+### For changes done to this file to be applied, the CustomList option in the
+### ConvertConfig.ini file needs to be set to 1.
+### 
+### This customization is supported only in builds 22563 and later.
 
 ### Choose the wanted apps from below by removing # prefix
 
@@ -39,6 +45,10 @@ Microsoft.VCLibs.140.00_8wekyb3d8bbwe
 # Microsoft.OutlookForWindows_8wekyb3d8bbwe
 # MicrosoftTeams_8wekyb3d8bbwe
 # Microsoft.Windows.DevHome_8wekyb3d8bbwe
+# Microsoft.BingSearch_8wekyb3d8bbwe
+# Microsoft.ApplicationCompatibilityEnhancements_8wekyb3d8bbwe
+# MicrosoftWindows.CrossDevice_cw5n1h2txyewy
+# MSTeams_8wekyb3d8bbwe
 
 ### Media Apps / Client non-N editions
 # Microsoft.ZuneMusic_8wekyb3d8bbwe
@@ -58,6 +68,8 @@ Microsoft.VCLibs.140.00_8wekyb3d8bbwe
 # Microsoft.VP9VideoExtensions_8wekyb3d8bbwe
 # Microsoft.WebpImageExtension_8wekyb3d8bbwe
 # Microsoft.DolbyAudioExtensions_8wekyb3d8bbwe
+# Microsoft.AVCEncoderVideoExtension_8wekyb3d8bbwe
+# Microsoft.MPEG2VideoExtension_8wekyb3d8bbwe
 
 ### Surface Hub Apps / Team edition
 # Microsoft.Whiteboard_8wekyb3d8bbwe
