@@ -1249,7 +1249,7 @@ set "_SxsKey=%_SupKey%"
 set "_SxsCmp=%_SupCmp%"
 set "_SxsIdn=%_SupIdn%"
 set "_SxsCF=64"
-set "_DsmLog=DismaSupSvc.log"
+set "_DsmLog=DismSupSvc.log"
 for %%# in (%supdt%) do (set "dest=%%~n#"&call :pXML)
 )
 if defined cupdt (
@@ -1731,8 +1731,8 @@ icacls "!mumtarget!\Windows\WinSxS\Manifests" /setowner *S-1-5-80-956008885-3418
 icacls "!mumtarget!\Windows\WinSxS" /restore "!_CabDir!\acl.txt"
 del /f /q "!_CabDir!\acl.txt"
 if %online%==0 reg.exe load HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE"
-reg.exe query HKLM\%COMPONENTS% 1>nul 2>nul || reg.exe load HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS"
-reg.exe delete "%_Cmp%\%_InCom%" /f 1>nul 2>nul
+reg.exe query HKLM\%COMPONENTS% %_Null% || reg.exe load HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS"
+reg.exe delete "%_Cmp%\%_InCom%" /f %_Null%
 reg.exe add "%_Cmp%\%_InCom%" /f /v "c^!%_Fnd%" /t REG_BINARY /d ""
 reg.exe add "%_Cmp%\%_InCom%" /f /v identity /t REG_BINARY /d "%_InIdt%"
 reg.exe add "%_Cmp%\%_InCom%" /f /v S256H /t REG_BINARY /d "%_InHsh%"
@@ -1755,7 +1755,7 @@ if not exist "!mumtarget!\Windows\WinSxS\Manifests\%_SxsCom%.manifest" (
 %_Nul3% icacls "!mumtarget!\Windows\WinSxS" /restore "!_cabdir!\acl.txt"
 %_Nul3% del /f /q "!_cabdir!\acl.txt"
 )
-reg.exe query HKLM\%COMPONENTS% %_Nul3% || reg.exe load HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS" %_Nul3%
+reg.exe query HKLM\%COMPONENTS% %_Null% || reg.exe load HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS" %_Nul3%
 reg.exe query "%_Cmp%\%_SxsCom%" %_Nul3% && goto :Winner
 for /f "skip=1 tokens=* delims=" %%# in ('certutil -hashfile "%dest%\%_SxsCom%.manifest" SHA256^|findstr /i /v CertUtil') do set "_SxsSha=%%#"
 set "_SxsSha=%_SxsSha: =%"
@@ -1779,7 +1779,7 @@ set kv_al=
 if %online%==0 reg.exe load HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE" %_Nul3%
 if not exist "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_%_SxsCmp%_*.manifest" goto :SkipChk
 reg.exe query "%_SxsKey%" %_Nul3% || goto :SkipChk
-reg.exe query HKLM\%COMPONENTS% %_Nul3% || reg.exe load HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS" %_Nul3%
+reg.exe query HKLM\%COMPONENTS% %_Null% || reg.exe load HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS" %_Nul3%
 reg.exe query "%_Cmp%" /f "%xBT%_%_SxsCmp%_*" /k %_Nul2% | find /i "HKEY_LOCAL_MACHINE" %_Nul1% || goto :SkipChk
 call :ChkESUver %_Nul3%
 set "wv_bl=0"&set "wv_dl=0"
@@ -1820,7 +1820,7 @@ reg.exe add "%_SxsKey%" /f /ve /d %pv_os% %_Nul3%
 if %online%==0 (
 if /i %xOS%==x86 if /i not %arch%==x86 (
   reg.exe save HKLM\%SOFTWARE% "!mumtarget!\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
-  reg.exe query HKLM\%COMPONENTS% %_Nul3% && reg.exe save HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS2" /y %_Nul1%
+  reg.exe query HKLM\%COMPONENTS% %_Null% && reg.exe save HKLM\%COMPONENTS% "!mumtarget!\Windows\System32\Config\COMPONENTS2" /y %_Nul1%
   )
 reg.exe unload HKLM\%SOFTWARE% %_Nul3%
 reg.exe unload HKLM\%COMPONENTS% %_Nul3%

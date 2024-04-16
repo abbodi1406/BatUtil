@@ -17,8 +17,10 @@ set "_u=%%A"
 for /f "tokens=3 delims==" %%# in ("%%~A") do set "_f=%%#"
 call :DoD
 )
+echo.
+echo Finished.
 echo.&echo Press any key to exit.&popd&pause >nul&exit /b
 
 :DoD
-ping -n 5 uupdump.net >nul && aria2c.exe --enable-http-keep-alive=false --conditional-get=true --file-allocation=none -x16 -s16 -c -R --max-overall-download-limit=%_l% -d . -o "%_f%" "%_u%"
+ping -n 5 localhost >nul && aria2c.exe --async-dns=false --enable-http-keep-alive=false --conditional-get=true --file-allocation=none -x16 -s16 -c -R --max-overall-download-limit=%_l% -d . -o "%_f%" "%_u%"
 goto :eof

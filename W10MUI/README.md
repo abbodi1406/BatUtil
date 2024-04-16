@@ -3,7 +3,7 @@
 * Automated script to add language packs for distribution of:  
 Windows 10  
 Windows 11  
-Windows Server 2016, 2019, 2022
+Windows Server 2016, 2019, 2022, 2025
 
 * Produce a multilingual updated ISO, including:  
 Choice of language at setup  
@@ -77,7 +77,13 @@ Windows ADK (Deployment Tools & Preinstallation Environment).
 <details><summary>ADK Links</summary>
 
 
-- Build 22621 - Windows 11 version 22H2:
+- Build 26100 - Windows 11 version 24H2 / Server 2025:
+```
+https://www.microsoft.com/en-us/software-download/windowsinsiderpreviewADK
+https://pixeldrain.com/l/NvvLDc3S
+```
+
+- Build 22621 - Windows 11 versions 22H2-23H2:
 ```
 https://download.microsoft.com/download/6/7/4/674ec7db-7c89-4f2b-8363-689055c2b430/adk/adksetup.exe
 https://download.microsoft.com/download/5/2/5/525dcde0-c7b8-487a-894d-0952775a78c7/adkwinpeaddons/adkwinpesetup.exe
@@ -205,7 +211,7 @@ when disabled "0":
 boot.wim index 2 (setup image) will be updated manually with setup resources found in the main lang pack.  
 when adding East-Asian lang, both boot.wim indices will be updated with font support
 
-**SLIM** (set 1 or 0)
+**SLIM** (set 1 or 0) // auto-disabled for builds 26040 and later
 
 when disabled "0":  
 all applicable WinPE lang packs will be added to boot.wim and winre.wim  
