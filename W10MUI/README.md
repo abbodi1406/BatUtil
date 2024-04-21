@@ -89,8 +89,8 @@ https://download.microsoft.com/download/6/7/4/674ec7db-7c89-4f2b-8363-689055c2b4
 https://download.microsoft.com/download/5/2/5/525dcde0-c7b8-487a-894d-0952775a78c7/adkwinpeaddons/adkwinpesetup.exe
 
 full ISO  
-https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/22621.1.220506-1250.ni_release_amd64fre_ADK.iso
-https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/22621.1.220506-1250.ni_release_amd64fre_adkwinpeaddons.iso
+https://software-download.microsoft.com/download/888969d5-f34g-4e03-ac9d-1f9786c66749/22621.1.220506-1250.ni_release_amd64fre_ADK.iso
+https://software-download.microsoft.com/download/888969d5-f34g-4e03-ac9d-1f9786c66749/22621.1.220506-1250.ni_release_amd64fre_adkwinpeaddons.iso
 ```
 
 - Build 22000 - Windows 11 version 21H2:
@@ -99,8 +99,8 @@ https://download.microsoft.com/download/1/f/d/1fd2291e-c0e9-4ae0-beae-fbbe0fe41a
 https://download.microsoft.com/download/5/5/e/55e3e34a-5708-46cd-a90d-92044c29336b/adkwinpeaddons/adkwinpesetup.exe
 
 full ISO  
-https://software-download.microsoft.com/download/sg/22000.1.210604-1628.co_release_amd64fre_ADK.iso
-https://software-download.microsoft.com/download/sg/22000.1.210604-1628.co_release_amd64fre_adkwinpeaddons.iso
+https://software-download.microsoft.com/download/22000.1.210604-1628.co_release_amd64fre_ADK.iso
+https://software-download.microsoft.com/download/22000.1.210604-1628.co_release_amd64fre_adkwinpeaddons.iso
 ```
 
 - Build 20348 - Windows Server 2022:
@@ -109,46 +109,46 @@ https://download.microsoft.com/download/b/9/8/b98fd877-f00f-49e3-8abb-77784cdae2
 https://download.microsoft.com/download/8/3/8/838d6e29-eaac-498b-82ad-5fbac20136f8/adkwinpeaddons/adkwinpesetup.exe
 
 full ISO  
-https://software-download.microsoft.com/download/sg/20348.1.210507-1500.fe_release_amd64fre_ADK.iso
-https://software-download.microsoft.com/download/sg/20348.1.210507-1500.fe_release_amd64fre_adkwinpeaddons.iso
+https://software-download.microsoft.com/download/20348.1.210507-1500.fe_release_amd64fre_ADK.iso
+https://software-download.microsoft.com/download/20348.1.210507-1500.fe_release_amd64fre_adkwinpeaddons.iso
 ```
 
-- Build 19041 - Windows 10 versions 2004-22H2:  
+- Build 19041 - Windows 10 versions 2004-22H2:
 ```
 https://download.microsoft.com/download/8/6/c/86c218f3-4349-4aa5-beba-d05e48bbc286/adk/adksetup.exe
 https://download.microsoft.com/download/3/c/2/3c2b23b2-96a0-452c-b9fd-6df72266e335/adkwinpeaddons/adkwinpesetup.exe
 
 full ISO  
-https://software-download.microsoft.com/download/pr/19041.1.191206-1406.vb_release_amd64fre_ADK.iso
-https://software-download.microsoft.com/download/pr/19041.1.191206-1406.vb_release_amd64fre_adkwinpeaddons.iso
+https://software-download.microsoft.com/download/19041.1.191206-1406.vb_release_amd64fre_ADK.iso
+https://software-download.microsoft.com/download/19041.1.191206-1406.vb_release_amd64fre_adkwinpeaddons.iso
 ```
 
-- Build 18362 - Windows 10 versions 1903-1909:  
+- Build 18362 - Windows 10 versions 1903-1909:
 ```
-https://download.microsoft.com/download/B/E/6/BE63E3A5-5D1C-43E7-9875-DFA2B301EC70/adk/adksetup.exe  
+https://download.microsoft.com/download/B/E/6/BE63E3A5-5D1C-43E7-9875-DFA2B301EC70/adk/adksetup.exe
 https://download.microsoft.com/download/E/F/A/EFA17CF0-7140-4E92-AC0A-D89366EBD79E/adkwinpeaddons/adkwinpesetup.exe
 
 full ISO  
-https://software-download.microsoft.com/download/pr/18362.1.190318-1202.19h1_release_amd64fre_ADK.iso  
-https://software-download.microsoft.com/download/pr/18362.1.190318-1202.19h1_release_amd64fre_adkwinpeaddons.iso
+https://software-download.microsoft.com/download/18362.1.190318-1202.19h1_release_amd64fre_ADK.iso
+https://software-download.microsoft.com/download/18362.1.190318-1202.19h1_release_amd64fre_adkwinpeaddons.iso
 ```
 
-- Build 17763 - Windows 10 version 1809 / Server 2019:  
+- Build 17763 - Windows 10 version 1809 / Server 2019:
 ```
-https://download.microsoft.com/download/0/1/C/01CC78AA-B53B-4884-B7EA-74F2878AA79F/adk/adksetup.exe  
+https://download.microsoft.com/download/0/1/C/01CC78AA-B53B-4884-B7EA-74F2878AA79F/adk/adksetup.exe
 https://download.microsoft.com/download/D/7/E/D7E22261-D0B3-4ED6-8151-5E002C7F823D/adkwinpeaddons/adkwinpesetup.exe
 
 full ISO  
-https://software-download.microsoft.com/download/pr/17763.1.180914-1434.rs5_release_amd64fre_ADK.iso  
-https://software-download.microsoft.com/download/pr/17763.1.180914-1434.rs5_release_amd64fre_ADKwinpeaddons.iso
+https://software-download.microsoft.com/download/17763.1.180914-1434.rs5_release_amd64fre_ADK.iso
+https://software-download.microsoft.com/download/17763.1.180914-1434.rs5_release_amd64fre_ADKwinpeaddons.iso
 ```
 
-- Build 17134 - Windows 10 version 1803:  
+- Build 17134 - Windows 10 version 1803:
 ```
 https://download.microsoft.com/download/6/8/9/689E62E5-C50F-407B-9C3C-B7F00F8C93C0/adk/adksetup.exe
 
-full ISO  
-https://software-download.microsoft.com/download/pr/17134.1.180410-1804.rs4_release_amd64fre_ADK.iso
+full ISO // Link offline  
+https://software-download.microsoft.com/download/17134.1.180410-1804.rs4_release_amd64fre_ADK.iso
 ```
 
 - Build 16299 - Windows 10 version 1709:  
