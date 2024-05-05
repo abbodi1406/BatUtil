@@ -1,28 +1,27 @@
 # Organize Office MSP Updates
 
-* Extract and prepare Office msp files from global exe update files, and rename them uniquely per KB number
+* Extract and prepare Office msp files from global exe/cab update files to a folder with meaningful names.
 
-* Mainly ment for Office 2010 to avoid confliction between neutral update and multilingual update for same product
+* The MSP files will be renamed with prefix `Y_` or `Z_` followed by the package name, KB ID, Arch and MSP file name.
 
 ## Variables:
 
-- "EXEFOL" the path to parent office updates folder
+- "dirOfEXE" the path to parent office updates folder
 
-- "MSPFOL" extracted MSP files path, default is 'MSPs' folder next to the script
+- "dirOfMSP" extracted MSP files path, default is 'MSPs' folder next to the script
 
-- "LANG" the locale to be kept. Leaving it empty will keep all locales.
+- "OldMSPdir" Folder to move old MSP versions, default is 'OLD' inside dirOfMSP
 
-- "PROOFLANG" the companion [proofing languages](https://technet.microsoft.com/en-us/library/ee942198(office.14).aspx). Leaving it empty will only keep the above locale patch.
+- "langOfMSP" language files to keep. Leaving it empty will keep all langs.
 
-## Last Step
+- "ProofLang" comma separated companion proofing languages. Leaving it empty will keep all proof msp files.  
+[Office 2010](https://technet.microsoft.com/en-us/library/ee942198(office.14).aspx)  
+[Office 2013](https://technet.microsoft.com/en-us/library/ee942198(office.15).aspx)  
+Office 2016: Not needed, Proof msp update contain all languages
+
+## Remark
 
 After the process is completed, manually delete msp files that have newer similar files (based on timestamps)
-
-example:
-
-z_word2010-kb2965313-x86.msp <- delete
-
-z_word2010-kb3128034-x86.msp <- keep
 
 ## Credits:
 

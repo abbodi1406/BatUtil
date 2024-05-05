@@ -1,5 +1,7 @@
 @echo off
 title ESD -^> CAB
+set unattend=0
+if not "%~1"=="" set unattend=1
 cd /d "%~dp0"
 if /i "%PROCESSOR_ARCHITECTURE%" equ "AMD64" (set "arch=x64") else (set "arch=x86")
 for %%A in (image%arch%.exe,cabarc.exe,SxSExpand.exe) do (
@@ -12,6 +14,7 @@ for %%p in ("bin\SxSExpand.exe") do set "SXS=%%~fp"
 set "tempdir=temp%random%"
 for /f "delims=" %%i in ('dir /b /a:-d *.esd') do call :esdcab "%%i"
 set "MESSEGE=Done."
+SET ERRORTEMP=0
 goto :fin
 
 :esdcab
@@ -45,11 +48,14 @@ goto :eof
 :fin
 cd /d "%~dp0"
 rd /s /q "%tempdir%" >nul 2>&1
+IF NOT DEFINED ERRORTEMP SET ERRORTEMP=1
 echo.
 echo ============================================================
 echo %MESSEGE%
 echo ============================================================
 echo.
+if %unattend% neq 1 (
 echo Press any key to exit...
 pause >nul
-exit
+)
+exit /b %ERRORTEMP%

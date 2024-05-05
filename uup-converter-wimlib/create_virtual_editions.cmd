@@ -1,21 +1,20 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v84
+@set uivr=v100
 @echo off
-:: Change to 1 to start the process directly
-:: it will create editions specified in AutoEditions if possible
+:: ### Creation Method ###
+::
+:: 0 - Registry manipulation / hacky way, work with install.wim or install.esd, support any host OS
+:: 1 - Dism.exe tool         / official way, work with install.wim, require NT 10.0 host OS or Windows 8.1 with Windows ADK
+:: 2 - Force Dism.exe tool   / Same as 1, but work on Windows 7/8 with Windows ADK
+set UseDism=1
+
+:: Change to 1 to start the process directly, creating editions specified in AutoEditions
 set AutoStart=0
 
 :: Specify target editions to auto create separated with space or comma ,
 :: leave it empty to create *all* possible editions
-
-:: allowed:
-:: Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,ServerRdsh,IoTEnterprise,CloudEdition
-:: EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN,CloudEditionN
-:: CoreSingleLanguage
-
-:: example: set "AutoEditions=Enterprise,ProfessionalWorkstation,Education"
-:: example: set "AutoEditions=Enterprise ServerRdsh"
+:: see ReadMe for details
 set "AutoEditions="
 
 :: Change to 1 to delete source edition index (example: create Enterprise and delete Pro)
@@ -44,27 +43,50 @@ set SkipISO=0
 :: ###################################################################
 
 set "_Null=1>nul 2>nul"
+set DisableWimRebuilds=0
+set "_wrb="
+if %DisableWimRebuilds% equ 1 set "_wrb=rem."
 
+set _uupc=0
 set _Debug=0
+set _type=
+set qerel=
 set _elev=
+set _args=
 set _args=%*
 if not defined _args goto :NoProgArgs
 if "%~1"=="" set "_args="&goto :NoProgArgs
-if "%~1"=="-elevated" set _elev=1&set "_args="&goto :NoProgArgs
-if "%~5"=="-elevated" set _elev=1
+for %%# in (%*) do call :parseArgs "%%#"
+if defined _exTP1 if defined _exTP2 set "_exTime=%_exTP1%,%_exTP2%"
+goto :NoProgArgs
+
+:parseArgs
+if "%~1"=="-elevated" (set _elev=1&exit /b)
+if "%~1"=="-qedit" (set qerel=1&exit /b)
+echo %~1|findstr /i "autoswm autowim autoesd manuswm manuwim manuesd extdism" >nul && (set "_type=%~1"&exit /b)
+echo %~1|findstr \/ >nul && (set "_exTP1=%~1"&exit /b)
+echo %~1|findstr :  >nul && (set "_exTP2=%~1"&exit /b)
+echo %~1|findstr _  >nul && (set "_exLabel=%~1"&exit /b)
+exit /b
 
 :NoProgArgs
-set "SysPath=%SystemRoot%\System32"
-if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
-set "xOS=%PROCESSOR_ARCHITECTURE%"
-if /i %PROCESSOR_ARCHITECTURE%==x86 (if defined PROCESSOR_ARCHITEW6432 (
-  set "xOS=%PROCESSOR_ARCHITEW6432%"
-  )
-)
+:: @color 07
+set "xOS=amd64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xOS=arm64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xOS=x86"
+if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
+if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
 set "xDS=bin\bin64;bin"
 if /i not %xOS%==amd64 set "xDS=bin"
+set "SysPath=%SystemRoot%\System32"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-set "_err===== ERROR ===="
+if exist "%SystemRoot%\Sysnative\reg.exe" (
+set "SysPath=%SystemRoot%\Sysnative"
+set "Path=%xDS%;%SystemRoot%\Sysnative;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
+)
+set "_err=echo: &echo ==== ERROR ===="
+set "_psc=powershell -nop -c"
+set winbuild=1
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 set _cwmi=0
 for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
@@ -72,23 +94,26 @@ wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "Com
 )
 set _pwsh=1
 for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
-if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PS
+if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
+call :pr_color
+if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PWS
 
+set _uac=-elevated
 %_Null% reg.exe query HKU\S-1-5-19 && (
   goto :Passed
   ) || (
   if defined _elev goto :E_Admin
 )
 
-set _PSarg="""%~f0""" -elevated
-if defined _args set _PSarg="""%~f0""" %_args:"="""% -elevated
+set _PSarg="""%~f0""" %_uac%
+if defined _args set _PSarg="""%~f0""" %_args:"="""% %_uac%
 set _PSarg=%_PSarg:'=''%
 
-(%_Null% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %* -elevated) && (
+(%_Null% cscript //NoLogo "%~f0?.wsf" //job:ELAV /File:"%~f0" %* %_uac%) && (
   exit /b
   ) || (
   call setlocal EnableDelayedExpansion
-  %_Null% powershell -nop -c "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
+  %_Null% %_psc% "start cmd.exe -Arg '/c \"!_PSarg!\"' -verb runas" && (
     exit /b
     ) || (
     goto :E_Admin
@@ -96,8 +121,29 @@ set _PSarg=%_PSarg:'=''%
 )
 
 :Passed
+if defined _type goto :skipQE
+if %winbuild% LSS 10586 (
+reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul && set qerel=1
+)
+if defined qerel goto :skipQE
+if %_pwsh% EQU 0 goto :skipQE
+set _PSarg="""%~f0""" -qedit
+if defined _args set _PSarg="""%~f0""" %_args:"="""% -qedit
+set _PSarg=%_PSarg:'=''%
+set "d1=$t=[AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1).DefineDynamicModule(2, $False).DefineType(0);"
+set "d2=$t.DefinePInvokeMethod('GetStdHandle', 'kernel32.dll', 22, 1, [IntPtr], @([Int32]), 1, 3).SetImplementationFlags(128);"
+set "d3=$t.DefinePInvokeMethod('SetConsoleMode', 'kernel32.dll', 22, 1, [Boolean], @([IntPtr], [Int32]), 1, 3).SetImplementationFlags(128);"
+set "d4=$k=$t.CreateType(); $b=$k::SetConsoleMode($k::GetStdHandle(-10), 0x0080);"
+setlocal EnableDelayedExpansion
+%_psc% "!d1! !d2! !d3! !d4! & cmd.exe '/c' '!_PSarg!'" &exit /b
+exit /b
+
+:skipQE
+set "logerr=%~dp0ErrorLog_V_%random%.txt"
+set "_batf=%~f0"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
+set _vdrv=%~d0
 setlocal EnableDelayedExpansion
 pushd "!_work!"
 if exist "convert-UUP.cmd" (
@@ -116,6 +162,7 @@ if %_Debug% equ 0 (
   set "_Contn=echo Press any key to continue..."
   set "_Exit=echo Press any key to exit."
   set "_Supp="
+  set "_Nul7=1>nul 2>nul"
   goto :Begin
 )
   set "_Nul1="
@@ -126,30 +173,42 @@ if %_Debug% equ 0 (
   set "_Contn=rem."
   set "_Exit=rem."
   set "_Supp=1>nul"
+  set "_Nul7="
 @echo on
 @prompt $G
 
 :Begin
-title Virtual Editions %uivr%
-set "vEditions=Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN,CoreSingleLanguage,ServerRdsh,IoTEnterprise,IoTEnterpriseS,CloudEdition,CloudEditionN"
-set ERRORTEMP=
+set "_dLog=%SystemRoot%\Logs\DISM"
+call :checkadk
+set _fils=(7z.dll,7z.exe,cdimage.exe,imagex.exe,libwim-15.dll,offlinereg.exe,offreg.dll,wimlib-imagex.exe,veData.cmd)
+for %%# in %_fils% do (
+if not exist ".\bin\%%#" (set _bin=%%#&goto :E_Bin)
+)
+set "_mount=%_vdrv%\MountUUP"
+set "_ntf=NTFS"
+if /i not "%_vdrv%"=="%SystemDrive%" if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_vdrv%' get FileSystem /value"') do set "_ntf=%%#"
+if /i not "%_vdrv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('%_psc% "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_vdrv%\"').Get()).FileSystem"') do set "_ntf=%%#"
+if /i not "%_ntf%"=="NTFS" (
+set "_mount=%SystemDrive%\MountUUP"
+)
+set "_elProf=Enterprise,IoTEnterprise,IoTEnterpriseK,ServerRdsh,Education,ProfessionalEducation,ProfessionalWorkstation,CloudEdition"
+set "_elProN=EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN,CloudEditionN"
+set "_elHome=CoreSingleLanguage"
+set "_elLTSC=IoTEnterpriseS,IoTEnterpriseSK"
+set "vEditions=%_elProf%,%_elProN%,%_elLTSC%,%_elHome%"
+set ERRTEMP=
+set _exDism=0
 set _all=0
 set _dir=0
 set _dvd=0
 set _iso=0
-set "line============================================================="
-if defined _args (
-set "_type=%~1"
-if /i not "%~2"=="" set "eLabel=%~2"
-if /i not "%~3"=="" set "eTime=%~3,%~4"
-)
-set _fils=(7z.dll,7z.exe,cdimage.exe,imagex.exe,libwim-15.dll,offlinereg.exe,offreg.dll,wimlib-imagex.exe)
-for %%# in %_fils% do (
-if not exist ".\bin\%%#" (set _bin=%%#&goto :E_Bin)
-)
+set "_ln2=____________________________________________________________"
+set "_ln1=________________________________________________"
+if not defined _type @color 07
 if not exist "ConvertConfig.ini" goto :proceed
 findstr /i \[create_virtual_editions\] ConvertConfig.ini %_Nul1% || goto :proceed
 for %%# in (
+UseDism
 AutoStart
 DeleteSource
 Preserve
@@ -168,25 +227,56 @@ goto :eof
 
 :proceed
 if defined _args (
-if /i "%_type%"=="autoswm" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0&set wim2swm=1
-if /i "%_type%"=="autowim" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0&set wim2swm=0
-if /i "%_type%"=="autoesd" set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=1&set wim2swm=0
+if /i "%_type%"=="autoswm" set _uupc=1&set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0&set wim2swm=1
+if /i "%_type%"=="autowim" set _uupc=1&set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=0&set wim2swm=0
+if /i "%_type%"=="autoesd" set _uupc=1&set AutoStart=1&set Preserve=0&set _Debug=1&set wim2esd=1&set wim2swm=0
 if /i "%_type%"=="manuswm" set wim2esd=0&set wim2swm=1
 if /i "%_type%"=="manuwim" set wim2esd=0&set wim2swm=0
 if /i "%_type%"=="manuesd" set wim2esd=1&set wim2swm=0
+if /i "%_type%"=="extdism" set AutoStart=1&set Preserve=0&set _Debug=1&set _exDism=1&set _exEdtn=%2
 )
+if %_uupc% equ 1 (
+findstr /b /i SkipISO ConvertConfig.ini %_Nul1% && for /f "tokens=2 delims==" %%# in ('findstr /b /i SkipISO ConvertConfig.ini') do set "SkipISO=%%#"
+)
+set _shortINF=
+if %_exDism% equ 0 goto :checkdir
+
+:extdism
+:: call :dk_color1 %Blue% "=== Creating Virtual Editions . . ." 4
+set UseDism=1
+set ISOdir=ISOUUP
+set WimFile=install.wim
+imagex /info ISOFOLDER\sources\%WimFile% >bin\infoall.txt 2>&1
+for /f "tokens=3 delims=: " %%# in ('findstr /i /b /c:"Image Count" bin\infoall.txt') do set images=%%#
+for /l %%# in (1,1,%images%) do imagex /info ISOFOLDER\sources\%WimFile% %%# >bin\info%%#.txt 2>&1
+for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info1.txt') do set _build=%%#
+set EditionHome=0
+set EditionProf=0
+set EditionProN=0
+set EditionLTSC=0
+set Edition%_exEdtn%=1
+set _shortINF=1
+call :sharedINF
+goto :dCheck
+
+:checkdir
+title Virtual Editions %uivr%
 dir /b /ad . %_Nul3% || goto :checkdvd
 for /f "tokens=* delims=" %%# in ('dir /b /ad .') do (
-if exist "%%~#\sources\install.esd" set _dir=1&set "ISOdir=%%~#"
 if exist "%%~#\sources\install.wim" set _dir=1&set "ISOdir=%%~#"
+)
+if %_dir% neq 1 for /f "tokens=* delims=" %%# in ('dir /b /ad .') do (
+if exist "%%~#\sources\install.esd" set _dir=1&set "ISOdir=%%~#"
 )
 if %_dir% neq 1 goto :checkdvd
 goto :dCheck
 
 :checkdvd
 for %%# in (D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
-if exist "%%#:\sources\install.esd" set _dvd=1&set "ISOdir=%%#:"
 if exist "%%#:\sources\install.wim" set _dvd=1&set "ISOdir=%%#:"
+)
+if %_dvd% neq 1 for %%# in (D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
+if exist "%%#:\sources\install.esd" set _dvd=1&set "ISOdir=%%#:"
 )
 if %_dvd% neq 1 goto :checkiso
 goto :dCheck
@@ -206,9 +296,9 @@ if %_Debug% neq 0 goto :dCheck
 @cls
 set _erriso=0
 set ISOfile=
-echo %line%
-echo Enter / Paste the complete path to ISO file
-echo %line%
+echo.
+echo Enter the full path to ISO file
+echo %_ln1%
 echo.
 set /p ISOfile=
 if not defined ISOfile set _Debug=1&goto :QUIT
@@ -216,8 +306,7 @@ set "ISOfile=%ISOfile:"=%"
 if not exist "%ISOfile%" set _erriso=1
 if /i not "%ISOfile:~-4%"==".iso" set _erriso=1
 if %_erriso% equ 1 (
-echo.
-echo %_err%
+%_err%
 echo Specified path is not a valid ISO file
 echo.
 %_Contn%&%_Pause%
@@ -227,15 +316,11 @@ set _iso=1
 set Preserve=0
 
 :dISO
-color 1F
+:: @color 1F
 @cls
-echo.
-echo %line%
-echo Extracting ISO file . . .
-echo %line%
-echo.
+call :dk_color1 %Blue% "=== Extracting ISO file . . ." 4 5
 echo "!ISOfile!"
-set "ISOdir=ISOUUP"
+set ISOdir=ISOUUP
 if exist %ISOdir%\ rmdir /s /q %ISOdir%\
 7z.exe x "!ISOfile!" -o%ISOdir% * -r %_Null%
 
@@ -247,11 +332,15 @@ echo "!_work!"
 if %_Debug% neq 0 (
 if %AutoStart% equ 0 set AutoStart=1
 )
-if not defined ISOdir exit /b
+if not defined ISOdir (
+(echo.&echo ISOdir source directory is not specified, or valid)>>"!logerr!"
+exit /b
+)
 if exist bin\temp\ rmdir /s /q bin\temp\
-color 1F
+:: @color 1F
 set _configured=0
 for %%# in (
+UseDism
 AutoStart
 DeleteSource
 Preserve
@@ -259,18 +348,21 @@ SkipISO
 wim2esd
 wim2swm
 ) do (
-if !%%#! equ 1 set _configured=1
+if !%%#! neq 0 set _configured=1
 )
-echo.
-echo %line%
-echo Checking Distribution Info . . .
-echo %line%
+if %_exDism% equ 1 goto :AUTOMENU
+if %_uupc% equ 1 (call :dk_color1 %Blue% "=== Creating Virtual Editions . . ." 4) else (call :dk_color1 %Blue% "=== Checking distribution Info . . ." 4)
 if %_dvd% equ 1 set Preserve=1
 goto :dInfo
 
 :AUTOMENU
 if %AutoStart% equ 0 goto :MULTIMENU
-if not defined AutoEditions set "AutoEditions=%vEditions%"
+if not defined AutoEditions (
+set "AutoEditions=%vEditions%"
+set "_showEd=ALL"
+) else (
+set "_showEd=%AutoEditions%"
+)
 for %%# in (%AutoEditions%) do (
 if /i %%#==Enterprise if %EditionProf% equ 1 (set Enterprise=1)
 if /i %%#==Education if %EditionProf% equ 1 (set Education=1)
@@ -286,10 +378,13 @@ if /i %%#==IoTEnterprise if %EditionProf% equ 1 if %_build% geq 18277 (set IoTEn
 if /i %%#==IoTEnterpriseS if %EditionLTSC% equ 1 if %_build% geq 19041 (set IoTEnterpriseS=1)
 if /i %%#==CloudEdition if %EditionProf% equ 1 if %_build% geq 21364 (set CloudEdition=1)
 if /i %%#==CloudEditionN if %EditionProN% equ 1 if %_build% geq 21364 (set CloudEditionN=1)
+if /i %%#==IoTEnterpriseK if %EditionProf% equ 1 if %_build% geq 25982 (set IoTEnterpriseK=1)
+if /i %%#==IoTEnterpriseSK if %EditionLTSC% equ 1 if %_build% geq 25193 (set IoTEnterpriseSK=1)
 )
 goto :CREATEMENU
 
 :SHWOINFO
+echo.
 for %%# in (%vEditions%) do (
 set %%#=0
 )
@@ -319,25 +414,49 @@ if %EditionLTSC% equ 1 (
 if %IoTEnterpriseS% equ 0 if %_build% geq 19041 echo 12. IoT Enterprise LTSC {OEM}
 )
 if %EditionProf% equ 1 (
-if %CloudEdition% equ 0 if %_build% geq 21364 echo 13. SE {Cloud}
+if %CloudEdition% equ 0 if %_build% geq 21364 echo 13. SE [Cloud]
 )
 if %EditionProN% equ 1 (
-if %CloudEditionN% equ 0 if %_build% geq 21364 echo 14. SE N {Cloud N}
+if %CloudEditionN% equ 0 if %_build% geq 21364 echo 14. SE N [Cloud N]
 )
+if %EditionProf% equ 1 (
+if %IoTEnterpriseK% equ 0 if %_build% geq 25982 echo 15. IoT Enterprise Subscription {OEM}
+)
+if %EditionLTSC% equ 1 (
+if %IoTEnterpriseSK% equ 0 if %_build% geq 25193 echo 16. IoT Enterprise LTSC Subscription {OEM}
+)
+exit /b
+
+:chkinp
+if %1 equ 1 if %EditionProf% equ 1 if %Enterprise% equ 0 (set Enterprise=1&set verify=1)
+if %1 equ 2 if %EditionProf% equ 1 if %Education% equ 0 (set Education=1&set verify=1)
+if %1 equ 3 if %EditionProf% equ 1 if %ProfessionalEducation% equ 0 (set ProfessionalEducation=1&set verify=1)
+if %1 equ 4 if %EditionProf% equ 1 if %ProfessionalWorkstation% equ 0 (set ProfessionalWorkstation=1&set verify=1)
+if %1 equ 5 if %EditionProN% equ 1 if %EnterpriseN% equ 0 (set EnterpriseN=1&set verify=1)
+if %1 equ 6 if %EditionProN% equ 1 if %EducationN% equ 0 (set EducationN=1&set verify=1)
+if %1 equ 7 if %EditionProN% equ 1 if %ProfessionalEducationN% equ 0 (set ProfessionalEducationN=1&set verify=1)
+if %1 equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (set ProfessionalWorkstationN=1&set verify=1)
+if %1 equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
+if %1 equ 10 if %EditionProf% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
+if %1 equ 11 if %EditionProf% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
+if %1 equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 19041 (set IoTEnterpriseS=1&set verify=1)
+if %1 equ 13 if %EditionProf% equ 1 if %CloudEdition% equ 0 if %_build% geq 21364 (set CloudEdition=1&set verify=1)
+if %1 equ 14 if %EditionProN% equ 1 if %CloudEditionN% equ 0 if %_build% geq 21364 (set CloudEditionN=1&set verify=1)
+if %1 equ 15 if %EditionProf% equ 1 if %IoTEnterpriseK% equ 0 if %_build% geq 25982 (set IoTEnterpriseK=1&set verify=1)
+if %1 equ 16 if %EditionLTSC% equ 1 if %IoTEnterpriseSK% equ 0 if %_build% geq 25193 (set IoTEnterpriseSK=1&set verify=1)
 exit /b
 
 :MULTIMENU
 @cls
-echo %line%
-echo Available Target Editions:
+call :dk_color1 %Blue% "Available Target Editions:"
 call :SHWOINFO
+echo %_ln2%
 echo.
-echo %line%
 echo Options:
 echo. 1 - Create all editions
 echo. 2 - Create one edition
 if %_sum% gtr 2 echo. 3 - Create randomly selected editions
-echo %line%
+echo %_ln1%
 echo.
 choice /c 1230 /n /m "Choose a menu option, or press 0 to quit: "
 if errorlevel 4 (set _Debug=1&goto :QUIT)
@@ -347,46 +466,39 @@ if errorlevel 1 goto :ALLMENU
 goto :MULTIMENU
 
 :ALLMENU
-for %%# in (Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,ServerRdsh) do (
-if %EditionProf% equ 1 set %%#=1
+if %EditionProf% equ 1 (
+for %%# in (Enterprise,Education,ProfessionalEducation,ProfessionalWorkstation,ServerRdsh) do set %%#=1
+if %_build% geq 18277 set IoTEnterprise=1
+if %_build% geq 21364 set CloudEdition=1
+if %_build% geq 25982 set IoTEnterpriseK=1
 )
-for %%# in (EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN) do (
-if %EditionProN% equ 1 set %%#=1
+if %EditionProN% equ 1 (
+for %%# in (EnterpriseN,EducationN,ProfessionalEducationN,ProfessionalWorkstationN) do set %%#=1
+if %_build% geq 21364 set CloudEditionN=1
 )
-if %EditionHome% equ 1 set CoreSingleLanguage=1
-if %EditionProf% equ 1 if %_build% geq 18277 set IoTEnterprise=1
-if %EditionLTSC% equ 1 if %_build% geq 19041 set IoTEnterpriseS=1
-if %EditionProf% equ 1 if %_build% geq 21364 set CloudEdition=1
-if %EditionProN% equ 1 if %_build% geq 21364 set CloudEditionN=1
+if %EditionLTSC% equ 1 (
+if %_build% geq 19041 set IoTEnterpriseS=1
+if %_build% geq 25193 set IoTEnterpriseSK=1
+)
+if %EditionHome% equ 1 (
+set CoreSingleLanguage=1
+)
 goto :CREATEMENU
 
 :SINGLEMENU
 @cls
 set verify=0
 set _single=
-echo %line%
 call :SHWOINFO
+echo %_ln2%
 echo.
-echo %line%
-echo Enter edition number to create, or zero '0' to return
-echo %line%
+echo Enter chosen edition number, or zero '0' to return
+echo %_ln1%
+echo.
 set /p _single= ^> Enter your option and press "Enter": 
 if not defined _single (set _Debug=1&goto :QUIT)
 if "%_single%"=="0" (set "_single="&goto :MULTIMENU)
-if %_single% equ 1 if %EditionProf% equ 1 if %Enterprise% equ 0 (set Enterprise=1&set verify=1)
-if %_single% equ 2 if %EditionProf% equ 1 if %Education% equ 0 (set Education=1&set verify=1)
-if %_single% equ 3 if %EditionProf% equ 1 if %ProfessionalEducation% equ 0 (set ProfessionalEducation=1&set verify=1)
-if %_single% equ 4 if %EditionProf% equ 1 if %ProfessionalWorkstation% equ 0 (set ProfessionalWorkstation=1&set verify=1)
-if %_single% equ 5 if %EditionProN% equ 1 if %EnterpriseN% equ 0 (set EnterpriseN=1&set verify=1)
-if %_single% equ 6 if %EditionProN% equ 1 if %EducationN% equ 0 (set EducationN=1&set verify=1)
-if %_single% equ 7 if %EditionProN% equ 1 if %ProfessionalEducationN% equ 0 (set ProfessionalEducationN=1&set verify=1)
-if %_single% equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (set ProfessionalWorkstationN=1&set verify=1)
-if %_single% equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
-if %_single% equ 10 if %EditionProf% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
-if %_single% equ 11 if %EditionProf% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
-if %_single% equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 19041 (set IoTEnterpriseS=1&set verify=1)
-if %_single% equ 13 if %EditionProf% equ 1 if %CloudEdition% equ 0 if %_build% geq 21364 (set CloudEdition=1&set verify=1)
-if %_single% equ 14 if %EditionProN% equ 1 if %CloudEditionN% equ 0 if %_build% geq 21364 (set CloudEditionN=1&set verify=1)
+call :chkinp %_single%
 if %verify% equ 1 goto :CREATEMENU
 set _single=
 goto :SINGLEMENU
@@ -396,45 +508,39 @@ goto :SINGLEMENU
 set verify=0
 set _count=
 set _index=
-echo %line%
 call :SHWOINFO
+echo %_ln2%
 echo.
-echo %line%
-echo Enter editions numbers to create separated with spaces
+echo Enter chosen editions numbers, space-separated, or zero '0' to return
 echo examples: 1 3 4 or 5 1 or 4 2 10
-echo Enter zero '0' to return
-echo %line%
+echo %_ln1%
+echo.
 set /p _index= ^> Enter your option and press "Enter": 
 if not defined _index (set _Debug=1&goto :QUIT)
 if "%_index%"=="0" (set "_index="&goto :MULTIMENU)
 for %%# in (%_index%) do (
-if %%# equ 1 if %EditionProf% equ 1 if %Enterprise% equ 0 (set Enterprise=1&set verify=1)
-if %%# equ 2 if %EditionProf% equ 1 if %Education% equ 0 (set Education=1&set verify=1)
-if %%# equ 3 if %EditionProf% equ 1 if %ProfessionalEducation% equ 0 (set ProfessionalEducation=1&set verify=1)
-if %%# equ 4 if %EditionProf% equ 1 if %ProfessionalWorkstation% equ 0 (set ProfessionalWorkstation=1&set verify=1)
-if %%# equ 5 if %EditionProN% equ 1 if %EnterpriseN% equ 0 (set EnterpriseN=1&set verify=1)
-if %%# equ 6 if %EditionProN% equ 1 if %EducationN% equ 0 (set EducationN=1&set verify=1)
-if %%# equ 7 if %EditionProN% equ 1 if %ProfessionalEducationN% equ 0 (set ProfessionalEducationN=1&set verify=1)
-if %%# equ 8 if %EditionProN% equ 1 if %ProfessionalWorkstationN% equ 0 (set ProfessionalWorkstationN=1&set verify=1)
-if %%# equ 9 if %EditionHome% equ 1 if %CoreSingleLanguage% equ 0 (set CoreSingleLanguage=1&set verify=1)
-if %%# equ 10 if %EditionProf% equ 1 if %ServerRdsh% equ 0 (set ServerRdsh=1&set verify=1)
-if %%# equ 11 if %EditionProf% equ 1 if %IoTEnterprise% equ 0 if %_build% geq 18277 (set IoTEnterprise=1&set verify=1)
-if %%# equ 12 if %EditionLTSC% equ 1 if %IoTEnterpriseS% equ 0 if %_build% geq 19041 (set IoTEnterpriseS=1&set verify=1)
-if %%# equ 13 if %EditionProf% equ 1 if %CloudEdition% equ 0 if %_build% geq 21364 (set CloudEdition=1&set verify=1)
-if %%# equ 14 if %EditionProN% equ 1 if %CloudEditionN% equ 0 if %_build% geq 21364 (set CloudEditionN=1&set verify=1)
+call :chkinp %%#
 )
 if %verify% equ 1 goto :CREATEMENU
 set _index=
 goto :RANDOMMENU
 
 :CREATEMENU
-if %AutoStart% equ 1 (echo.) else (@cls)
-if %_configured% equ 1 (
-echo %line%
-echo Configured Virtual Options . . .
-echo %line%
-echo.
+set modded=0
+set _preMount=0
+set _preCopy=4
+set _sufCopy=
+if %AutoStart% equ 0 (
+@cls
+call :checkQE
+)
+if %_exDism% equ 0 if %_configured% equ 1 (
+set _preMount=0
+set _preCopy=0
+set _sufCopy=5
+call :dk_color1 %Blue% "=== Configured Virtual Options . . ." 4 5
   for %%# in (
+  UseDism
   AutoStart
   DeleteSource
   Preserve
@@ -442,30 +548,36 @@ echo.
   wim2esd
   wim2swm
   ) do (
-  if !%%#! equ 1 echo %%#
+  if !%%#! neq 0 echo %%#
   )
-if %AutoStart% equ 1 if defined AutoEditions echo AutoEditions: %AutoEditions%
+if %AutoStart% neq 0 if defined AutoEditions echo AutoEditions: %_showEd%
 echo.
 )
+if %_exDism% equ 1 goto :skipcopy
 
-if %Preserve% equ 1 (
-echo %line%
-echo Copying Distribution source . . .
-echo %line%
-echo.
-echo "%ISOdir%"
-echo.
+if %winbuild% lss 10240 if %_ADK% equ 0 (
+if %UseDism% neq 0 call :dk_color1 %_Yellow% "Windows NT 10.0 ADK is not detected, reverting to Registry method." 0 5
+set UseDism=0
+)
+if %winbuild% lss 9600 (
+if %UseDism% equ 2 (set UseDism=1) else (set UseDism=0)
+)
+if %Preserve% neq 0 (
+call :dk_color1 %Blue% "=== Copying source: {%ISOdir%}" %_preCopy% %_sufCopy%
 robocopy "%ISOdir%" "ISOFOLDER" /E /A-:R %_Null%
 ) else (
 move /y "%ISOdir%" ISOFOLDER %_Nul1%
 attrib -A -I -R "ISOFOLDER\*" /S /D %_Nul3%
 )
 if not exist "ISOFOLDER\sources\%WimFile%" (
-echo %_err%
+%_err%
 echo Failed to create ISOFOLDER\sources\%WimFile%
 echo.
+(echo.&echo Failed to create ISOFOLDER\sources\%WimFile%)>>"!logerr!"
 goto :E_None
 )
+
+:skipcopy
 for %%# in (%vEditions%) do (
 find /i "<EDITIONID>%%#</EDITIONID>" bin\infoall.txt %_Nul1% && set %%#=0
 )
@@ -473,25 +585,121 @@ for %%# in (%vEditions%) do (
 if !%%#! equ 1 set /a _all+=1
 )
 if %_all% equ 0 goto :E_None
-set modified=0
+set _doProf=0
+set _doProN=0
+set _doHome=0
+set _doLTSC=0
+if %EditionProf% equ 1 for %%# in (%_elProf%) do (
+if !%%#! equ 1 set _doProf=1
+)
+if %EditionProN% equ 1 for %%# in (%_elProN%) do (
+if !%%#! equ 1 set _doProN=1
+)
+if %EditionLTSC% equ 1 for %%# in (%_elLTSC%) do (
+if !%%#! equ 1 set _doLTSC=1
+)
+if %EditionHome% equ 1 for %%# in (%_elHome%) do (
+if !%%#! equ 1 set _doHome=1
+)
+set /a _doALL=%_doProf%+%_doProN%+%_doHome%+%_doLTSC%
 set /a index=0
-if %DeleteSource% neq 1 (
-echo %line%
-echo Copying %WimFile% . . .
-echo %line%
-echo.
+if %UseDism% equ 1 (
+set /a index=%images%
+goto :doDism
+)
+set _doCopy=0
+if %DeleteSource% neq 1 set _doCopy=1
+if %_doALL% lss %images% set _doCopy=1
+if %_doCopy% equ 1 (
+call :dk_color1 %Blue% "=== Copying %WimFile% . . ." %_preCopy%
 copy /y ISOFOLDER\sources\%WimFile% ISOFOLDER\sources\temp.wim %_Nul1%
 set /a index=%images%
 )
-for %%# in (%vEditions%) do (
-if !%%#! equ 1 call :%%# %%#
+:: for %%# in (%vEditions%) do (
+:: if !%%#! equ 1 call :doData %%#
+:: )
+if %_doProf% equ 1 for %%# in (%_elProf%) do (
+if !%%#! equ 1 call :doData %%#
 )
-if %modified% equ 1 (goto :ISOCREATE) else (goto :E_None)
+if %_doProN% equ 1 for %%# in (%_elProN%) do (
+if !%%#! equ 1 call :doData %%#
+)
+if %_doLTSC% equ 1 for %%# in (%_elLTSC%) do (
+if !%%#! equ 1 call :doData %%#
+)
+if %_doHome% equ 1 for %%# in (%_elHome%) do (
+if !%%#! equ 1 call :doData %%#
+)
+if %modded% equ 1 (goto :ISOCREATE) else (goto :E_None)
+
+:doDism
+if %_exDism% equ 0 del /f /q "%_dLog%\DismVirtualEditions.log" %_Nul3%
+if not exist "%_dLog%\" mkdir "%_dLog%" %_Nul3%
+if %_build% geq 19041 if %winbuild% lss 17133 if not exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+copy /y %SysPath%\slc.dll %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
+if /i not %xOS%==x86 copy /y %SystemRoot%\SysWOW64\slc.dll %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
+)
+if %_doProf% equ 1 (
+call :doMount %IndexProf%
+for %%# in (%_elProf%) do (if !%%#! equ 1 call :doData %%#)
+call :doUnmount %IndexProf%
+)
+if defined _term exit /b
+if %_doProN% equ 1 (
+call :doMount %IndexProN%
+for %%# in (%_elProN%) do (if !%%#! equ 1 call :doData %%#)
+call :doUnmount %IndexProN%
+)
+if defined _term exit /b
+if %_doLTSC% equ 1 (
+call :doMount %IndexLTSC%
+for %%# in (%_elLTSC%) do (if !%%#! equ 1 call :doData %%#)
+call :doUnmount %IndexLTSC%
+)
+if defined _term exit /b
+if %_doHome% equ 1 (
+call :doMount %IndexHome%
+for %%# in (%_elHome%) do (if !%%#! equ 1 call :doData %%#)
+call :doUnmount %IndexHome%
+)
+if defined _term exit /b
+if %_exDism% equ 1 exit /b
+if %_build% geq 19041 if %winbuild% lss 17133 if exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+del /f /q %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
+if /i not %xOS%==x86 del /f /q %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
+)
+if %modded% equ 1 (goto :ISOCREATE) else (goto :E_None)
+
+:doData
+if defined _term exit /b
+if /i %1==IoTEnterpriseSK (
+if %UseDism% neq 1 exit /b
+if %_build% lss 25193 exit /b
+)
+if /i %1==IoTEnterpriseK (
+if %_build% lss 25982 exit /b
+)
+if /i %1==IoTEnterpriseS (
+if %_build% lss 19041 exit /b
+if %UseDism% equ 1 if not exist "%_mount%\Windows\System32\spp\tokens\skus\IoTEnterpriseS\IoTEnterpriseS-OEM*.xrm-ms" exit /b
+)
+if /i %1==IoTEnterprise (
+if %_build% lss 18277 exit /b
+)
+if /i %1==CloudEdition (
+if %_build% lss 21364 exit /b
+)
+if /i %1==CloudEditionN (
+if %_build% lss 21364 exit /b
+)
+call bin\veData.cmd %1
+call :WIM
+exit /b
 
 :WIM
-echo %line%
-echo Creating Edition: %desc%
-echo %line%
+if defined _term exit /b
+call :dk_color1 %Gray% "=== Creating Edition: %desc%" 4
+if %UseDism% equ 1 goto :doWIM
 echo.
 if %DeleteSource% equ 1 (
   if %_all% equ 1 (
@@ -500,15 +708,15 @@ if %DeleteSource% equ 1 (
     wimlib-imagex.exe info ISOFOLDER\sources\temp.wim 1 "%winver% %desc%" "%winver% %desc%" %_Null%
     )
     if %images% neq 1 (
-    wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "%winver% %desc%" "%winver% %desc%" %_Supp%
+    wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "%winver% %desc%" "%winver% %desc%"
     )
   )
   if %_all% neq 1 (
-  wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "%winver% %desc%" "%winver% %desc%" %_Supp%
+  wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "%winver% %desc%" "%winver% %desc%"
   )
 )
 if %DeleteSource% neq 1 (
-wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "%winver% %desc%" "%winver% %desc%" %_Supp%
+wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %source% ISOFOLDER\sources\temp.wim "%winver% %desc%" "%winver% %desc%"
 )
 set /a index+=1
 wimlib-imagex.exe extract ISOFOLDER\sources\temp.wim %index% \Windows\System32\config\SOFTWARE \Windows\System32\config\SYSTEM \Windows\servicing\Editions\%EditionID%Edition.xml --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
@@ -533,12 +741,14 @@ if /i %EditionID%==CoreSingleLanguage (
 )
 %_Nul3% reg.exe add "HKLM\SOF\Microsoft\Windows NT\CurrentVersion\Print" /f /v DoNotInstallCompatibleDriverFromWindowsUpdate /t REG_DWORD /d !Print!
 %_Nul3% reg.exe add "HKLM\SOF\Microsoft\Windows\CurrentVersion\Setup\OOBE" /f /v SetupDisplayedProductKey /t REG_DWORD /d 1
+if %_build% geq 22557 (
+%_Nul3% reg.exe add "HKLM\SOF\Microsoft\Windows\Windows Error Reporting" /f /v ChangeDumpTypeByTelemetryLevel /t REG_DWORD /d !DumpLv!
+)
 if /i %EditionID%==ServerRdsh (
-if %_build% lss 22483 reg.exe add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c WMIC /NAMESPACE:\\ROOT\CIMV2 PATH Win32_UserAccount WHERE \"SID like 'S-1-5-21-%%-500'\" SET Disabled=FALSE &exit /b 0 " %_Nul3%
-if %_build% geq 22483 reg.exe add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c powershell -nop -c \"Set-CimInstance -Query 'Select * from Win32_UserAccount WHERE SID LIKE \\\"S-1-5-21-%%-500\\\"' -Property @{Disabled=0}\" &exit /b 0 " %_Nul3%
+%_Nul3% reg.exe add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c powershell -ep unrestricted -nop -c \"Set-CimInstance -Query 'Select * from Win32_UserAccount WHERE SID LIKE ''S-1-5-21-%%-500''' -Property @{Disabled=0}\" &exit /b 0 "
 )
 %_Nul3% reg.exe unload HKLM\SYS
-%_Nul3% reg.exe save HKLM\SOF .\bin\temp\SOFTWARE2
+%_Nul3% reg.exe save HKLM\SOF .\bin\temp\SOFTWARE2 /y
 %_Nul3% reg.exe unload HKLM\SOF
 %_Nul3% move /y .\bin\temp\SOFTWARE2 .\bin\temp\SOFTWARE
 type nul>bin\temp\virtual.txt
@@ -547,23 +757,112 @@ type nul>bin\temp\virtual.txt
 >>bin\temp\virtual.txt echo add 'bin^\temp^\%EditionID%Edition.xml' '^\Windows^\%EditionID%.xml'
 wimlib-imagex.exe update ISOFOLDER\sources\temp.wim %index% < bin\temp\virtual.txt %_Null%
 rmdir /s /q bin\temp\
-echo.
+:: echo.
 wimlib-imagex.exe info ISOFOLDER\sources\temp.wim %index% --image-property WINDOWS/EDITIONID=%EditionID% --image-property FLAGS=%EditionID% --image-property DISPLAYNAME="%winver% %desc%" --image-property DISPLAYDESCRIPTION="%winver% %desc%"
+set modded=1
+exit /b
+
+:doWIM
+if /i "%channel%"=="OEM" (
+%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismVirtualEditions.log" /Set-Edition:%EditionID%
+) else (
+%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismVirtualEditions.log" /Set-Edition:%EditionID% /Channel:%channel%
+)
+set ERRTEMP=%ERRORLEVEL%
+if %ERRTEMP% neq 0 (
+call :dk_color1 %Red% "Could not set %EditionID% edition." 4
+(echo.&echo Could not set %EditionID% edition.)>>"!logerr!"
+exit /b
+)
+if /i %EditionID%==ServerRdsh (
+%_Nul3% reg.exe load HKLM\SYS "%_mount%\Windows\System32\config\SYSTEM"
+%_Nul3% reg.exe add "HKLM\SYS\Setup\FirstBoot\PreOobe" /f /v 00 /t REG_SZ /d "cmd.exe /c powershell -ep unrestricted -nop -c \"Set-CimInstance -Query 'Select * from Win32_UserAccount WHERE SID LIKE ''S-1-5-21-%%-500''' -Property @{Disabled=0}\" &exit /b 0 "
+%_Nul3% reg.exe unload HKLM\SYS
+)
+%_dism1% /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
+set ERRTEMP=%ERRORLEVEL%
+if %ERRTEMP% neq 0 (
+call :dk_color1 %Red% "Could not save the edition image." 4
+(echo.&echo Could not save the edition image.)>>"!logerr!"
+exit /b
+)
+set /a index+=1
+if %_exDism% equ 0 (
+set "_Nul7="
 echo.
-set modified=1
+)
+%_Nul7% wimlib-imagex.exe info ISOFOLDER\sources\%WimFile% %index% "%winver% %desc%" "%winver% %desc%" --image-property FLAGS=%EditionID% --image-property DISPLAYNAME="%winver% %desc%" --image-property DISPLAYDESCRIPTION="%winver% %desc%"
+set modded=1
+exit /b
+
+:doMount
+if defined _term exit /b
+if %_exDism% equ 1 exit /b
+call :dk_color1 %Blue% "=== Mounting Source Index: %1" %_preMount%
+set _preMount=4
+if exist "%_mount%\" rmdir /s /q "%_mount%\"
+if not exist "%_mount%\" mkdir "%_mount%"
+%_dism1% /Mount-Wim /Wimfile:ISOFOLDER\sources\%WimFile% /Index:%1 /MountDir:"%_mount%" %_Supp%
+set ERRTEMP=%ERRORLEVEL%
+if %ERRTEMP% neq 0 (
+call :discard
+set "MESSAGE=Could not mount the image"&goto :E_MSG
+)
+exit /b
+
+:doUnmount
+if defined _term exit /b
+if %_exDism% equ 1 exit /b
+call :dk_color1 %Blue% "=== Unmounting Source Index: %1" 4
+%_dism1% /Unmount-Wim /MountDir:"%_mount%" /Discard %_Supp%
+set ERRTEMP=%ERRORLEVEL%
+if %ERRTEMP% neq 0 (
+call :discard
+set "MESSAGE=Could not unmount the image"&goto :E_MSG
+)
+rmdir /s /q "%_mount%\"
+exit /b
+
+:discard
+%_dism1% /Image:"%_mount%" /Get-Packages %_Null%
+%_dism1% /Unmount-Wim /MountDir:"%_mount%" /Discard %_Supp%
+%_dism1% /Cleanup-Mountpoints %_Nul3%
+%_dism1% /Cleanup-Wim %_Nul3%
+if exist "%_mount%\" rmdir /s /q "%_mount%\"
+set _term=1
+exit /b
+
+:dDelete
+for /f "tokens=3 delims=: " %%# in ('imagex /info ISOFOLDER\sources\%WimFile% ^|findstr /i /b /c:"Image Count"') do set dimages=%%#
+for /l %%# in (1,1,%dimages%) do imagex /info ISOFOLDER\sources\%WimFile% %%# >bin\info%%#.txt 2>&1
+for /L %%# in (1,1,%dimages%) do (
+find /i "<EDITIONID>%1</EDITIONID>" bin\info%%#.txt %_Nul3% && (
+  echo %1
+  rem %_dism1% /Delete-Image /ImageFile:ISOFOLDER\sources\%WimFile% /Index:%%#
+  wimlib-imagex.exe delete ISOFOLDER\sources\%WimFile% %%# --soft %_Nul3%
+  )
+)
+del /f /q bin\info*.txt %_Nul3%
 exit /b
 
 :ISOCREATE
-if exist ISOFOLDER\sources\ei.cfg del /f /q ISOFOLDER\sources\ei.cfg
+for /f "tokens=3 delims=: " %%# in ('imagex /info ISOFOLDER\sources\%WimFile% ^|findstr /i /b /c:"Image Count"') do set finalimages=%%#
+if %finalimages% gtr 1 if not exist "ei.cfg" if not exist "UUPs\ei.cfg" if exist ISOFOLDER\sources\ei.cfg del /f /q ISOFOLDER\sources\ei.cfg
+if %UseDism% neq 1 (
 if exist ISOFOLDER\sources\%WimFile% del /f /q ISOFOLDER\sources\%WimFile%
 ren ISOFOLDER\sources\temp.wim %WimFile%
-if %DeleteSource% equ 1 call :dPREPARE
+)
+if %DeleteSource% equ 1 (
+call :dk_color1 %Blue% "=== Deleting Source Edition{s} . . ." 4 5
+if %_doProf% equ 1 call :dDelete Professional
+if %_doProN% equ 1 call :dDelete ProfessionalN
+if %_doLTSC% equ 1 call :dDelete EnterpriseS
+if %_doHome% equ 1 call :dDelete Core
+call :dPREPARE
+)
 if %wim2esd% equ 0 (
-echo %line%
-echo Rebuilding %WimFile% . . .
-echo %line%
-echo.
-wimlib-imagex.exe optimize ISOFOLDER\sources\%WimFile% %_Supp%
+call :dk_color1 %Blue% "=== Rebuilding %WimFile% . . ." 4 5
+%_wrb% wimlib-imagex.exe optimize ISOFOLDER\sources\%WimFile% %_Supp%
 )
 pushd "ISOFOLDER\sources"
 for /f %%# in ('dir /b /a:-d %WimFile%') do set "_size=000000%%~z#"
@@ -571,60 +870,55 @@ popd
 if "%_size%" lss "0000004194304000" set wim2swm=0
 if %wim2esd% equ 0 if %wim2swm% equ 0 goto :finVIR
 if %wim2esd% equ 0 if %wim2swm% equ 1 goto :swmVIR
-echo %line%
-echo Converting install.wim to install.esd . . .
-echo %line%
-echo.
+call :dk_color1 %Blue% "=== Converting install.wim to install.esd . . ." 4 5
 wimlib-imagex.exe export ISOFOLDER\sources\install.wim all ISOFOLDER\sources\install.esd --compress=LZMS --solid %_Supp%
-call set ERRORTEMP=!ERRORLEVEL!
-if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during export. Discarding install.esd&del /f /q ISOFOLDER\sources\install.esd %_Nul3%)
+set ERRTEMP=%ERRORLEVEL%
+if %ERRTEMP% neq 0 (
+call :dk_color1 %Red% "Errors were reported during export. Discarding install.esd" 4
+(echo.&echo Errors were reported during export. Discarding install.esd)>>"!logerr!"
+del /f /q ISOFOLDER\sources\install.esd %_Nul3%
+)
 if exist ISOFOLDER\sources\install.esd del /f /q ISOFOLDER\sources\install.wim
 goto :finVIR
 :swmVIR
-echo.
-echo %line%
-echo Splitting install.wim into multiple install*.swm . . .
-echo %line%
-echo.
+call :dk_color1 %Blue% "=== Splitting install.wim into install*.swm . . ." 4 5
 wimlib-imagex.exe split ISOFOLDER\sources\install.wim ISOFOLDER\sources\install.swm 3500 %_Supp%
-call set ERRORTEMP=!ERRORLEVEL!
-if !ERRORTEMP! neq 0 (echo.&echo Errors were reported during split. Discarding install.swm&del /f /q ISOFOLDER\sources\install*.swm %_Nul3%)
+set ERRTEMP=%ERRORLEVEL%
+if %ERRTEMP% neq 0 (
+call :dk_color1 %Red% "Errors were reported during split. Discarding install*.swm" 4
+(echo.&echo Errors were reported during split. Discarding install*.swm)>>"!logerr!"
+del /f /q ISOFOLDER\sources\install*.swm %_Nul3%
+)
 if exist ISOFOLDER\sources\install*.swm del /f /q ISOFOLDER\sources\install.wim
 :finVIR
 if %SkipISO% neq 0 (
   ren ISOFOLDER %DVDISO%
-  echo.
-  echo %line%
-  echo Done. You chose not to create iso file.
-  echo %line%
-  echo.
+  set qmsg=Finished. You chose not to create iso file.
   goto :QUIT
 )
-echo.
-echo %line%
-echo Creating ISO . . .
-echo %line%
-if defined eTime set isotime=%eTime%
+call :dk_color1 %Blue% "=== Creating ISO . . ." 4
+if defined _exTime set isotime=%_exTime%
 if /i not %arch%==arm64 (
 cdimage.exe -bootdata:2#p0,e,b"ISOFOLDER\boot\etfsboot.com"#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -t%isotime% -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
 ) else (
 cdimage.exe -bootdata:1#pEF,e,b"ISOFOLDER\efi\Microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -t%isotime% -l%DVDLABEL% ISOFOLDER %DVDISO%.ISO
 )
-set ERRORTEMP=%ERRORLEVEL%
-if %ERRORTEMP% neq 0 goto :E_ISO
-echo.
+set ERRTEMP=%ERRORLEVEL%
+if %ERRTEMP% neq 0 goto :E_ISO
+set qmsg=Finished.
 goto :QUIT
 
 :dInfo
-if exist "%ISOdir%\sources\install.wim" (set WimFile=install.wim) else (set WimFile=install.esd&set wim2esd=0&set wim2swm=0)
-imagex /info "%ISOdir%\sources\%WimFile%" | findstr /i /c:"LZMS" %_Nul1% && (set wim2esd=0&set wim2swm=0)
+if exist "%ISOdir%\sources\install.wim" (set WimFile=install.wim) else (set WimFile=install.esd&set wim2esd=0&set wim2swm=0&set UseDism=0)
+imagex /info "%ISOdir%\sources\%WimFile%" | findstr /i /c:"LZMS" %_Nul1% && (set wim2esd=0&set wim2swm=0&set UseDism=0)
 wimlib-imagex.exe info "%ISOdir%\sources\%WimFile%" 1 %_Nul3%
-set ERRORTEMP=%ERRORLEVEL%
-if %ERRORTEMP% neq 0 (
-echo %_err%
+set ERRTEMP=%ERRORLEVEL%
+if %ERRTEMP% neq 0 (
+%_err%
 echo Could not execute wimlib-imagex.exe
 echo Use simple work path without special characters
 echo.
+(echo.&echo Could not execute wimlib-imagex.exe)>>"!logerr!"
 goto :QUIT
 )
 imagex /info "%ISOdir%\sources\%WimFile%">bin\infoall.txt 2>&1
@@ -633,7 +927,6 @@ for /l %%# in (1,1,%images%) do imagex /info "%ISOdir%\sources\%WimFile%" %%# >b
 for /f "tokens=3 delims=<>" %%# in ('find /i "<BUILD>" bin\info1.txt') do set _build=%%#
 for /f "tokens=3 delims=<>" %%# in ('find /i "<DEFAULT>" bin\info1.txt') do set "langid=%%#"
 for /f "tokens=3 delims=<>" %%# in ('find /i "<ARCH>" bin\info1.txt') do (if %%# equ 0 (set "arch=x86") else if %%# equ 9 (set "arch=x64") else (set "arch=arm64"))
-set /a _fixSV=%_build%+1
 set EditionHome=0
 set EditionProf=0
 set EditionProN=0
@@ -642,13 +935,14 @@ find /i "Core</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionHome=1)
 find /i "Professional</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionProf=1)
 find /i "ProfessionalN</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionProN=1)
 if %_build% geq 19041 (
-find /i "EnterpriseS</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionLTSC=1)
+find /i "<EDITIONID>EnterpriseS</EDITIONID>" bin\infoall.txt %_Nul1% && (set EditionLTSC=1)
 )
+:sharedINF
 for /L %%# in (1,1,%images%) do (
 if %EditionHome% equ 1 (find /i "Core</EDITIONID>" bin\info%%#.txt %_Nul3% && (set IndexHome=%%#))
 if %EditionProf% equ 1 (find /i "Professional</EDITIONID>" bin\info%%#.txt %_Nul3% && (set IndexProf=%%#))
 if %EditionProN% equ 1 (find /i "ProfessionalN</EDITIONID>" bin\info%%#.txt %_Nul3% && (set IndexProN=%%#))
-if %EditionLTSC% equ 1 (find /i "EnterpriseS</EDITIONID>" bin\info%%#.txt %_Nul3% && (set IndexLTSC=%%#))
+if %EditionLTSC% equ 1 (find /i "<EDITIONID>EnterpriseS</EDITIONID>" bin\info%%#.txt %_Nul3% && (set IndexLTSC=%%#))
 )
 set "wtxHome=Windows 10"
 set "wtxProf=Windows 10"
@@ -656,26 +950,29 @@ set "wtxProN=Windows 10"
 set "wtxLTSC=Windows 10"
 if %EditionHome% equ 1 (
 find /i "<NAME>" bin\info%IndexHome%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxHome=Windows 11")
+find /i "<NAME>" bin\info%IndexHome%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxHome=Windows 12")
 )
 if %EditionProf% equ 1 (
 find /i "<NAME>" bin\info%IndexProf%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxProf=Windows 11")
+find /i "<NAME>" bin\info%IndexProf%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxProf=Windows 12")
 )
 if %EditionProN% equ 1 (
 find /i "<NAME>" bin\info%IndexProN%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxProN=Windows 11")
+find /i "<NAME>" bin\info%IndexProN%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxProN=Windows 12")
 )
 if %EditionLTSC% equ 1 (
 find /i "<NAME>" bin\info%IndexLTSC%.txt %_Nul2% | find /i "Windows 11" %_Nul1% && (set "wtxLTSC=Windows 11")
+find /i "<NAME>" bin\info%IndexLTSC%.txt %_Nul2% | find /i "Windows 12" %_Nul1% && (set "wtxLTSC=Windows 12")
 )
 for /l %%# in (1,1,%images%) do del /f /q bin\info%%#.txt %_Nul3%
+if defined _shortINF goto :eof
 if %_build% lss 17063 (
-set "MESSAGE=ISO build %_build% do not support virtual editions"
 if %_iso% equ 1 rmdir /s /q "%ISOdir%\"
-goto :E_MSG
+set "MESSAGE=ISO build %_build% do not support virtual editions"&goto :E_MSG
 )
 if %EditionHome% equ 0 if %EditionProf% equ 0 if %EditionProN% equ 0 if %EditionLTSC% equ 0 (
-set "MESSAGE=No supported source edition detected"
 if %_iso% equ 1 rmdir /s /q "%ISOdir%\"
-goto :E_MSG
+set "MESSAGE=No supported source edition detected"&goto :E_MSG
 )
 if %EditionProf% equ 1 set /a _sum+=5
 if %EditionProN% equ 1 set /a _sum+=4
@@ -684,7 +981,9 @@ if %EditionLTSC% equ 1 if %_build% geq 19041 set /a _sum+=1
 if %EditionProf% equ 1 if %_build% geq 18277 set /a _sum+=1
 if %EditionProf% equ 1 if %_build% geq 21364 set /a _sum+=1
 if %EditionProN% equ 1 if %_build% geq 21364 set /a _sum+=1
-wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+if %EditionProf% equ 1 if %_build% geq 25982 set /a _sum+=1
+if %EditionLTSC% equ 1 if %_build% geq 25193 set /a _sum+=1
+wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 7z.exe l .\bin\temp\setuphost.exe >.\bin\temp\version.txt 2>&1
 for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l)
 set revver=%uupver%&set revmaj=%uupmaj%&set revmin=%uupmin%
@@ -730,12 +1029,15 @@ if %revmaj%==19045 (
 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
 if %uupver:~0,5%==19041 set uupver=19045%uupver:~5%
 )
-if %revmaj%==19046 (
-if /i "%branch:~0,2%"=="vb" set branch=23h2%branch:~2%
-if %uupver:~0,5%==19041 set uupver=19046%uupver:~5%
-)
 if %revmaj% geq %_build% if %_build% geq 21382 (
 if %uupver:~0,5%==%_build% set uupver=%revmaj%%uupver:~5%
+)
+if %revmaj%==22631 (
+if /i "%branch:~0,2%"=="ni" (echo %branch% | find /i "beta" %_Nul1% || set branch=23h2_ni%branch:~2%)
+if %uupver:~0,5%==22621 set uupver=22631%uupver:~5%
+)
+if %revmaj%==22635 (
+if %uupver:~0,5%==22621 set uupver=22635%uupver:~5%
 )
 if %uupmin% lss %revmin% (
 set uupver=%revver%
@@ -770,10 +1072,12 @@ set langid=!langid:%%#=%%#!
 if /i %arch%==x86 set archl=X86
 if /i %arch%==x64 set archl=X64
 if /i %arch%==arm64 set archl=A64
-set "DVDLABEL=CCSA_%archl%FRE_%langid%_DV5"
-if defined eLabel set _label=%eLabel%
+set _ddv=DV5
+if %_build% geq 22621 set _ddv=DV9
+set "DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%"
+if defined _exLabel set _label=%_exLabel%
 set "DVDISO=%_label%MULTI_%archl%FRE_%langid%"
-if exist "%DVDISO%.ISO" set "DVDISO=%DVDISO%_r"
+if exist "%DVDISO%.ISO" set "DVDISO=%DVDISO%_%random%"
 goto :AUTOMENU
 
 :dPREPARE
@@ -781,10 +1085,10 @@ for /f "tokens=3 delims=: " %%# in ('imagex /info ISOFOLDER\sources\%WimFile% ^|
 if %finalimages% gtr 1 exit /b
 set _VL=0
 for /f "tokens=3 delims=<>" %%# in ('imagex /info ISOFOLDER\sources\%WimFile% 1 ^| find /i "<EDITIONID>"') do set _edtn=%%#
-if /i %_edtn%==Professional set DVDLABEL=CPRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRO_OEMRET_%archl%FRE_%langid%
-if /i %_edtn%==ProfessionalN set DVDLABEL=CPRNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRON_OEMRET_%archl%FRE_%langid%
 if /i %_edtn%==Core set DVDLABEL=CCRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CORE_OEMRET_%archl%FRE_%langid%
 if /i %_edtn%==CoreSingleLanguage set DVDLABEL=CSLA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%SINGLELANGUAGE_OEM_%archl%FRE_%langid%
+if /i %_edtn%==Professional set DVDLABEL=CPRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRO_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==ProfessionalN set DVDLABEL=CPRNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRON_OEMRET_%archl%FRE_%langid%
 if /i %_edtn%==Enterprise set DVDLABEL=CENA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISE_VOL_%archl%FRE_%langid%&set _VL=1
 if /i %_edtn%==EnterpriseN set DVDLABEL=CENNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISEN_VOL_%archl%FRE_%langid%&set _VL=1
 if /i %_edtn%==Education set DVDLABEL=CEDA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%EDUCATION_RET_%archl%FRE_%langid%&set _VL=1
@@ -796,8 +1100,10 @@ if /i %_edtn%==ProfessionalEducationN set DVDLABEL=CPRENA_%archl%FRE_%langid%_DV
 if /i %_edtn%==ServerRdsh set DVDLABEL=CEV_%archl%FREV_%langid%_DV5&set DVDISO=%_label%MULTISESSION_VOL_%archl%FRE_%langid%&set _VL=1
 if /i %_edtn%==CloudEdition set DVDLABEL=CWCA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUD_OEMRET_%archl%FRE_%langid%
 if /i %_edtn%==CloudEditionN set DVDLABEL=CWCNNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUDN_OEMRET_%archl%FRE_%langid%
-if /i %_edtn%==IoTEnterprise set DVDLABEL=IOTE_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISE_OEMRET_%archl%FRE_%langid%
-if /i %_edtn%==IoTEnterpriseS set DVDLABEL=IOTS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISES_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==IoTEnterprise set DVDLABEL=IOTEN_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISE_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==IoTEnterpriseS set DVDLABEL=IOTES_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISES_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==IoTEnterpriseSK set DVDLABEL=IOTESK_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISESK_OEMRET_%archl%FRE_%langid%
+if /i %_edtn%==IoTEnterpriseK set DVDLABEL=IOTENK_%archl%FRE_%langid%_DV5&set DVDISO=%_label%IOTENTERPRISEK_OEMRET_%archl%FRE_%langid%
 if /i %_edtn%==EnterpriseS set DVDLABEL=CES_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISES_VOL_%archl%FRE_%langid%&set _VL=1
 if /i %_edtn%==EnterpriseSN set DVDLABEL=CESN_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISESN_VOL_%archl%FRE_%langid%&set _VL=1
 if %_VL% equ 0 exit /b
@@ -817,17 +1123,17 @@ exit /b
 set "mumfile=%SystemRoot%\temp\update.mum"
 set "chkfile=!mumfile:\=\\!"
 if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
-if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!chkfile!\"').LastModified"') do set "mumdate=%%#"
+if %_cwmi% equ 0 for /f %%# in ('%_psc% "([WMI]'CIM_DataFile.Name=''!chkfile!''').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "%1=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 set "%2=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
 exit /b
 
 :setuphostprep
-wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
-wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setupprep.exe --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
-wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\system32\UpdateAgent.dll --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
-wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\system32\Facilitator.dll --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
+wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setuphost.exe --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Null%
+wimlib-imagex.exe extract "%ISOdir%\sources\boot.wim" 2 sources\setupprep.exe --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Null%
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\system32\UpdateAgent.dll --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Null%
+wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\system32\Facilitator.dll --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Null%
 set _svr1=0&set _svr2=0&set _svr3=0&set _svr4=0
 set "_fvr1=%SystemRoot%\temp\UpdateAgent.dll"
 set "_fvr2=%SystemRoot%\temp\setupprep.exe"
@@ -844,10 +1150,10 @@ if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "nam
 if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr4!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
 )
 if %_cwmi% equ 0 (
-if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr1!\"').Version"') do set /a "_svr1=%%a"
-if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr2!\"').Version"') do set /a "_svr2=%%a"
-if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr3!\"').Version"') do set /a "_svr3=%%a"
-if exist "!_fvr4!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfvr4!\"').Version"') do set /a "_svr4=%%a"
+if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr1!''').Version"') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr2!''').Version"') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr3!''').Version"') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr4!''').Version"') do set /a "_svr4=%%a"
 )
 set "_chk=!_fvr1!"
 if %chkmin% equ %_svr1% set "_chk=!_fvr1!"&goto :prephostsetup
@@ -875,304 +1181,186 @@ if %_svr4% gtr %_svr2% if %_svr4% gtr %_svr3% set "_chk=!_fvr4!"
 del /f /q "!_fvr1!" "!_fvr2!" "!_fvr3!" "!_fvr4!" %_Nul3%
 exit /b
 
-:IoTEnterpriseS
-if %_build% lss 19041 exit /b
-set "EditionID=%1"
-set "ProductId=00436-40000-00000-AAOEM"
-set "OSProductContentId=d5914fe3-3021-a30f-7bb7-e1714e56ecc0"
-set "OSProductPfn=Microsoft.Windows.191.X21-99672_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303433362D34303030302D30303030302D41414F454D000C1100005B56625D5832312D39393637320000000C1100000000D499A3B1A9035BEF09000000000011D0F8602F6CACBA020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000064A7CB60"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300034003300360034002D003000300030002D003000300030003000300030002D00300032002D0031003000320035002D0039003200300030002E0030003000300030002D0032003000330032003000320031000000000000000000000000000000000000000000000000000000000000000000360033003200660066006100310030002D0033006200370035002D0034003100380030002D0061006500640039002D0034006500370039003900610034003400350036003300620000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000049006F00540045006E0074006500720070007200690073006500530000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C1100000000D499A3B1A9035BEF0900D9192A0A78E8DB9B0EE018D04C1B385D85744DB979455D09C648004501E7EEB2A6088C16424B42B1A7C7367D07C223CDAEFD0C1AD8F0EB240E7AD5FB4B3295AD5B00560062005D005800320031002D00390039003600370032000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004F0045004D003A0044004D0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004F0045004D000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=1"
-set "Insecure=0"
-set "desc=IoT Enterprise LTSC"
-set "source=%IndexLTSC%"
-set "winver=%wtxLTSC%"
-call :WIM
-exit /b
-
-:IoTEnterprise
-if %_build% lss 18277 exit /b
-set "EditionID=%1"
-set "ProductId=00436-20000-00000-AAOEM"
-set "OSProductContentId=4b1412af-12ad-0bbd-177e-6f7579c8600f"
-set "OSProductPfn=Microsoft.Windows.188.X21-99378_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303433362D32303030302D30303030302D41414F454D000A1100005B313948315D5832312D3939333738000A1100000000C8BFC44ABE281573090000000000BA3FC65C79FBCEC902000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004E6597C1"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300034003300360032002D003000300030002D003000300030003000300030002D00300032002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100390032003000310039000000000000000000000000000000000000000000000000000000000000000000380061006200390062006400640031002D0031006600360037002D0034003900390037002D0038003200640039002D0038003800370038003500320030003800330037006400390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000049006F00540045006E0074006500720070007200690073006500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000A1100000000C8BFC44ABE2815730900C2586D4B3D14127A7AA589B597436B2B668BB57F03BBF64B34DADF82166ED03DAE567D1A43D2A5F01CBEFFA92C8D86415273F040C17EFE9C1A53F6D49DB0A54B5B0031003900480031005D005800320031002D003900390033003700380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004F0045004D003A0044004D0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004F0045004D000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=1"
-set "Insecure=0"
-set "desc=IoT Enterprise"
-set "source=%IndexProf%"
-set "winver=%wtxProf%"
-call :WIM
-exit /b
-
-:ServerRdsh
-set "EditionID=%1"
-set "Print=1"
-set "Insecure=0"
-set "source=%IndexProf%"
-set "winver=%wtxProf%"
-if %_build% geq 17763 (
-set "ProductId=00432-70000-00001-AA701"
-set "OSProductContentId=8e20e60b-0826-3084-51fe-cda9e1b184cd"
-set "OSProductPfn=Microsoft.Windows.175.X21-83765_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303433322D37303030302D30303030312D414137303100E71000005B5253355D5832312D38333736350000E710100000000019E6ABC946E0F0090000000000A23EC65C05F0E66F0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000651DE578"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300034003300320037002D003000300030002D003000300030003000300031002D00300033002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100390032003000310039000000000000000000000000000000000000000000000000000000000000000000650063003800360038006500360035002D0066006100640066002D0034003700350039002D0062003200330065002D00390033006600650033003700660032006300630032003900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000530065007200760065007200520064007300680000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000E710100000000019E6ABC946E0F009002B11469E49D838FE3D68708FF122CB51C5BB3CB181B914B08DE8BFDDE9D3B495B852E47C048CEF48B76AA54F7352659895F9AA7B24F08092E3CA900D5B3DE7A15B005200530035005D005800320031002D00380033003700360035000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065003A00470056004C004B000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "desc=Enterprise multi-session"
+:checkadk
+set _dism1=dism.exe /English
+set _dism2=dism.exe /English /ScratchDir
+set _ADK=0
+set regKeyPathFound=1
+set wowRegKeyPathFound=1
+reg.exe query "HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 %_Nul3% || set wowRegKeyPathFound=0
+reg.exe query "HKLM\Software\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 %_Nul3% || set regKeyPathFound=0
+if %wowRegKeyPathFound% equ 0 (
+  if %regKeyPathFound% equ 0 (
+    goto :eof
+  ) else (
+    set regKeyPath=HKLM\Software\Microsoft\Windows Kits\Installed Roots
+  )
 ) else (
-set "ProductId=00389-50000-00001-AA267"
-set "OSProductContentId=8bcd2f4f-8b45-3e55-522d-c3875c18832e"
-set "OSProductPfn=Microsoft.Windows.175.X21-41298_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303338392D35303030302D30303030312D414132363700370F00005B5253335D5832312D34313239380000370F10000000BCF257653B915B7B08000000000033CEF96093E107C603000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004CF96235"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300033003800390035002D003000300030002D003000300030003000300031002D00300033002D0031003000320035002D0039003200300030002E0030003000300030002D0032003000330032003000320031000000000000000000000000000000000000000000000000000000000000000000650034006400620035003000650061002D0062006400610031002D0034003500360036002D0062003000340037002D00300063006100350030006100620063003600660030003700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000530065007200760065007200520064007300680000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000370F10000000BCF257653B915B7B08007632A0BB31567060B7BAA12133B532B4C584703400AE491DCB35FA2AB047DA9400B57AED3AD9CC7CB073C821FB8EF6E459CCCB5E7DB66FFC118BE0AD70D105E15B005200530033005D005800320031002D00340031003200390038000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065003A00470056004C004B000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "desc=Enterprise Remote Server"
+    set regKeyPath=HKLM\Software\Wow6432Node\Microsoft\Windows Kits\Installed Roots
 )
-call :WIM
+for /f "skip=2 tokens=2*" %%i in ('reg.exe query "%regKeyPath%" /v KitsRoot10') do set "KitsRoot=%%j"
+set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
+if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
+set _ADK=1
+set "Path=%xDS%;%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+)
+goto :eof
+
+:pr_color
+set _NCS=1
+if %winbuild% LSS 10586 set _NCS=0
+if %winbuild% GEQ 10586 reg.exe query HKCU\Console /v ForceV2 %_Null% | find /i "0x0" %_Null% && (set _NCS=0)
+
+if %_NCS% EQU 1 (
+for /F %%a in ('echo prompt $E ^| cmd.exe') do set "_esc=%%a"
+set     "Red="41;97m" "pad""
+set    "Gray="100;97m" "pad""
+set   "Green="42;97m" "pad""
+set    "Blue="44;97m" "pad""
+set  "_White="40;37m" "pad""
+set  "_Green="40;92m" "pad""
+set "_Yellow="40;93m" "pad""
+) else (
+set     "Red="Red" "white""
+set    "Gray="DarkGray" "white""
+set   "Green="DarkGreen" "white""
+set    "Blue="Blue" "white""
+set  "_White="Black" "Gray""
+set  "_Green="Black" "Green""
+set "_Yellow="Black" "Yellow""
+)
+
+set "_err=echo: &call :dk_color1 %Red% "==== ERROR ====" &echo:"
 exit /b
 
-:Enterprise
-set "EditionID=%1"
-set "ProductId=00329-00000-00003-AA163"
-set "OSProductContentId=05ce649a-eed1-d14e-aa01-4045f35ca54d"
-set "OSProductPfn=Microsoft.Windows.4.X19-98698_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303332392D30303030302D30303030332D414131363300DA0C00005B54485D5831392D3938363938000000DA0C30000000186367E01565BE190800000000006A3CC65C7B0355CF03000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001820E0CF"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300033003200390030002D003000300030002D003000300030003000300033002D00300033002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100380032003000310039000000000000000000000000000000000000000000000000000000000000000000370033003100310031003100320031002D0035003600330038002D0034003000660036002D0062006300310031002D0066003100640037006200300064003600340033003000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000045006E007400650072007000720069007300650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000DA0C30000000186367E01565BE1908002F804AB2DB805EA13D7F55FE45580AACE318F8564D3FADB7415C2F5B04D68038B0CB8213C664AB77BE2BCA373C415436BC9DCF06233D14E08772FC1D4C4137145B00540048005D005800310039002D003900380036003900380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065003A00470056004C004B000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=1"
-set "Insecure=0"
-set "desc=Enterprise"
-set "source=%IndexProf%"
-set "winver=%wtxProf%"
-call :WIM
+:dk_color1
+if /i "%_Exit%"=="rem." (
+echo %~3
+exit /b
+)
+if not "%4"=="" if "%4"=="4" echo:
+if %_NCS% EQU 1 (
+echo %_esc%[%~1%~3%_esc%[0m
+) else if %_pwsh% EQU 1 (
+%_psc% write-host -back '%1' -fore '%2' '%3'
+) else (
+echo %~3
+)
+if not "%5"=="" echo:
 exit /b
 
-:Education
-set "EditionID=%1"
-set "ProductId=00328-10000-00001-AA343"
-set "OSProductContentId=ce14a187-835c-7270-6fcb-602268e16063"
-set "OSProductPfn=Microsoft.Windows.121.X19-98668_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303332382D31303030302D30303030312D414133343300D10C00005B54485D5831392D3938363638000000D10C10000000603EF693CD84A6280800000000003B3EC65CEFDEBD170300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000FBB56065"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300033003200380031002D003000300030002D003000300030003000300031002D00300033002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100380032003000310039000000000000000000000000000000000000000000000000000000000000000000650030006300340032003200380038002D0039003800300063002D0034003700380038002D0061003000310034002D0063003000380030006400320065003100390032003600650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000045006400750063006100740069006F006E00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000D10C10000000603EF693CD84A628080097DF6CB8F7B0FE32CAD1D565E037D8EF8A2DD512CE70153460A140266ECEED293F9366CBE687D3DB1F6A8C152BBF06D2CF3526E15637F4CAD048E4FECFC139EC5B00540048005D005800310039002D003900380036003600380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065003A00470056004C004B000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=1"
-set "Insecure=0"
-set "desc=Education"
-set "source=%IndexProf%"
-set "winver=%wtxProf%"
-call :WIM
+:dk_color2
+if /i "%_Exit%"=="rem." (
+echo %~3 %~6
+exit /b
+)
+if not "%7"=="" if "%7"=="7" echo:
+if %_NCS% EQU 1 (
+echo %_esc%[%~1%~3%_esc%[%~4%~6%_esc%[0m
+) else if %_pwsh% EQU 1 (
+%_psc% write-host -back '%1' -fore '%2' '%3' -NoNewline; write-host -back '%4' -fore '%5' '%6'
+) else (
+echo %~3 %~6
+)
+if not "%8"=="" echo:
 exit /b
 
-:ProfessionalEducation
-set "EditionID=%1"
-set "ProductId=00380-00000-00001-AA261"
-set "OSProductContentId=3c88328a-7c1e-aa8a-72e7-edca5665b405"
-set "OSProductPfn=Microsoft.Windows.164.X21-04955_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303338302D30303030302D30303030312D414132363100D80E00005B5253315D5832312D30343935350000D80E10000000B0D59918A63DEAC7090000000000F83EC65C8D0D82E800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003A8EA582"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300033003800300030002D003000300030002D003000300030003000300031002D00300030002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100390032003000310039000000000000000000000000000000000000000000000000000000000000000000360032006600300063003100300030002D0039006300350033002D0034006500300032002D0062003800380036002D00610033003500320038006400640066006500370066003600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500072006F00660065007300730069006F006E0061006C0045006400750063006100740069006F006E00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000D80E10000000B0D59918A63DEAC7090049CE26E216D5DA7CB7BCE6C212337CFD8DFFB4DF3542F3082038118C22F8F62AEB533B180E8C2EB103A53ADA9E058D80FE788F03A557C608FA26AF208C838F0B5B005200530031005D005800320031002D003000340039003500350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=0"
-set "Insecure=1"
-set "desc=Pro Education"
-set "source=%IndexProf%"
-set "winver=%wtxProf%"
-call :WIM
-exit /b
-
-:ProfessionalWorkstation
-set "EditionID=%1"
-set "ProductId=00391-70000-00000-AA825"
-set "OSProductContentId=665f6f21-1692-5d08-17e4-934e0c638268"
-set "OSProductPfn=Microsoft.Windows.161.X21-43626_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303339312D37303030302D30303030302D4141383235004D0F00005B5253335D5832312D343336323600004D0F00000000344DD4F276BB0150090000000000583FC65CE95A1CEA00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007DD61CA5"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300033003900310037002D003000300030002D003000300030003000300030002D00300030002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100390032003000310039000000000000000000000000000000000000000000000000000000000000000000650062003600640033003400360066002D0031006300360030002D0034003600340033002D0062003900360030002D00340030006500630033003100350039003600630034003500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500072006F00660065007300730069006F006E0061006C0057006F0072006B00730074006100740069006F006E0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004D0F00000000344DD4F276BB01500900DCA02A65542EDA7278AEE106EB6DBB25C6E2B84961296DB9FCF4F525C29FD0B4434023AD5574B64901101BC377CDE0346F5E7F97ED597050592F15D40B2F63C85B005200530033005D005800320031002D003400330036003200360000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=0"
-set "Insecure=1"
-set "desc=Pro for Workstations"
-set "source=%IndexProf%"
-set "winver=%wtxProf%"
-call :WIM
-exit /b
-
-:CloudEdition
-if %_build% lss 21364 exit /b
-set "EditionID=%1"
-set "ProductId=00475-80000-00000-AA899"
-set "OSProductContentId=cc260727-8d42-5c4c-3c2f-f093008dcd9a"
-set "OSProductPfn=Microsoft.Windows.203.X22-53847_8wekyb3d8bbwe"
-set "DigitalProductId=a40000000300000030303437352d38303030302d30303030302d414138393900961200005b436f5d5832322d3533383437000000961200000000e02f4e1cfb11241c09000000000060d886607b382ca600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007577b471"
-set "DigitalProductId4=f804000004000000350035003000340031002d00300034003700350038002d003000300030002d003000300030003000300030002d00300030002d0031003000330033002d00310039003000340032002e0030003000300030002d003100310036003200300032003100000000000000000000000000000000000000000000000000000000000000390032006600620038003700320036002d0039003200610038002d0034006600660063002d0039003400630065002d0066003800320065003000370034003400340036003500330000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000043006c006f0075006400450064006900740069006f006e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000961200000000e02f4e1cfb11241c0900636972e5f0d63c608ba93e4720664c3858b991e1cc7a277780e018e825b3ae1f30148c66f7e5b0bef9dca012f82b093d6350ed21b50aebca55a81cecd47ad94f5b0043006f005d005800320032002d0035003300380034003700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=0"
-set "Insecure=1"
-set "desc=SE"
-set "source=%IndexProf%"
-set "winver=%wtxProf%"
-call :WIM
-exit /b
-
-:EnterpriseN
-set "EditionID=%1"
-set "ProductId=00329-90000-00000-AA065"
-set "OSProductContentId=95bd2561-e54d-b969-789e-f7d12b386c67"
-set "OSProductPfn=Microsoft.Windows.27.X19-98747_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303332392D39303030302D30303030302D414130363500E30C00005B54485D5831392D3938373437000000E30C0000000074483162F763DE2D090000000000B168C75CB909475F0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000BBAF583E"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300033003200390039002D003000300030002D003000300030003000300030002D00300033002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100390032003000310039000000000000000000000000000000000000000000000000000000000000000000650032003700320065003300650032002D0037003300320066002D0034006300360035002D0061003800660030002D0034003800340037003400370064003000640039003400370000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000045006E00740065007200700072006900730065004E000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000E30C0000000074483162F763DE2D0900013ACB6CFB7A43817B1886F4231F31CB9D9984E412F00E88D4AFC9BC29D6805A013BC42A03714918ED6F587A2424253F18375D7E42711D3553A7EF7BDAACB9B05B00540048005D005800310039002D003900380037003400370000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065003A00470056004C004B000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=1"
-set "Insecure=0"
-set "desc=Enterprise N"
-set "source=%IndexProN%"
-set "winver=%wtxProN%"
-call :WIM
-exit /b
-
-:EducationN
-set "EditionID=%1"
-set "ProductId=00328-60000-00001-AA362"
-set "OSProductContentId=70f4ccac-9a50-0c5b-9b8c-4fe0d6276cf1"
-set "OSProductPfn=Microsoft.Windows.122.X19-98682_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303332382D36303030302D30303030312D414133363200D60C00005B54485D5831392D3938363832000000D60C10000000FC97E3F1CCDF3C370900000000004C69C75C1AA7E14A03000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002B44EB37"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300033003200380036002D003000300030002D003000300030003000300031002D00300033002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100390032003000310039000000000000000000000000000000000000000000000000000000000000000000330063003100300032003300350035002D0064003000320037002D0034003200630036002D0061006400320033002D0032006500370065006600380061003000320035003800350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000045006400750063006100740069006F006E004E0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000D60C10000000FC97E3F1CCDF3C370900CDF1B541541FBEFA02F6D41F9D7F8F41203AAADAE64A2981E617D6F4E3439F1592B7C251D0024D513741D883801A4F2010CE63E9B65244FB1D641A4D8963A50E5B00540048005D005800310039002D003900380036003800320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065003A00470056004C004B000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000056006F006C0075006D0065000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=1"
-set "Insecure=0"
-set "desc=Education N"
-set "source=%IndexProN%"
-set "winver=%wtxProN%"
-call :WIM
-exit /b
-
-:ProfessionalEducationN
-set "EditionID=%1"
-set "ProductId=00380-10000-00001-AA148"
-set "OSProductContentId=3dc4d427-0e39-c53a-6b2c-a801a01f902b"
-set "OSProductPfn=Microsoft.Windows.165.X21-04956_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303338302D31303030302D30303030312D414131343800D90E00005B5253315D5832312D30343935360000D90E1000000040E86D4ECFECBC12090000000000826BC75C947D897B0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000359333A5"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300033003800300031002D003000300030002D003000300030003000300031002D00300030002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100390032003000310039000000000000000000000000000000000000000000000000000000000000000000310033006100330038003600390038002D0034006100340039002D0034006200390065002D0038006500380033002D00390038006600650035003100310031003000390035003300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500072006F00660065007300730069006F006E0061006C0045006400750063006100740069006F006E004E0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000D90E1000000040E86D4ECFECBC12090004D5AD09CB250227EA46806F10551398C0BE8348C85D5056A4D7FDDC3D059E056747155A62192E948AA6815878A1A99C2C20655DFBB248ACDBD8A73DCC9979BB5B005200530031005D005800320031002D003000340039003500360000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=0"
-set "Insecure=1"
-set "desc=Pro Education N"
-set "source=%IndexProN%"
-set "winver=%wtxProN%"
-call :WIM
-exit /b
-
-:ProfessionalWorkstationN
-set "EditionID=%1"
-set "ProductId=00392-20000-00000-AA717"
-set "OSProductContentId=0ec42cc5-2b09-a734-1bb9-ff00e4a52d46"
-set "OSProductPfn=Microsoft.Windows.162.X21-43644_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303339322D32303030302D30303030302D414137313700520F00005B5253335D5832312D34333634340000520F00000000D8B84CE6055D81ED080000000000CA6BC75C6DA8F63B0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000619D9E2C"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300033003900320032002D003000300030002D003000300030003000300030002D00300030002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100390032003000310039000000000000000000000000000000000000000000000000000000000000000000380039006500380037003500310030002D0062006100390032002D0034003500660036002D0038003300320039002D00330061006600610039003000350065003300650038003300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500072006F00660065007300730069006F006E0061006C0057006F0072006B00730074006100740069006F006E004E00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520F00000000D8B84CE6055D81ED0800088943EDD3CF7A8B08D896A5563ED4A52421E0D01861CB786C78E3CA17454B8912A965EB02684AC4AD00913D7997FA5432771B7FCD710600DE39FE61521B10F45B005200530033005D005800320031002D003400330036003400340000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=0"
-set "Insecure=1"
-set "desc=Pro N for Workstations"
-set "source=%IndexProN%"
-set "winver=%wtxProN%"
-call :WIM
-exit /b
-
-:CloudEditionN
-if %_build% lss 21364 exit /b
-set "EditionID=%1"
-set "ProductId=00476-20000-00000-AA946"
-set "OSProductContentId=c7cfb460-bc9b-b32a-69b3-acf52bd6fa48"
-set "OSProductPfn=Microsoft.Windows.202.X22-53884_8wekyb3d8bbwe"
-set "DigitalProductId=a40000000300000030303437362d32303030302d30303030302d4141393436009a1200005b436f5d5832322d35333838340000009a1200000000083f35e14bd1e61c090000000000dfd886600a6f758a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000075cb374"
-set "DigitalProductId4=f804000004000000350035003000340031002d00300034003700360032002d003000300030002d003000300030003000300030002d00300030002d0031003000330033002d00310039003000340032002e0030003000300030002d003100310036003200300032003100000000000000000000000000000000000000000000000000000000000000640034006200640063003600370038002d0030006100340062002d0034006100330032002d0061003500620033002d0061006100610032003400630033006200300066003200340000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000043006c006f0075006400450064006900740069006f006e004e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000009a1200000000083f35e14bd1e61c0900ffc38a76e892bd57eadfade6e936a55ce150993173ee18b032ce8e375692b16e46be16aecc3daeedb01882e374a0eff0da5337243ced353b562c337e864dccea5b0043006f005d005800320032002d0035003300380038003400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=0"
-set "Insecure=1"
-set "desc=SE N"
-set "source=%IndexProN%"
-set "winver=%wtxProN%"
-call :WIM
-exit /b
-
-:CoreSingleLanguage
-set "EditionID=%1"
-set "ProductId=00327-60000-00000-AA157"
-set "OSProductContentId=6fba12a6-3077-5301-cfde-f22f59f1e2a6"
-set "OSProductPfn=Microsoft.Windows.100.X19-99661_8wekyb3d8bbwe"
-set "DigitalProductId=A40000000300000030303332372D36303030302D30303030302D414131353700CC0C00005B54485D5831392D3939363631000000CC0C00000000A0DB36D6DC41C8CD090000000000B270C75CC5F629D50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100770A8"
-set "DigitalProductId4=F804000004000000350035003000340031002D00300033003200370036002D003000300030002D003000300030003000300030002D00300030002D0031003000320035002D0039003200300030002E0030003000300030002D0031003100390032003000310039000000000000000000000000000000000000000000000000000000000000000000330061006500320063006300310034002D0061006200320064002D0034003100660034002D0039003700320066002D0035006500320030003100340032003700370031006400630000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000043006F0072006500530069006E0067006C0065004C0061006E0067007500610067006500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000CC0C00000000A0DB36D6DC41C8CD09002A9E0AB03607F36AE6CA609D0A54E68E58186B61A1D6A3C0BFDD6FC40AF2168D262581306BED0061DC0DDD8912031EE633FC7BB84B09C413ACAA627B3AABC92C5B00540048005D005800310039002D0039003900360036003100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000520065007400610069006C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-set "Print=0"
-set "Insecure=1"
-set "desc=Home Single Language"
-set "source=%IndexHome%"
-set "winver=%wtxHome%"
-call :WIM
+:checkQE
+if not defined qerel reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul || (
+call :dk_color1 %Red% "### WARNING ###"
+echo.
+echo Console "Quick Edit Mode" is active.
+echo Do not left-click with the mouse cursor inside the console window,
+echo or else the operation execution will hang until a key is pressed.
+echo.
+set _preMount=4
+)
 exit /b
 
 :E_Admin
-echo %_err%
+%_err%
 echo This script require administrator privileges.
 echo To do so, right click on this script and select 'Run as administrator'
-echo.
-if %_Debug% neq 0 exit /b
-echo Press any key to exit.
-pause >nul
-exit /b
+goto :E_Exit
 
-:E_PS
-echo %_err%
-echo Windows PowerShell is required for this script to work.
-echo.
+:E_PWS
+%_err%
+echo Windows PowerShell is not detected or not properly responding.
+echo It is required for this script to work.
+goto :E_Exit
+
+:E_Exit
 if %_Debug% neq 0 exit /b
+echo.
 echo Press any key to exit.
 pause >nul
 exit /b
 
 :E_Bin
-echo %_err%
+%_err%
 echo Required file %_bin% is missing.
 echo.
 goto :QUIT
 
 :E_MSG
-echo.
-echo %_err%
+:: @color 47
+if %_build% geq 19041 if %winbuild% lss 17133 if exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
+del /f /q %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
+if /i not %xOS%==x86 del /f /q %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
+)
+if exist "ISOFOLDER\sources\*.exe" ren ISOFOLDER %DVDISO% %_Nul3%
+%_err%
 echo %MESSAGE%
 echo.
+(echo.&echo %MESSAGE%)>>"!logerr!"
 goto :QUIT
 
 :E_None
-if exist ISOFOLDER\sources\temp.wim del /f /q ISOFOLDER\sources\temp.wim
+:: @color 0F
+if %_exDism% equ 1 exit /b
+if %UseDism% neq 1 if exist ISOFOLDER\sources\temp.wim del /f /q ISOFOLDER\sources\temp.wim
 call :dPREPARE
 ren ISOFOLDER %DVDISO%
+if %modded% equ 0 (
 echo.
-echo %line%
-echo No operation performed.
-echo %line%
-echo.
+echo All chosen editions already exists in the source
+)
+call :dk_color1 %Gray% "No operation performed." 4 5
 goto :QUIT
 
 :E_ISO
+:: @color 17
 ren ISOFOLDER %DVDISO%
-echo.&echo Errors were reported during ISO creation.&echo.&goto :QUIT
+call :dk_color1 %Red% "Errors were reported during ISO creation." 4 5
+(echo.&echo Errors were reported during ISO creation.)>>"!logerr!"
+goto :QUIT
 
 :QUIT
 if exist ISOFOLDER\ rmdir /s /q ISOFOLDER\
 if exist bin\temp\ rmdir /s /q bin\temp\
 if exist bin\infoall.txt del /f /q bin\infoall.txt
 popd
-if %_Debug% neq 0 (exit /b) else (echo Press 0 to exit.)
-choice /c 0 /n
+if %_Debug% neq 0 exit /b
+if defined qmsg call :dk_color1 %Green% "%qmsg%" 4
+call :dk_color1 %_Yellow% "Press 0 or q to exit."
+choice /c 0Q /n
 if errorlevel 1 (exit /b) else (rem.)
 
 ----- Begin wsf script --->
 <package>
    <job id="ELAV">
-       <script language="VBScript">
-           Set strArg=WScript.Arguments.Named
-           If Not strArg.Exists("File") Then
-               Wscript.Echo "Switch /File:<File> is missing."
-               WScript.Quit 1
-           End If
-           Set strRdlproc = CreateObject("WScript.Shell").Exec("rundll32 kernel32,Sleep")
-           With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & strRdlproc.ProcessId & "'")
-               With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & .ParentProcessId & "'")
-                   If InStr (.CommandLine, WScript.ScriptName) <> 0 Then
-                       strLine = Mid(.CommandLine, InStr(.CommandLine , "/File:") + Len(strArg("File")) + 8)
-                   End If
-               End With
-               .Terminate
-           End With
-          CreateObject("Shell.Application").ShellExecute "cmd.exe", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & strLine & chr(34), "", "runas", 1
-       </script>
+      <script language="VBScript">
+         Set strArg=WScript.Arguments.Named
+         Set strRdlproc = CreateObject("WScript.Shell").Exec("rundll32 kernel32,Sleep")
+         With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & strRdlproc.ProcessId & "'")
+            With GetObject("winmgmts:\\.\root\CIMV2:Win32_Process.Handle='" & .ParentProcessId & "'")
+               If InStr (.CommandLine, WScript.ScriptName) <> 0 Then
+                  strLine = Mid(.CommandLine, InStr(.CommandLine , "/File:") + Len(strArg("File")) + 8)
+               End If
+            End With
+            .Terminate
+         End With
+         CreateObject("Shell.Application").ShellExecute "cmd.exe", "/c " & chr(34) & chr(34) & strArg("File") & chr(34) & strLine & chr(34), "", "runas", 1
+      </script>
    </job>
 </package>

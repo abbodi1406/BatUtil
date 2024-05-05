@@ -3,29 +3,80 @@
 :embed:
 [Environment]::CurrentDirectory = (Get-Location -PSProvider FileSystem).ProviderPath
 Add-Type -Path .\Microsoft.Dism.dll
-[Microsoft.Dism.DismApi]::InitializeEx(2, $g, $c)
-$s = [Microsoft.Dism.DismApi]::OpenOfflineSession($m)
-$l = (Get-Content .\AppsToAdd.txt)
-ForEach ($a in $l)
+$Dism = [Microsoft.Dism.DismApi]
+
+function ATA($Mnt, $Log = [NullString]::Value, $Tmp = [NullString]::Value, $Stub = 0) {
+
+try
 {
-  $d = [IO.Path]::GetDirectoryName($a)
-  If ($d -Eq 'MSIXFramework')
-  {
-    echo ([IO.Path]::GetFileNameWithoutExtension($a))
-    try {[Microsoft.Dism.DismApi]::AddProvisionedAppxPackage($s, $a, $null, $null, $null)} catch {}
-    continue
-  }
-  echo ($d)
-  If (Test-Path ($d + '\AppxMetadata\Stub\*'))
-  {
-    $t = 2
-  }
-  Else
-  {
-    $t = 0
-  }
-  try {[Microsoft.Dism.DismApi]::AddProvisionedAppxPackage($s, $a, $null, $null, $d + '\License.xml', $null, 'all', $t)} catch {}
+    $Dism::InitializeEx(2, $Log, $Tmp)
+    $sesn = $Dism::OpenOfflineSession($Mnt)
+    $lst = [IO.File]::ReadAllLines('AppsToAdd.txt', [Text.Encoding]::ASCII)
 }
-[Microsoft.Dism.DismApi]::CloseSession($s)
-[Microsoft.Dism.DismApi]::Shutdown()
+catch
+{
+    Write-Host -Fore Red -Back Black $_.Exception.Message
+    return
+}
+
+[bool]$bError = $FALSE
+
+ForEach ($itm in $lst)
+{
+    $drc = [IO.Path]::GetDirectoryName($itm)
+
+    if ($drc.Equals('MSIXFramework', 'OrdinalIgnoreCase'))
+    {
+        Write-Host ([IO.Path]::GetFileNameWithoutExtension($itm))
+        try
+        {
+            $Dism::AddProvisionedAppxPackage($sesn, $itm, $null, $null, $null)
+        }
+        catch
+        {
+            Write-Host -Fore Red -Back Black $_.Exception.Message
+            $bError = $TRUE
+            break
+        }
+        continue
+    }
+
+    Write-Host ($drc)
+    [bool]$isStub = ([IO.Directory]::Exists($drc + '\AppxMetadata\Stub')) -and ([IO.Directory]::GetFiles($drc + '\AppxMetadata\Stub').Length -gt 0)
+    if ($isStub)
+    {
+        $stb = 2
+        if ($Stub -ne 0) {$stb = 1}
+    }
+    else
+    {
+        $stb = 0
+    }
+    try
+    {
+        $Dism::AddProvisionedAppxPackage($sesn, $itm, $null, $null, $drc + '\License.xml', $null, 'all', $stb)
+    }
+    catch
+    {
+        Write-Host -Fore Red -Back Black $_.Exception.Message
+        $bError = $TRUE
+        break
+    }
+}
+
+if ($bError)
+{
+    try {$Dism::CloseSession($sesn)} catch {}
+    try {$Dism::CloseSession($sesn)} catch {}
+    try {$sesn = $Dism::OpenOfflineSession($Mnt)} catch {}
+    try {$Dism::CloseSession($sesn)} catch {}
+    $Dism::Shutdown()
+}
+else
+{
+    $Dism::CloseSession($sesn)
+    $Dism::Shutdown()
+}
+
+}
 :embed:

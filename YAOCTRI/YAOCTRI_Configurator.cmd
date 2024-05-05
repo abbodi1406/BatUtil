@@ -15,6 +15,16 @@ set "SysPath=%SystemRoot%\System32"
 if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
 set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 set "_err===== ERROR ===="
+for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
+if %winbuild% lss 7601 goto :E_Win
+set _cwmi=0
+for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
+wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
+set _pwsh=1
+for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
+if %_cwmi% equ 0 if %_pwsh% equ 0 goto :E_WMI
+reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
 set "xOS=x64"
 set "_ComSpec=%SystemRoot%\System32\cmd.exe"
 set "_Common=%CommonProgramFiles%"
@@ -32,14 +42,12 @@ set "_file=%_target%\OfficeClickToRun.exe"
 set "_temp=%temp%"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
-reg query HKU\S-1-5-19 >nul 2>&1 || goto :E_Admin
 set "_ini=%~dp0"
 for /f "skip=2 tokens=2*" %%a in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%SystemDrive%\Users\Public\Desktop\desktop.ini" set "_dsk=%SystemDrive%\Users\Public\Desktop"
+
+@title Office Click-to-Run Configurator - Volume
 setlocal EnableDelayedExpansion
-for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
-if %winbuild% lss 7601 goto :E_Win
-title Office Click-to-Run Configurator - Volume
 set lpid=(ar-SA,bg-BG,cs-CZ,da-DK,de-DE,el-GR,en-US,es-ES,et-EE,fi-FI,fr-FR,he-IL,hr-HR,hu-HU,it-IT,ja-JP,ko-KR,lt-LT,lv-LV,nb-NO,nl-NL,pl-PL,pt-BR,pt-PT,ro-RO,ru-RU,sk-SK,sl-SI,sr-Latn-RS,sv-SE,th-TH,tr-TR,uk-UA,zh-CN,zh-TW,hi-IN,id-ID,kk-KZ,MS-MY,vi-VN,en-GB,es-MX,fr-CA)
 set lcid=(1025,1026,1029,1030,1031,1032,1033,3082,1061,1035,1036,1037,1050,1038,1040,1041,1042,1063,1062,1044,1043,1045,1046,2070,1048,1049,1051,1060,9242,1053,1054,1055,1058,2052,1028,1081,1057,1087,1086,1066,2057,2058,3084)
 set bits=(32,64)
@@ -423,7 +431,9 @@ set CTRvcab=v64_%CTRver%.cab&set CTRicab=i640.cab&set CTRicabr=i64%CTRprm%.cab
 :XmlCheck
 set _O2019=1
 set _O2021=1
+set _O2024=1
 if %verchk% lss 14026 set _O2021=0
+if %verchk% lss 17101 set _O2024=0
 expand.exe -f:*.xml "!CTRsource!\Office\Data\%CTRvcab%" "!_temp!." >nul
 find /i "Word2019Volume" "!_temp!\VersionDescriptor.xml" 1>nul 2>nul || set _O2019=0
 for /f "tokens=3 delims=<= " %%# in ('find /i "DeliveryMechanism" "!_temp!\VersionDescriptor.xml" 2^>nul') do set "FFNRoot=%%~#"
@@ -473,6 +483,14 @@ set _O21PowerPoint=ON
 set _O21Publisher=ON
 set _O21SkypeForBusiness=ON
 set _O21Word=ON
+set _O24Access=ON
+set _O24Excel=ON
+set _O24Lync=ON
+set _O24Outlook=ON
+set _O24PowerPoint=ON
+set _O24Publisher=ON
+set _O24SkypeForBusiness=ON
+set _O24Word=ON
 set _Mondo=OFF
 set _O365PP=ON
 set _O19Pro=OFF
@@ -487,6 +505,12 @@ set _O21PrjPro=OFF
 set _O21PrjStd=OFF
 set _O21VisPro=OFF
 set _O21VisStd=OFF
+set _O24Pro=OFF
+set _O24Std=OFF
+set _O24PrjPro=OFF
+set _O24PrjStd=OFF
+set _O24VisPro=OFF
+set _O24VisStd=OFF
 set _updt=True
 set _eula=True
 set _icon=False
@@ -497,7 +521,7 @@ set _tele=False
 set _Teams=OFF
 if %verchk:~0,2% geq 11 if %verchk% lss 11328 set _Teams=0
 if %verchk:~0,2% equ 10 if %verchk% lss 10336 set _Teams=0
-if %_O2019%==0 if %_O2021%==0 goto :MenuSuite
+if %_O2019%==0 if %_O2021%==0 if %_O2024%==0 goto :MenuSuite
 cls
 echo %line%
 echo Source  : "!CTRsource!"
@@ -505,19 +529,20 @@ echo Version : %CTRver% / Arch: %CTRarc% / Lang: %CTRlng%
 echo %line%
 echo.
 echo. 1. Install Microsoft Office Suite
-if %_O2021%==1 echo. 2. Install Office 2021 Single Apps
-if %_O2019%==1 echo. 3. Install Office 2019 Single Apps
+if %_O2019%==1 echo. 2. Install Office 2019 Single Apps
+if %_O2021%==1 echo. 3. Install Office 2021 Single Apps
+:: if %_O2024%==1 echo. 4. Install Office 2024 Single Apps
 echo.
 echo %line%
 choice /c 123X /n /m "Choose a menu option to proceed, or press X to exit: "
 if errorlevel 4 goto :eof
-if errorlevel 3 (if %_O2019%==1 (goto :MenuApps) else (goto :MenuInitial))
-if errorlevel 2 (if %_O2021%==1 (goto :Menu21Apps) else (goto :MenuInitial))
+if errorlevel 3 (if %_O2021%==1 (goto :Menu21Apps) else (goto :MenuInitial))
+if errorlevel 2 (if %_O2019%==1 (goto :MenuApps) else (goto :MenuInitial))
 if errorlevel 1 goto :MenuSuite
 goto :MenuInitial
 
 :MenuSuite
-if %_Mondo%==OFF if %_O365PP%==OFF if %_O19Pro%==OFF if %_O19Std%==OFF if %_O19PrjPro%==OFF if %_O19PrjStd%==OFF if %_O19VisPro%==OFF if %_O19VisStd%==OFF if %_O21Pro%==OFF if %_O21Std%==OFF if %_O21PrjPro%==OFF if %_O21PrjStd%==OFF if %_O21VisPro%==OFF if %_O21VisStd%==OFF set _O365PP=ON
+if %_Mondo%==OFF if %_O365PP%==OFF if %_O19Pro%==OFF if %_O19Std%==OFF if %_O19PrjPro%==OFF if %_O19PrjStd%==OFF if %_O19VisPro%==OFF if %_O19VisStd%==OFF if %_O21Pro%==OFF if %_O21Std%==OFF if %_O21PrjPro%==OFF if %_O21PrjStd%==OFF if %_O21VisPro%==OFF if %_O21VisStd%==OFF if %_O24Pro%==OFF if %_O24Std%==OFF if %_O24PrjPro%==OFF if %_O24PrjStd%==OFF if %_O24VisPro%==OFF if %_O24VisStd%==OFF set _O365PP=ON
 set errortmp=
 cls
 echo %line%
@@ -550,11 +575,22 @@ echo. R. Project Standard 2019    : %_O19PrjStd%
 echo. V. Visio Pro 2019           : %_O19VisPro%
 echo. S. Visio Standard 2019      : %_O19VisStd%
 )
+if %_O2024%==1 (
+echo.
+echo. G. Office ProPlus 2024      : %_O24Pro%
+)
+if %_O2024%==1 if %_supv%==1 (
+echo. W. Project Pro 2024         : %_O24PrjPro%
+echo. Y. Visio Pro 2024           : %_O24VisPro%
+)
 echo %line%
-choice /c 123456789FDPRVS0X /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
+choice /c 123456789FDPRVSGWY0X /n /m "Change a menu option, press 0 to proceed, 9 to go back, or X to exit: "
 set errortmp=%errorlevel%
-if %errortmp%==17 goto :eof
-if %errortmp%==16 goto :MenuSuit2
+if %errortmp%==20 goto :eof
+if %errortmp%==19 goto :MenuSuit2
+if %errortmp%==18 if %_O2024%==1 if %_supv%==1 (if %_O24VisPro%==ON (set _O24VisPro=OFF) else if %_Mondo%==OFF (set _O24VisPro=ON&set _O24VisStd=OFF&set _O21VisPro=OFF&set _O21VisStd=OFF&set _O19VisPro=OFF&set _O19VisStd=OFF)&goto :MenuSuite)
+if %errortmp%==17 if %_O2024%==1 if %_supv%==1 (if %_O24PrjPro%==ON (set _O24PrjPro=OFF) else if %_Mondo%==OFF (set _O24PrjPro=ON&set _O24PrjStd=OFF&set _O21PrjPro=OFF&set _O21PrjStd=OFF&set _O19PrjPro=OFF&set _O19PrjStd=OFF)&goto :MenuSuite)
+if %errortmp%==16 if %_O2024%==1 (if %_O24Pro%==ON (set _O24Pro=OFF) else (set _O24Pro=ON&set _Mondo=OFF&set _O365PP=OFF&set _O24Std=OFF&set _O21Pro=OFF&set _O21Std=OFF&set _O19Pro=OFF&set _O19Std=OFF)&goto :MenuSuite)
 if %errortmp%==15 if %_O2019%==1 if %_supv%==1 (if %_O19VisStd%==ON (set _O19VisStd=OFF) else if %_Mondo%==OFF (set _O19VisStd=ON&set _O19VisPro=OFF&set _O21VisPro=OFF&set _O21VisStd=OFF)&goto :MenuSuite)
 if %errortmp%==14 if %_O2019%==1 if %_supv%==1 (if %_O19VisPro%==ON (set _O19VisPro=OFF) else if %_Mondo%==OFF (set _O19VisPro=ON&set _O19VisStd=OFF&set _O21VisPro=OFF&set _O21VisStd=OFF)&goto :MenuSuite)
 if %errortmp%==13 if %_O2019%==1 if %_supv%==1 (if %_O19PrjStd%==ON (set _O19PrjStd=OFF) else if %_Mondo%==OFF (set _O19PrjStd=ON&set _O19PrjPro=OFF&set _O21PrjPro=OFF&set _O21PrjStd=OFF)&goto :MenuSuite)
@@ -674,11 +710,11 @@ goto :Menu21Apps
 set "_return=MenuSuite"
 set "_suite="
 set "_suit2="
-for /l %%J in (1,1,20) do (
+for /l %%J in (1,1,23) do (
 set "_sku%%J="
 )
 set "_pkey0="
-for /l %%J in (1,1,20) do (
+for /l %%J in (1,1,23) do (
 set "_pkey%%J="
 )
 set /a cc=0
@@ -686,6 +722,9 @@ set /a kk=0
 if %_O365PP%==ON (
 set _suite=O365ProPlusRetail&set _suit2=MondoVolume
 set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
+) else if %_O24Pro%==ON (
+if %winbuild% lss 10240 (set _suite=O365ProPlusRetail&set _suit2=ProPlus2024Volume) else (set _suite=ProPlus2024Volume)
+set _pkey0=2TDPW-NDQ7G-FMG99-DXQ7M-TX3T2
 ) else if %_O21Pro%==ON (
 if %winbuild% lss 10240 (set _suite=O365ProPlusRetail&set _suit2=ProPlus2021Volume) else (set _suite=ProPlus2021Volume)
 set _pkey0=FXYTK-NJJ8C-GB6DW-3DYQT-6F7TH
@@ -702,7 +741,12 @@ set _pkey0=6NWWJ-YQWMR-QKGCB-6TMB3-9D9HK
 set _suite=MondoVolume
 set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
 )
-if %_O21PrjPro%==ON (
+if %_O24PrjPro%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=ProjectProRetail&set /a cc+=1&set _sku!cc!=ProjectPro2024Volume) else (set _sku!cc!=ProjectPro2024Volume)
+set /a kk+=1
+set _pkey!kk!=D9GTG-NP7DV-T6JP3-B6B62-JB89R
+) else if %_O21PrjPro%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=ProjectProRetail&set /a cc+=1&set _sku!cc!=ProjectPro2021Volume) else (set _sku!cc!=ProjectPro2021Volume)
 set /a kk+=1
@@ -723,7 +767,12 @@ if %winbuild% lss 10240 (set _sku!cc!=ProjectStdRetail&set /a cc+=1&set _sku!cc!
 set /a kk+=1
 set _pkey!kk!=C4F7P-NCP8C-6CQPT-MQHV9-JXD2M
 )
-if %_O21VisPro%==ON (
+if %_O24VisPro%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=VisioProRetail&set /a cc+=1&set _sku!cc!=VisioPro2024Volume) else (set _sku!cc!=VisioPro2024Volume)
+set /a kk+=1
+set _pkey!kk!=YW66X-NH62M-G6YFP-B7KCT-WXGKQ
+) else if %_O21VisPro%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=VisioProRetail&set /a cc+=1&set _sku!cc!=VisioPro2021Volume) else (set _sku!cc!=VisioPro2021Volume)
 set /a kk+=1
@@ -749,12 +798,12 @@ goto :MenuChannel
 
 :MenuApp2
 set "_return=MenuApps"
-for /l %%J in (1,1,20) do (
+for /l %%J in (1,1,23) do (
 set "_sku%%J="
 )
 set "_keys="
 set "_pkey0="
-for /l %%J in (1,1,20) do (
+for /l %%J in (1,1,23) do (
 set "_pkey%%J="
 )
 set /a cc=0
@@ -833,12 +882,12 @@ goto :MenuChannel
 
 :Menu21App2
 set "_return=Menu21Apps"
-for /l %%J in (1,1,20) do (
+for /l %%J in (1,1,23) do (
 set "_sku%%J="
 )
 set "_keys="
 set "_pkey0="
-for /l %%J in (1,1,20) do (
+for /l %%J in (1,1,23) do (
 set "_pkey%%J="
 )
 set /a cc=0
@@ -916,7 +965,10 @@ set _pkey!kk!=MJVNY-BYWPY-CWV6J-2RKRT-4M8QG
 goto :MenuChannel
 
 :MenuExclude
-if %_O21Std%==ON (
+if %_O24Std%==ON (
+set _Access=OFF
+set _Lync=OFF
+) else if %_O21Std%==ON (
 set _Access=OFF
 set _Lync=OFF
 ) else if %_O19Std%==ON (
@@ -939,7 +991,9 @@ if defined _suit2 (
 echo %line%
 echo Select Apps to include ^(OFF ^= exclude^):
 echo.
-if %_O21Std%==OFF (
+if %_O24Std%==OFF (
+echo. A. Access           : %_Access%
+) else if %_O21Std%==OFF (
 echo. A. Access           : %_Access%
 ) else if %_O19Std%==OFF (
 echo. A. Access           : %_Access%
@@ -949,7 +1003,9 @@ echo. N. OneNote          : %_OneNote%
 echo. O. Outlook          : %_Outlook%
 echo. P. PowerPoint       : %_PowerPoint%
 echo. R. Publisher        : %_Publisher%
-if %_O21Std%==OFF (
+if %_O24Std%==OFF (
+echo. S. SkypeForBusiness : %_Lync%
+) else if %_O21Std%==OFF (
 echo. S. SkypeForBusiness : %_Lync%
 ) else if %_O19Std%==OFF (
 echo. S. SkypeForBusiness : %_Lync%
@@ -1193,8 +1249,8 @@ goto :MenuFinal
 
 :MenuFinal2
 cls
-if %winbuild% lss 22483 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
-if %winbuild% geq 22483 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
+if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
+if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
 copy /y nul "!_work!\#.rw" 1>nul 2>nul && (if exist "!_work!\#.rw" del /f /q "!_work!\#.rw") || (set "_ini=!_dsk!")
 
 (
@@ -1281,10 +1337,10 @@ echo exit /b
 
 set "CTRexe=1"
 set "cfile=!_file:\=\\!"
-if exist "!_file!" if %winbuild% lss 22483 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
+if exist "!_file!" if %_cwmi% equ 1 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
-if exist "!_file!" if %winbuild% geq 22483 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=\"!cfile!\"').Version"') do (
+if exist "!_file!" if %_cwmi% equ 0 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfile!''').Version"') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
 call :StopService 1>nul 2>nul
@@ -1364,11 +1420,11 @@ reg add %_Config% /f /v %%J.OSPPReady /t REG_SZ /d 1
 exit /b
 
 :Telemetry
-set "_inter=Software"
-if %wow64%==1 (set "_inter=Software\Wow6432Node")
-set "_rkey=%_CTR%\REGISTRY\MACHINE\%_inter%\Microsoft\Office\16.0\User Settings\CustomSettings"
-set "_skey=%_CTR%\REGISTRY\MACHINE\%_inter%\Microsoft\Office\16.0\User Settings\CustomSettings\Create\Software\Microsoft\Office\16.0"
-set "_tkey=%_CTR%\REGISTRY\MACHINE\%_inter%\Microsoft\Office\16.0\User Settings\CustomSettings\Create\Software\Microsoft\Office\Common\ClientTelemetry"
+set "_inter=SOFTWARE"
+if %wow64%==1 (set "_inter=SOFTWARE\Wow6432Node")
+set "_rkey=HKLM\%_inter%\Microsoft\Office\16.0\User Settings\MyCustomUserSettings"
+set "_skey=HKLM\%_inter%\Microsoft\Office\16.0\User Settings\MyCustomUserSettings\Create\Software\Microsoft\Office\16.0"
+set "_tkey=HKLM\%_inter%\Microsoft\Office\16.0\User Settings\MyCustomUserSettings\Create\Software\Microsoft\Office\Common\ClientTelemetry"
 for %%# in (Count,Order) do reg add "%_rkey%" /f /v %%# /t REG_DWORD /d 1
 reg add "%_tkey%" /f /v SendTelemetry /t REG_DWORD /d 3
 reg add "%_tkey%" /f /v DisableTelemetry /t REG_DWORD /d 1
@@ -1401,12 +1457,18 @@ goto :TheEnd
 
 :E_Admin
 echo %_err%
-echo Right click on this script and select 'Run as administrator'
+echo This script require administrator privileges.
 goto :TheEnd
 
 :E_Win
 echo %_err%
 echo Windows 7 SP1 is the minimum supported OS.
+goto :TheEnd
+
+:E_WMI
+echo %_err%
+echo WMIC.exe or Windows PowerShell is required for this script to work.
+goto :TheEnd
 
 :TheEnd
 echo.

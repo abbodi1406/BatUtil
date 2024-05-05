@@ -156,12 +156,19 @@
                 <br />
                 <li>
                     <b>LCUwinre</b><br /><br />
-                    Force updating winre.wim with Cumulative Update even if SafeOS update detected.
+                    Force updating winre.wim with Cumulative Update even if SafeOS update detected.<br /><br />
+                    This option is auto enabled for Windows 11 build 22000 and later, Set this option to <strong>2</strong> to disable.
+                </li>
+                <br />
+                <li>
+                    <b>DisableUpdatingUpgrade</b><br /><br />
+                    Disable updating process optimization by using editions upgrade (Home>Pro / ServerStandard>ServerDatacenter), and perform separate updating for each edition.
                 </li>
                 <br />
                 <li>
                     <b>UpdtBootFiles</b><br /><br />
-                    Update ISO boot files bootmgr/bootmgr.efi/efisys.bin with new files from Cumulative Update.
+                    Update ISO boot files bootmgr/memtest/efisys.bin with new files from Cumulative Update.<br /><br />
+                    note: to accommodate KB5025885 changes, the two files bootmgr.efi/bootmgfw.efi will be always updated regardless this option.
                 </li>
                 <br />
                 <li>
@@ -174,6 +181,11 @@
                     Keep converted reference ESD files for future operations instead converting them each time.<br /><br />
                     if UUP source is Express, Reference ESDs and Edition ESDs will be copied to new folder "CanonicalUUP", practically, this convert/backup Express UUP source to Canonical.<br />
                     if UUP source is Canonical, Reference ESDs will be copied to the same UUP source folder, and original CAB files will be moved to subdirectory "Original".
+                </li>
+                <br />
+                <li>
+                    <b>SkipLCUmsu</b><br /><br />
+                    Skip creating Cumulative Update MSU for builds 21382 to 25330 (LCU will be added using legacy cab+psf extraction).
                 </li>
                 <br />
                 <li>
@@ -190,24 +202,54 @@
                 </li>
                 <br />
                 <li>
+                    <b>AddDrivers</b><br /><br />
+                    Add drivers to install.wim and boot.wim / winre.wim<br />
+                    this is basic feature support, and should be used only with tested working compatible drivers.<br /><br />
+                    * How To Use:<br />
+                    - enable the option<br />
+                    - place the drivers you want to add inside the proper subfolder:<br />
+                    <code>ALL: drivers will be added to all wim files<br />
+                    OS: drivers will be added to install.wim only<br />
+                    WinPE: drivers will be added to boot.wim / winre.wim only</code><br /><br />
+                    * Optionally, you can specify different source folder path for drivers, using option <b>Drv_Source</b><br />
+                    the folder must contain subfolder for each drivers target, as explained above.<br /><br />
+                    * The option will only works alongside integrating Updates or Apps.<br /><br />
+                    * The option will not check or verify drivers, it simply point DISM towards the drivers folders.<br /><br />
+                    * The option is ment for simple and boot critical drivers (chipsets, disk controllers, LAN/WiFi..), to allow easier installation, not for large drivers, or drivers that may break setup.
+                </li>
+                <br />
+                <li>
+                    <b>### Below options apply only for builds 22563 and later ###</b><br /><br />
+                </li>
+                <li>
                     <b>SkipApps</b><br /><br />
-                    Do not add Store Apps for builds 22563 and later.
+                    Do not add Store Apps.
                 </li>
                 <br />
                 <li>
                     <b>AppsLevel</b><br /><br />
                     Control added Apps for Client editions (except Team).<br /><br />
-                    Set to <strong>0</strong> to add all referenced Apps</b><br />
-                    Set to <strong>1</strong> to add Store, Security Health only</b><br />
+                    Set to <strong>0</strong> to add all referenced Apps<br />
+                    Set to <strong>1</strong> to add Store, Security Health only<br />
                     Set to <strong>2</strong> to add level 1 apps + Photos, Camera, Notepad, Paint<br />
                     Set to <strong>3</strong> to add level 2 apps + Terminal, App Installer, Widgets<br />
                     Set to <strong>4</strong> to add level 3 apps + Media apps (Music, Video, Codecs, Phone Link) / not for N editions
                 </li>
                 <br />
                 <li>
+                    <b>StubAppsFull</b><br /><br />
+                    Control preference for Apps which are available as stubs.<br /><br />
+                    Set to <strong>0</strong> to install as stub app<br />
+                    Set to <strong>1</strong> to install as full app
+                </li>
+                <br />
+                <li>
                     <b>CustomList</b><br /><br />
-                    Enable using CustomAppsList.txt to pick and choose added Apps.<br /><br />
-                    If enabled, this option takes precedence over AppsLevel option.
+                    Enable using CustomAppsList.txt or CustomAppsList2.txt to pick and choose the added Apps.<br />
+                    If enabled, this option takes precedence over AppsLevel option.<br /><br />
+                    How to use:<br />
+                    You can either use <b>CustomAppsList.txt</b> directly, or copy/rename it to <b>CustomAppsList2.txt</b><br />
+                    Edit the choosen file, and remove <b>#</b> prefix in front the Apps you wish to add, and save the file.
                 </li>
             </ul>
             <hr />
@@ -257,6 +299,9 @@
                 <br />
                 <li><u>Integrate</u> updates mode for ARM64 UUP images only works on <u>Windows 11/10/8.1 Host OS</u>.
                 </li>
+                <br />
+                <li><u>Integrate</u> updates mode for Windows 11 builds 22567 and later require at least <u>Windows 10 v1607 Host OS</u>.
+                </li>
             </ul>
             <br />
             <h3><a name="UpdateHow"></a>How To</h3>
@@ -288,10 +333,11 @@
                 <br />
                 <li>According to that, UUP will deliver installation files for the above editions only</li>
                 <br />
-                <li>The following editions are now exist as "virtual upgrade editions" with base editions:<br /><br />
+                <li>The following editions now exist as "virtual upgrade editions" with base editions:<br /><br />
                 <code>Home -&gt; Home Single Language<br />
-                Pro N -&gt; Enterprise N, Education N, Pro Education N, Pro N for Workstations, Cloud N (build 21364 and later)<br />
-                Pro -&gt; Enterprise, Education, Pro Education, Pro for Workstations, Enterprise multi-session, IoT Enterprise (build 18277 and later), Cloud (build 21364 and later)</code>
+                Pro -&gt; Enterprise, Education, Pro Education, Pro for Workstations, Cloud (builds 21364+), Enterprise multi-session, IoT Enterprise (builds 18277+), IoT Enterprise Subscription (builds 25982+)<br />
+                Pro N -&gt; Enterprise N, Education N, Pro Education N, Pro N for Workstations, Cloud N (builds 21364+)<br />
+                Enterprise LTSC -&gt; IoT Enterprise LTSC (builds 19041+), IoT Enterprise LTSC Subscription (builds 25193+)</code>
                 </li>
                 <br />
                 <li>Therefore, the extra script is to help create these additional editions from UUP source.
@@ -336,6 +382,18 @@
                 - edit <b>ConvertConfig.ini</b> under [create_virtual_editions] section<br />
                 - delete <b>ConvertConfig.ini</b> and edit <b>create_virtual_editions.cmd</b> script directly<br /><br />
             <ul style="margin-top:0in;margin-bottom:0in">
+                <li>UseDism<br /><br />
+                Choose the creation method:<br /><br />
+                Value <strong>0</strong> : <b>Registry manipulation</b><br />
+                hacky way, work with install.wim or install.esd, support any host OS (Vista+).<br /><br />
+                Value <strong>1</strong> : <b>Dism.exe tool</b><br />
+                official way, work with install.wim, require NT 10.0 host OS or Windows 8.1 with Windows ADK.<br /><br />
+                Value <strong>2</strong> : <b>Force Dism.exe tool</b><br />
+                Same as value 1, but work on Windows 7/8 with Windows ADK.<br /><br />
+                If chosen value is 1 or 2 and host OS is NT 6.x without Windows ADK installed, it will be auto reverted to value 0<br />
+                If chosen value is 1 or 2 and source file is install.esd, it will be auto reverted to value 0
+                </li>
+                <br />
                 <li>AutoStart<br /><br />
                 Start the creation process directly without prompts.<br />
                 This require the source distribution to be ready (folder or drive).<br />
@@ -345,7 +403,11 @@
                 <li>AutoEditions<br /><br />
                 Specify editions to auto create with <b>AutoStart</b> option, separate the editions with a comma ,<br /><br />
                 Leave this option empty to create all possible target editions.<br /><br />
-                Allowed values: Enterprise, Education, ProfessionalEducation, ProfessionalWorkstation, EnterpriseN, EducationN, ProfessionalEducationN, ProfessionalWorkstationN, CoreSingleLanguage, ServerRdsh, IoTEnterprise, CloudEdition, CloudEditionN<br /><br />
+                <u>Supported editions values</u>:<br />
+                Enterprise, Education, ProfessionalEducation, ProfessionalWorkstation, CloudEdition, ServerRdsh, IoTEnterprise, IoTEnterpriseK<br />
+                EnterpriseN, EducationN, ProfessionalEducationN, ProfessionalWorkstationN, CloudEditionN<br />
+                CoreSingleLanguage<br />
+                IoTEnterpriseS,  IoTEnterpriseSK<br /><br />
                 Examples:<br />
                 <code>vAutoEditions=Enterprise<br />
                 vAutoEditions=Enterprise,ProfessionalWorkstation,Education<br />
@@ -372,7 +434,7 @@
             </ul>
                 <br />
                 <b>Note:</b><br /><br />
-                If create_virtual_editions.cmd is started from convert-UUP.cmd, options <b>AutoStart</b> &amp; <b>wim2esd</b> will be inherited from convert-UUP section, regardless their current state under create_virtual_editions section<br /><br />
+                If create_virtual_editions.cmd is started from convert-UUP.cmd, options <b>AutoStart</b> &amp; <b>wim2esd</b> &amp; <b>SkipISO</b> will be inherited from convert-UUP section, regardless their current state under create_virtual_editions section<br /><br />
                 meaning, the script will auto-create virtual editions if convert-UUP's AutoStart=1<br />
                 and install.wim will be converted to install.esd if convert-UUP's wim2esd=1, otherwise skip conversion if convert-UUP's wim2esd=0<br />
             <hr />
@@ -435,8 +497,10 @@
             <hr />
             <br />
 
-            <h2><a name="Remarks"></a>Remark</h2>
+            <h2><a name="Remarks"></a>Extra Notes</h2>
             <ul style="margin-top:0in;margin-bottom:0in">
+                <li>If the conversion or updating process failed and you got "access denied" errors, run <b>Remove_Failure_MountDir_TempDir.cmd</b> as administrator to remove temporary mount directory and extraction leftovers.</li>
+                <br />
                 <li>If the upgrade is done via Express UUP (multiple expanded folders in the download directory), you need to perform the UUP &gt; ISO operation before starting the upgrade process (before first restart).<br />
                     to do so, when WU prompt you to restart, start convert-UUP.cmd and paste the path to download directory, example:
                 <ul style="margin-top:0in;margin-bottom:0in">
@@ -489,7 +553,7 @@
             &nbsp;&nbsp;&nbsp;<a href="#MultiOps">Options</a><br />
             &nbsp;&nbsp;&nbsp;<a href="#MultiNote">Notes</a><br /><br />
             <a href="#Debug">Debug Mode</a><br />
-            <a href="#Remarks">Remark</a><br />
+            <a href="#Remarks">Extra</a><br />
             <a href="#Credits">Credits</a>
         </div>
     </nav>

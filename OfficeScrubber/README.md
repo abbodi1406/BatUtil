@@ -10,7 +10,7 @@ Additionally, if you uninstalled Office 2013+ normally on Windows 8 or later, th
 
 ## Scrub ALL Overview
 
-* By default, this operation will remove the detected Office versions only  
+* By default, this operation will remove remove detected versions only, and Office C2R/2016  
 in addition to uninstalling product keys, and clean licenses leftovers
 
 * However, you can use the numbers 2-8 to toggle the state for menu options  

@@ -63,7 +63,7 @@ avoid using them with the script and install them manually
 
 * Press zero '0' to start the process
 
-* At the end, Press 9 to exit, or close the windows with red X button
+* At the end, Press 9 or q to exit, or close the windows with red X button
 
 ## Options:
 
@@ -159,6 +159,28 @@ keep or delete DVD distribution folder after creating updated ISO
 start the process automatically once you execute the script  
 the option will also auto exit at the end without prompt
 
+* UseWimlib  
+detect and use wimlib-imagex.exe for exporting wim files instead dism.exe
+
+* AddDrivers  
+add drivers to install.wim and boot.wim / winre.wim  
+> this is basic feature support, and should be used only with tested working compatible drivers.  
+it is ment for simple and boot critical drivers (chipsets, disk controllers, LAN/WiFi..), to allow easier installation, not for large drivers, or drivers that may break setup.  
+it will not check or verify drivers, it simply point DISM towards the drivers folders.
+
+How To Use:
+
+enable "AddDrivers" option
+
+place the drivers you want to add inside the proper subfolder:  
+> ALL   / drivers will be added to all wim files  
+OS    / drivers will be added to install.wim only  
+WinPE / drivers will be added to boot.wim / winre.wim only
+
+* Drv_Source  
+optional, specify different source folder path for drivers  
+the folder must contain subfolder for each drivers target, as explained above.
+
 - Note: Do not change the structure of W10UI.ini, just set your options after the equal sign `=`
 
 - To restore old behavior and change options by editing the script, simply detele W10UI.ini file
@@ -184,10 +206,69 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 [SxSExpand](https://forums.mydigitallife.net/members/superbubble.250156/)  
 [DIR2ISO code, Compressed2TXT](https://github.com/AveYo)
 [msu wim Reflection code](https://github.com/ave9858)  
+[WinSxS Suppressors](https://github.com/asdcorp/haveSxS)  
 
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.41:  
+- Fix to skip Package_for_SafeOSDU for boot.wim
+
+10.40:  
+- Detect Package_for_SafeOSDU (26080+)
+- Detect and skip HotPatchUpdate for offline target (26058+)
+- Skip LCU for winre.wim (26052+)
+- Remove WinPE-Rejuv-Package from boot.wim if LCU is added (26052+)
+- Only reinstall highest LCU after NetFx3 feature (26052+)
+
+10.39:  
+- Implemented basic support to Add Drivers to install.wim and boot.wim / winre.wim
+- Updated detection for SafeOS DU
+
+10.38:  
+- Fixed processing SSU-*.cab from normally-named SSU msu
+- Changed 22631 iso label to 23h2_ni_release
+- Changed finish prompt to "Press 9 or q to exit"
+- Added detection for Net35 sxs folder from W10UI.cmd root, or updates repo folder
+- Added SupplementalServicing suppressor for builds 14393+ < 19041
+- Added ExtendedSecurityUpdates suppressor for builds 17763+ < 20348 (theoretical)
+- Added EdgeChromium suppressor for builds 17134+ < 20348 if SkipEdge=1
+
+10.37:  
+- Fixed CIM_DataFile powershell.exe commands (used if wmic.exe is not installed)
+
+10.36:  
+- Improved iso label accuracy for Enablement Package fake builds
+- Fixed accidental endless loop when AutoStart=1 and Target/Repo are not detected
+- Update boot files when W10UI.cmd is called from W10MUI.cmd
+
+10.35:  
+- Fixed wimlib issue with boot.wim
+- Changed "UseWimlib" default state to OFF
+
+10.34:  
+- Detect and use wimlib-imagex.exe for exporting wim files instead dism.exe
+- Added config option "UseWimlib" to control the new behavior
+
+10.33:  
+- Export wim indexes one at a time if detected Dism.exe version 10.0.25115.1000 or later
+
+10.32:  
+- Updated detection for Windows 11 23H2 Enablement Package
+
+10.31:  
+- Fixed Windows 10 Combined LCU integration for install.wim when used via W10MUI
+
+10.30:  
+- Added workaround for using target image dpx.dll to extract updates cab files for builds 22000+
+- Suppress DISM cleanup output for builds 25380+
+
+10.29:  
+- ISO files bootmgr.efi/bootmgfw.efi will be always updated, regardless UpdtBootFiles option
+
+10.28:  
+- Added conditional support for SV2 beta builds 22631+
 
 10.27:  
 - Updated detection for separate Secure Boot updates
@@ -391,15 +472,15 @@ https://docs.microsoft.com/en-us/windows/deployment/update/media-dynamic-update
 7:7:  
 - x64 target on x86 host: Fix for unseen registry flush error.
 
-7:6:  
+7.6:  
 - x64 target on x86 host: Fix for wrong detection.
 
-7:5:  
+7.5:  
 - Code improvements and fixes.
 
 - Added option wim2esd to convert install.wim to install.esd (only for distribution target)
 
-7:4:  
+7.4:  
 - Detect and skip WinPE only updates for install.wim
 
 7.3:  

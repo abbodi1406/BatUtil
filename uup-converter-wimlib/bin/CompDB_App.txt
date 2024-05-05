@@ -16,9 +16,9 @@ ForEach ($a in $doc.CompDB.Features.Feature) {
 }
 $packs = @{}
 ForEach ($a in $doc.CompDB.Packages.Package) {
-    $packs[$($a.ID)] = $a.Payload.PayloadItem.Path -replace 'UUP\\Desktop\\Apps\\',''
+    $packs[$($a.ID)] = $a.Payload.PayloadItem.Path -replace '(.*\\IPA\\)(.*)','IPA\$2'
 }
-echo ('File_Prefix;Target_Path') | Out-File -Encoding ASCII .\_AppsFilesList.csv
+#echo ('File_Prefix;Target_Path') | Out-File -Encoding ASCII .\_AppsFilesList.csv
 ForEach ($a in $doc.CompDB.Features.Feature) {
 ForEach ($b in $a.Packages.Package) {
     $null = $packs[$($b.ID)] -match '.*\\'
@@ -42,6 +42,7 @@ ForEach ($b in $a.Packages.Package) {
     Start-Process robocopy.exe -NoNewWindow -Wait -ArgumentList ('"' + $cwd + '"' + ' ' + '"' + $cwd + '\' + $drname + '"' + ' ' + $source + ' /MOV /R:1 /W:1 /NS /NC /NFL /NDL /NP /NJH /NJS')
 }
 }
+:embed:
 $x = [xml](Get-Content .\AppsList.xml)
 if ($null -ne $x.Apps.Client.Feature) { $Client = [ordered]@{}; foreach ($a in $x.Apps.Client.Feature) {$Client[$($a.FeatureID)] = 'y'}; $ListClient = '_appProf='; ForEach ($k in $Client.Keys) {$ListClient += $k + ','}; echo ($ListClient) | Out-File -Encoding ASCII -Append .\_AppsEditions.txt }
 if ($null -ne $x.Apps.CoreN.Feature) { $CoreN = [ordered]@{}; foreach ($a in $x.Apps.CoreN.Feature) {$CoreN[$($a.FeatureID)] = 'y'}; $ListCoreN = '_appProN='; ForEach ($k in $CoreN.Keys) {$ListCoreN += $k + ','}; echo ($ListCoreN) | Out-File -Encoding ASCII -Append .\_AppsEditions.txt }
