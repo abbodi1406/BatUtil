@@ -110,8 +110,9 @@ WinDlp.dll
 winsetup.dll
 wpx.dll
 xmllite.dll
+deployprovider.dll
+osimageprovider.dll
 pnppropmig.dll
-testplugin.dll
 UnattendMgr.dll
 UpdateCompression.dll
 WinSetupBoot.hiv

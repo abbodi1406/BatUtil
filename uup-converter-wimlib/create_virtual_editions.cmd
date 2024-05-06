@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v100
+@set uivr=v104
 @echo off
 :: ### Creation Method ###
 ::
@@ -673,7 +673,6 @@ if %modded% equ 1 (goto :ISOCREATE) else (goto :E_None)
 :doData
 if defined _term exit /b
 if /i %1==IoTEnterpriseSK (
-if %UseDism% neq 1 exit /b
 if %_build% lss 25193 exit /b
 )
 if /i %1==IoTEnterpriseK (

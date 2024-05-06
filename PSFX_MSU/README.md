@@ -6,7 +6,8 @@
 
 ## Requirements
 
-- Mandatory  : LCU cab and psf files
+- Mandatory  : LCU psf file
+- Mandatory  : LCU cab or wim file
 - Mandatory  : AggregatedMetadata cab file
 - Mandatory  : DesktopDeployment cab file or SSU cab file
 - Recommended: DesktopDeployment cab file and SSU cab file
@@ -82,3 +83,7 @@ the installed update will be missing the reverse differentials
 New:  
 add the msu file directly, even on current running live OS  
 the installation process will generate the reverse differentials
+
+- Windows 11 build 25336 and later introduced new format for LCU msu container
+
+it's now a wim file instead cab file, and the inner manifests file is also wim instead cab

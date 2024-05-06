@@ -74,6 +74,10 @@ ______________________________
 
 Windows ADK (Deployment Tools & Preinstallation Environment).
 
+Notice:  
+if full ISO url did not work, replace `software-download.microsoft.com/download`  
+with `software-static.download.prss.microsoft.com/dbazure`
+
 <details><summary>ADK Links</summary>
 
 

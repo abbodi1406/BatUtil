@@ -3,6 +3,7 @@ arunres.dll.mui
 cmisetup.dll.mui
 compatctrl.dll.mui
 compatprovider.dll.mui
+deployprovider.dll.mui
 dism.exe.mui
 dismapi.dll.mui
 dismcore.dll.mui
@@ -13,6 +14,7 @@ input.dll.mui
 logprovider.dll.mui
 MediaSetupUIMgr.dll.mui
 nlsbres.dll.mui
+osimageprovider.dll.mui
 pnpibs.dll.mui
 reagent.adml
 reagent.dll.mui

@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v103
+@set uivr=v104
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -89,9 +89,9 @@ set SkipApps=0
 
 :: # Control added Apps for Client editions (except Team)
 :: 0 / all referenced Apps
-:: 1 / only Store, Security Health
+:: 1 / only Store, Security Health, App Installer
 :: 2 / level 1 + Photos, Camera, Notepad, Paint
-:: 3 / level 2 + Terminal, App Installer, Widgets, Mail
+:: 3 / level 2 + Terminal, Widgets, Mail / Outlook, Clipchamp
 :: 4 / level 3 + Media apps (Music, Video, Codecs, Phone Link) / not for N editions
 set AppsLevel=0
 
@@ -911,7 +911,8 @@ if !_ESDSrv%%#! equ 1 (
   )
 )
 if %_updexist% equ 1 if %_build% geq 22000 if exist "%SysPath%\ucrtbase.dll" if not exist "bin\dpx.dll" if not exist "temp\dpx.dll" call :uups_dpx
-if %_reMSU% equ 1 if %SkipLCUmsu% equ 0 call :uups_msu
+if %_reMSU% equ 1 if %_build% geq 25336 call :uups_msu
+if %_reMSU% equ 1 if %_build% lss 25336 if %SkipLCUmsu% equ 0 call :uups_msu
 if exist "!_cabdir!\" rmdir /s /q "!_cabdir!\"
 del /f /q %_dLog%\* %_Nul3%
 if not exist "%_dLog%\" mkdir "%_dLog%" %_Nul3%
@@ -1107,6 +1108,7 @@ for %%# in (ru-ru,zh-cn,zh-tw,zh-hk) do if /i !langid%%A!==%%# set "_os%%A=!_oNa
 >nul chcp %oemcp%
 del /f /q bin\info*.txt
 if %_build% geq 21382 if exist "!_UUP!\*.AggregatedMetadata*.cab" if exist "!_UUP!\*Windows1*-KB*.cab" if exist "!_UUP!\*Windows1*-KB*.psf" set _reMSU=1
+if %_build% geq 25336 if exist "!_UUP!\*.AggregatedMetadata*.cab" if exist "!_UUP!\*Windows1*-KB*.wim" if exist "!_UUP!\*Windows1*-KB*.psf" set _reMSU=1
 if %_build% geq 22563 if exist "!_UUP!\*.AggregatedMetadata*.cab" (
 if exist "!_UUP!\*.*xbundle" set _IPA=1
 if exist "!_UUP!\*.appx" set _IPA=1
@@ -1489,16 +1491,29 @@ set "_MSUdll=dpx.dll ReserveManager.dll TurboStack.dll UpdateAgent.dll UpdateCom
 set "_MSUonf=onepackage.AggregatedMetadata.cab"
 set "_MSUssu="
 set IncludeSSU=1
+set xmf=cab
 set _mcfail=0
 for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do set "_MSUmeta=%%#"
 if exist "_tMSU\" rmdir /s /q "_tMSU\" %_Nul3%
 mkdir "_tMSU"
+if %_build% lss 25336 (
 expand.exe -f:LCUCompDB*.xml.cab "%_MSUmeta%" "_tMSU" %_Null%
-if not exist "_tMSU\LCUCompDB*.xml.cab" (
-echo.
-echo LCUCompDB file is missing from AggregatedMetadata, skip operation.
-(echo.&echo LCUCompDB file is missing from AggregatedMetadata)>>"!logerr!"
-goto :msu_uups
+if not exist "_tMSU\LCUCompDB*.xml.cab" goto :msu_uups
+)
+if %_build% geq 25336 (
+expand.exe -f:*.AggregatedMetadata*.cab "%_MSUmeta%" "_tMSU" %_Null%
+if not exist "_tMSU\*.AggregatedMetadata*.cab" goto :msu_uups
+for /f %%# in ('dir /b /a:-d "_tMSU\*.AggregatedMetadata*.cab"') do expand.exe -f:*.xml "_tMSU\%%#" "_tMSU" %_Null%
+if not exist "_tMSU\LCUCompDB*.xml" goto :msu_uups
+for /f %%# in ('dir /b /a:-d "_tMSU\LCUCompDB*.xml"') do (
+%_Null% makecab.exe /D Compress=ON /D CompressionType=MSZIP "_tMSU\%%~n#.xml" "_tMSU\%%~n#.xml.cab"
+)
+if exist "_tMSU\SSUCompDB*.xml" for /f %%# in ('dir /b /a:-d "_tMSU\SSUCompDB*.xml"') do (
+%_Null% makecab.exe /D Compress=ON /D CompressionType=MSZIP "_tMSU\%%~n#.xml" "_tMSU\%%~n#.xml.cab"
+)
+if not exist "_tMSU\LCUCompDB*.xml.cab" goto :msu_uups
+del /f /q "_tMSU\*.xml" %_Nul3%
+set xmf=wim
 )
 for /f %%# in ('dir /b /a:-d "_tMSU\LCUCompDB*.xml.cab"') do set "_MSUcdb=%%#"
 for /f "tokens=2 delims=_." %%# in ('echo %_MSUcdb%') do set "_MSUkbn=%%#"
@@ -1507,10 +1522,10 @@ echo.
 echo LCU %_MSUkbn% msu file already exist, skip operation.
 goto :msu_uups
 )
-if not exist "*Windows1*%_MSUkbn%*%arch%*.cab" (
+if not exist "*Windows1*%_MSUkbn%*%arch%*.%xmf%" (
 echo.
-echo LCU %_MSUkbn% cab file is missing, skip operation.
-(echo.&echo LCU %_MSUkbn% cab file is missing)>>"!logerr!"
+echo LCU %_MSUkbn% %xmf% file is missing, skip operation.
+(echo.&echo LCU %_MSUkbn% %xmf% file is missing)>>"!logerr!"
 goto :msu_uups
 )
 if not exist "*Windows1*%_MSUkbn%*%arch%*.psf" (
@@ -1519,7 +1534,7 @@ echo LCU %_MSUkbn% psf file is missing, skip operation.
 (echo.&echo LCU %_MSUkbn% psf file is missing)>>"!logerr!"
 goto :msu_uups
 )
-for /f "delims=" %%# in ('dir /b /a:-d "*Windows1*%_MSUkbn%*%arch%*.cab"') do set "_MSUcab=%%#"
+for /f "delims=" %%# in ('dir /b /a:-d "*Windows1*%_MSUkbn%*%arch%*.%xmf%"') do set "_MSUcab=%%#"
 for /f "delims=" %%# in ('dir /b /a:-d "*Windows1*%_MSUkbn%*%arch%*.psf"') do set "_MSUpsf=%%#"
 set "_MSUkbf=Windows10.0-%_MSUkbn%-%arch%"
 echo %_MSUcab%| findstr /i "Windows11\." %_Nul1% && set "_MSUkbf=Windows11.0-%_MSUkbn%-%arch%"
@@ -1527,13 +1542,14 @@ echo %_MSUcab%| findstr /i "Windows12\." %_Nul1% && set "_MSUkbf=Windows12.0-%_M
 if exist "SSU-*%arch%*.cab" (
 for /f "tokens=2 delims=-" %%# in ('dir /b /a:-d "SSU-*%arch%*.cab"') do set "_MSUtsu=SSU-%%#-%arch%.cab"
 for /f "delims=" %%# in ('dir /b /a:-d "SSU-*%arch%*.cab"') do set "_MSUssu=%%#"
-expand.exe -f:SSUCompDB*.xml.cab "%_MSUmeta%" "_tMSU" %_Null%
-if exist "_tMSU\SSU*-express.xml.cab" del /f /q "_tMSU\SSU*-express.xml.cab"
-if not exist "_tMSU\SSUCompDB*.xml.cab" set IncludeSSU=0
 ) else (
 set IncludeSSU=0
 )
-if %IncludeSSU% equ 1 for /f %%# in ('dir /b /a:-d "_tMSU\SSUCompDB*.xml.cab"') do set "_MSUsdb=%%#"
+if %IncludeSSU% equ 1 if not exist "_tMSU\SSUCompDB*.xml.cab" (
+expand.exe -f:SSUCompDB*.xml.cab "%_MSUmeta%" "_tMSU" %_Null%
+if exist "_tMSU\SSU*-express.xml.cab" del /f /q "_tMSU\SSU*-express.xml.cab"
+)
+if exist "_tMSU\SSUCompDB*.xml.cab" (for /f %%# in ('dir /b /a:-d "_tMSU\SSUCompDB*.xml.cab"') do set "_MSUsdb=%%#") else (set IncludeSSU=0)
 set "_MSUddd=DesktopDeployment_x86.cab"
 if exist "*DesktopDeployment*.cab" (
 for /f "delims=" %%# in ('dir /b /a:-d "*DesktopDeployment*.cab" ^|find /i /v "%_MSUddd%"') do set "_MSUddc=%%#"
@@ -1558,6 +1574,7 @@ call :dk_color1 %Red% "makecab.exe %_MSUonf% failed, skip operation." 4
 (echo.&echo makecab.exe %_MSUonf% failed)>>"!logerr!"
 goto :msu_uups
 )
+if %_build% geq 25336 goto :msu_wim
 call :crDDF %_MSUkbf%.msu
 (echo "%_MSUddc%" "DesktopDeployment.cab"
 if /i not %arch%==x86 echo "%_MSUddd%" "DesktopDeployment_x86.cab"
@@ -1570,11 +1587,29 @@ echo "%_MSUpsf%" "%_MSUkbf%.psf"
 if %ERRORLEVEL% neq 0 (
 call :dk_color1 %Red% "makecab.exe %_MSUkbf%.msu failed, skip operation." 4
 (echo.&echo makecab.exe %_MSUkbf%.msu failed)>>"!logerr!"
+)
 goto :msu_uups
+
+:msu_wim
+echo.
+echo Creating: %_MSUkbf%.msu
+if exist "_tWIM\" rmdir /s /q "_tWIM\" %_Nul3%
+mkdir "_tWIM"
+copy /y "%_MSUddc%" "_tWIM\DesktopDeployment.cab" %_Nul3%
+if /i not %arch%==x86 copy /y "%_MSUddd%" "_tWIM\DesktopDeployment_x86.cab" %_Nul3%
+copy /y "_tMSU\%_MSUonf%" "_tWIM\%_MSUonf%" %_Nul3%
+if %IncludeSSU% equ 1 copy /y "%_MSUssu%" "_tWIM\%_MSUtsu%" %_Nul3%
+copy /y "%_MSUcab%" "_tWIM\%_MSUkbf%.wim" %_Nul3%
+copy /y "%_MSUpsf%" "_tWIM\%_MSUkbf%.psf" %_Nul3%
+wimlib-imagex.exe capture _tWIM\ %_MSUkbf%.msu content --compress=none --nocheck --no-acls %_Nul3%
+if %ERRORLEVEL% neq 0 (
+call :dk_color1 %Red% "capture %_MSUkbf%.msu failed, skip operation." 4
+(echo.&echo capture %_MSUkbf%.msu failed)>>"!logerr!"
 )
 
 :msu_uups
 if exist "zzz.ddf" del /f /q "zzz.ddf"
+if exist "_tWIM\" rmdir /s /q "_tWIM\" %_Nul3%
 if exist "_tSSU\" rmdir /s /q "_tSSU\" %_Nul3%
 rmdir /s /q "_tMSU\" %_Nul3%
 popd
@@ -2331,6 +2366,7 @@ goto :eof
 if exist "%~1\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
 if exist "%~1\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
 if exist "%~1\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixSV=22635"&set "_fixEP=22635"
+if exist "%~1\Microsoft-Windows-Ge-Client-Server-Beta-Version-Enablement-Package~*.mum" set "_fixSV=26120"&set "_fixEP=26120"
 goto :eof
 
 :inrenupd
@@ -3832,15 +3868,15 @@ goto :eof
 :postVars
 set "_wsr=Windows Server 2022"
 set "pub=_8wekyb3d8bbwe"
-set "_appBase=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,microsoft.windowscommunicationsapps%pub%,Microsoft.WindowsCalculator%pub%,Microsoft.Windows.Photos%pub%,Microsoft.WindowsMaps%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsFeedbackHub%pub%,Microsoft.Getstarted%pub%,Microsoft.WindowsAlarms%pub%"
-set "_appClnt=Microsoft.WindowsNotepad%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.Paint%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,Microsoft.People%pub%,Microsoft.ScreenSketch%pub%,Microsoft.MicrosoftStickyNotes%pub%,Microsoft.XboxIdentityProvider%pub%,Microsoft.XboxSpeechToTextOverlay%pub%,Microsoft.XboxGameOverlay%pub%,OutlookForWindows%pub%,MicrosoftTeams%pub%,MSTeams%pub%"
+set "_appBase=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,Microsoft.DesktopAppInstaller%pub%,microsoft.windowscommunicationsapps%pub%,Microsoft.OutlookForWindows%pub%,Microsoft.WindowsCalculator%pub%,Microsoft.Windows.Photos%pub%,Microsoft.WindowsMaps%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsFeedbackHub%pub%,Microsoft.Getstarted%pub%,Microsoft.WindowsAlarms%pub%"
+set "_appClnt=Microsoft.WindowsNotepad%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.Paint%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,Microsoft.People%pub%,Microsoft.ScreenSketch%pub%,Microsoft.MicrosoftStickyNotes%pub%,Microsoft.XboxIdentityProvider%pub%,Microsoft.XboxSpeechToTextOverlay%pub%,Microsoft.XboxGameOverlay%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt,MicrosoftTeams%pub%,MSTeams%pub%"
 set "_appCodec=Microsoft.WebMediaExtensions%pub%,Microsoft.RawImageExtension%pub%,Microsoft.HEIFImageExtension%pub%,Microsoft.HEVCVideoExtension%pub%,Microsoft.VP9VideoExtensions%pub%,Microsoft.WebpImageExtension%pub%,Microsoft.DolbyAudioExtension%pub%,Microsoft.AVCEncoderVideoExtension%pub%,Microsoft.MPEG2VideoExtension%pub%"
-set "_appMedia=Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.WindowsSoundRecorder%pub%,Microsoft.GamingApp%pub%,Microsoft.XboxGamingOverlay%pub%,Microsoft.Xbox.TCUI%pub%,Microsoft.YourPhone%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt,Microsoft.Windows.DevHome%pub%"
+set "_appMedia=Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.WindowsSoundRecorder%pub%,Microsoft.GamingApp%pub%,Microsoft.XboxGamingOverlay%pub%,Microsoft.Xbox.TCUI%pub%,Microsoft.YourPhone%pub%,Microsoft.Windows.DevHome%pub%"
 set "_appPPIP=Microsoft.MicrosoftPowerBIForWindows%pub%,microsoft.microsoftskydrive%pub%,Microsoft.MicrosoftTeamsforSurfaceHub%pub%,MicrosoftCorporationII.MailforSurfaceHub%pub%,Microsoft.Whiteboard%pub%,Microsoft.SkypeApp_kzf8qxf38zg5c"
-set "_appMin1=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%"
+set "_appMin1=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,Microsoft.DesktopAppInstaller%pub%"
 set "_appMin2=Microsoft.Windows.Photos%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsNotepad%pub%,Microsoft.Paint%pub%"
-set "_appMin3=Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,microsoft.windowscommunicationsapps%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy"
-set "_appMin4=%_appCodec%,Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.YourPhone%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt"
+set "_appMin3=Microsoft.WindowsTerminal%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,microsoft.windowscommunicationsapps%pub%,Microsoft.OutlookForWindows%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt"
+set "_appMin4=%_appCodec%,Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.YourPhone%pub%"
 set ksub=SOFTWIM
 set ERRTEMP=
 set PREPARED=0
