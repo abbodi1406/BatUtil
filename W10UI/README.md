@@ -212,6 +212,13 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 
 <details><summary>changelog</summary>
 
+10.42:  
+- Fix detection issue where SafeOS DU might get added for install.wim
+- Add fallback `dism.exe /Apply-Image` command to extract LCU msu wim files if Powershell code failed
+- Optimize "Extracting dpx.dll" code
+- Detect oscdimg.exe from work `\bin` directory
+- Skip integrating SSU for winre.wim if no other updates will be added
+
 10.41:  
 - Fix to skip Package_for_SafeOSDU for boot.wim
 
