@@ -83,8 +83,12 @@ with `software-static.download.prss.microsoft.com/dbazure`
 
 - Build 26100 - Windows 11 version 24H2 / Server 2025:
 ```
-https://www.microsoft.com/en-us/software-download/windowsinsiderpreviewADK
-https://pixeldrain.com/l/NvvLDc3S
+https://download.microsoft.com/download/5/8/6/5866fc30-973c-40c6-ab3f-2edb2fc3f727/ADK/adksetup.exe
+https://download.microsoft.com/download/d/f/0/df0273fb-4587-4cc5-a98c-7d2359b4a387/ADKWinPEAddons/adkwinpesetup.exe
+
+full ISO  
+https://software-download.microsoft.com/download/888969d5-f34g-4e03-ac9d-1f9786c66749/26100.1.240331-1435.ge_release_amd64fre_ADK.iso
+https://software-download.microsoft.com/download/888969d5-f34g-4e03-ac9d-1f9786c66749/26100.1.240331-1435.ge_release_amd64fre_adkwinpeaddons.iso
 ```
 
 - Build 22621 - Windows 11 versions 22H2-23H2:

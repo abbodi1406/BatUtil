@@ -12,6 +12,7 @@ set "uLanguage="
 :: DogfoodDevMain, MicrosoftElite
 :: PerpetualVL2019, MicrosoftLTSC
 :: PerpetualVL2021, MicrosoftLTSC2021
+:: PerpetualVL2024, MicrosoftLTSC2024
 set "uChannel="
 
 :: level
@@ -88,6 +89,8 @@ f2e724c1-748f-4b47-8fb8-8e0d210e9208
 1d2d2ea6-1680-4c56-ac58-a441c8c24ff9
 5030841d-c919-4594-8d2d-84ae4f96e58e
 86752282-5841-4120-ac80-db03ae6b5fdb
+7983bac0-e531-40cf-be00-fd24fe66619c
+c02d8fe6-5242-4da8-972f-82ee55e00671
 ) do (
 set /a cc+=1
 set ffn!cc!=%%A
@@ -106,6 +109,8 @@ PerpetualVL2019
 MicrosoftLTSC
 PerpetualVL2021
 MicrosoftLTSC2021
+PerpetualVL2024
+MicrosoftLTSC2024
 ) do (
 set /a cc+=1
 set chn!cc!=%%A
@@ -168,7 +173,7 @@ for /L %%# in (10,1,43) do if /i "!uLanguage!"=="!lang%%#!" (set "lang=!lang%%#!
 
 set "chn=!chn3!"&set "ffn=!ffn3!"
 if defined uChannel (
-for /L %%# in (1,1,12) do if /i "!uChannel!"=="!chn%%#!" (set "chn=!chn%%#!"&set "ffn=!ffn%%#!")
+for /L %%# in (1,1,14) do if /i "!uChannel!"=="!chn%%#!" (set "chn=!chn%%#!"&set "ffn=!ffn%%#!")
 )
 
 set "arc=!arc3!"&set "bit=!bit3!"
@@ -213,11 +218,13 @@ echo.
 echo 11. Perpetual2021 VL                    ^| Production::LTSC2021
 echo 12. Microsoft2021 VL                    ^|  Microsoft::LTSC2021
 echo.
-echo %line%
+echo 13. Perpetual2024 VL                    ^| Production::LTSC2024
+echo 14. Microsoft2024 VL                    ^|  Microsoft::LTSC2024
 echo.
+echo %line%
 set /p inpt= ^> Enter Channel option number, and press "Enter": 
 if "%inpt%"=="" goto :eof
-for /l %%i in (1,1,12) do (if %inpt%==%%i set verified=1)
+for /l %%i in (1,1,14) do (if %inpt%==%%i set verified=1)
 if %verified%==0 goto :CHANNEL
 set "ffn=!ffn%inpt%!"
 set "chn=!chn%inpt%!"
@@ -291,7 +298,7 @@ if %vvv0:~5,5% lss 14026 set _a64=0
 if %vvv0:~5,5% lss 14326 set _ext=0
 if defined uLevel set "vvv=%vvv0%"&set "utc=%utc0%"&set "inpt=%otpt%"&goto :POSTout
 if not defined vvv7 if not defined vvv8 set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS
-set _a86=0&set _a64=0
+:: set _a86=0&set _a64=0
 if not defined vvv7 goto :skip7
 if %vvv7:~5,5% gtr %vvv0:~5,5% set "vvv0=%vvv7%"&set "utc0=%utc7%"
 if not defined vvv8 if "%vvv0%" equ "%vvv7%" set "vvv=%vvv0%"&set "utc=%utc0%"&goto :BITNESS

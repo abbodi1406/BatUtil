@@ -23,9 +23,13 @@ if /i "%%A"=="/s" (set _silent=1
 
 :NoProgArgs
 set "SysPath=%SystemRoot%\System32"
-if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
-set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set "Path=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\"
+if exist "%SystemRoot%\Sysnative\reg.exe" (
+set "SysPath=%SystemRoot%\Sysnative"
+set "Path=%SystemRoot%\Sysnative;%SystemRoot%;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
+)
 set "_err===== ERROR ===="
+set winbuild=1
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 if %winbuild% lss 7601 goto :E_Win
 set _cwmi=0
@@ -207,16 +211,21 @@ if not defined _suite goto :sku
 
 if %winbuild% lss 10240 (
 set "_suit2="
-if /i "%_suite%"=="ProPlus2021Retail" (set _suite=ProPlusRetail&set _suit2=ProPlus2021Retail)
-if /i "%_suite%"=="Professional2021Retail" (set _suite=ProfessionalRetail&set _suit2=Professional2021Retail)
-if /i "%_suite%"=="Standard2021Retail" (set _suite=StandardRetail&set _suit2=Standard2021Retail)
-if /i "%_suite%"=="HomeBusiness2021Retail" (set _suite=HomeBusinessRetail&set _suit2=HomeBusiness2021Retail)
-if /i "%_suite%"=="HomeStudent2021Retail" (set _suite=HomeStudentRetail&set _suit2=HomeStudent2021Retail)
 if /i "%_suite%"=="ProPlus2019Retail" (set _suite=ProPlusRetail&set _suit2=ProPlus2019Retail)
 if /i "%_suite%"=="Professional2019Retail" (set _suite=ProfessionalRetail&set _suit2=Professional2019Retail)
 if /i "%_suite%"=="Standard2019Retail" (set _suite=StandardRetail&set _suit2=Standard2019Retail)
 if /i "%_suite%"=="HomeBusiness2019Retail" (set _suite=HomeBusinessRetail&set _suit2=HomeBusiness2019Retail)
 if /i "%_suite%"=="HomeStudent2019Retail" (set _suite=HomeStudentRetail&set _suit2=HomeStudent2019Retail)
+if /i "%_suite%"=="ProPlus2021Retail" (set _suite=ProPlusRetail&set _suit2=ProPlus2021Retail)
+if /i "%_suite%"=="Professional2021Retail" (set _suite=ProfessionalRetail&set _suit2=Professional2021Retail)
+if /i "%_suite%"=="Standard2021Retail" (set _suite=StandardRetail&set _suit2=Standard2021Retail)
+if /i "%_suite%"=="HomeBusiness2021Retail" (set _suite=HomeBusinessRetail&set _suit2=HomeBusiness2021Retail)
+if /i "%_suite%"=="HomeStudent2021Retail" (set _suite=HomeStudentRetail&set _suit2=HomeStudent2021Retail)
+if /i "%_suite%"=="ProPlus2024Retail" (set _suite=ProPlusRetail&set _suit2=ProPlus2024Retail)
+if /i "%_suite%"=="Professional2024Retail" (set _suite=ProfessionalRetail&set _suit2=Professional2024Retail)
+if /i "%_suite%"=="Standard2024Retail" (set _suite=StandardRetail&set _suit2=Standard2024Retail)
+if /i "%_suite%"=="HomeBusiness2024Retail" (set _suite=HomeBusinessRetail&set _suit2=HomeBusiness2024Retail)
+if /i "%_suite%"=="Home2024Retail" (set _suite=HomeStudentRetail&set _suit2=Home2024Retail)
 )
 
 if %winbuild% geq 10240 if defined _suit2 (
@@ -236,6 +245,7 @@ if not defined _skus goto :MenuFinal
 set _O2016=1
 echo %_skus%| findstr /i "2019" 1>nul && set _O2016=0
 echo %_skus%| findstr /i "2021" 1>nul && set _O2016=0
+echo %_skus%| findstr /i "2024" 1>nul && set _O2016=0
 
 set _base=0
 set /a kk=0
@@ -259,6 +269,15 @@ if /i "!_tmp:~-10!"=="2021Retail" if %winbuild% geq 10240 (
   if defined _products (set "_products=!_products!^|%%J.16_%CTRlng%_x-none") else (set "_products=%%J.16_%CTRlng%_x-none")
   if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! %%J.excludedapps.16=onedrive") else (set "_exclude1d=%%J.excludedapps.16=onedrive"))
   )
+if /i "!_tmp:~-10!"=="2024Retail" if %winbuild% lss 10240 (
+  if defined _show (set "_show=!_show!,%%J") else (set "_show=%%J")
+  if defined _licenses (set "_licenses=!_licenses!,%%J") else (set "_licenses=%%J")
+  )
+if /i "!_tmp:~-10!"=="2024Retail" if %winbuild% geq 10240 (
+  if defined _show (set "_show=!_show!,%%J") else (set "_show=%%J")
+  if defined _products (set "_products=!_products!^|%%J.16_%CTRlng%_x-none") else (set "_products=%%J.16_%CTRlng%_x-none")
+  if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! %%J.excludedapps.16=onedrive") else (set "_exclude1d=%%J.excludedapps.16=onedrive"))
+  )
 for %%A in (Access,Excel,Outlook,PowerPoint,Publisher,SkypeForBusiness,Word,OneNote) do if /i "!_tmp!"=="%%ARetail" (
   if /i "%%A"=="OneNote" (if defined _show (set "_show=!_show!,%%J") else (set "_show=%%J"))
   if defined _products (set "_products=!_products!^|%%J.16_%CTRlng%_x-none") else (set "_products=%%J.16_%CTRlng%_x-none")
@@ -277,16 +296,17 @@ if %winbuild% lss 10240 if %_base% equ 0 if %_O2016%==0 for %%J in (%_skus%) do 
 set _tmp=%%J
 if /i "!_tmp:~-10!"=="2019Retail" call set _tmp=!_tmp:~0,-10!Retail
 if /i "!_tmp:~-10!"=="2021Retail" call set _tmp=!_tmp:~0,-10!Retail
+if /i "!_tmp:~-10!"=="2024Retail" call set _tmp=!_tmp:~0,-10!Retail
   if defined _products (set "_products=!_products!^|!_tmp!.16_%CTRlng%_x-none") else (set "_products=!_tmp!.16_%CTRlng%_x-none")
   if %_OneDrive%==OFF (if defined _exclude1d (set "_exclude1d=!_exclude1d! !_tmp!.excludedapps.16=onedrive") else (set "_exclude1d=!_tmp!.excludedapps.16=onedrive"))
 )
 
 :MenuFinal
-if %_unattend%==True goto :MenuInstall
 if %_silent% EQU 1 (
 set _disp=False
 goto :MenuInstall
 )
+if %_unattend%==True goto :MenuInstall
 cls
 echo %line%
 echo Source  : "!CTRsource!"
@@ -346,7 +366,8 @@ echo baseurl.16="!CTRsource!" ^^^^
 echo productstoadd="%_products%" ^^
 if defined _suite echo %_suite%.excludedapps.16=%_excluded% ^^
 if defined _exclude1d echo %_exclude1d% ^^
-echo flt.useexptransportinplacepl=disabled flt.useofficehelperaddon=disabled flt.useoutlookshareaddon=disabled 1^>nul 2^>nul
+echo flt.useexptransportinplacepl=disabled flt.useofficehelperaddon=disabled flt.useoutlookshareaddon=disabled ^^
+echo flt.useteamsaddon=disabled flt.usebingaddononinstall=disabled flt.usebingaddononupdate=disabled 1^>nul 2^>nul
 echo reg.exe add %_Config% /f /v UpdateChannel /t REG_SZ /d "%_url%/%CTRffn%" 1^>nul 2^>nul
 echo reg.exe add %_Config% /f /v UpdateChannelChanged /t REG_SZ /d True 1^>nul 2^>nul
 echo exit /b
@@ -363,8 +384,8 @@ if exist "!_file!" if %_cwmi% equ 0 for /f "tokens=3 delims==." %%i in ('powersh
 )
 call :StopService 1>nul 2>nul
 if %CTRexe%==1 (
-if exist "!_target!" rd /s /q "!_target!" 1>nul 2>nul
-md "!_target!" 1>nul 2>nul
+if exist "!_target!" rmdir /s /q "!_target!" 1>nul 2>nul
+mkdir "!_target!" 1>nul 2>nul
 expand -f:* "!CTRsource!\Office\Data\%CTRver%\%CTRicab%" "!_target!" 1>nul 2>nul
 expand -f:* "!CTRsource!\Office\Data\%CTRver%\%CTRicabr%" "!_target!" 1>nul 2>nul
 )
@@ -388,14 +409,15 @@ goto :TheEnd
 if defined _licenses (
 echo.
 echo %line%
-echo Installing Office 2019/2021 Licenses...
+echo Installing uplevel Licenses...
 echo %line%
 echo.
 call :Licenses 1>nul 2>nul
 )
-if %_tele%==True if %_Of365%==0 (
+if %_tele%==True (
 call :Telemetry 1>nul 2>nul
 )
+call :Cleanup 1>nul 2>nul
 echo.
 echo %line%
 echo Done.
@@ -403,9 +425,9 @@ echo %line%
 echo.
 if %_unattend%==True goto :eof
 if %_silent% EQU 1 goto :eof
-echo Press any key to exit.
-pause >nul
-taskkill /t /f /IM OfficeC2RClient.exe 1>nul 2>nul
+echo Press 9 or X to exit.
+choice /c 9X /n
+if errorlevel 1 (exit /b) else (rem.)
 goto :eof
 
 :StopService
@@ -416,6 +438,13 @@ sc query ClickToRunSvc | find /i "STOPPED" || net stop ClickToRunSvc /y
 sc query ClickToRunSvc | find /i "STOPPED" || sc stop ClickToRunSvc
 taskkill /t /f /IM OfficeC2RClient.exe
 taskkill /t /f /IM OfficeClickToRun.exe
+exit /b
+
+:Cleanup
+taskkill /t /f /IM OfficeC2RClient.exe
+reg delete HKCU\Software\Microsoft\Office\Common /f
+reg delete HKCU\Software\Microsoft\Office\16.0 /f
+reg add HKCU\Software\Policies\Microsoft\Office\16.0\Teams /f /v PreventFirstLaunchAfterInstall /t REG_DWORD /d 1
 exit /b
 
 :Licenses
@@ -434,25 +463,33 @@ exit /b
 
 :Telemetry
 set "_inter=SOFTWARE"
-if /i %xOS%==x64 if %wow64%==1 (set "_inter=SOFTWARE\Wow6432Node")
+if "%xOS%"=="x64" if %wow64%==1 (set "_inter=SOFTWARE\Wow6432Node")
 set "_rkey=HKLM\%_inter%\Microsoft\Office\16.0\User Settings\MyCustomUserSettings"
 set "_skey=HKLM\%_inter%\Microsoft\Office\16.0\User Settings\MyCustomUserSettings\Create\Software\Microsoft\Office\16.0"
 set "_tkey=HKLM\%_inter%\Microsoft\Office\16.0\User Settings\MyCustomUserSettings\Create\Software\Microsoft\Office\Common\ClientTelemetry"
 for %%# in (Count,Order) do reg add "%_rkey%" /f /v %%# /t REG_DWORD /d 1
 reg add "%_tkey%" /f /v SendTelemetry /t REG_DWORD /d 3
 reg add "%_tkey%" /f /v DisableTelemetry /t REG_DWORD /d 1
+if %_Of365%==0 (
 for %%# in (disconnectedstate,usercontentdisabled,downloadcontentdisabled,controllerconnectedservicesenabled) do reg add "%_skey%\Common\Privacy" /f /v %%# /t REG_DWORD /d 2
+)
+for %%# in (disableboottoofficestart) do reg add "%_skey%\Common" /f /v %%# /t REG_DWORD /d 1
 for %%# in (qmenable,sendcustomerdata,updatereliabilitydata) do reg add "%_skey%\Common" /f /v %%# /t REG_DWORD /d 0
 for %%# in (disableboottoofficestart,optindisable,shownfirstrunoptin,ShownFileFmtPrompt) do reg add "%_skey%\Common\General" /f /v %%# /t REG_DWORD /d 1
+for %%# in (skydrivesigninoption) do reg add "%_skey%\Common\General" /f /v %%# /t REG_DWORD /d 0
+for %%# in (enabled,includescreenshot) do reg add "%_skey%\Common\Feedback" /f /v %%# /t REG_DWORD /d 0
+for %%# in (disableboottoofficestart) do reg add "%_skey%\Common\Internet" /f /v %%# /t REG_DWORD /d 1
+for %%# in (serviceleveloptions) do reg add "%_skey%\Common\Internet" /f /v %%# /t REG_DWORD /d 0
+for %%# in (disableboottoofficestart) do reg add "%_skey%\Common\PTWatson" /f /v %%# /t REG_DWORD /d 1
+for %%# in (PTWOptIn) do reg add "%_skey%\Common\PTWatson" /f /v %%# /t REG_DWORD /d 0
+for %%# in (disablereporting) do reg add "%_skey%\Common\Security\FileValidation" /f /v %%# /t REG_DWORD /d 1
 for %%# in (BootedRTM,disablemovie) do reg add "%_skey%\Firstrun" /f /v %%# /t REG_DWORD /d 1
+for %%# in (disableautomaticsendtracing) do reg add "%_skey%\Lync" /f /v %%# /t REG_DWORD /d 1
+for %%# in (EnableLogging) do reg add "%_skey%\Outlook\Options\Mail" /f /v %%# /t REG_DWORD /d 0
+for %%# in (EnableLogging) do reg add "%_skey%\Word\Options" /f /v %%# /t REG_DWORD /d 0
 for %%# in (EnableLogging,EnableUpload) do reg add "%_skey%\OSM" /f /v %%# /t REG_DWORD /d 0
 for %%# in (accesssolution,olksolution,onenotesolution,pptsolution,projectsolution,publishersolution,visiosolution,wdsolution,xlsolution) do reg add "%_skey%\OSM\PreventedApplications" /f /v %%# /t REG_DWORD /d 1
 for %%# in (agave,appaddins,comaddins,documentfiles,templatefiles) do reg add "%_skey%\OSM\PreventedSolutiontypes" /f /v %%# /t REG_DWORD /d 1
-reg add "%_skey%\Common\Security\FileValidation" /f /v disablereporting /t REG_DWORD /d 1
-reg add "%_skey%\Common\PTWatson" /f /v PTWOptIn /t REG_DWORD /d 0
-reg add "%_skey%\Lync" /f /v disableautomaticsendtracing /t REG_DWORD /d 1
-reg add "%_skey%\Outlook\Options\Mail" /f /v EnableLogging /t REG_DWORD /d 0
-reg add "%_skey%\Word\Options" /f /v EnableLogging /t REG_DWORD /d 0
 set "_schtasks=SCHTASKS /Change /DISABLE /TN"
 set "_schedule=Microsoft\Office"
 %_schtasks% "%_schedule%\OfficeInventoryAgentFallBack"
@@ -461,6 +498,7 @@ set "_schedule=Microsoft\Office"
 %_schtasks% "%_schedule%\OfficeInventoryAgentLogOn"
 %_schtasks% "%_schedule%\OfficeTelemetryAgentLogOn"
 %_schtasks% "%_schedule%\OfficeTelemetryAgentLogOn2016"
+%_schtasks% "ServiceWatcherSchedule"
 exit /b
 
 :E_FILE
@@ -470,16 +508,23 @@ goto :TheEnd
 
 :E_Admin
 echo %_err%
-echo Right click on this script and select 'Run as administrator'
+echo This script require administrator privileges.
 goto :TheEnd
 
 :E_Win
 echo %_err%
 echo Windows 7 SP1 is the minimum supported OS.
+goto :TheEnd
+
+:E_WMI
+echo %_err%
+echo WMIC.exe or Windows PowerShell is required for this script to work.
+goto :TheEnd
 
 :TheEnd
 if %_silent% EQU 1 goto :eof
 echo.
-echo Press any key to exit.
-pause >nul
+echo Press 9 or X to exit.
+choice /c 9X /n
+if errorlevel 1 (exit /b) else (rem.)
 goto :eof

@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v24.0
+@set uiv=v24.2
 @echo off
 
 set DVDPATH=
@@ -148,16 +148,11 @@ goto :check
 :skipadk
 set "DismRoot=!WORKDIR!\dism\dism.exe"
 if /i %xOS%==amd64 set "DismRoot=!WORKDIR!\dism\dism64\dism.exe"
-if %winbuild% GEQ 10240 set "DismRoot=dism.exe"
+if %winbuild% GEQ 10240 set "DismRoot=%SysPath%\dism.exe"
 
 :check
-if /i not "!dismroot!"=="dism.exe" (
-set _dism2="!DismRoot!" /English /ScratchDir
-) else (
-set "DismRoot=%SysPath%\dism.exe"
-set _dism2=!DismRoot! /English /ScratchDir
-)
 if not exist "!DismRoot!" goto :E_BIN
+set _dism2="!DismRoot!" /English /ScratchDir
 set "dsv=!dismroot:\=\\!"
 call :DismVer
 cd /d "!WORKDIR!"
@@ -223,12 +218,12 @@ echo ============================================================
 echo.
 set count=0
 set _ol=0
-if exist ".\langs\*.cab" for /f %%i in ('dir /b /on ".\langs\*.cab"') do (
+if exist ".\langs\*.cab" for /f "tokens=* delims=" %%i in ('dir /b /on ".\langs\*.cab"') do (
 set /a _ol+=1
 set /a count+=1
 set "LPFILE!count!=%%i"
 )
-if exist ".\langs\*.esd" for /f %%i in ('dir /b /on ".\langs\*.esd"') do (
+if exist ".\langs\*.esd" for /f "tokens=* delims=" %%i in ('dir /b /on ".\langs\*.esd"') do (
 set /a _ol+=1
 set /a count+=1
 set "LPFILE!count!=%%i"
@@ -237,14 +232,14 @@ if %_ol% equ 0 goto :E_FILES
 set LANGUAGES=%_ol%
 set count=0
 set _oa=0
-if exist ".\ondemand\x86\*.cab" for /f %%i in ('dir /b ".\ondemand\x86\*.cab"') do (
+if exist ".\ondemand\x86\*.cab" for /f "tokens=* delims=" %%i in ('dir /b ".\ondemand\x86\*.cab"') do (
 set /a _oa+=1
 set /a count+=1
 set "OAFILE!count!=%%i"
 )
 set count=0
 set _ob=0
-if exist ".\ondemand\x64\*.cab" for /f %%i in ('dir /b ".\ondemand\x64\*.cab"') do (
+if exist ".\ondemand\x64\*.cab" for /f "tokens=* delims=" %%i in ('dir /b ".\ondemand\x64\*.cab"') do (
 set /a _ob+=1
 set /a count+=1
 set "OBFILE!count!=%%i"
@@ -275,7 +270,7 @@ if not exist "!WinpeOC%%j!\!LANGUAGE%%j!\lp.cab" call set WINPE=0
 set _lpver=%LPBUILD1%
 
 for %%# in (
-basic font hand locr speech tts intl 
+basic font hand ocr speech tts intl 
 ext tra ntwrk 1st 2nd 3rd paint note 
 power ppmc pwsf word step snip nots 
 ieop ethernet wifi media wmi 
@@ -292,11 +287,16 @@ goto :contwork
 :setfod
 set "ofc=%2%3"
 "!_7z!" x ".\ondemand\x%1\!%2%3!" -o"!TEMPDIR!\FOD%1\!ofc!" * -r %_Null%
+if not exist "!TEMPDIR!\FOD%1\!ofc!" (
+echo.
+echo ERROR: cannot extract !%2%3!
+goto :eof
+)
 pushd "!TEMPDIR!\FOD%1\!ofc!"
 findstr /i /m Microsoft-Windows-LanguageFeatures-Basic update.mum %_Nul3% && (call set _ODbasic%1=!_ODbasic%1! /PackagePath:!ofc!\update.mum&goto :eof)
 findstr /i /m Microsoft-Windows-LanguageFeatures-Fonts update.mum %_Nul3% && (call set _ODfont%1=!_ODfont%1! /PackagePath:!ofc!\update.mum&goto :eof)
 findstr /i /m Microsoft-Windows-LanguageFeatures-Handwriting update.mum %_Nul3% && (call set _ODhand%1=!_ODhand%1! /PackagePath:!ofc!\update.mum&goto :eof)
-findstr /i /m Microsoft-Windows-LanguageFeatures-OCR update.mum %_Nul3% && (call set _ODlocr%1=!_ODlocr%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-LanguageFeatures-OCR update.mum %_Nul3% && (call set _ODocr%1=!_ODocr%1! /PackagePath:!ofc!\update.mum&goto :eof)
 findstr /i /m Microsoft-Windows-LanguageFeatures-Speech update.mum %_Nul3% && (call set _ODspeech%1=!_ODspeech%1! /PackagePath:!ofc!\update.mum&goto :eof)
 findstr /i /m Microsoft-Windows-LanguageFeatures-TextToSpeech update.mum %_Nul3% && (call set _ODtts%1=!_ODtts%1! /PackagePath:!ofc!\update.mum&goto :eof)
 findstr /i /m Microsoft-Windows-InternationalFeatures update.mum %_Nul3% && (call set _ODintl%1=!_ODintl%1! /PackagePath:!ofc!\update.mum&goto :eof)
@@ -366,6 +366,7 @@ if %_build% equ 18363 set _build=18362
 for %%# in (19042 19043 19044 19045) do if %_build% equ %%# set _build=19041
 for %%# in (22622 22623 22624 22631 22635) do if %_build% equ %%# set _build=22621
 if %_build% equ 20349 set _build=20348
+if %_build% equ 26120 set _build=26100
 for /L %%j in (1,1,%LANGUAGES%) do (
 if not !LPBUILD%%j!==%_build% set "ERRFILE=!LPFILE%%j!"&goto :E_VER
 )
@@ -499,6 +500,7 @@ if /i not %xOS%==x86 copy /y %SystemRoot%\SysWOW64\slc.dll %SystemRoot%\SysWOW64
 )
 set isomin=0
 for /L %%i in (1,1,%imgcount%) do set "_i=%%i"&call :doinstall
+if defined errMOUNT goto :eof
 goto :rewim
 
 :doinstall
@@ -623,7 +625,7 @@ if defined _ODsync%1 if exist "%_svcn%\Microsoft-Windows-EnterpriseClientSync-Ho
 if defined _ODadam%1 if exist "%_svcn%\Microsoft-Windows-DirectoryServices-ADAM-Client-FOD*.mum" set "_AP3rd=!_ODadam%1! !_AP3rd!"
 )
 if defined _ODbasic%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1a.log" /Add-Package !_ODbasic%1!
-if defined _ODbasic%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1a.log" /Add-Package !_ODfont%1! !_ODtts%1! !_ODhand%1! !_ODlocr%1! !_ODspeech%1! !_ODintl%1!
+if defined _ODbasic%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1a.log" /Add-Package !_ODfont%1! !_ODtts%1! !_ODhand%1! !_ODocr%1! !_ODspeech%1! !_ODintl%1!
 if defined _APext !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1b.log" /Add-Package !_APext!
 if defined _APtra !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1c.log" /Add-Package !_APtra!
 if defined _AP1st !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1d.log" /Add-Package !_AP1st!
@@ -712,6 +714,7 @@ goto :eof
 
 :rewim
 for /L %%i in (1,1,%BOOTCOUNT%) do set "_i=%%i"&call :doboot
+if defined errMOUNT goto :eof
 goto :rebuild
 
 :doboot
@@ -1290,10 +1293,12 @@ goto :END
 
 :E_MOUNT
 set MESSAGE=ERROR: Could not mount WIM image
+set errMOUNT=1
 goto :END
 
 :E_UNMOUNT
 set MESSAGE=ERROR: Could not unmount WIM image
+set errMOUNT=1
 goto :END
 
 :E_ADMIN

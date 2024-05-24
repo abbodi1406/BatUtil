@@ -22,7 +22,7 @@
 install volume products for Office 2024/2021/2019, in addition to Microsoft 365 Enterprise (O365ProPlus) and Office Mondo 2016
 
 - YAOCTRIR - Retail  
-install retail products for Microsoft 365 / Office 2021/2019/2016 Suites, in addition to Office 2021/2019 Single Apps
+install retail products for Microsoft 365 / Office 2024/2021/2019/2016 Suites, in addition to Office 2024/2021/2019 Single Apps
 
 * Each flavor consist of two command scripts:
 
@@ -40,17 +40,6 @@ bg-BG, et-EE, hr-HR, lt-LT, lv-LV, sr-Latn-RS, th-TH, hi-IN, id-ID, kk-KZ, MS-MY
 
 * Office C2R source files are universal, and contain all possible products, any SKU can be installed from the same source  
 https://docs.microsoft.com/office365/troubleshoot/installation/product-ids-supported-office-deployment-click-to-run
-
-* Starting MAY 2020, Office 365 products are being renamed to Microsoft 365, keeping the same SKU names and included apps:  
-https://docs.microsoft.com/deployoffice/name-change
-
-SKU ID                 | Old Name                  | New Name  
----------------------- | ------------------------- | -------------------------------  
-O365ProPlusRetail      | Office 365 ProPlus        | Microsoft 365 Enterprise  
-O365BusinessRetail     | Office 365 Business       | Microsoft 365 Business  
-O365SmallBusPremRetail | Office 365 Small Business | Microsoft 365 Small Business  
-O365HomePremRetail     | Office 365 Home           | Microsoft 365 Family  
-O365EduCloudRetail     | Office 365 Education      | Microsoft 365 Education
 
 * If you are using Office C2R for the first time or you are confused with the different products, the most recommended choices are:  
 Product: Microsoft 365 Enterprise  
@@ -125,13 +114,14 @@ therefore, the underlying Product IDs and entries in "Program and Features" will
 
 * For YAOCTRI - Volume flavor, if the source files are from Volume LTSC channels, only those channels will available for selection
 
-* For YAOCTRI - Volume flavor, if you choose "Microsoft 365 Enterprise" along with Project 2021/2019 and/or Visio 2021/2019,
+* For YAOCTRI - Volume flavor, if you choose "Microsoft 365 Enterprise" along with Project and/or Visio,
 
 Mondo licenses used for volume conversion will take precedence over Project/Visio licenses (this is a limitation in Office itself, not the script)
 
 a better choice would be to select Mondo directly, which include Project/Visio
 
-* Disable Telemetry option is not processed for "Microsoft 365" suites because it affects features
+* For "Microsoft 365" suites, Disable Telemetry option will not disable "connected experiences" policies  
+https://learn.microsoft.com/deployoffice/privacy/manage-privacy-controls
 
 * Auto Activate option has no effect in YAOCTRIR - Retail flavor
 
@@ -153,6 +143,17 @@ then, you can execute this in command prompt as administrator to update Office:
 
 "%CommonProgramFiles%\Microsoft Shared\ClickToRun\OfficeC2RClient.exe" /update user updatepromptuser=True displaylevel=True
 
+* Starting MAY 2020, Office 365 products are being renamed to Microsoft 365, keeping the same SKU names and included apps:  
+https://docs.microsoft.com/deployoffice/name-change
+
+SKU ID                 | Old Name                  | New Name  
+---------------------- | ------------------------- | -------------------------------  
+O365ProPlusRetail      | Office 365 ProPlus        | Microsoft 365 Enterprise  
+O365BusinessRetail     | Office 365 Business       | Microsoft 365 Business  
+O365SmallBusPremRetail | Office 365 Small Business | Microsoft 365 Small Business  
+O365HomePremRetail     | Office 365 Home           | Microsoft 365 Family  
+O365EduCloudRetail     | Office 365 Education      | Microsoft 365 Education
+
 ______________________________
 
 ## Windows 7/8.1 Limited Support
@@ -167,6 +168,9 @@ or build targeted for Windows 8.1 to be installed on Windows 7
 * For more information:  
 https://learn.microsoft.com/deployoffice/endofsupport/windows-7-support  
 https://learn.microsoft.com/deployoffice/endofsupport/windows-81-support
+
+* YAOCTRI will not block Office 2019/2021/2024 installation on Windows 7/8.1  
+however, builds higher than the specific build range, or builds from Volume channels, are mostly not compatible with these OSs
 
 ______________________________
 
@@ -225,6 +229,17 @@ the most frequent channel for Office builds as soon as they are compiled, provid
 
 the second most frequent channel for Office builds as soon as they are tested  
 it mostly aligns with Beta channel and works as an internal preview for it
+
+* Office 2024 Volume channels:
+
+1. Perpetual2024 VL
+
+the official update channel for volume licensed products of Office 2024  
+it only gets security and quality fixes once a month (Patch Tuesday)
+
+2. Microsoft2024 VL
+
+internal preview channel for Perpetual2024 VL channel
 
 * Office 2021 Volume channels:
 

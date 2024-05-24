@@ -23,9 +23,13 @@ if /i "%%A"=="/s" (set _silent=1
 
 :NoProgArgs
 set "SysPath=%SystemRoot%\System32"
-if exist "%SystemRoot%\Sysnative\reg.exe" (set "SysPath=%SystemRoot%\Sysnative")
-set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
+set "Path=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\"
+if exist "%SystemRoot%\Sysnative\reg.exe" (
+set "SysPath=%SystemRoot%\Sysnative"
+set "Path=%SystemRoot%\Sysnative;%SystemRoot%;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
+)
 set "_err===== ERROR ===="
+set winbuild=1
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 if %winbuild% lss 7601 goto :E_Win
 set _cwmi=0
@@ -207,32 +211,35 @@ if not defined _suite goto :sku
 
 if %winbuild% lss 10240 (
 if /i "%_suite%"=="O365ProPlusRetail" set _suit2=MondoVolume
-if /i "%_suite%"=="ProPlus2024Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2024Volume)
-if /i "%_suite%"=="ProPlus2021Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2021Volume)
-if /i "%_suite%"=="Standard2021Volume" (set _suite=StandardRetail&set _suit2=Standard2021Volume)
 if /i "%_suite%"=="ProPlus2019Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2019Volume)
 if /i "%_suite%"=="Standard2019Volume" (set _suite=StandardRetail&set _suit2=Standard2019Volume)
+if /i "%_suite%"=="ProPlus2021Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2021Volume)
+if /i "%_suite%"=="Standard2021Volume" (set _suite=StandardRetail&set _suit2=Standard2021Volume)
+if /i "%_suite%"=="ProPlus2024Volume" (set _suite=O365ProPlusRetail&set _suit2=ProPlus2024Volume)
+if /i "%_suite%"=="Standard2024Volume" (set _suite=StandardRetail&set _suit2=Standard2024Volume)
 )
 if %winbuild% geq 10240 (
 if /i "%_suite%"=="O365ProPlusRetail" set _suit2=MondoVolume
 )
 
 set "_products=%_suite%.16_%CTRlng%_x-none"
-if /i "%_suite%"=="ProPlus2024Volume" set _pkey0=2TDPW-NDQ7G-FMG99-DXQ7M-TX3T2
-if /i "%_suite%"=="ProPlus2021Volume" set _pkey0=FXYTK-NJJ8C-GB6DW-3DYQT-6F7TH
-if /i "%_suite%"=="Standard2021Volume" set _pkey0=KDX7X-BNVR8-TXXGX-4Q7Y8-78VT3
+if /i "%_suite%"=="MondoVolume" set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
 if /i "%_suite%"=="ProPlus2019Volume" set _pkey0=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP
 if /i "%_suite%"=="Standard2019Volume" set _pkey0=6NWWJ-YQWMR-QKGCB-6TMB3-9D9HK
-if /i "%_suite%"=="MondoVolume" set _pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2
+if /i "%_suite%"=="ProPlus2021Volume" set _pkey0=FXYTK-NJJ8C-GB6DW-3DYQT-6F7TH
+if /i "%_suite%"=="Standard2021Volume" set _pkey0=KDX7X-BNVR8-TXXGX-4Q7Y8-78VT3
+if /i "%_suite%"=="ProPlus2024Volume" set _pkey0=NBBBB-BBBBB-BBBBB-BBBJD-VXRPM
+if /i "%_suite%"=="Standard2024Volume" set _pkey0=V28N4-JG22K-W66P8-VTMGK-H6HGR
 
 if defined _suit2 (
 set "_licenses=%_suit2%"
-if /i "%_suit2%"=="ProPlus2024Volume" set _pkey0=2TDPW-NDQ7G-FMG99-DXQ7M-TX3T2
-if /i "%_suit2%"=="ProPlus2021Volume" set _pkey0=FXYTK-NJJ8C-GB6DW-3DYQT-6F7TH
-if /i "%_suit2%"=="Standard2021Volume" set _pkey0=KDX7X-BNVR8-TXXGX-4Q7Y8-78VT3
+if /i "%_suit2%"=="MondoVolume" set "_pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2,DRNV7-VGMM2-B3G9T-4BF84-VMFTK"&set _Of365=1
 if /i "%_suit2%"=="ProPlus2019Volume" set _pkey0=NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP
 if /i "%_suit2%"=="Standard2019Volume" set _pkey0=6NWWJ-YQWMR-QKGCB-6TMB3-9D9HK
-if /i "%_suit2%"=="MondoVolume" set "_pkey0=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2,DRNV7-VGMM2-B3G9T-4BF84-VMFTK"&set _Of365=1
+if /i "%_suit2%"=="ProPlus2021Volume" set _pkey0=FXYTK-NJJ8C-GB6DW-3DYQT-6F7TH
+if /i "%_suit2%"=="Standard2021Volume" set _pkey0=KDX7X-BNVR8-TXXGX-4Q7Y8-78VT3
+if /i "%_suit2%"=="ProPlus2024Volume" set _pkey0=NBBBB-BBBBB-BBBBB-BBBJD-VXRPM
+if /i "%_suit2%"=="Standard2024Volume" set _pkey0=V28N4-JG22K-W66P8-VTMGK-H6HGR
 )
 if defined _pkey0 set "_keys=%_pkey0%"
 
@@ -280,8 +287,16 @@ if /i "%%J"=="ProjectPro2021Volume" (set /a kk+=1&set _pkey!kk!=FTNWT-C6WBT-8HMG
 if /i "%%J"=="ProjectStd2021Volume" (set /a kk+=1&set _pkey!kk!=J2JDC-NJCYY-9RGQ4-YXWMH-T3D4T)
 if /i "%%J"=="VisioPro2021Volume" (set /a kk+=1&set _pkey!kk!=KNH8D-FGHT4-T8RK3-CTDYJ-K2HT4)
 if /i "%%J"=="VisioStd2021Volume" (set /a kk+=1&set _pkey!kk!=MJVNY-BYWPY-CWV6J-2RKRT-4M8QG)
-if /i "%%J"=="ProjectPro2024Volume" (set /a kk+=1&set _pkey!kk!=D9GTG-NP7DV-T6JP3-B6B62-JB89R)
-if /i "%%J"=="VisioPro2024Volume" (set /a kk+=1&set _pkey!kk!=YW66X-NH62M-G6YFP-B7KCT-WXGKQ)
+if /i "%%J"=="Access2024Volume" (set /a kk+=1&set _pkey!kk!=82FTR-NCHR7-W3944-MGRHM-JMCWD)
+if /i "%%J"=="Excel2024Volume" (set /a kk+=1&set _pkey!kk!=F4DYN-89BP2-WQTWJ-GR8YC-CKGJG)
+if /i "%%J"=="Outlook2024Volume" (set /a kk+=1&set _pkey!kk!=D2F8D-N3Q3B-J28PV-X27HD-RJWB9)
+if /i "%%J"=="PowerPoint2024Volume" (set /a kk+=1&set _pkey!kk!=CW94N-K6GJH-9CTXY-MG2VC-FYCWP)
+if /i "%%J"=="SkypeForBusiness2024Volume" (set /a kk+=1&set _pkey!kk!=4NKHF-9HBQF-Q3B6C-7YV34-F64P3)
+if /i "%%J"=="Word2024Volume" (set /a kk+=1&set _pkey!kk!=MQ84N-7VYDM-FXV7C-6K7CC-VFW9J)
+if /i "%%J"=="ProjectPro2024Volume" (set /a kk+=1&set _pkey!kk!=NBBBB-BBBBB-BBBBB-BBBH4-GX3R4)
+if /i "%%J"=="ProjectStd2024Volume" (set /a kk+=1&set _pkey!kk!=PD3TT-NTHQQ-VC7CY-MFXK3-G87F8)
+if /i "%%J"=="VisioPro2024Volume" (set /a kk+=1&set _pkey!kk!=NBBBB-BBBBB-BBBBB-BBBCW-6MX6T)
+if /i "%%J"=="VisioStd2024Volume" (set /a kk+=1&set _pkey!kk!=JMMVY-XFNQC-KK4HK-9H7R3-WQQTV)
 )
 
 if %winbuild% lss 10240 if %_base% equ 0 for %%J in (%_skus%) do (
@@ -296,11 +311,11 @@ if defined _keys (set "_keys=!_keys!,!_pkey%%J!") else (set "_keys=!_pkey%%J!")
 )
 
 :MenuFinal
-if %_unattend%==True goto :MenuInstall
 if %_silent% EQU 1 (
 set _disp=False
 goto :MenuInstall
 )
+if %_unattend%==True goto :MenuInstall
 cls
 echo %line%
 echo Source  : "!CTRsource!"
@@ -366,7 +381,8 @@ if %winbuild% geq 10240 echo pidkeys=%_keys% %_autoact% ^^
 if %winbuild% lss 10240 if /i "%_suite%"=="MondoVolume" echo pidkeys=HFTND-W9MK4-8B7MJ-B6C4G-XQBR2 %_autoact% ^^
 if defined _suite echo %_suite%.excludedapps.16=%_excluded% ^^
 if defined _exclude1d echo %_exclude1d% ^^
-echo flt.useexptransportinplacepl=disabled flt.useofficehelperaddon=disabled flt.useoutlookshareaddon=disabled 1^>nul 2^>nul
+echo flt.useexptransportinplacepl=disabled flt.useofficehelperaddon=disabled flt.useoutlookshareaddon=disabled ^^
+echo flt.useteamsaddon=disabled flt.usebingaddononinstall=disabled flt.usebingaddononupdate=disabled 1^>nul 2^>nul
 echo reg.exe add %_Config% /f /v UpdateChannel /t REG_SZ /d "%_url%/%CTRffn%" 1^>nul 2^>nul
 echo reg.exe add %_Config% /f /v UpdateChannelChanged /t REG_SZ /d True 1^>nul 2^>nul
 echo exit /b
@@ -383,8 +399,8 @@ if exist "!_file!" if %_cwmi% equ 0 for /f "tokens=3 delims==." %%i in ('powersh
 )
 call :StopService 1>nul 2>nul
 if %CTRexe%==1 (
-if exist "!_target!" rd /s /q "!_target!" 1>nul 2>nul
-md "!_target!" 1>nul 2>nul
+if exist "!_target!" rmdir /s /q "!_target!" 1>nul 2>nul
+mkdir "!_target!" 1>nul 2>nul
 expand -f:* "!CTRsource!\Office\Data\%CTRver%\%CTRicab%" "!_target!" 1>nul 2>nul
 expand -f:* "!CTRsource!\Office\Data\%CTRver%\%CTRicabr%" "!_target!" 1>nul 2>nul
 )
@@ -408,14 +424,15 @@ goto :TheEnd
 if defined _licenses (
 echo.
 echo %line%
-echo Installing Volume Licenses...
+echo Installing uplevel Licenses...
 echo %line%
 echo.
 call :Licenses 1>nul 2>nul
 )
-if %_tele%==True if %_Of365%==0 (
+if %_tele%==True (
 call :Telemetry 1>nul 2>nul
 )
+call :Cleanup 1>nul 2>nul
 echo.
 echo %line%
 echo Done.
@@ -423,9 +440,9 @@ echo %line%
 echo.
 if %_unattend%==True goto :eof
 if %_silent% EQU 1 goto :eof
-echo Press any key to exit.
-pause >nul
-taskkill /t /f /IM OfficeC2RClient.exe 1>nul 2>nul
+echo Press 9 or X to exit.
+choice /c 9X /n
+if errorlevel 1 (exit /b) else (rem.)
 goto :eof
 
 :StopService
@@ -436,6 +453,13 @@ sc query ClickToRunSvc | find /i "STOPPED" || net stop ClickToRunSvc /y
 sc query ClickToRunSvc | find /i "STOPPED" || sc stop ClickToRunSvc
 taskkill /t /f /IM OfficeC2RClient.exe
 taskkill /t /f /IM OfficeClickToRun.exe
+exit /b
+
+:Cleanup
+taskkill /t /f /IM OfficeC2RClient.exe
+reg delete HKCU\Software\Microsoft\Office\Common /f
+reg delete HKCU\Software\Microsoft\Office\16.0 /f
+reg add HKCU\Software\Policies\Microsoft\Office\16.0\Teams /f /v PreventFirstLaunchAfterInstall /t REG_DWORD /d 1
 exit /b
 
 :Licenses
@@ -454,25 +478,33 @@ exit /b
 
 :Telemetry
 set "_inter=SOFTWARE"
-if /i %xOS%==x64 if %wow64%==1 (set "_inter=SOFTWARE\Wow6432Node")
+if "%xOS%"=="x64" if %wow64%==1 (set "_inter=SOFTWARE\Wow6432Node")
 set "_rkey=HKLM\%_inter%\Microsoft\Office\16.0\User Settings\MyCustomUserSettings"
 set "_skey=HKLM\%_inter%\Microsoft\Office\16.0\User Settings\MyCustomUserSettings\Create\Software\Microsoft\Office\16.0"
 set "_tkey=HKLM\%_inter%\Microsoft\Office\16.0\User Settings\MyCustomUserSettings\Create\Software\Microsoft\Office\Common\ClientTelemetry"
 for %%# in (Count,Order) do reg add "%_rkey%" /f /v %%# /t REG_DWORD /d 1
 reg add "%_tkey%" /f /v SendTelemetry /t REG_DWORD /d 3
 reg add "%_tkey%" /f /v DisableTelemetry /t REG_DWORD /d 1
+if %_Of365%==0 (
 for %%# in (disconnectedstate,usercontentdisabled,downloadcontentdisabled,controllerconnectedservicesenabled) do reg add "%_skey%\Common\Privacy" /f /v %%# /t REG_DWORD /d 2
+)
+for %%# in (disableboottoofficestart) do reg add "%_skey%\Common" /f /v %%# /t REG_DWORD /d 1
 for %%# in (qmenable,sendcustomerdata,updatereliabilitydata) do reg add "%_skey%\Common" /f /v %%# /t REG_DWORD /d 0
 for %%# in (disableboottoofficestart,optindisable,shownfirstrunoptin,ShownFileFmtPrompt) do reg add "%_skey%\Common\General" /f /v %%# /t REG_DWORD /d 1
+for %%# in (skydrivesigninoption) do reg add "%_skey%\Common\General" /f /v %%# /t REG_DWORD /d 0
+for %%# in (enabled,includescreenshot) do reg add "%_skey%\Common\Feedback" /f /v %%# /t REG_DWORD /d 0
+for %%# in (disableboottoofficestart) do reg add "%_skey%\Common\Internet" /f /v %%# /t REG_DWORD /d 1
+for %%# in (serviceleveloptions) do reg add "%_skey%\Common\Internet" /f /v %%# /t REG_DWORD /d 0
+for %%# in (disableboottoofficestart) do reg add "%_skey%\Common\PTWatson" /f /v %%# /t REG_DWORD /d 1
+for %%# in (PTWOptIn) do reg add "%_skey%\Common\PTWatson" /f /v %%# /t REG_DWORD /d 0
+for %%# in (disablereporting) do reg add "%_skey%\Common\Security\FileValidation" /f /v %%# /t REG_DWORD /d 1
 for %%# in (BootedRTM,disablemovie) do reg add "%_skey%\Firstrun" /f /v %%# /t REG_DWORD /d 1
+for %%# in (disableautomaticsendtracing) do reg add "%_skey%\Lync" /f /v %%# /t REG_DWORD /d 1
+for %%# in (EnableLogging) do reg add "%_skey%\Outlook\Options\Mail" /f /v %%# /t REG_DWORD /d 0
+for %%# in (EnableLogging) do reg add "%_skey%\Word\Options" /f /v %%# /t REG_DWORD /d 0
 for %%# in (EnableLogging,EnableUpload) do reg add "%_skey%\OSM" /f /v %%# /t REG_DWORD /d 0
 for %%# in (accesssolution,olksolution,onenotesolution,pptsolution,projectsolution,publishersolution,visiosolution,wdsolution,xlsolution) do reg add "%_skey%\OSM\PreventedApplications" /f /v %%# /t REG_DWORD /d 1
 for %%# in (agave,appaddins,comaddins,documentfiles,templatefiles) do reg add "%_skey%\OSM\PreventedSolutiontypes" /f /v %%# /t REG_DWORD /d 1
-reg add "%_skey%\Common\Security\FileValidation" /f /v disablereporting /t REG_DWORD /d 1
-reg add "%_skey%\Common\PTWatson" /f /v PTWOptIn /t REG_DWORD /d 0
-reg add "%_skey%\Lync" /f /v disableautomaticsendtracing /t REG_DWORD /d 1
-reg add "%_skey%\Outlook\Options\Mail" /f /v EnableLogging /t REG_DWORD /d 0
-reg add "%_skey%\Word\Options" /f /v EnableLogging /t REG_DWORD /d 0
 set "_schtasks=SCHTASKS /Change /DISABLE /TN"
 set "_schedule=Microsoft\Office"
 %_schtasks% "%_schedule%\OfficeInventoryAgentFallBack"
@@ -481,6 +513,7 @@ set "_schedule=Microsoft\Office"
 %_schtasks% "%_schedule%\OfficeInventoryAgentLogOn"
 %_schtasks% "%_schedule%\OfficeTelemetryAgentLogOn"
 %_schtasks% "%_schedule%\OfficeTelemetryAgentLogOn2016"
+%_schtasks% "ServiceWatcherSchedule"
 exit /b
 
 :E_FILE
@@ -506,6 +539,7 @@ goto :TheEnd
 :TheEnd
 if %_silent% EQU 1 goto :eof
 echo.
-echo Press any key to exit.
-pause >nul
+echo Press 9 or X to exit.
+choice /c 9X /n
+if errorlevel 1 (exit /b) else (rem.)
 goto :eof

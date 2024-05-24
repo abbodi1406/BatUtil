@@ -40,7 +40,7 @@ require WinPE lang packs from ADK (Preinstallation Environment) to update winre.
 when disabled "0":  
 winre.wim won't be updated
 
-**SLIM** (set 1 or 0)
+**SLIM** (set 1 or 0) // auto-disabled for builds 26040 and later
 
 when disabled "0":  
 all applicable WinPE lang packs will be added to winre.wim

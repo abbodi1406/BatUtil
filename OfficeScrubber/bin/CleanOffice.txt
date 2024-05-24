@@ -2,50 +2,29 @@
 
 :embed:
 function UninstallLicenses($DllPath) {
-    $DynAssembly = New-Object System.Reflection.AssemblyName('Win32Lib')
-    $AssemblyBuilder = [AppDomain]::CurrentDomain.DefineDynamicAssembly($DynAssembly, [Reflection.Emit.AssemblyBuilderAccess]::Run)
-    $ModuleBuilder = $AssemblyBuilder.DefineDynamicModule('Win32Lib', $False)
-    $TypeBuilder = $ModuleBuilder.DefineType('sppc', 'Public, Class')
-    $DllImportConstructor = [Runtime.InteropServices.DllImportAttribute].GetConstructor(@([String]))
-    $FieldArray = [Reflection.FieldInfo[]] @([Runtime.InteropServices.DllImportAttribute].GetField('EntryPoint'))
+    $TB = [AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1).DefineDynamicModule(2).DefineType(0)
+    
+    [void]$TB.DefinePInvokeMethod('SLOpen', $DllPath, 22, 1, [int], @([IntPtr].MakeByRefType()), 1, 3)
+    [void]$TB.DefinePInvokeMethod('SLGetSLIDList', $DllPath, 22, 1, [int],
+        @([IntPtr], [int], [Guid].MakeByRefType(), [int], [int].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+    [void]$TB.DefinePInvokeMethod('SLUninstallLicense', $DllPath, 22, 1, [int], @([IntPtr], [IntPtr]), 1, 3)
 
-    $Open = $TypeBuilder.DefineMethod('SLOpen', [Reflection.MethodAttributes] 'Public, Static', [int], @([IntPtr].MakeByRefType()))
-    $Open.SetCustomAttribute((New-Object Reflection.Emit.CustomAttributeBuilder(
-                $DllImportConstructor,
-                @($DllPath),
-                $FieldArray,
-                @('SLOpen'))))
-
-    $GetSLIDList = $TypeBuilder.DefineMethod('SLGetSLIDList', [Reflection.MethodAttributes] 'Public, Static', [int], @([IntPtr], [int], [guid].MakeByRefType(), [int], [int].MakeByRefType(), [IntPtr].MakeByRefType()))
-    $GetSLIDList.SetCustomAttribute((New-Object Reflection.Emit.CustomAttributeBuilder(
-                $DllImportConstructor,
-                @($DllPath),
-                $FieldArray,
-                @('SLGetSLIDList'))))
-
-    $UninstallLicense = $TypeBuilder.DefineMethod('SLUninstallLicense', [Reflection.MethodAttributes] 'Public, Static', [int], @([IntPtr], [IntPtr]))
-    $UninstallLicense.SetCustomAttribute((New-Object Reflection.Emit.CustomAttributeBuilder(
-                $DllImportConstructor,
-                @($DllPath),
-                $FieldArray,
-                @('SLUninstallLicense'))))
-
-    $SPPC = $TypeBuilder.CreateType()
-    $Handle = [IntPtr]::Zero
-    $SPPC::SLOpen([ref]$handle) | Out-Null
+    $SPPC = $TB.CreateType()
+    $Handle = 0
+    [void]$SPPC::SLOpen([ref]$Handle)
     $pnReturnIds = 0
-    $ppReturnIds = [IntPtr]::Zero
+    $ppReturnIds = 0
 
-    if (!$SPPC::SLGetSLIDList($handle, 0, [ref][guid]"0ff1ce15-a989-479d-af46-f275c6370663", 6, [ref]$pnReturnIds, [ref]$ppReturnIds)) {
+    if (!$SPPC::SLGetSLIDList($Handle, 0, [ref][Guid]"0ff1ce15-a989-479d-af46-f275c6370663", 6, [ref]$pnReturnIds, [ref]$ppReturnIds)) {
         foreach ($i in 0..($pnReturnIds - 1)) {
-            $SPPC::SLUninstallLicense($handle, [System.Int64]$ppReturnIds + [System.Int64]16 * $i) | Out-Null
+            [void]$SPPC::SLUninstallLicense($Handle, [Int64]$ppReturnIds + [Int64]16 * $i)
         }    
     }
 }
 
 $OSPP = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform" -ErrorAction SilentlyContinue).Path
 if ($OSPP) {
-    UninstallLicenses($OSPP + "osppc.dll")
+    UninstallLicenses ($OSPP + "osppc.dll")
 }
-UninstallLicenses("sppc.dll")
+UninstallLicenses "sppc.dll"
 :embed:

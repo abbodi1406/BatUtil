@@ -5,16 +5,17 @@
 * A command line script to generate download links for Office Click To Run installation source files
 
 * Office C2R source files are universal, and contain all possible products, any SKU can be installed from the same source  
-https://docs.microsoft.com/office365/troubleshoot/installation/product-ids-supported-office-deployment-click-to-run
+https://learn.microsoft.com/office365/troubleshoot/installation/product-ids-supported-office-deployment-click-to-run
 
 * To install Office C2R, you can use third-party tools like YAOCTRI, OfficeRTool or Office Tool Plus
 
 or you can use the official Office Deployment Tool, which has some limitations  
 for more info:  
-https://docs.microsoft.com/deployoffice/overview-of-the-office-customization-tool-for-click-to-run  
-https://docs.microsoft.com/deployoffice/overview-office-deployment-tool  
-https://docs.microsoft.com/deployoffice/office2019/deploy  
-https://docs.microsoft.com/deployoffice/ltsc2021/deploy
+https://learn.microsoft.com/deployoffice/overview-of-the-office-customization-tool-for-click-to-run  
+https://learn.microsoft.com/deployoffice/overview-office-deployment-tool  
+https://learn.microsoft.com/deployoffice/office2019/deploy  
+https://learn.microsoft.com/deployoffice/ltsc2021/deploy
+https://learn.microsoft.com/deployoffice/preview-ltsc2024/install-ltsc-preview
 
 * The most recommended choices for download:  
 Channel: 3. Current / Monthly  
@@ -158,6 +159,15 @@ it only gets security and quality fixes once a month (Patch Tuesday)
 
 internal preview channel for Perpetual2021 VL channel
 
+11. Perpetual2024 VL
+
+the official update channel for volume licensed products of Office 2024  
+it only gets security and quality fixes once a month (Patch Tuesday)
+
+12. Microsoft2024 VL
+
+internal preview channel for Perpetual2024 VL channel
+
 ______________________________
 
 ## Available Builds Level
@@ -167,7 +177,7 @@ ______________________________
 * Because of that, most Office channels will offer a specific build targeted for Windows 7/8.1
 
 * You cannot choose a build targeted for Windows 11/10 to be installed on Windows 7/8.1,  
-or build targeted for Windows 8.1 to be installed on Windows 7
+or a build targeted for Windows 8.1 to be installed on Windows 7
 
 * For more information:  
 https://learn.microsoft.com/deployoffice/endofsupport/windows-7-support  
@@ -212,7 +222,7 @@ es-ES         lt-LT         sl-SI         kk-KZ
 et-EE         lv-LV         sr-Latn-RS    MS-MY  
 fi-FI         nb-NO         sv-SE         vi-VN
 
-Office 365/2021 additionally support these languages since Version 2108 (Build 14326.20238):
+Office 365/2021/2024 additionally support these languages since Version 2108 (Build 14326.20238):
 en-GB         es-MX         fr-CA
 
 - uChannel
@@ -232,6 +242,8 @@ PerpetualVL2019
 MicrosoftLTSC
 PerpetualVL2021
 MicrosoftLTSC2021
+PerpetualVL2024
+MicrosoftLTSC2024
 
 - uLevel
 

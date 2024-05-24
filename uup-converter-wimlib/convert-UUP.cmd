@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v104
+@set uivr=v105z
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -109,9 +109,9 @@ set CustomList=0
 set DeleteSource=0
 
 set "_Null=1>nul 2>nul"
-set DisableWimRebuilds=0
+set DisableRebuildWim=0
 set "_wrb="
-if %DisableWimRebuilds% equ 1 set "_wrb=rem."
+if %DisableRebuildWim% equ 1 set "_wrb=rem."
 
 set _UUP=
 set qerel=
@@ -348,7 +348,6 @@ if exist temp\ rmdir /s /q temp\
 if exist bin\expand.exe if not exist bin\dpx.dll del /f /q bin\expand.exe
 mkdir bin\temp
 mkdir temp
-if %CustomList% neq 0 if exist "CustomAppsList*.txt" set _appsCustom=1
 set _updexist=0
 if exist "!_UUP!\*Windows1*-KB*.msu" set _updexist=1
 if exist "!_UUP!\*Windows1*-KB*.cab" set _updexist=1
@@ -357,17 +356,6 @@ set _pmcppc=0
 if exist "!_UUP!\*Microsoft-Windows-Printing-PMCPPC-FoD-Package*.cab" set _pmcppc=1
 if exist "!_UUP!\*Microsoft-Windows-Printing-PMCPPC-FoD-Package*.esd" set _pmcppc=1
 dir /b /ad "!_UUP!\*Package*" %_Nul3% && set EXPRESS=1
-if "!Drv_Source!"=="\Drivers" set "Drv_Source=!_work!\Drivers"
-set "DrvSrcALL="
-set "DrvSrcOS="
-set "DrvSrcPE="
-if %AddDrivers% neq 0 if %W10UI% neq 0 if exist "!Drv_Source!\" (
-pushd "!Drv_Source!"
-if exist ALL\ dir /b /s "ALL\*.inf" %_Nul3% && set "DrvSrcALL=!Drv_Source!\ALL"
-if exist OS\ dir /b /s "OS\*.inf" %_Nul3% && set "DrvSrcOS=!Drv_Source!\OS"
-if exist WinPE\ dir /b /s "WinPE\*.inf" %_Nul3% && set "DrvSrcPE=!Drv_Source!\WinPE"
-popd
-)
 for %%# in (
 Core,CoreN,CoreSingleLanguage,CoreCountrySpecific
 Professional,ProfessionalN,ProfessionalEducation,ProfessionalEducationN,ProfessionalWorkstation,ProfessionalWorkstationN
@@ -424,6 +412,20 @@ set /a _count+=1
 set _index%_count%=%1
 goto :eof
 
+:optDrivers
+if "!Drv_Source!"=="\Drivers" set "Drv_Source=!_work!\Drivers"
+set "DrvSrcALL="
+set "DrvSrcOS="
+set "DrvSrcPE="
+if %AddDrivers% neq 0 if %W10UI% neq 0 if exist "!Drv_Source!\" (
+pushd "!Drv_Source!"
+if exist ALL\ dir /b /s "ALL\*.inf" %_Nul3% && set "DrvSrcALL=!Drv_Source!\ALL"
+if exist OS\ dir /b /s "OS\*.inf" %_Nul3% && set "DrvSrcOS=!Drv_Source!\OS"
+if exist WinPE\ dir /b /s "WinPE\*.inf" %_Nul3% && set "DrvSrcPE=!Drv_Source!\WinPE"
+popd
+)
+goto :eof
+
 :MAINMENU
 if %AutoStart% equ 1 (set WIMFILE=install.wim&goto :ISO)
 if %AutoStart% equ 2 (set WIMFILE=install.esd&goto :ISO)
@@ -459,47 +461,51 @@ goto :MAINMENU
 :CONFMENU
 @cls
 set userinp=
+set _optStub=No
+set _optList=No
+if %StubAppsFull% neq 0 set _optStub=Yes
+if %CustomList% neq 0 set _optList=Yes
 echo %_ln2%
 echo.
 echo. 0 - Return to Main Menu
 if %_updexist% equ 1 if %W10UI% equ 0 (
-if %AddUpdates% equ 2 (echo. 1 - AddUpdates  : Yes {External}) else if %AddUpdates% equ 1 (echo. 1 - AddUpdates  : No  {ADK missing}) else (echo. 1 - AddUpdates  : No)
+if %AddUpdates% equ 2 (echo. 1 - AddUpdates   : Yes {External}) else if %AddUpdates% equ 1 (echo. 1 - AddUpdates   : No  {ADK missing}) else (echo. 1 - AddUpdates   : No)
 )
 if %_updexist% equ 1 if %W10UI% neq 0 (
-if %AddUpdates% equ 2 (echo. 1 - AddUpdates  : Yes {External}) else if %AddUpdates% equ 1 (echo. 1 - AddUpdates  : Yes {Integrate}) else (echo. 1 - AddUpdates  : No)
+if %AddUpdates% equ 2 (echo. 1 - AddUpdates   : Yes {External}) else if %AddUpdates% equ 1 (echo. 1 - AddUpdates   : Yes {Integrate}) else (echo. 1 - AddUpdates   : No)
 if %AddUpdates% equ 1 (
-  if %Cleanup% equ 0 (echo. 2 - Cleanup     : No) else (if %ResetBase% equ 0 (echo. 2 - Cleanup     : Yes {ResetBase: No}) else (echo. 2 - Cleanup     : Yes {ResetBase: Yes}))
+  if %Cleanup% equ 0 (echo. 2 - Cleanup      : No) else (if %ResetBase% equ 0 (echo. 2 - Cleanup      : Yes {ResetBase : No}) else (echo. 2 - Cleanup      : Yes {ResetBase : Yes}))
   )
 if %AddUpdates% neq 0 (
-  if %NetFx3% neq 0 (echo. 3 - NetFx3      : Yes) else (echo. 3 - NetFx3      : No)
+  if %NetFx3% neq 0 (echo. 3 - NetFx3       : Yes) else (echo. 3 - NetFx3       : No)
   )
 )
-if %StartVirtual% neq 0 (echo. 4 - StartVirtual: Yes) else (echo. 4 - StartVirtual: No)
-if %wim2esd% neq 0 (echo. 5 - WIM2ESD     : Yes) else (if %wim2swm% neq 0 (echo. 5 - WIM2SWM     : Yes) else (echo. 5 - WIM2ESD/SWM : No))
-if %SkipISO% neq 0 (echo. 6 - SkipISO     : Yes) else (echo. 6 - SkipISO     : No)
-if %SkipWinRE% neq 0 (echo. 7 - SkipWinRE   : Yes) else (echo. 7 - SkipWinRE   : No)
+if %StartVirtual% neq 0 (echo. 4 - StartVirtual : Yes) else (echo. 4 - StartVirtual : No)
+if %wim2esd% neq 0 (echo. 5 - WIM2ESD      : Yes) else (if %wim2swm% neq 0 (echo. 5 - WIM2SWM      : Yes) else (echo. 5 - WIM2ESD/SWM  : No))
+if %SkipISO% neq 0 (echo. 6 - SkipISO      : Yes) else (echo. 6 - SkipISO      : No)
+if %SkipWinRE% neq 0 (echo. 7 - SkipWinRE    : Yes) else (echo. 7 - SkipWinRE    : No)
 if %W10UI% neq 0 (
-if %ForceDism% neq 0 (echo. 8 - ForceDism   : Yes) else (echo. 8 - ForceDism   : No)
+if %ForceDism% neq 0 (echo. 8 - ForceDism    : Yes) else (echo. 8 - ForceDism    : No)
 )
-if %RefESD% neq 0 (echo. 9 - RefESD      : Yes) else (echo. 9 - RefESD      : No)
+if %RefESD% neq 0 (echo. 9 - RefESD       : Yes) else (echo. 9 - RefESD       : No)
 if %W10UI% neq 0 (
-  if %DisableUpdatingUpgrade% neq 0 (echo. U - DisableUpdatingUpgrade: Yes) else (echo. U - DisableUpdatingUpgrade: No)
+  if %DisableUpdatingUpgrade% neq 0 (echo. U - DisableUpdatingUpgrade : Yes) else (echo. U - DisableUpdatingUpgrade : No)
 )
 if %_updexist% equ 1 if %W10UI% neq 0 (
 if %AddUpdates% equ 1 (
-  if %LCUwinre% equ 1 (echo. R - LCUwinre    : Yes) else (echo. R - LCUwinre    : No  {%LCUwinre%})
-  if %SkipEdge% neq 0 (echo. E - SkipEdge    : Yes {%SkipEdge%}) else (echo. E - SkipEdge    : No)
+  if %LCUwinre% equ 1 (echo. R - LCUwinre     : Yes) else (echo. R - LCUwinre     : No  {%LCUwinre%})
+  if %UpdtBootFiles% equ 1 (echo. B - UpdtBootFiles: Yes) else (echo. B - UpdtBootFiles: No)
+  if %SkipEdge% neq 0 (echo. E - SkipEdge     : Yes {%SkipEdge%}) else (echo. E - SkipEdge     : No)
   )
 )
-if %SkipLCUmsu% neq 0 (echo. M - SkipLCUmsu  : Yes) else (echo. M - SkipLCUmsu  : No)
+if %SkipLCUmsu% neq 0 (echo. M - SkipLCUmsu   : Yes) else (echo. M - SkipLCUmsu   : No)
 if %W10UI% neq 0 (
+  if %AddDrivers% neq 0 (echo. D - AddDrivers   : Yes) else (echo. D - AddDrivers   : No)
   echo.
-  if %SkipApps% neq 0 (echo. A - SkipApps    : Yes) else (echo. A - SkipApps    : No)
+  if %SkipApps% neq 0 (echo. A - SkipApps     : Yes) else (echo. A - SkipApps     : No)
 )
 if %W10UI% neq 0 if %SkipApps% equ 0 (
-  if %StubAppsFull% neq 0 (echo. S - StubAppsFull: Yes) else (echo. S - StubAppsFull: No)
-  if %CustomList% neq 0 (echo. C - CustomList  : Yes) else (echo. C - CustomList  : No)
-  echo. L - AppsLevel   : %AppsLevel%
+  echo. S - StubAppsFull: %_optStub% # C - CustomList: %_optList% # L - AppsLevel: %AppsLevel%
 )
 echo %_ln1%
 echo.
@@ -512,8 +518,10 @@ if /i %userinp%==L (if %W10UI% neq 0 if %SkipApps% equ 0 (if %AppsLevel% equ 0 (
 if /i %userinp%==C (if %W10UI% neq 0 if %SkipApps% equ 0 (if %CustomList% equ 0 (set CustomList=1) else (set CustomList=0)))&goto :CONFMENU
 if /i %userinp%==S (if %W10UI% neq 0 if %SkipApps% equ 0 (if %StubAppsFull% equ 0 (set StubAppsFull=1) else (set StubAppsFull=0)))&goto :CONFMENU
 if /i %userinp%==A (if %W10UI% neq 0 (if %SkipApps% equ 0 (set SkipApps=1) else (set SkipApps=0)))&goto :CONFMENU
+if /i %userinp%==D (if %W10UI% neq 0 (if %AddDrivers% equ 0 (set AddDrivers=1) else (set AddDrivers=0)))&goto :CONFMENU
 if /i %userinp%==M (if %SkipLCUmsu% equ 0 (set SkipLCUmsu=1) else (set SkipLCUmsu=0))&goto :CONFMENU
 if /i %userinp%==E (if %AddUpdates% equ 1 (if %SkipEdge% equ 0 (set SkipEdge=1) else if %SkipEdge% equ 1 (set SkipEdge=2) else (set SkipEdge=0)))&goto :CONFMENU
+if /i %userinp%==B (if %AddUpdates% equ 1 (if %UpdtBootFiles% equ 0 (set UpdtBootFiles=1) else (set UpdtBootFiles=0)))&goto :CONFMENU
 if /i %userinp%==R (if %AddUpdates% equ 1 (if %LCUwinre% equ 0 (set LCUwinre=1) else if %LCUwinre% equ 1 (set LCUwinre=2) else (set LCUwinre=0)))&goto :CONFMENU
 if %userinp%==9 (if %RefESD% equ 0 (set RefESD=1) else (set RefESD=0))&goto :CONFMENU
 if %userinp%==8 (if %W10UI% neq 0 (if %ForceDism% equ 0 (set ForceDism=1) else (set ForceDism=0)))&goto :CONFMENU
@@ -533,7 +541,11 @@ call :checkQE
 set _initial=1
 if %_updexist% equ 0 set AddUpdates=0
 if %PREPARED% equ 0 call :PREPARE
+call :optDrivers
+if %_build% equ 25398 set SkipApps=1
+if %_SrvESD% equ 1 set StubAppsFull=1
 if %_IPA% equ 1 if %SkipApps% equ 0 set _runIPA=1
+if %CustomList% neq 0 if exist "CustomAppsList*.txt" set _appsCustom=1
 if /i %arch%==arm64 if %winbuild% lss 9600 if %AddUpdates% equ 1 (
 if %_build% geq 17763 (set AddUpdates=2) else (set AddUpdates=0)
 )
@@ -624,9 +636,9 @@ if %_build% geq 21382 if %SkipLCUmsu% neq 0 echo SkipLCUmsu
 if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge %SkipEdge%
 if %_build% geq 22563 if %W10UI% neq 0 (
 if %SkipApps% neq 0 echo SkipApps
-if %AppsLevel% neq 0 echo AppsLevel %AppsLevel%
+if %SkipApps% equ 0 (if %AppsLevel% neq 0 echo AppsLevel %AppsLevel%
 if %StubAppsFull% neq 0 echo StubAppsFull
-if %_appsCustom% neq 0 echo CustomAppsList
+if %_appsCustom% neq 0 echo CustomAppsList)
 )
 if %_runIPA% equ 1 call :appx_sort
 if %_IPA% equ 1 if %SkipApps% equ 1 (
@@ -727,7 +739,11 @@ call :checkQE
 set _initial=1
 if %_updexist% equ 0 set AddUpdates=0
 if %PREPARED% equ 0 call :PREPARE
+call :optDrivers
+if %_build% equ 25398 set SkipApps=1
+if %_SrvESD% equ 1 set StubAppsFull=1
 if %_IPA% equ 1 if %SkipApps% equ 0 set _runIPA=1
+if %CustomList% neq 0 if exist "CustomAppsList*.txt" set _appsCustom=1
 if %W10UI% equ 0 (set AddUpdates=0)
 if /i %arch%==arm64 if %winbuild% lss 9600 if %AddUpdates% equ 1 (set AddUpdates=0)
 if %Cleanup% equ 0 set ResetBase=0
@@ -803,9 +819,9 @@ if %_build% geq 21382 if %SkipLCUmsu% neq 0 echo SkipLCUmsu
 if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge %SkipEdge%
 if %_build% geq 22563 if %W10UI% neq 0 (
 if %SkipApps% neq 0 echo SkipApps
-if %AppsLevel% neq 0 echo AppsLevel %AppsLevel%
+if %SkipApps% equ 0 (if %AppsLevel% neq 0 echo AppsLevel %AppsLevel%
 if %StubAppsFull% neq 0 echo StubAppsFull
-if %_appsCustom% neq 0 echo CustomAppsList
+if %_appsCustom% neq 0 echo CustomAppsList)
 )
 if %_runIPA% equ 1 call :appx_sort
 if %_IPA% equ 1 if %SkipApps% equ 1 (
@@ -2388,8 +2404,8 @@ if not exist "!_cabdir!\lcu\update.mum" goto :eof
 for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "!_cabdir!\lcu\update.mum"') do set kbupd=%%~#
 if "%kbupd%"=="" goto :eof
 set _ufn=Windows10.0-%kbupd%-%arch%_inout.cab
-dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
-dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.cab" %_Nul2% | findstr /i "Windows12\." %_Nul1% && set _ufn=Windows12.0-%kbupd%-%arch%_inout.cab
+dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.*" %_Nul2% | findstr /i "Windows11\." %_Nul1% && set _ufn=Windows11.0-%kbupd%-%arch%_inout.cab
+dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.*" %_Nul2% | findstr /i "Windows12\." %_Nul1% && set _ufn=Windows12.0-%kbupd%-%arch%_inout.cab
 if exist "!_UUP!\%_ufn%" goto :eof
 call set /a _cab+=1
 set "tmpcmp=!tmpcmp! %_ufn%"
@@ -2753,6 +2769,7 @@ if not exist "!dest!\*enablement-package*.mum" set "edge=!edge! /PackagePath:!de
 goto :eof
 )
 if exist "!dest!\update.mum" findstr /i /m "Package_for_SafeOSDU" "!dest!\update.mum" %_Nul3% && (
+if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" goto :eof
 set "safeos=!safeos! /PackagePath:!dest!\update.mum"
 goto :eof
 )
@@ -2762,6 +2779,7 @@ set "safeos=!safeos! /PackagePath:!dest!\update.mum"
 goto :eof
 )
 if exist "!dest!\*_microsoft-windows-winpe_tools_*.manifest" if not exist "!dest!\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (
+if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
 set "safeos=!safeos! /PackagePath:!dest!\update.mum"
 goto :eof
 )
@@ -3107,11 +3125,12 @@ set _eosC=0
 set _eosP=0
 set _eosT=0
 )
-for %%# in (uProf,uProN,uSDC,uSDD,_upgr,handle1,handle2) do set %%#=0
+for %%# in (uProf,uProN,uSDC,uSDD,_upgr,handle1,handle2,WimRE) do set %%#=0
 for %%# in (iCore,iCorN,iCorS,iCorC,iTeam,iEntr,iEntN,iSRSC,iSRSD,iHome,iHomN,iProf,iProN,iSSC,iSSD,iSDC,iSDD) do set "%%#="
-if /i not %_nnn%==winre.wim if %_build% geq 17063 if %imgcount% gtr 1 if %DisableUpdatingUpgrade% equ 0 set _upgr=1
+if /i %_nnn%==winre.wim set WimRE=1
+if %WimRE% equ 0 if %_build% geq 17063 if %imgcount% gtr 1 if %DisableUpdatingUpgrade% equ 0 set _upgr=1
 for /L %%# in (1,1,%imgcount%) do imagex /info "%_www%" %%# >bin\info%%#.txt 2>&1
-if /i not %_nnn%==winre.wim for /L %%# in (1,1,%imgcount%) do (
+if %WimRE% equ 0 for /L %%# in (1,1,%imgcount%) do (
 if not defined iHome if %_eosC% equ 0 (find /i "Core</EDITIONID>" bin\info%%#.txt %_Nul3% && set iHome=%%#)
 if not defined iHomN if %_eosC% equ 0 (find /i "CoreN</EDITIONID>" bin\info%%#.txt %_Nul3% && set iHomN=%%#)
 if not defined iProf if %_eosP% equ 0 (find /i "Professional</EDITIONID>" bin\info%%#.txt %_Nul3% && set iProf=%%#)
@@ -3149,7 +3168,7 @@ wimlib-imagex.exe delete "%_www%" %iProf% --soft %_Nul3%
 )
 set _imgi=%imgcount%
 for /L %%# in (1,1,%imgcount%) do imagex /info "%_www%" %%# >bin\info%%#.txt 2>&1
-if /i not %_nnn%==winre.wim for /L %%# in (1,1,%imgcount%) do (
+if %WimRE% equ 0 for /L %%# in (1,1,%imgcount%) do (
 if not defined iCore (find /i "Core</EDITIONID>" bin\info%%#.txt %_Nul3% && set iCore=%%#)
 if not defined iCorN (find /i "CoreN</EDITIONID>" bin\info%%#.txt %_Nul3% && set iCorN=%%#)
 if not defined iCorS (find /i "CoreSingleLanguage</EDITIONID>" bin\info%%#.txt %_Nul3% && set iCorS=%%#)
@@ -3182,7 +3201,7 @@ find /i "<NAME>" bin\info%iSRSD%.txt %_Nul2% | find /i " 2025" %_Nul1% && (set "
 if %_build% geq 26010 (set "_wsr=Windows Server 2025")
 )
 del /f /q bin\info*.txt
-if /i %_nnn%==winre.wim (
+if %WimRE% equ 1 (
 set "_inx=1"&call :dowork
 goto :eof
 )
@@ -3220,10 +3239,10 @@ set _oa%%#=0
 if %_runIPA% equ 1 for /L %%# in (1,1,%imgcount%) do (
 if !_oa%%#! equ 1 (if defined indexes (set "indexes=!indexes!,%%#") else (set "indexes=%%#"))
 )
-set _noCmpt=0
-if %_runIPA% equ 0 if not defined indices set _noCmpt=1
-if %_runIPA% equ 1 if not defined indices if not defined indexes set _noCmpt=1
-if %_noCmpt% equ 1 (
+set _inCmpt=0
+if %_runIPA% equ 0 if not defined indices set _inCmpt=1
+if %_runIPA% equ 1 if not defined indices if not defined indexes set _inCmpt=1
+if %_inCmpt% equ 1 (
 call :dk_color1 %_Yellow% "No compatible editions found with applicable updates." 4
 goto :eof
 )
@@ -3245,7 +3264,7 @@ call :virtlabel
 goto :eof
 
 :dowork
-if /i not %_nnn%==winre.wim call :dk_color1 %Gray% "=== Servicing Index: %_inx%" 4
+if %WimRE% equ 0 call :dk_color1 %Gray% "=== Servicing Index: %_inx%" 4
 %_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:"%_www%" /Index:%_inx% /MountDir:"%_mount%"
 if !errorlevel! neq 0 (
 %_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
@@ -3253,22 +3272,29 @@ if !errorlevel! neq 0 (
 %_dism1% /Cleanup-Wim %_Nul3%
 goto :eof
 )
-if defined isappx goto :doappx
-
-if /i not %_nnn%==winre.wim if %_wimEdge% equ 1 if %SkipEdge% equ 0 (
+set _noApps=1
+set _noSave=1
+if %WimRE% equ 0 if %_wimEdge% equ 1 if %SkipEdge% equ 0 (
+set _noSave=0
 call :dk_color1 %Gray% "=== Adding Microsoft Edge . . ." 4
 %_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismEdgeWim.log" /Add-Edge /SupportPath:"!_UUP!"
 if !errorlevel! neq 0 (
   (echo.&echo Failed adding Edge.wim)>>"!logerr!"
   )
 )
-if /i not %_nnn%==winre.wim if %_runIPA% equ 1 (
+if %WimRE% equ 0 if %_build% geq 19041 if %_upgr% equ 1 if %_pmcppc% equ 1 if not exist "%_mount%\Windows\Servicing\Packages\Microsoft-Windows-Printing-PMCPPC-FoD-Package*.mum" call :pmcppcwim
+if defined isappx goto :doappx
+
+if %WimRE% equ 1 goto :doupdt
+if %_runIPA% equ 0 goto :doupdt
 call :dk_color1 %Gray% "=== Adding Apps . . ." 4 5
 call :appx_wim
+if %_noApps% equ 0 (
 %_dism2%:"!_cabdir!" /Commit-Wim /MountDir:"%_mount%"
-call :dk_color1 %Gray% "=== Adding Updates . . ." 4
 )
-if /i not %_nnn%==winre.wim if %_build% geq 19041 if %_upgr% equ 1 if %_pmcppc% equ 1 if not exist "%_mount%\Windows\Servicing\Packages\Microsoft-Windows-Printing-PMCPPC-FoD-Package*.mum" call :pmcppcwim
+call :dk_color1 %Gray% "=== Adding Updates . . ." 4
+
+:doupdt
 call :updatewim
 if defined mounterr goto :eof
 if %NetFx3% equ 1 if %dvd% equ 1 call :enablenet35
@@ -3306,24 +3332,18 @@ for /f %%i in ('"offlinereg.exe "%_mount%\Windows\system32\config\SOFTWARE" "!is
 )
 if exist "%_mount%\Windows\system32\UpdateAgent.dll" if not exist "%SystemRoot%\temp\UpdateAgent.dll" copy /y "%_mount%\Windows\system32\UpdateAgent.dll" %SystemRoot%\temp\ %_Nul1%
 if exist "%_mount%\Windows\system32\Facilitator.dll" if not exist "%SystemRoot%\temp\Facilitator.dll" copy /y "%_mount%\Windows\system32\Facilitator.dll" %SystemRoot%\temp\ %_Nul1%
+set _noSave=0
 goto :doProceed
 
 :doappx
-if %_wimEdge% equ 1 if %SkipEdge% equ 0 (
-call :dk_color1 %Gray% "=== Adding Microsoft Edge . . ." 4
-%_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\DismEdgeWim.log" /Add-Edge /SupportPath:"!_UUP!"
-if !errorlevel! neq 0 (
-  (echo.&echo Failed adding Edge.wim)>>"!logerr!"
-  )
-)
 call :dk_color1 %Gray% "=== Adding Apps . . ." 4 5
 call :appx_wim
-if %_upgr% equ 1 if %_pmcppc% equ 1 if not exist "%_mount%\Windows\Servicing\Packages\Microsoft-Windows-Printing-PMCPPC-FoD-Package*.mum" call :pmcppcwim
 
 :doProceed
 if %AddDrivers% equ 0 goto :doCommit
 if not defined DrvSrcALL if not defined DrvSrcPE if not defined DrvSrcOS goto :doCommit
-if /i %_nnn%==winre.wim (
+set _noSave=0
+if %WimRE% equ 1 (
 if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
 if defined DrvSrcPE %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcPE!" /Recurse
 goto :doCommit
@@ -3333,13 +3353,15 @@ if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.l
 if defined DrvSrcOS %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.log" /Add-Driver /Driver:"!DrvSrcOS!" /Recurse
 
 :doCommit
+if %_noSave% equ 1 goto :noCommit
 %_dism2%:"!_cabdir!" /Commit-Wim /MountDir:"%_mount%"
 if !errorlevel! neq 0 (
 %_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
 %_dism1% /Unmount-Wim /MountDir:"%_mount%" /Discard
 %_dism1% /Cleanup-Wim %_Nul3%
 )
-if /i %_nnn%==winre.wim goto :crDsc
+:noCommit
+if %WimRE% equ 1 goto :crDsc
 
 :crHome
 if %_inx% neq %iHome% goto :crProf
@@ -3421,6 +3443,7 @@ rmdir /s /q bin\temp\sxs\
 goto :eof
 
 :pmcppcwim
+set _noSave=0
 for /f %%# in ('dir /b /a:-d "bin\temp\pmcppc\Microsoft-Windows-Printing-PMCPPC-FoD-Package~%_Pkt%~*~~*.mum" %_Nul6%') do (
 %_dism2%:"!_cabdir!" /Image:"%_mount%" /LogPath:"%_dLog%\PMCPPC_FoD.log" /Add-Package /PackagePath:"bin\temp\pmcppc\%%#" %_Nul3%
 if !errorlevel! neq 0 (
@@ -3700,11 +3723,14 @@ if %_appsCustom% neq 0 for /f "eol=# tokens=*" %%a in ('type %_appsFile%') do se
 set "_appProf=%_appBase%,%_appClnt%,%_appCodec%,%_appMedia%"
 set "_appProN=%_appBase%,%_appClnt%"
 set "_appTeam=%_appBase%,%_appCodec%,%_appPPIP%"
-set "_appSFull=Microsoft.SecHealthUI%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.WindowsFeedbackHub%pub%"
+set "_appSFull=%_appSrvr%"
 set "_appSCore="
 set "_appAzure="
 pushd "!_UUP!\Apps"
-if exist "_AppsEditions.txt" for /f "tokens=* delims=" %%# in ('type _AppsEditions.txt') do set "%%#"
+if exist "_AppsEditions.txt" (
+for /f "tokens=* delims=" %%# in ('type _AppsEditions.txt') do set "%%#"
+type _AppsEditions.txt | find "=" %_Nul3% || set "_appSFull="
+)
 if %_appsCustom% equ 0 if %AppsLevel% gtr 0 (
 set "_appProf=%_appMin1%"
 set "_appProN=%_appMin1%"
@@ -3742,10 +3768,21 @@ if %apiver% geq 19040 (set _appWay=1) else (set _appWay=0)
 if not exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set _appWay=0
 if %winbuild% LSS 9600 if not exist "%SystemRoot%\servicing\Packages\Microsoft-Windows-PowerShell-WTR-Package~*.mum" set _appWay=0
 if not exist "!_work!\bin\APAP.*" set _appWay=0
-set _addFrmk=1
-if exist "%mumtarget%\Windows\Servicing\Packages\Microsoft-Windows-Server*CorEdition~*.mum" if "%_appList%"=="" set _addFrmk=0
+set _addApps=1
+set _fndApps=0
+for /f %%# in ('dir /b /ad . %_Nul6% ^| findstr /i /v MSIXFramework') do (
+if exist "%%#\*.appx*" set _fndApps=1
+if exist "%%#\*.msix*" set _fndApps=1
+)
+if exist "%mumtarget%\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" (
+if "%_appList%"=="" set _addApps=0
+if %_fndApps% equ 0 set _addApps=0
+)
+if %_addApps% equ 0 goto :wimappx
+set _noApps=0
+set _noSave=0
 del /f /q AppsToAdd.txt %_Null%
-if %_addFrmk% equ 1 if exist "MSIXFramework\*" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "MSIXFramework\*.*x"') do (
+if exist "MSIXFramework\*" for /f "tokens=* delims=" %%# in ('dir /b /a:-d "MSIXFramework\*.*x"') do (
   if %_appWay% equ 0 (
   echo %%~n#
   %_Nul1% %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismAppx.log" /Add-ProvisionedAppxPackage /PackagePath:"MSIXFramework\%%#" /SkipLicense
@@ -3764,7 +3801,7 @@ del /f /q AppsToAdd.txt APAP.* Microsoft.Dism.dll %_Nul3%
 :wimappx
 popd
 if %_appsCustom% neq 0 for /f "eol=# tokens=*" %%a in ('type %_appsFile%') do set "cal_%%a="
-%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
+if %_addApps% equ 1 %_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Get-Packages %_Null%
 goto :eof
 
 :appx_add
@@ -3868,6 +3905,7 @@ goto :eof
 :postVars
 set "_wsr=Windows Server 2022"
 set "pub=_8wekyb3d8bbwe"
+set "_appSrvr=Microsoft.SecHealthUI%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.WindowsFeedbackHub%pub%"
 set "_appBase=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,Microsoft.DesktopAppInstaller%pub%,microsoft.windowscommunicationsapps%pub%,Microsoft.OutlookForWindows%pub%,Microsoft.WindowsCalculator%pub%,Microsoft.Windows.Photos%pub%,Microsoft.WindowsMaps%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsFeedbackHub%pub%,Microsoft.Getstarted%pub%,Microsoft.WindowsAlarms%pub%"
 set "_appClnt=Microsoft.WindowsNotepad%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.Paint%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,Microsoft.People%pub%,Microsoft.ScreenSketch%pub%,Microsoft.MicrosoftStickyNotes%pub%,Microsoft.XboxIdentityProvider%pub%,Microsoft.XboxSpeechToTextOverlay%pub%,Microsoft.XboxGameOverlay%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt,MicrosoftTeams%pub%,MSTeams%pub%"
 set "_appCodec=Microsoft.WebMediaExtensions%pub%,Microsoft.RawImageExtension%pub%,Microsoft.HEIFImageExtension%pub%,Microsoft.HEVCVideoExtension%pub%,Microsoft.VP9VideoExtensions%pub%,Microsoft.WebpImageExtension%pub%,Microsoft.DolbyAudioExtension%pub%,Microsoft.AVCEncoderVideoExtension%pub%,Microsoft.MPEG2VideoExtension%pub%"
