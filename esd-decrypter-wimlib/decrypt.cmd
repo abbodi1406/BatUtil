@@ -811,51 +811,55 @@ if /i %arch%==x86 set archl=X86
 if /i %arch%==x64 set archl=X64
 if /i %arch%==arm64 set archl=A64
 
+set _ddv=DV5
+if %_build% geq 22621 set _ddv=DV9
 if %MULTI% geq 5 (
-if %nedtn% equ 1 set DVDLABEL=CCSNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDN_OEMRET_%archl%FRE_%langid%
-if %aedtn% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINED_OEMRET_%archl%FRE_%langid%
-if %sedtn% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDSL_OEMRET_%archl%FRE_%langid%
-if %cedtn% equ 1 set DVDLABEL=CCCHA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COMBINEDCHINA_OEMRET_%archl%FRE_%langid%
-if %_build% geq 16299 (if %VOL% equ 1 (set DVDLABEL=CCSA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%BUSINESS_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CONSUMER_OEMRET_%archl%FRE_%langid%))
+if %nedtn% equ 1 set DVDLABEL=CCSNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%COMBINEDN_OEMRET_%archl%FRE_%langid%
+if %aedtn% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%COMBINED_OEMRET_%archl%FRE_%langid%
+if %sedtn% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%COMBINEDSL_OEMRET_%archl%FRE_%langid%
+if %cedtn% equ 1 set DVDLABEL=CCCHA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%COMBINEDCHINA_OEMRET_%archl%FRE_%langid%
+if %_build% geq 16299 (if %VOL% equ 1 (set DVDLABEL=CCSA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%BUSINESS_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%CONSUMER_OEMRET_%archl%FRE_%langid%))
 if %_SrvESD% equ 1 (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV9&set DVDISO=%_label%_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV9&set DVDISO=%_label%_OEMRET_%archl%FRE_%langid%))
 if defined branch exit /b
 )
 
 :SINGLEINFO
-set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%%editionid%_RET_%archl%FRE_%langid%
-if %_SrvESD% equ 1 set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%-%editionid%_RET_%archl%FRE_%langid%
-if /i %editionid%==Core set DVDLABEL=CCRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CORE_OEMRET_%archl%FRE_%langid%&exit /b
-if /i %editionid%==CoreN set DVDLABEL=CCRNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COREN_OEMRET_%archl%FRE_%langid%&exit /b
-if /i %editionid%==CoreSingleLanguage set DVDLABEL=CSLA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%SINGLELANGUAGE_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==CoreCountrySpecific set DVDLABEL=CCHA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%CHINA_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==Professional (if %VOL% equ 1 (set DVDLABEL=CPRA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROFESSIONALVL_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRO_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ProfessionalN (if %VOL% equ 1 (set DVDLABEL=CPRNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROFESSIONALNVL_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRON_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==Education (if %VOL% equ 1 (set DVDLABEL=CEDA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%EDUCATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CEDA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%EDUCATION_RET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==EducationN (if %VOL% equ 1 (set DVDLABEL=CEDNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%EDUCATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CEDNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%EDUCATIONN_RET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==Enterprise set DVDLABEL=CENA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISE_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==EnterpriseN set DVDLABEL=CENNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISEN_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==Cloud set DVDLABEL=CWCA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%CLOUD_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==CloudN set DVDLABEL=CWCNNA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%CLOUDN_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==PPIPro set DVDLABEL=CPPIA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%PPIPRO_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==EnterpriseG set DVDLABEL=CEGA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISEG_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==EnterpriseGN set DVDLABEL=CEGNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISEGN_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==EnterpriseS set DVDLABEL=CES_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISES_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==EnterpriseSN set DVDLABEL=CESNN_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISESN_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==ProfessionalEducation (if %VOL% equ 1 (set DVDLABEL=CPREA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROEDUCATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPREA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATION_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ProfessionalEducationN (if %VOL% equ 1 (set DVDLABEL=CPRENA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROEDUCATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRENA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATIONN_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ProfessionalWorkstation (if %VOL% equ 1 (set DVDLABEL=CPRWA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROWORKSTATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRWA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATION_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ProfessionalWorkstationN (if %VOL% equ 1 (set DVDLABEL=CPRWNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRWNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ProfessionalSingleLanguage set DVDLABEL=CPRSLA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%PROSINGLELANGUAGE_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==ProfessionalCountrySpecific set DVDLABEL=CPRCHA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%PROCHINA_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==CloudEdition (if %VOL% equ 1 (set DVDLABEL=CWCA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%CLOUD_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CWCA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUD_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==CloudEditionN (if %VOL% equ 1 (set DVDLABEL=CWCNNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%CLOUDN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CWCNNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUDN_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerStandard (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%STANDARD_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%STANDARD_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerStandardCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%STANDARDCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%STANDARDCORE_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerDatacenter (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%DATACENTER_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%DATACENTER_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerDatacenterCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%DATACENTERCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%DATACENTERCORE_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerTurbine (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_DV5&set DVDISO=%_label%TURBINE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_DV5&set DVDISO=%_label%TURBINE_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerTurbineCore (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_DV5&set DVDISO=%_label%TURBINECOR_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_DV5&set DVDISO=%_label%TURBINECOR_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerAzureStackHCICor set DVDLABEL=SASH_%archl%FRE_%langid%_DV5&set DVDISO=%_label%AZURESTACKHCI_RET_%archl%FRE_%langid%&exit /b
+set _ddv=DV5
+if %_build% geq 22621 set _ddv=DV9
+set DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%%editionid%_RET_%archl%FRE_%langid%
+if %_SrvESD% equ 1 set DVDLABEL=SSS_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%-%editionid%_RET_%archl%FRE_%langid%
+if /i %editionid%==Core set DVDLABEL=CCRA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%CORE_OEMRET_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CoreN set DVDLABEL=CCRNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%COREN_OEMRET_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CoreSingleLanguage set DVDLABEL=CSLA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%SINGLELANGUAGE_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CoreCountrySpecific set DVDLABEL=CCHA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%CHINA_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==Professional (if %VOL% equ 1 (set DVDLABEL=CPRA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROFESSIONALVL_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PRO_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ProfessionalN (if %VOL% equ 1 (set DVDLABEL=CPRNA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROFESSIONALNVL_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PRON_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==Education (if %VOL% equ 1 (set DVDLABEL=CEDA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%EDUCATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CEDA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%EDUCATION_RET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==EducationN (if %VOL% equ 1 (set DVDLABEL=CEDNA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%EDUCATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CEDNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%EDUCATIONN_RET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==Enterprise set DVDLABEL=CENA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISE_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==EnterpriseN set DVDLABEL=CENNA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISEN_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==Cloud set DVDLABEL=CWCA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%CLOUD_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CloudN set DVDLABEL=CWCNNA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%CLOUDN_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==PPIPro set DVDLABEL=CPPIA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%PPIPRO_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==EnterpriseG set DVDLABEL=CENG_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISEG_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==EnterpriseGN set DVDLABEL=CENGN_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISEGN_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==EnterpriseS set DVDLABEL=CES_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISES_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==EnterpriseSN set DVDLABEL=CESNN_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISESN_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==ProfessionalEducation (if %VOL% equ 1 (set DVDLABEL=CPREA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROEDUCATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPREA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PROEDUCATION_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ProfessionalEducationN (if %VOL% equ 1 (set DVDLABEL=CPRENA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROEDUCATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRENA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PROEDUCATIONN_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ProfessionalWorkstation (if %VOL% equ 1 (set DVDLABEL=CPRWA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROWORKSTATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRWA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PROWORKSTATION_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ProfessionalWorkstationN (if %VOL% equ 1 (set DVDLABEL=CPRWNA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROWORKSTATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRWNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PROWORKSTATIONN_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ProfessionalSingleLanguage set DVDLABEL=CPRSLA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%PROSINGLELANGUAGE_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==ProfessionalCountrySpecific set DVDLABEL=CPRCHA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%PROCHINA_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CloudEdition (if %VOL% equ 1 (set DVDLABEL=CWCA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%CLOUD_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CWCA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%CLOUD_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==CloudEditionN (if %VOL% equ 1 (set DVDLABEL=CWCNNA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%CLOUDN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CWCNNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%CLOUDN_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerStandard (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%STANDARD_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%STANDARD_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerStandardCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%STANDARDCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%STANDARDCORE_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerDatacenter (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%DATACENTER_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%DATACENTER_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerDatacenterCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%DATACENTERCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%DATACENTERCORE_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerTurbine (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%TURBINE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%TURBINE_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerTurbineCore (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%TURBINECOR_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%TURBINECOR_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerAzureStackHCICor set DVDLABEL=SASH_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%AZURESTACKHCI_RET_%archl%FRE_%langid%&exit /b
 exit /b
 
 :setloop

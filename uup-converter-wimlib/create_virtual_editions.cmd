@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v104
+@set uivr=v106
 @echo off
 :: ### Creation Method ###
 ::
@@ -1208,7 +1208,7 @@ goto :eof
 :pr_color
 set _NCS=1
 if %winbuild% LSS 10586 set _NCS=0
-if %winbuild% GEQ 10586 reg.exe query HKCU\Console /v ForceV2 %_Null% | find /i "0x0" %_Null% && (set _NCS=0)
+if %winbuild% GEQ 10586 reg.exe query HKCU\Console /v ForceV2 %_Nul2% | find /i "0x0" %_Null% && (set _NCS=0)
 
 if %_NCS% EQU 1 (
 for /F %%a in ('echo prompt $E ^| cmd.exe') do set "_esc=%%a"

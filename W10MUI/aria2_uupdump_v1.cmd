@@ -12,7 +12,7 @@ if %_e%==0 echo.&echo Error: aria2c.exe is not detected&echo.&popd&pause&exit /b
 if not exist "aria2_links.txt" echo.&echo Error: aria2_links.txt is not found&echo.&popd&pause&exit /b
 echo.
 echo Downloading...
-for /f "tokens=* delims=" %%A in ('findstr /i /c:"getfile\.php" aria2_links.txt') do (
+for /f "usebackq tokens=* delims=" %%A in ("aria2_links.txt") do (
 set "_u=%%A"
 for /f "tokens=3 delims==" %%# in ("%%~A") do set "_f=%%#"
 call :DoD

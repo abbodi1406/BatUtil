@@ -215,6 +215,9 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 
 <details><summary>changelog</summary>
 
+10.44:  
+- Reinstall all LCUs together after NetFx3 feature (26052+)
+
 10.43:  
 - Add Edge-WebView suppressor for builds 19041+ < 26080
 - Add config option "SkipWebView" to control the new suppressor
@@ -234,7 +237,7 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 - Detect and skip HotPatchUpdate for offline target (26058+)
 - Skip LCU for winre.wim (26052+)
 - Remove WinPE-Rejuv-Package from boot.wim if LCU is added (26052+)
-- Only reinstall highest LCU after NetFx3 feature (26052+)
+- Reinstall only highest LCU after NetFx3 feature (26052+)
 
 10.39:  
 - Implemented basic support to Add Drivers to install.wim and boot.wim / winre.wim

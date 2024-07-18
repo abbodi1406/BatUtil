@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v105z
+@set uivr=v107
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -1219,40 +1219,42 @@ if %AIO% equ 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%M
 if %_count% gtr 1 set DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%MULTI_%archl%FRE_%langid%&exit /b
 
 :virtlabel
-set DVDLABEL=CCSA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%%editionid%_RET_%archl%FRE_%langid%
-if %_SrvESD% equ 1 set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%-%editionid%_RET_%archl%FRE_%langid%
-if /i %editionid%==Core set DVDLABEL=CCRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CORE_OEMRET_%archl%FRE_%langid%&exit /b
-if /i %editionid%==CoreN set DVDLABEL=CCRNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%COREN_OEMRET_%archl%FRE_%langid%&exit /b
-if /i %editionid%==CoreSingleLanguage set DVDLABEL=CSLA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%SINGLELANGUAGE_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==CoreCountrySpecific set DVDLABEL=CCHA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%CHINA_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==Professional (if %VOL% equ 1 (set DVDLABEL=CPRA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROFESSIONALVL_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRO_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ProfessionalN (if %VOL% equ 1 (set DVDLABEL=CPRNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROFESSIONALNVL_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PRON_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==Education (if %VOL% equ 1 (set DVDLABEL=CEDA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%EDUCATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CEDA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%EDUCATION_RET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==EducationN (if %VOL% equ 1 (set DVDLABEL=CEDNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%EDUCATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CEDNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%EDUCATIONN_RET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==Enterprise set DVDLABEL=CENA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISE_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==EnterpriseN set DVDLABEL=CENNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISEN_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==Cloud set DVDLABEL=CWCA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%CLOUD_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==CloudN set DVDLABEL=CWCNNA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%CLOUDN_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==PPIPro set DVDLABEL=CPPIA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%PPIPRO_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==EnterpriseG set DVDLABEL=CEGA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISEG_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==EnterpriseGN set DVDLABEL=CEGNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISEGN_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==EnterpriseS set DVDLABEL=CES_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISES_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==EnterpriseSN set DVDLABEL=CESNN_%archl%FREV_%langid%_DV5&set DVDISO=%_label%ENTERPRISESN_VOL_%archl%FRE_%langid%&exit /b
-if /i %editionid%==ProfessionalEducation (if %VOL% equ 1 (set DVDLABEL=CPREA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROEDUCATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPREA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATION_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ProfessionalEducationN (if %VOL% equ 1 (set DVDLABEL=CPRENA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROEDUCATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRENA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROEDUCATIONN_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ProfessionalWorkstation (if %VOL% equ 1 (set DVDLABEL=CPRWA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROWORKSTATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRWA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATION_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ProfessionalWorkstationN (if %VOL% equ 1 (set DVDLABEL=CPRWNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRWNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%PROWORKSTATIONN_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ProfessionalSingleLanguage set DVDLABEL=CPRSLA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%PROSINGLELANGUAGE_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==ProfessionalCountrySpecific set DVDLABEL=CPRCHA_%archl%FREO_%langid%_DV5&set DVDISO=%_label%PROCHINA_OEM_%archl%FRE_%langid%&exit /b
-if /i %editionid%==CloudEdition (if %VOL% equ 1 (set DVDLABEL=CWCA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%CLOUD_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CWCA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUD_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==CloudEditionN (if %VOL% equ 1 (set DVDLABEL=CWCNNA_%archl%FREV_%langid%_DV5&set DVDISO=%_label%CLOUDN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CWCNNA_%archl%FRE_%langid%_DV5&set DVDISO=%_label%CLOUDN_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerStandard (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%STANDARD_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%STANDARD_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerStandardCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%STANDARDCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%STANDARDCORE_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerDatacenter (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%DATACENTER_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%DATACENTER_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerDatacenterCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_DV5&set DVDISO=%_label%DATACENTERCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_DV5&set DVDISO=%_label%DATACENTERCORE_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerTurbine (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_DV5&set DVDISO=%_label%TURBINE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_DV5&set DVDISO=%_label%TURBINE_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerTurbineCore (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_DV5&set DVDISO=%_label%TURBINECOR_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_DV5&set DVDISO=%_label%TURBINECOR_OEMRET_%archl%FRE_%langid%))&exit /b
-if /i %editionid%==ServerAzureStackHCICor set DVDLABEL=SASH_%archl%FRE_%langid%_DV5&set DVDISO=%_label%AZURESTACKHCI_RET_%archl%FRE_%langid%&exit /b
+set _ddv=DV5
+if %_build% geq 22621 set _ddv=DV9
+set DVDLABEL=CCSA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%%editionid%_RET_%archl%FRE_%langid%
+if %_SrvESD% equ 1 set DVDLABEL=SSS_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%-%editionid%_RET_%archl%FRE_%langid%
+if /i %editionid%==Core set DVDLABEL=CCRA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%CORE_OEMRET_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CoreN set DVDLABEL=CCRNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%COREN_OEMRET_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CoreSingleLanguage set DVDLABEL=CSLA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%SINGLELANGUAGE_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CoreCountrySpecific set DVDLABEL=CCHA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%CHINA_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==Professional (if %VOL% equ 1 (set DVDLABEL=CPRA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROFESSIONALVL_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PRO_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ProfessionalN (if %VOL% equ 1 (set DVDLABEL=CPRNA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROFESSIONALNVL_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PRON_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==Education (if %VOL% equ 1 (set DVDLABEL=CEDA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%EDUCATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CEDA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%EDUCATION_RET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==EducationN (if %VOL% equ 1 (set DVDLABEL=CEDNA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%EDUCATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CEDNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%EDUCATIONN_RET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==Enterprise set DVDLABEL=CENA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISE_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==EnterpriseN set DVDLABEL=CENNA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISEN_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==Cloud set DVDLABEL=CWCA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%CLOUD_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CloudN set DVDLABEL=CWCNNA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%CLOUDN_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==PPIPro set DVDLABEL=CPPIA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%PPIPRO_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==EnterpriseG set DVDLABEL=CENG_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISEG_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==EnterpriseGN set DVDLABEL=CENGN_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISEGN_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==EnterpriseS set DVDLABEL=CES_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISES_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==EnterpriseSN set DVDLABEL=CESNN_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%ENTERPRISESN_VOL_%archl%FRE_%langid%&exit /b
+if /i %editionid%==ProfessionalEducation (if %VOL% equ 1 (set DVDLABEL=CPREA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROEDUCATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPREA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PROEDUCATION_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ProfessionalEducationN (if %VOL% equ 1 (set DVDLABEL=CPRENA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROEDUCATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRENA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PROEDUCATIONN_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ProfessionalWorkstation (if %VOL% equ 1 (set DVDLABEL=CPRWA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROWORKSTATION_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRWA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PROWORKSTATION_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ProfessionalWorkstationN (if %VOL% equ 1 (set DVDLABEL=CPRWNA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%PROWORKSTATIONN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CPRWNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%PROWORKSTATIONN_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ProfessionalSingleLanguage set DVDLABEL=CPRSLA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%PROSINGLELANGUAGE_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==ProfessionalCountrySpecific set DVDLABEL=CPRCHA_%archl%FREO_%langid%_%_ddv%&set DVDISO=%_label%PROCHINA_OEM_%archl%FRE_%langid%&exit /b
+if /i %editionid%==CloudEdition (if %VOL% equ 1 (set DVDLABEL=CWCA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%CLOUD_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CWCA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%CLOUD_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==CloudEditionN (if %VOL% equ 1 (set DVDLABEL=CWCNNA_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%CLOUDN_VOL_%archl%FRE_%langid%) else (set DVDLABEL=CWCNNA_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%CLOUDN_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerStandard (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%STANDARD_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%STANDARD_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerStandardCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%STANDARDCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%STANDARDCORE_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerDatacenter (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%DATACENTER_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%DATACENTER_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerDatacenterCore (if %VOL% equ 1 (set DVDLABEL=SSS_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%DATACENTERCORE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SSS_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%DATACENTERCORE_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerTurbine (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%TURBINE_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%TURBINE_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerTurbineCore (if %VOL% equ 1 (set DVDLABEL=SADC_%archl%FREV_%langid%_%_ddv%&set DVDISO=%_label%TURBINECOR_VOL_%archl%FRE_%langid%) else (set DVDLABEL=SADC_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%TURBINECOR_OEMRET_%archl%FRE_%langid%))&exit /b
+if /i %editionid%==ServerAzureStackHCICor set DVDLABEL=SASH_%archl%FRE_%langid%_%_ddv%&set DVDISO=%_label%AZURESTACKHCI_RET_%archl%FRE_%langid%&exit /b
 exit /b
 
 :fixBranch
@@ -1505,97 +1507,144 @@ call :dk_color1 %Blue% "=== Creating Cumulative Update MSU . . ." 4
 pushd "!_UUP!"
 set "_MSUdll=dpx.dll ReserveManager.dll TurboStack.dll UpdateAgent.dll UpdateCompression.dll wcp.dll"
 set "_MSUonf=onepackage.AggregatedMetadata.cab"
-set "_MSUssu="
 set IncludeSSU=1
-set xmf=cab
+set /a _rnd=%random%
+for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do if /i "%%#"=="%_MSUonf%" (
+set /a _rnd+=1
+ren "%%#" "org!_rnd!_%%#"
+)
+for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do (set "metaf=%%#"&call :doMSU)
+rem. goto :msu_uups
+if exist "zzz.ddf" del /f /q "zzz.ddf"
+if exist "_tWIM\" rmdir /s /q "_tWIM\" %_Nul3%
+if exist "_tSSU\" rmdir /s /q "_tSSU\" %_Nul3%
+if exist "_tMSU\" rmdir /s /q "_tMSU\" %_Nul3%
+popd
+exit /b
+
+:doMSU
+set "_MSUssu="
+set optSSU=%IncludeSSU%
 set _mcfail=0
-for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do set "_MSUmeta=%%#"
 if exist "_tMSU\" rmdir /s /q "_tMSU\" %_Nul3%
 mkdir "_tMSU"
-if %_build% lss 25336 (
-expand.exe -f:LCUCompDB*.xml.cab "%_MSUmeta%" "_tMSU" %_Null%
-if not exist "_tMSU\LCUCompDB*.xml.cab" goto :msu_uups
+expand.exe -f:LCUCompDB*.xml.cab "%metaf%" "_tMSU" %_Null%
+expand.exe -f:SSUCompDB*.xml.cab "%metaf%" "_tMSU" %_Null%
+expand.exe -f:*.AggregatedMetadata*.cab "%metaf%" "_tMSU" %_Null%
+if not exist "_tMSU\LCUCompDB*.xml.cab" if not exist "_tMSU\*.AggregatedMetadata*.cab" (
+rem. echo.
+rem. echo LCUCompDB file is missing
+goto :eof
 )
-if %_build% geq 25336 (
-expand.exe -f:*.AggregatedMetadata*.cab "%_MSUmeta%" "_tMSU" %_Null%
-if not exist "_tMSU\*.AggregatedMetadata*.cab" goto :msu_uups
+if exist "_tMSU\SSU*-express.xml.cab" del /f /q "_tMSU\SSU*-express.xml.cab"
+
+set xtn=cab
+if not exist "_tMSU\*.AggregatedMetadata*.cab" goto :skpwim
+set xtn=wim
 for /f %%# in ('dir /b /a:-d "_tMSU\*.AggregatedMetadata*.cab"') do expand.exe -f:*.xml "_tMSU\%%#" "_tMSU" %_Null%
-if not exist "_tMSU\LCUCompDB*.xml" goto :msu_uups
+if not exist "_tMSU\LCUCompDB*.xml" (
+rem. echo.
+rem. echo LCUCompDB file is missing
+goto :eof
+)
 for /f %%# in ('dir /b /a:-d "_tMSU\LCUCompDB*.xml"') do (
 %_Null% makecab.exe /D Compress=ON /D CompressionType=MSZIP "_tMSU\%%~n#.xml" "_tMSU\%%~n#.xml.cab"
 )
 if exist "_tMSU\SSUCompDB*.xml" for /f %%# in ('dir /b /a:-d "_tMSU\SSUCompDB*.xml"') do (
 %_Null% makecab.exe /D Compress=ON /D CompressionType=MSZIP "_tMSU\%%~n#.xml" "_tMSU\%%~n#.xml.cab"
 )
-if not exist "_tMSU\LCUCompDB*.xml.cab" goto :msu_uups
-del /f /q "_tMSU\*.xml" %_Nul3%
-set xmf=wim
+if not exist "_tMSU\LCUCompDB*.xml.cab" (
+rem. echo.
+rem. echo makecab.exe LCUCompDB file failed
+goto :eof
 )
-for /f %%# in ('dir /b /a:-d "_tMSU\LCUCompDB*.xml.cab"') do set "_MSUcdb=%%#"
-for /f "tokens=2 delims=_." %%# in ('echo %_MSUcdb%') do set "_MSUkbn=%%#"
+del /f /q "_tMSU\*.xml" %_Nul3%
+
+:skpwim
+set "_MSUkbn="
+for /f "tokens=2 delims=_." %%# in ('dir /b /a:-d "_tMSU\LCUCompDB*.xml.cab"') do (
+set "_MSUkbn=%%#"
+)
 if exist "*Windows1*%_MSUkbn%*%arch%*.msu" (
 echo.
 echo LCU %_MSUkbn% msu file already exist, skip operation.
-goto :msu_uups
-)
-if not exist "*Windows1*%_MSUkbn%*%arch%*.%xmf%" (
-echo.
-echo LCU %_MSUkbn% %xmf% file is missing, skip operation.
-(echo.&echo LCU %_MSUkbn% %xmf% file is missing)>>"!logerr!"
-goto :msu_uups
+goto :eof
 )
 if not exist "*Windows1*%_MSUkbn%*%arch%*.psf" (
-echo.
-echo LCU %_MSUkbn% psf file is missing, skip operation.
-(echo.&echo LCU %_MSUkbn% psf file is missing)>>"!logerr!"
-goto :msu_uups
+rem. echo.
+rem. echo %_MSUkbn% psf file is missing
+goto :eof
 )
+if exist "*Windows1*%_MSUkbn%*%arch%*.cab" (
+set xmf=cab
+) else if exist "*Windows1*%_MSUkbn%*%arch%*.wim" (
+set xmf=wim
+) else (
+rem. echo.
+rem. echo %_MSUkbn% %xtn% file is missing
+goto :eof
+)
+
+for /f %%# in ('dir /b /a:-d "_tMSU\LCUCompDB_%_MSUkbn%*.xml.cab"') do set "_MSUcdb=%%#"
+rem. for /f "tokens=3 delims=-_" %%# in ('dir /b /a:-d "Windows1*%_MSUkbn%*.psf"') do set "arch=%%~n#"
 for /f "delims=" %%# in ('dir /b /a:-d "*Windows1*%_MSUkbn%*%arch%*.%xmf%"') do set "_MSUcab=%%#"
 for /f "delims=" %%# in ('dir /b /a:-d "*Windows1*%_MSUkbn%*%arch%*.psf"') do set "_MSUpsf=%%#"
 set "_MSUkbf=Windows10.0-%_MSUkbn%-%arch%"
 echo %_MSUcab%| findstr /i "Windows11\." %_Nul1% && set "_MSUkbf=Windows11.0-%_MSUkbn%-%arch%"
 echo %_MSUcab%| findstr /i "Windows12\." %_Nul1% && set "_MSUkbf=Windows12.0-%_MSUkbn%-%arch%"
-if exist "SSU-*%arch%*.cab" (
-for /f "tokens=2 delims=-" %%# in ('dir /b /a:-d "SSU-*%arch%*.cab"') do set "_MSUtsu=SSU-%%#-%arch%.cab"
-for /f "delims=" %%# in ('dir /b /a:-d "SSU-*%arch%*.cab"') do set "_MSUssu=%%#"
-) else (
-set IncludeSSU=0
-)
-if %IncludeSSU% equ 1 if not exist "_tMSU\SSUCompDB*.xml.cab" (
-expand.exe -f:SSUCompDB*.xml.cab "%_MSUmeta%" "_tMSU" %_Null%
-if exist "_tMSU\SSU*-express.xml.cab" del /f /q "_tMSU\SSU*-express.xml.cab"
-)
-if exist "_tMSU\SSUCompDB*.xml.cab" (for /f %%# in ('dir /b /a:-d "_tMSU\SSUCompDB*.xml.cab"') do set "_MSUsdb=%%#") else (set IncludeSSU=0)
+
+if not exist "SSU-*%arch%*.cab" set optSSU=0&goto :skpssu
+for /f "delims=" %%# in ('dir /b /a:-d "SSU-*%arch%*.cab"') do (set "_chk=%%#"&call :doSSU)
+if not defined _MSUssu set optSSU=0&goto :skpssu
+goto :skpssu
+
+:doSSU
+if defined _MSUssu goto :eof
+if exist "_tMSU\update.mum" del /f /q "_tMSU\update.mum"
+expand.exe -f:update.mum "%_chk%" "_tMSU" %_Null%
+set "_SSUkbn="
+if exist "_tMSU\update.mum" for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "_tMSU\update.mum"') do set _SSUkbn=%%~#
+if "%_SSUkbn%"=="" goto :eof
+if not exist "_tMSU\SSUCompDB_%_SSUkbn%*.xml.cab" goto :eof
+for /f %%# in ('dir /b /a:-d "_tMSU\SSUCompDB_%_SSUkbn%*.xml.cab"') do set "_MSUsdb=%%#"
+for /f "tokens=2 delims=-" %%# in ('dir /b /a:-d "%_chk%"') do set "_MSUtsu=SSU-%%#-%arch%.cab"
+set "_MSUssu=%_chk%"
+goto :eof
+
+:skpssu
+set "_MSUddc="
 set "_MSUddd=DesktopDeployment_x86.cab"
 if exist "*DesktopDeployment*.cab" (
 for /f "delims=" %%# in ('dir /b /a:-d "*DesktopDeployment*.cab" ^|find /i /v "%_MSUddd%"') do set "_MSUddc=%%#"
-) else (
+)
+rem. if exist "%SysPath%\ucrtbase.dll" call :dodpx
+if not defined _MSUddc (
 call set "_MSUddc=_tMSU\DesktopDeployment.cab"
 call set "_MSUddd=_tMSU\DesktopDeployment_x86.cab"
 call :DDCAB
 )
-if %_mcfail% equ 1 goto :msu_uups
+if %_mcfail% equ 1 goto :eof
 if /i not %arch%==x86 if not exist "DesktopDeployment_x86.cab" if not exist "_tMSU\DesktopDeployment_x86.cab" (
 call set "_MSUddd=_tMSU\DesktopDeployment_x86.cab"
 call :DDC86
 )
-if %_mcfail% equ 1 goto :msu_uups
+if %_mcfail% equ 1 goto :eof
 call :crDDF _tMSU\%_MSUonf%
 (echo "_tMSU\%_MSUcdb%" "%_MSUcdb%"
-if %IncludeSSU% equ 1 echo "_tMSU\%_MSUsdb%" "%_MSUsdb%"
+if %optSSU% equ 1 echo "_tMSU\%_MSUsdb%" "%_MSUsdb%"
 )>>zzz.ddf
 %_Null% makecab.exe /F zzz.ddf /D Compress=ON /D CompressionType=MSZIP
 if %ERRORLEVEL% neq 0 (
 call :dk_color1 %Red% "makecab.exe %_MSUonf% failed, skip operation." 4
 (echo.&echo makecab.exe %_MSUonf% failed)>>"!logerr!"
-goto :msu_uups
+goto :eof
 )
-if %_build% geq 25336 goto :msu_wim
+if %xmf%==wim goto :msu_wim
 call :crDDF %_MSUkbf%.msu
 (echo "%_MSUddc%" "DesktopDeployment.cab"
-if /i not %arch%==x86 echo "%_MSUddd%" "DesktopDeployment_x86.cab"
+if exist "%_MSUddd%" if /i not %arch%==x86 echo "%_MSUddd%" "DesktopDeployment_x86.cab"
 echo "_tMSU\%_MSUonf%" "%_MSUonf%"
-if %IncludeSSU% equ 1 echo "%_MSUssu%" "%_MSUtsu%"
+if %optSSU% equ 1 echo "%_MSUssu%" "%_MSUtsu%"
 echo "%_MSUcab%" "%_MSUkbf%.cab"
 echo "%_MSUpsf%" "%_MSUkbf%.psf"
 )>>zzz.ddf
@@ -1603,8 +1652,10 @@ echo "%_MSUpsf%" "%_MSUkbf%.psf"
 if %ERRORLEVEL% neq 0 (
 call :dk_color1 %Red% "makecab.exe %_MSUkbf%.msu failed, skip operation." 4
 (echo.&echo makecab.exe %_MSUkbf%.msu failed)>>"!logerr!"
+goto :eof
 )
-goto :msu_uups
+rem. call :undpx
+goto :eof
 
 :msu_wim
 echo.
@@ -1612,24 +1663,19 @@ echo Creating: %_MSUkbf%.msu
 if exist "_tWIM\" rmdir /s /q "_tWIM\" %_Nul3%
 mkdir "_tWIM"
 copy /y "%_MSUddc%" "_tWIM\DesktopDeployment.cab" %_Nul3%
-if /i not %arch%==x86 copy /y "%_MSUddd%" "_tWIM\DesktopDeployment_x86.cab" %_Nul3%
+if exist "%_MSUddd%" if /i not %arch%==x86 copy /y "%_MSUddd%" "_tWIM\DesktopDeployment_x86.cab" %_Nul3%
 copy /y "_tMSU\%_MSUonf%" "_tWIM\%_MSUonf%" %_Nul3%
-if %IncludeSSU% equ 1 copy /y "%_MSUssu%" "_tWIM\%_MSUtsu%" %_Nul3%
+if %optSSU% equ 1 copy /y "%_MSUssu%" "_tWIM\%_MSUtsu%" %_Nul3%
 copy /y "%_MSUcab%" "_tWIM\%_MSUkbf%.wim" %_Nul3%
 copy /y "%_MSUpsf%" "_tWIM\%_MSUkbf%.psf" %_Nul3%
-wimlib-imagex.exe capture _tWIM\ %_MSUkbf%.msu content --compress=none --nocheck --no-acls %_Nul3%
+%_Nul3% wimlib-imagex.exe capture _tWIM\ %_MSUkbf%.msu content --compress=none --nocheck --no-acls
 if %ERRORLEVEL% neq 0 (
 call :dk_color1 %Red% "capture %_MSUkbf%.msu failed, skip operation." 4
 (echo.&echo capture %_MSUkbf%.msu failed)>>"!logerr!"
+goto :eof
 )
-
-:msu_uups
-if exist "zzz.ddf" del /f /q "zzz.ddf"
-if exist "_tWIM\" rmdir /s /q "_tWIM\" %_Nul3%
-if exist "_tSSU\" rmdir /s /q "_tSSU\" %_Nul3%
-rmdir /s /q "_tMSU\" %_Nul3%
-popd
-exit /b
+rem. call :undpx
+goto :eof
 
 :DDCAB
 echo.
@@ -2460,6 +2506,7 @@ set netpack=
 set netroll=
 set netlcu=
 set netmsu=
+set netfil=
 set secureboot=
 set edge=
 set safeos=
@@ -2796,7 +2843,7 @@ goto :eof
 if exist "!dest!\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
 if %winbuild% lss 9600 goto :eof
-set secureboot=!secureboot! /PackagePath:"!_UUP!\%package%"
+set "secureboot=!secureboot! /PackagePath:"!_UUP!\%package%""
 goto :eof
 )
 if exist "!dest!\update.mum" if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
@@ -2834,7 +2881,8 @@ if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
   )
 if %xmsu% equ 1 (
   set "lcumsu=!lcumsu! %package%"
-  set "netmsu=%package%"
+  set "netmsu=!netmsu! /PackagePath:"!_UUP!\%package%""
+  set "netfil=%package%"
   goto :eof
   ) else (
   set "netlcu=!netlcu! /PackagePath:!dest!\update.mum"
@@ -3552,19 +3600,23 @@ if !errorlevel! neq 0 (
   (echo.&echo Failed installing NetFx3 update)>>"!logerr!"
   )
 )
-if not defined netroll if not defined netlcu if not defined netmsu if not defined cumulative (call :cleanmanual&goto :eof)
-if not defined netupdt if %_build% geq 20231 dir /b /ad "%mumtarget%\Windows\Servicing\LCU\Package_for_RollupFix*" %_Nul3% && (call :cleanmanual&goto :eof)
+if not defined netroll if not defined netlcu if not defined netmsu if not defined cumulative (
+call :cleanmanual
+goto :eof
+)
+if not defined netupdt if %_build% geq 20231 dir /b /ad "%mumtarget%\Windows\Servicing\LCU\Package_for_RollupFix*" %_Nul3% && (
+call :cleanmanual
+goto :eof
+)
 set ERRTEMP=0
 set netxtr=
 if defined netroll set "netxtr=%netroll%"
 if defined netlcu set "netxtr=%netxtr% %netlcu%"
 if defined netmsu (
 if defined netxtr %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netxtr%
-for %%# in (%netmsu%) do (
-  echo.&echo Reinstalling %%#
-  %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package /PackagePath:"!_UUP!\%%#"
-  call set ERRTEMP=!ERRORLEVEL!
-  )
+echo.&echo Reinstalling %netfil%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netmsu%
+call set ERRTEMP=!ERRORLEVEL!
 )
 if not defined netmsu if defined netlcu (
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netroll% %netlcu%
@@ -3639,10 +3691,11 @@ set _IPA=0
 goto :eof
 )
 pushd "!_UUP!"
-for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do set "_mdf=%%#"
 if exist "_tmpMD\" rmdir /s /q "_tmpMD\" %_Nul3%
 mkdir "_tmpMD"
-expand.exe -f:*TargetCompDB_* "%_mdf%" _tmpMD %_Null%
+for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do (
+expand.exe -f:*TargetCompDB_* "%%#" _tmpMD %_Null%
+)
 expand.exe -r -f:*.xml "_tmpMD\*.cab" _tmpMD %_Null%
 if not exist "_tmpMD\*TargetCompDB_App_*.xml" (
 echo.
@@ -4017,7 +4070,7 @@ exit /b
 :pr_color
 set _NCS=1
 if %winbuild% LSS 10586 set _NCS=0
-if %winbuild% GEQ 10586 reg.exe query HKCU\Console /v ForceV2 %_Null% | find /i "0x0" %_Null% && (set _NCS=0)
+if %winbuild% GEQ 10586 reg.exe query HKCU\Console /v ForceV2 %_Nul2% | find /i "0x0" %_Null% && (set _NCS=0)
 
 if %_NCS% EQU 1 (
 for /F %%a in ('echo prompt $E ^| cmd.exe') do set "_esc=%%a"

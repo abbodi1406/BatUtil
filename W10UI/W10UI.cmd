@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.43
+@set uiv=v10.44
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -1190,6 +1190,7 @@ set netpack=
 set netroll=
 set netlcu=
 set netmsu=
+set netfil=
 set secureboot=
 set edge=
 set safeos=
@@ -1542,7 +1543,7 @@ goto :eof
 if exist "%dest%\*_microsoft-windows-s..boot-firmwareupdate_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
 if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
 if %winbuild% lss 9600 (set /a _sum-=1&goto :eof)
-set secureboot=!secureboot! /PackagePath:"!repo!\!package!"
+set "secureboot=!secureboot! /PackagePath:"!repo!\!package!""
 goto :eof
 )
 if exist "%dest%\update.mum" if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
@@ -1580,7 +1581,8 @@ if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
   )
 if %xmsu% equ 1 (
   set "lcumsu=!lcumsu! !package!"
-  set "netmsu=!package!"
+  set "netmsu=!netmsu! /PackagePath:"!repo!\!package!""
+  set "netfil=!package!"
   goto :eof
   ) else (
   set "netlcu=!netlcu! /PackagePath:%dest%\update.mum"
@@ -1929,10 +1931,8 @@ if defined netroll set "netxtr=%netroll%"
 if defined netlcu set "netxtr=%netxtr% %netlcu%"
 if defined netmsu (
 if defined netxtr %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netxtr%
-for %%# in (%netmsu%) do (
-  echo.&echo Reinstalling %%#
-  %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package /PackagePath:"!repo!\%%#"
-  )
+echo.&echo Reinstalling %netfil%
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netmsu%
 )
 if not defined netmsu if defined netlcu (
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netroll% %netlcu%
