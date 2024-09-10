@@ -211,9 +211,21 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 [msu wim Reflection code](https://github.com/ave9858)  
 [WinSxS Suppressors](https://github.com/asdcorp/haveSxS)  
 
+special thanks for testing and feedback:
+@Enthousiast, @Paul Mercer, @Clusterhead
+
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.45:  
+- All : Detect SSU(s) version, and install the highest only
+- 24H2: Detect LCU(s) version, and install the highest only (26052+)
+- 24H2: Fix SSU misdetection as .NET rollup in latest updates
+- 24H2: NetFx3 feature will not be enabled if multiple LCUs detected
+- Show defender-dism package versions, and fix detection for arm64
+- Limit LCU .mum timestamp workaround for builds 22621+ < 26052
+- DisableResetbase registry will be always set to 1 for builds 25380+
 
 10.44:  
 - Reinstall all LCUs together after NetFx3 feature (26052+)

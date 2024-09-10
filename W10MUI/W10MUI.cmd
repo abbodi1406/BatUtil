@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v24.2
+@set uiv=v24.4
 @echo off
 
 set DVDPATH=
@@ -12,6 +12,8 @@ set DEFAULTLANGUAGE=
 set MOUNTDIR=
 
 set WINPEPATH=
+
+set RemoveInboxLP=0 
 
 :: dism.exe tool custom path (if Host OS is Win8.1 or earlier and no Win10 ADK installed)
 set "DismRoot=dism.exe"
@@ -36,7 +38,7 @@ exit /b
 )
 
 set "SysPath=%SystemRoot%\System32"
-set "Path=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\"
+set "Path=%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 if exist "%SystemRoot%\Sysnative\reg.exe" (
 set "SysPath=%SystemRoot%\Sysnative"
 set "Path=%SystemRoot%\Sysnative;%SystemRoot%;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
@@ -47,13 +49,17 @@ if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "x
 if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
 if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
 set "_Null=1>nul 2>nul"
+set "_psc=powershell -nop -c"
+set winbuild=1
+for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 set _cwmi=0
 for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
-wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+cmd /c "wmic path Win32_ComputerSystem get CreationClassName /value" 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
 )
 set _pwsh=1
 for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
-if %_cwmi% equ 0 if %_pwsh% equ 0 goto :E_PS
+cmd /c "%_psc% "$ExecutionContext.SessionState.LanguageMode"" | find /i "FullLanguage" 1>nul || (set _pwsh=0)
+if %_cwmi% equ 0 if %_pwsh% equ 0 goto :E_PWS
 reg.exe query HKU\S-1-5-19 %_Null% || goto :E_ADMIN
 set "_log=%~dpn0"
 set "WORKDIR=%~dp0"
@@ -66,7 +72,6 @@ set "TMPUPDT=%TEMPDIR%\updtemp"
 set "_7z=%WORKDIR%\dism\7z.exe"
 for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop') do call set "_dsk=%%b"
 if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
-for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 setlocal EnableDelayedExpansion
 
 if %_Debug% equ 0 (
@@ -96,7 +101,7 @@ set "_dLog=%SystemRoot%\Logs\DISM"
 set _drv=%~d0
 set _ntf=NTFS
 if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
-if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('%_psc% "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" set _drv=%SystemDrive%
 if "!MOUNTDIR!"=="" set "MOUNTDIR=%_drv%\W10MUIMOUNT"
 set "MOUNTDIR=%MOUNTDIR:"=%"
@@ -112,7 +117,7 @@ goto :adk10
 set _all=0
 set "dsmver=10240"
 if %_cwmi% equ 1 for /f "tokens=4 delims==." %%# in ('wmic datafile where "name='!dsv!'" get Version /value') do set "dsmver=%%#" 
-if %_cwmi% equ 0 for /f "tokens=3 delims=." %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!dsv!''').Version"') do set "dsmver=%%#"
+if %_cwmi% equ 0 for /f "tokens=3 delims=." %%# in ('%_psc% "([WMI]'CIM_DataFile.Name=''!dsv!''').Version"') do set "dsmver=%%#"
 if %dsmver% lss 25115 set _all=1
 exit /b
 
@@ -374,9 +379,6 @@ if %WINPE%==1 for /L %%j in (1,1,%LANGUAGES%) do (
 "!_7z!" e "!WinpeOC%%j!\!LANGUAGE%%j!\lp.cab" -o"!EXTRACTDIR!" Microsoft-Windows-Common-Foundation-Package*%_build%*.mum %_Null%
 if not exist "!EXTRACTDIR!\*.mum" call set WINPE=0
 )
-if "%DEFAULTLANGUAGE%"=="" (
-for /f "tokens=1" %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\install.wim" /index:1 ^| find /i "Default"') do set "DEFAULTLANGUAGE=%%i"
-)
 for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\boot.wim" ^| findstr "Index"') do set BOOTCOUNT=%%i
 for /f "tokens=2 delims=: " %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\boot.wim" /index:1 ^| find /i "Architecture"') do set "BOOTARCH=%%i"
 if /i %BOOTARCH%==x64 set BOOTARCH=amd64
@@ -410,6 +412,16 @@ if %_build% GEQ 26040 set SLIM=0
 set _pex=0
 if %SLIM% NEQ 1 set _pex=1
 
+set _sss=Client
+dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\install.wim" /index:1 | findstr /i /c:"Installation : Server" %_Nul1% && set _sss=Server
+if "%_sss%"=="Server" dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\install.wim" /index:1 | findstr /i /c:"ServerAzureStackHCI" %_Nul1% && set _sss=ASZ
+if %RemoveInboxLP% NEQ 2 if %_build% EQU 26100 if "%_sss%"=="Server" for /L %%j in (1,1,%LANGUAGES%) do (
+call :chkSrvLP "!LANGUAGE%%j!"
+)
+if %RemoveInboxLP% NEQ 1 if "%DEFAULTLANGUAGE%"=="" (
+for /f "tokens=1" %%i in ('dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\install.wim" /index:1 ^| find /i "Default"') do set "DEFAULTLANGUAGE=%%i"
+)
+
 if %WINPE% NEQ 1 goto :extract
 set _PEM86=
 set _PES86=
@@ -421,9 +433,6 @@ set _PES64=
 set _PEX64=
 set _PEF64=
 set _PER64=
-set _sss=Client
-dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\install.wim" /index:1 | findstr /i /c:"Installation : Server" %_Nul1% && set _sss=Server
-if "%_sss%"=="Server" dism\dism.exe /english /get-wiminfo /wimfile:"!DVDDIR!\sources\install.wim" /index:1 | findstr /i /c:"ServerAzureStackHCI" %_Nul1% && set _sss=ASZ
 echo.
 echo ============================================================
 echo Set WinPE language packs paths
@@ -449,6 +458,17 @@ call set _PEX%2=!_PEX%2! /PackagePath:!LANGUAGE%1!\WinPE-EnhancedStorage_!LANGUA
 call set _PER%2=!_PER%2! /PackagePath:!LANGUAGE%1!\WinPE-HTA_!LANGUAGE%1!.cab /PackagePath:!LANGUAGE%1!\WinPE-Rejuv_!LANGUAGE%1!.cab /PackagePath:!LANGUAGE%1!\WinPE-StorageWMI_!LANGUAGE%1!.cab
 for %%G in %EAlang% do if /i !LANGUAGE%1!==%%G (
 call set _PEF%2=!_PEF%2! /PackagePath:WinPE-FontSupport-%%G.cab
+)
+goto :eof
+
+:chkSrvLP
+for %%# in (
+ar-SA bg-BG da-DK el-GR en-GB
+et-EE fi-FI he-IL hr-HR lt-LT
+lv-LV nb-NO ro-RO sk-SK sl-SI
+sr-LATN-RS th-TH uk-UA
+) do (
+if /i "%~1"=="%%#" set RemoveInboxLP=1
 )
 goto :eof
 
@@ -514,6 +534,10 @@ echo.
 echo ============================================================
 echo Add LPs to install.wim - index %_i%/%imgcount%
 echo ============================================================
+if %RemoveInboxLP% EQU 1 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Server-LanguagePack-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1.mum" (
+!_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIEnUsRemove.log" /Remove-Package /PackageName:Microsoft-Windows-Server-LanguagePack-Package~31bf3856ad364e35~amd64~en-US~10.0.26100.1
+!_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIEnUsClean.log" /Cleanup-Image /StartComponentCleanup /ResetBase
+)
 pushd "!TEMPDIR!\!WIMARCH%_i%!"
 if defined _PP64 if /i !WIMARCH%_i%!==amd64 (
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallLP64.log" /Add-Package !_PP64!
@@ -529,6 +553,12 @@ echo ============================================================
 echo Update language settings
 echo ============================================================
 echo.
+if not "%DEFAULTLANGUAGE%"=="" if not exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-*-LanguagePack-Package*~%DEFAULTLANGUAGE%~*.mum" (
+set "DEFAULTLANGUAGE="
+)
+if "%DEFAULTLANGUAGE%"=="" for /L %%j in (1,1,%LANGUAGES%) do (
+if not defined DEFAULTLANGUAGE if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-*-LanguagePack-Package*~!LANGUAGE%%j!~*.mum" call set "DEFAULTLANGUAGE=!LANGUAGE%%j!"
+)
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Set-AllIntl:%DEFAULTLANGUAGE% /Quiet
 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /Set-SKUIntlDefaults:%DEFAULTLANGUAGE% /Quiet
 if %_i%==%imgcount% (
@@ -878,7 +908,7 @@ move /y "!DVDDIR!\setup.exe" "!DVDDIR!\sources" %_Nul3%
 :fulldvd
 call :DATEISO
 if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
-if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
+if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('%_psc% "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
 if not defined isodate set "isodate=%_date:~2,6%-%_date:~8,4%"
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set isolab=!isolab:%%#=%%#!
@@ -967,17 +997,17 @@ if exist "!_fvr3!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "nam
 if exist "!_fvr4!" for /f "tokens=5 delims==." %%a in ('wmic datafile where "name='!cfvr4!'" get Version /value ^| find "="') do set /a "_svr4=%%a"
 )
 if %_cwmi% equ 0 (
-if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfvr1!''').Version"') do set /a "_svr1=%%a"
-if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfvr2!''').Version"') do set /a "_svr2=%%a"
-if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfvr3!''').Version"') do set /a "_svr3=%%a"
-if exist "!_fvr4!" for /f "tokens=4 delims=." %%a in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfvr4!''').Version"') do set /a "_svr4=%%a"
+if exist "!_fvr1!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr1!''').Version"') do set /a "_svr1=%%a"
+if exist "!_fvr2!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr2!''').Version"') do set /a "_svr2=%%a"
+if exist "!_fvr3!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr3!''').Version"') do set /a "_svr3=%%a"
+if exist "!_fvr4!" for /f "tokens=4 delims=." %%a in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfvr4!''').Version"') do set /a "_svr4=%%a"
 )
 if %isomin% neq %_svr1% if %isomin% neq %_svr2% if %isomin% neq %_svr3% if %isomin% neq %_svr4% goto :eof
 if %isomin% equ %_svr1% set "_chk=!_fvr1!"
 if %isomin% equ %_svr2% set "_chk=!_fvr2!"
 if %isomin% equ %_svr3% set "_chk=!_fvr3!"
 if %isomin% equ %_svr4% set "_chk=!_fvr4!"
-for /f "tokens=6 delims=.) " %%# in ('powershell -nop -c "(gi '!_chk!').VersionInfo.FileVersion" %_Nul6%') do set "_ddd=%%#"
+for /f "tokens=6 delims=.) " %%# in ('%_psc% "(gi '!_chk!').VersionInfo.FileVersion" %_Nul6%') do set "_ddd=%%#"
 if defined _ddd (
 if /i not "%_ddd%"=="winpbld" set "isodate=%_ddd%"
 )
@@ -1032,14 +1062,14 @@ move /y "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE2" "%INSTALLMOUNTDIR%
 goto :eof
 
 :legacyLab
-for /f "tokens=5 delims=.( " %%# in ('powershell -nop -c "(gi '%INSTALLMOUNTDIR%\Windows\system32\ntoskrnl.exe').VersionInfo.FileVersion" %_Nul6%') do set "%1=%%#"
+for /f "tokens=5 delims=.( " %%# in ('%_psc% "(gi '%INSTALLMOUNTDIR%\Windows\system32\ntoskrnl.exe').VersionInfo.FileVersion" %_Nul6%') do set "%1=%%#"
 goto :eof
 
 :datemum
 set "mumfile=%SystemRoot%\temp\update.mum"
 set "chkfile=!mumfile:\=\\!"
 if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
-if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!chkfile!''').LastModified"') do set "mumdate=%%#"
+if %_cwmi% equ 0 for /f %%# in ('%_psc% "([WMI]'CIM_DataFile.Name=''!chkfile!''').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "%1=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 goto :eof
@@ -1090,6 +1120,19 @@ del /f /q "%~1\Windows\inf\*.log" %_Nul3%
 )
 for /f "tokens=* delims=" %%# in ('dir /b /ad "%~1\Windows\CbsTemp\" %_Nul6%') do rmdir /s /q "%~1\Windows\CbsTemp\%%#\" %_Nul3%
 del /s /f /q "%~1\Windows\CbsTemp\*" %_Nul3%
+for /f "tokens=* delims=" %%# in ('dir /b /ad "%~1\Windows\Temp\" %_Nul6%') do rmdir /s /q "%~1\Windows\Temp\%%#\" %_Nul3%
+del /s /f /q "%~1\Windows\Temp\*" %_Nul3%
+if exist "%~1\Windows\WinSxS\pending.xml" goto :eof
+for /f "tokens=* delims=" %%# in ('dir /b /ad "%~1\Windows\WinSxS\Temp\InFlight\" %_Nul6%') do (
+takeown /f "%~1\Windows\WinSxS\Temp\InFlight\%%#" /A %_Null%
+icacls "%~1\Windows\WinSxS\Temp\InFlight\%%#" /grant:r "*S-1-5-32-544:(OI)(CI)(F)" %_Null%
+rmdir /s /q "%~1\Windows\WinSxS\Temp\InFlight\%%#\" %_Nul3%
+)
+if exist "%~1\Windows\WinSxS\Temp\PendingRenames\*" (
+takeown /f "%~1\Windows\WinSxS\Temp\PendingRenames\*" /A %_Nul3%
+icacls "%~1\Windows\WinSxS\Temp\PendingRenames\*" /grant *S-1-5-32-544:F %_Nul3%
+del /f /q "%~1\Windows\WinSxS\Temp\PendingRenames\*" %_Nul3%
+)
 goto :eof
 
 :ISOmui
@@ -1305,7 +1348,7 @@ goto :END
 set MESSAGE=ERROR: Run the script as administrator
 goto :END
 
-:E_PS
+:E_PWS
 set MESSAGE=ERROR: wmic.exe or Windows PowerShell is required for this script to work
 goto :END
 
