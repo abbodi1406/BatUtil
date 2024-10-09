@@ -131,6 +131,10 @@ specify custom "folder" path which contain microsoft-windows-netfx3-ondemand-pac
 * LCUwinre  
 force updating winre.wim with Cumulative Update even if SafeOS update detected
 
+* LCUmsuExpand  
+expand Cumulative Update and install from loose files via update.mum, instead adding msu files directly  
+applicable only for builds 26052 and later
+
 * UpdtBootFiles  
 update ISO boot files bootmgr/bootmgr.efi/efisys.bin from Cumulative Update
 
@@ -218,14 +222,25 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.47:  
+- 24H2: Add option "LCUmsuExpand":  
+expand LCUs and install via update.mum, instead adding msu files directly  
+default state is OFF
+- Update PSFExtractor code to support the new PA31 format, using UpdateCompression.dll
+- Detect Package_for_SafeOSDU update for all builds
+
+10.46:  
+- 24H2: Always install/reinstall all LCU(s) one by one per version
+- 24H2: Remove the block for NetFx3 feature with multiple LCUs
+
 10.45:  
 - All : Detect SSU(s) version, and install the highest only
 - 24H2: Detect LCU(s) version, and install the highest only (26052+)
 - 24H2: Fix SSU misdetection as .NET rollup in latest updates
 - 24H2: NetFx3 feature will not be enabled if multiple LCUs detected
 - Show defender-dism package versions, and fix detection for arm64
-- Limit LCU .mum timestamp workaround for builds 22621+ < 26052
 - DisableResetbase registry will be always set to 1 for builds 25380+
+- Extend LCU .mum timestamp preserve workaround for all builds 22621+
 
 10.44:  
 - Reinstall all LCUs together after NetFx3 feature (26052+)

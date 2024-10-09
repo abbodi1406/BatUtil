@@ -41,6 +41,7 @@ Microsoft.DesktopAppInstaller_8wekyb3d8bbwe
 # Microsoft.549981C3F5F10_8wekyb3d8bbwe
 # MicrosoftCorporationII.QuickAssist_8wekyb3d8bbwe
 # MicrosoftCorporationII.MicrosoftFamily_8wekyb3d8bbwe
+# Clipchamp.Clipchamp_yxz26nhyzhsrt
 # Microsoft.OutlookForWindows_8wekyb3d8bbwe
 # MicrosoftTeams_8wekyb3d8bbwe
 # Microsoft.Windows.DevHome_8wekyb3d8bbwe
@@ -48,6 +49,8 @@ Microsoft.DesktopAppInstaller_8wekyb3d8bbwe
 # Microsoft.ApplicationCompatibilityEnhancements_8wekyb3d8bbwe
 # MicrosoftWindows.CrossDevice_cw5n1h2txyewy
 # MSTeams_8wekyb3d8bbwe
+# Microsoft.MicrosoftPCManager_8wekyb3d8bbwe
+# Microsoft.StartExperiencesApp_8wekyb3d8bbwe
 
 ### Media Apps / Client non-N editions
 # Microsoft.ZuneMusic_8wekyb3d8bbwe
@@ -57,7 +60,6 @@ Microsoft.DesktopAppInstaller_8wekyb3d8bbwe
 # Microsoft.GamingApp_8wekyb3d8bbwe
 # Microsoft.XboxGamingOverlay_8wekyb3d8bbwe
 # Microsoft.Xbox.TCUI_8wekyb3d8bbwe
-# Clipchamp.Clipchamp_yxz26nhyzhsrt
 
 ### Media Codecs / Client non-N editions, Team edition
 # Microsoft.WebMediaExtensions_8wekyb3d8bbwe
@@ -69,6 +71,7 @@ Microsoft.DesktopAppInstaller_8wekyb3d8bbwe
 # Microsoft.DolbyAudioExtensions_8wekyb3d8bbwe
 # Microsoft.AVCEncoderVideoExtension_8wekyb3d8bbwe
 # Microsoft.MPEG2VideoExtension_8wekyb3d8bbwe
+# Microsoft.AV1VideoExtension_8wekyb3d8bbwe
 
 ### Surface Hub Apps / Team edition
 # Microsoft.Whiteboard_8wekyb3d8bbwe

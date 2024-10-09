@@ -1,0 +1,21 @@
+@exit /b
+
+:cbsreg:
+$Class = [AppDomain]::CurrentDomain.DefineDynamicAssembly(4, 1).DefineDynamicModule(2, $False).DefineType(0)
+[void]$Class.DefinePInvokeMethod('OpenProcessToken', 'advapi32.dll', 22, 1, [Boolean], @([IntPtr], [UInt32], [IntPtr].MakeByRefType()), 1, 3)
+[void]$Class.DefinePInvokeMethod('DuplicateToken', 'advapi32.dll', 22, 1, [Boolean], @([IntPtr], [Int32], [IntPtr].MakeByRefType()), 1, 3)
+[void]$Class.DefinePInvokeMethod('SetThreadToken', 'advapi32.dll', 22, 1, [Boolean], @([IntPtr], [IntPtr]), 1, 3)
+$Win32 = $Class.CreateType()
+$sysProc = [Diagnostics.Process]::GetProcessById(([WMI]'Win32_Service.Name=''SamSs''').ProcessId)
+$sysTkn = 0; $dupTkn = 0
+[void]$Win32::OpenProcessToken($sysProc.Handle, 6, [ref]$sysTkn)
+[void]$Win32::DuplicateToken($sysTkn, 2, [ref]$dupTkn)
+[void]$Win32::SetThreadToken(0, $dupTkn)
+Start-Service TrustedInstaller
+$tiProc = [Diagnostics.Process]::GetProcessById(([WMI]'Win32_Service.Name=''TrustedInstaller''').ProcessId)
+$tiTkn = 0; $dupTkn = 0
+[void]$Win32::OpenProcessToken($tiProc.Handle, 46, [ref]$tiTkn)
+[void]$Win32::DuplicateToken($tiTkn, 2, [ref]$dupTkn)
+[void]$Win32::SetThreadToken(0, $dupTkn)
+iex ([IO.File]::ReadAllText($r)) | Out-Null
+:cbsreg:

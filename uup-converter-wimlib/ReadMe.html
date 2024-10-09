@@ -161,6 +161,12 @@
                 </li>
                 <br />
                 <li>
+                    <b>LCUmsuExpand</b><br /><br />
+                    Expand Cumulative Update and install from loose files via update.mum, instead adding direct msu files.<br /><br />
+                    This option is applicable only for Windows 11 build 26052 and later.
+                </li>
+                <br />
+                <li>
                     <b>DisableUpdatingUpgrade</b><br /><br />
                     Disable updating process optimization by using editions upgrade (Home>Pro / ServerStandard>ServerDatacenter), and perform separate updating for each edition.
                 </li>
@@ -221,7 +227,8 @@
                 </li>
                 <br />
                 <li>
-                    <b>### Below options apply only for builds 22563 and later ###</b><br /><br />
+                    <b>#############################################################</b><br /><br />
+                    <b>Below options apply only for Windows 11 build 22563 and later</b><br /><br />
                 </li>
                 <li>
                     <b>SkipApps</b><br /><br />
@@ -252,6 +259,14 @@
                     How to use:<br />
                     You can either use <b>CustomAppsList.txt</b> directly, or copy/rename it to <b>CustomAppsList2.txt</b><br />
                     Edit the choosen file, and remove <b>#</b> prefix in front the Apps you wish to add, and save the file.
+                </li>
+                <br />
+                <li>
+                    <b>Extra Bonus (not an option)</b><br /><br />
+                    The script supports adding LanguageExperiencePack (LXP) along with other Apps.<br /><br />
+                    How to do:<br />
+                    Download required LanguageExperiencePack files from UUP dump or <a href="https://store.rg-adguard.net/" target="_blank">store.rg-adguard.net</a><br />
+                    Place the files into <b>UUPs</b> folder (or the alternative UUP files source folder) before starting the conversion process.
                 </li>
             </ul>
             <hr />
@@ -302,7 +317,7 @@
                 <li><u>Integrate</u> updates mode for ARM64 UUP images only works on <u>Windows 11/10/8.1 Host OS</u>.
                 </li>
                 <br />
-                <li><u>Integrate</u> updates mode for Windows 11 builds 22567 and later require at least <u>Windows 10 v1607 Host OS</u>.
+                <li><u>Integrate</u> updates mode for Windows 11 build 22567 and later require at least <u>Windows 10 v1607 Host OS (build 14399)</u>.
                 </li>
             </ul>
             <br />

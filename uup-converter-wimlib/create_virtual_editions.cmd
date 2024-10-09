@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v106
+@set uivr=v108
 @echo off
 :: ### Creation Method ###
 ::
@@ -82,7 +82,7 @@ set "SysPath=%SystemRoot%\System32"
 set "Path=%xDS%;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
 if exist "%SystemRoot%\Sysnative\reg.exe" (
 set "SysPath=%SystemRoot%\Sysnative"
-set "Path=%xDS%;%SystemRoot%\Sysnative;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
+set "Path=%xDS%;%SystemRoot%\Sysnative;%SystemRoot%;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
 )
 set "_err=echo: &echo ==== ERROR ===="
 set "_psc=powershell -nop -c"
@@ -90,13 +90,13 @@ set winbuild=1
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 set _cwmi=0
 for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
-wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+cmd /c "wmic path Win32_ComputerSystem get CreationClassName /value" 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
 )
 set _pwsh=1
 for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
-if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
+cmd /c "%_psc% "$ExecutionContext.SessionState.LanguageMode"" | find /i "FullLanguage" 1>nul || (set _pwsh=0)
 call :pr_color
-if %_cwmi% equ 0 if %_pwsh% EQU 0 goto :E_PWS
+if %_cwmi% equ 0 if %_pwsh% equ 0 goto :E_PWS
 
 set _uac=-elevated
 %_Null% reg.exe query HKU\S-1-5-19 && (
@@ -1284,7 +1284,7 @@ goto :E_Exit
 
 :E_PWS
 %_err%
-echo Windows PowerShell is not detected or not properly responding.
+echo Windows PowerShell is not detected or not working correctly.
 echo It is required for this script to work.
 goto :E_Exit
 

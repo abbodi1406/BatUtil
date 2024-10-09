@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v24.4
+@set uiv=v24.5
 @echo off
 
 set DVDPATH=
@@ -109,7 +109,7 @@ if "%MOUNTDIR:~-1%"=="\" set "MOUNTDIR=%MOUNTDIR:~0,-1%"
 set "INSTALLMOUNTDIR=%MOUNTDIR%\install"
 set "WINREMOUNTDIR=%MOUNTDIR%\winre"
 set "BOOTMOUNTDIR=%MOUNTDIR%\boot"
-set EAlang=(ja-jp,ko-kr,zh-cn,zh-hk,zh-tw)
+set EAlpid=(ja-jp,ko-kr,zh-cn,zh-hk,zh-tw)
 set bootmui=(appraiser.dll,arunres.dll,cmisetup.dll,compatctrl.dll,compatprovider.dll,deployprovider.dll,dism.exe,dismapi.dll,dismcore.dll,dismprov.dll,folderprovider.dll,imagingprovider.dll,input.dll,logprovider.dll,mediasetupuimgr.dll,nlsbres.dll,osimageprovider.dll,pnpibs.dll,reagent.dll,rollback.exe,setup.exe,setupcompat.dll,setupcore.dll,setupmgr.dll,setupplatform.exe,setupprep.exe,smiengine.dll,spwizres.dll,upgloader.dll,uxlibres.dll,vhdprovider.dll,w32uires.dll,wdsclient.dll,wdsimage.dll,wimgapi.dll,wimprovider.dll,windlp.dll,winsetup.dll)
 goto :adk10
 
@@ -253,6 +253,10 @@ set foundupdates=0
 if exist ".\Updates\W10UI.cmd" (
 if exist ".\Updates\SSU-*-*.*" set foundupdates=1
 if exist ".\Updates\*Windows1*-KB*.*" set foundupdates=1
+for /f "skip=2 tokens=1* delims==" %%A in ('find /i "repo " ".\Updates\W10UI.ini" %_Nul6%') do (
+  if exist "%%~B\SSU-*-*.*" set foundupdates=1
+  if exist "%%~B\*Windows1*-KB*.*" set foundupdates=1
+  )
 )
 
 for /L %%j in (1,1,%LANGUAGES%) do (
@@ -880,6 +884,8 @@ echo ============================================================
 echo Cleanup ISO payload
 echo ============================================================
 echo.
+copy /y "!DVDDIR!\sources\setuphost.exe" %SystemRoot%\temp\ %_Nul3%
+copy /y "!DVDDIR!\sources\setupprep.exe" %SystemRoot%\temp\ %_Nul3%
 del /f /q /s "!DVDDIR!\ch*_boot.ttf" %_Nul3%
 del /f /q /s "!DVDDIR!\jpn_boot.ttf" %_Nul3%
 del /f /q /s "!DVDDIR!\kor_boot.ttf" %_Nul3%
@@ -957,19 +963,29 @@ goto :END
 
 :LANGISO
 for %%a in (3 2 1) do (for /f "tokens=1 delims== " %%b in ('findstr %%a "sources\lang.ini"') do echo %%b>>"isolang.txt")
+set _c_=0
+for /f "usebackq tokens=1" %%a in ("isolang.txt") do (
+set /a _c_+=1
+)
+set _short=1
+if %_build% GEQ 18362 set _short=0
+if %_c_% GEQ 5 set _short=1
 for /f "usebackq tokens=1" %%a in ("isolang.txt") do (
 set langid=%%a
-set lang=!langid:~0,2!
-if /i !langid!==en-gb set lang=en-gb
-if /i !langid!==es-mx set lang=es-mx
-if /i !langid!==fr-ca set lang=fr-ca
-if /i !langid!==pt-pt set lang=pp
-if /i !langid!==sr-latn-rs set lang=sr-latn
-if /i !langid!==zh-cn set lang=cn
-if /i !langid!==zh-hk set lang=hk
-if /i !langid!==zh-tw set lang=tw
-if /i !langid!==zh-tw if %_build% GEQ 14393 set lang=ct
-if defined _mui (set "_mui=!_mui!_!lang!") else (set "_mui=!lang!")
+if %_short% equ 0 (
+  set lpid=!langid!
+  ) else (
+  set lpid=!langid:~0,2!
+  if /i !langid!==en-gb set lpid=en-gb
+  if /i !langid!==es-mx set lpid=es-mx
+  if /i !langid!==fr-ca set lpid=fr-ca
+  if /i !langid!==pt-pt set lpid=pp
+  if /i !langid!==sr-latn-rs set lpid=sr-latn
+  if /i !langid!==zh-cn set lpid=cn
+  if /i !langid!==zh-hk set lpid=hk
+  if /i !langid!==zh-tw set lpid=ct
+  )
+if defined _mui (set "_mui=!_mui!_!lpid!") else (set "_mui=!lpid!")
 )
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set _mui=!_mui:%%#=%%#!
@@ -979,8 +995,6 @@ goto :eof
 
 :DATEISO
 if %_pwsh% equ 0 goto :eof
-copy /y "!DVDDIR!\sources\setuphost.exe" %SystemRoot%\temp\ %_Nul3%
-copy /y "!DVDDIR!\sources\setupprep.exe" %SystemRoot%\temp\ %_Nul3%
 set _svr1=0&set _svr2=0&set _svr3=0&set _svr4=0
 set "_fvr1=%SystemRoot%\temp\UpdateAgent.dll"
 set "_fvr2=%SystemRoot%\temp\setuphost.exe"
@@ -1007,7 +1021,7 @@ if %isomin% equ %_svr1% set "_chk=!_fvr1!"
 if %isomin% equ %_svr2% set "_chk=!_fvr2!"
 if %isomin% equ %_svr3% set "_chk=!_fvr3!"
 if %isomin% equ %_svr4% set "_chk=!_fvr4!"
-for /f "tokens=6 delims=.) " %%# in ('%_psc% "(gi '!_chk!').VersionInfo.FileVersion" %_Nul6%') do set "_ddd=%%#"
+if exist "!_chk!" for /f "tokens=6 delims=.) " %%# in ('%_psc% "(gi '!_chk!').VersionInfo.FileVersion" %_Nul6%') do set "_ddd=%%#"
 if defined _ddd (
 if /i not "%_ddd%"=="winpbld" set "isodate=%_ddd%"
 )

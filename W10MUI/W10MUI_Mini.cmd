@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v24.4
+@set uiv=v24.5
 @echo off
 
 set WIMPATH=
@@ -244,6 +244,10 @@ set foundupdates=0
 if exist ".\Updates\W10UI.cmd" (
 if exist ".\Updates\SSU-*-*.*" set foundupdates=1
 if exist ".\Updates\*Windows1*-KB*.*" set foundupdates=1
+for /f "skip=2 tokens=1* delims==" %%A in ('find /i "repo " ".\Updates\W10UI.ini" %_Nul6%') do (
+  if exist "%%~B\SSU-*-*.*" set foundupdates=1
+  if exist "%%~B\*Windows1*-KB*.*" set foundupdates=1
+  )
 )
 
 for /L %%j in (1,1,%LANGUAGES%) do (
