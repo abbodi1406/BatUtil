@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v24.5
+@set uiv=v24.6
 @echo off
 
 set DVDPATH=
@@ -109,7 +109,7 @@ if "%MOUNTDIR:~-1%"=="\" set "MOUNTDIR=%MOUNTDIR:~0,-1%"
 set "INSTALLMOUNTDIR=%MOUNTDIR%\install"
 set "WINREMOUNTDIR=%MOUNTDIR%\winre"
 set "BOOTMOUNTDIR=%MOUNTDIR%\boot"
-set EAlpid=(ja-jp,ko-kr,zh-cn,zh-hk,zh-tw)
+set EAlang=(ja-jp,ko-kr,zh-cn,zh-hk,zh-tw)
 set bootmui=(appraiser.dll,arunres.dll,cmisetup.dll,compatctrl.dll,compatprovider.dll,deployprovider.dll,dism.exe,dismapi.dll,dismcore.dll,dismprov.dll,folderprovider.dll,imagingprovider.dll,input.dll,logprovider.dll,mediasetupuimgr.dll,nlsbres.dll,osimageprovider.dll,pnpibs.dll,reagent.dll,rollback.exe,setup.exe,setupcompat.dll,setupcore.dll,setupmgr.dll,setupplatform.exe,setupprep.exe,smiengine.dll,spwizres.dll,upgloader.dll,uxlibres.dll,vhdprovider.dll,w32uires.dll,wdsclient.dll,wdsimage.dll,wimgapi.dll,wimprovider.dll,windlp.dll,winsetup.dll)
 goto :adk10
 

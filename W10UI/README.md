@@ -228,6 +228,7 @@ expand LCUs and install via update.mum, instead adding msu files directly
 default state is OFF
 - Update PSFExtractor code to support the new PA31 format, using UpdateCompression.dll
 - Detect Package_for_SafeOSDU update for all builds
+- 24H2: Match setuphost.exe version between ISO and boot.wim
 
 10.46:  
 - 24H2: Always install/reinstall all LCU(s) one by one per version

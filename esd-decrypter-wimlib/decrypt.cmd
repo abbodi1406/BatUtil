@@ -727,6 +727,7 @@ rmdir /s /q bin\temp\
 
 set _rfr=refresh
 set _rsr=release_svc_%_rfr%
+if %revver%==26100.2033 (set _label=26100.2033.241004-2336.ge_%_rsr%&set branch=ge_%_rsr%&set ISOnameESD=0)
 if %revver%==26100.1742 (set _label=26100.1742.240909-0928.ge_%_rsr%&set branch=ge_%_rsr%&set ISOnameESD=0)
 if %revmaj%==22631 (set _label=%revver%.%_time%.23h2_ni_%_rsr%&set branch=23h2_ni_%_rsr%)
 if %revver%==22631.2861 (set _label=22631.2861.231204-0538.23h2_ni_%_rsr%&set branch=23h2_ni_%_rsr%&set ISOnameESD=0)

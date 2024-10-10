@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v24.5
+@set uiv=v24.6
 @echo off
 
 set WIMPATH=

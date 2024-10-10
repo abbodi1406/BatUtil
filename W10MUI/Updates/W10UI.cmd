@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.47
+@set uiv=v10.47r
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -708,7 +708,10 @@ if not defined isoupdate goto :fin
 if %_offdu%==1 if not exist "!_cabdir!\du\" (
   mkdir "!_cabdir!\du" %_Nul3%
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
-  if exist "!mountdir!\sources\setup.exe" if exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" if exist "!_cabdir!\du\setup.exe" del /f /q "!_cabdir!\du\setup.exe" %_Nul3%
+  if exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" (
+  if exist "!mountdir!\sources\setup.exe" if exist "!_cabdir!\du\setup.exe" del /f /q "!_cabdir!\du\setup.exe" %_Nul3%
+  if %_build% geq 26052 if exist "!mountdir!\sources\setuphost.exe" if exist "!_cabdir!\du\setuphost.exe" del /f /q "!_cabdir!\du\setuphost.exe" %_Nul3%
+  )
   xcopy /CRUY "!_cabdir!\du" "!cmd_source!\" %_Nul3%
   if exist "!_cabdir!\du\*.ini" xcopy /CRY "!_cabdir!\du\*.ini" "!cmd_source!\" %_Nul3%
   for /f %%# in ('dir /b /ad "!_cabdir!\du\*-*" %_Nul6%') do if exist "!cmd_source!\%%#\*.mui" copy /y "!_cabdir!\du\%%#\*" "!cmd_source!\%%#\" %_Nul3%
@@ -741,24 +744,27 @@ if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%
 set keep=0&set imgcount=%bootimg%&set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount sources\boot.wim
 if not defined isoupdate goto :dvdproceed
-  echo.
-  echo ============================================================
-  echo Adding setup dynamic update^(s^)...
-  echo ============================================================
-  echo.
-  mkdir "!_cabdir!\du" %_Nul3%
-  for %%i in (!isoupdate!) do (
-  echo %%~i
-  expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
-  )
-  if %uupboot%==0 if exist "!_cabdir!\du\setup.exe" del /f /q "!_cabdir!\du\setup.exe" %_Nul3%
-  if %uupboot%==1 xcopy /CRUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
-  if %uupboot%==0 xcopy /CDRUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
-  if %uupboot%==0 for /f %%# in ('dir /b /a:-d "!_cabdir!\du\*.*" %_Nul6%') do call :du_fix %%#
-  if exist "!_cabdir!\du\*.ini" xcopy /CRY "!_cabdir!\du\*.ini" "!target!\sources\" %_Nul3%
-  for /f %%# in ('dir /b /ad "!_cabdir!\du\*-*" %_Nul6%') do if exist "!target!\sources\%%#\*.mui" copy /y "!_cabdir!\du\%%#\*" "!target!\sources\%%#\" %_Nul3%
-  if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!target!\sources\replacementmanifests\" %_Nul3%
-  rmdir /s /q "!_cabdir!\du\" %_Nul3%
+echo.
+echo ============================================================
+echo Adding setup dynamic update^(s^)...
+echo ============================================================
+echo.
+mkdir "!_cabdir!\du" %_Nul3%
+for %%i in (!isoupdate!) do (
+echo %%~i
+expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
+)
+if %uupboot%==0 (
+if exist "!_cabdir!\du\setup.exe" del /f /q "!_cabdir!\du\setup.exe" %_Nul3%
+if %_build% geq 26052 if exist "!_cabdir!\du\setuphost.exe" del /f /q "!_cabdir!\du\setuphost.exe" %_Nul3%
+)
+if %uupboot%==1 xcopy /CRUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
+if %uupboot%==0 xcopy /CDRUY "!_cabdir!\du" "!target!\sources\" %_Nul3%
+if %uupboot%==0 for /f %%# in ('dir /b /a:-d "!_cabdir!\du\*.*" %_Nul6%') do call :du_fix %%#
+if exist "!_cabdir!\du\*.ini" xcopy /CRY "!_cabdir!\du\*.ini" "!target!\sources\" %_Nul3%
+for /f %%# in ('dir /b /ad "!_cabdir!\du\*-*" %_Nul6%') do if exist "!target!\sources\%%#\*.mui" copy /y "!_cabdir!\du\%%#\*" "!target!\sources\%%#\" %_Nul3%
+if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!target!\sources\replacementmanifests\" %_Nul3%
+rmdir /s /q "!_cabdir!\du\" %_Nul3%
 
 :dvdproceed
 xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
@@ -2382,6 +2388,7 @@ if exist "!mountdir!\Windows\system32\Facilitator.dll" if not exist "%SystemRoot
 )
 if %wim%==1 if exist "!_wimpath!\setup.exe" (
 if exist "!mountdir!\sources\setup.exe" copy /y "!mountdir!\sources\setup.exe" "!_wimpath!" %_Nul3%
+if %_build% geq 26052 if exist "!mountdir!\sources\setuphost.exe" copy /y "!mountdir!\sources\setuphost.exe" "!_wimpath!" %_Nul3%
 if defined isoupdate if not exist "!mountdir!\sources\setup.exe" if not exist "!_cabdir!\du\" (
   echo.
   echo ============================================================
@@ -2556,10 +2563,10 @@ del /f /q "!target!\sources\xmllite.dll" %_Nul3%
 if %UpdtBootFiles% equ 1 (
 for %%i in (efisys.bin,efisys_noprompt.bin) do if exist "!mountdir!\Windows\Boot\DVD\EFI\en-US\%%i" (copy /y "!mountdir!\Windows\Boot\DVD\EFI\en-US\%%i" "!target!\efi\microsoft\boot\" %_Nul1%)
 if /i not %arch%==arm64 (
-copy /y "!mountdir!\Windows\Boot\PCAT\bootmgr" "!target!\" %_Nul1%
-copy /y "!mountdir!\Windows\Boot\EFI\memtest.efi" "!target!\efi\microsoft\boot\" %_Nul1%
-copy /y "!mountdir!\Windows\Boot\PCAT\memtest.exe" "!target!\boot\" %_Nul1%
-)
+  copy /y "!mountdir!\Windows\Boot\PCAT\bootmgr" "!target!\" %_Nul1%
+  copy /y "!mountdir!\Windows\Boot\EFI\memtest.efi" "!target!\efi\microsoft\boot\" %_Nul1%
+  copy /y "!mountdir!\Windows\Boot\PCAT\memtest.exe" "!target!\boot\" %_Nul1%
+  )
 )
 if exist "!target!\efi\boot\bootmgfw.efi" copy /y "!mountdir!\Windows\Boot\EFI\bootmgfw.efi" "!target!\efi\boot\bootmgfw.efi" %_Nul1%
 copy /y "!mountdir!\Windows\Boot\EFI\bootmgfw.efi" "!target!\efi\boot\%efifile%" %_Nul1%
