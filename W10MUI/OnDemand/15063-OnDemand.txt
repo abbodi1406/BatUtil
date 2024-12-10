@@ -167,6 +167,7 @@ http://download.windowsupdate.com/c/msdownload/update/software/updt/2017/03/micr
 http://download.windowsupdate.com/c/msdownload/update/software/updt/2017/03/microsoft-windows-languagefeatures-texttospeech-th-th-package_5e7f2e6874af6d19a151c75d39f25b7e9991bc2d.cab
 tr-tr / Turkish
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2017/03/microsoft-windows-languagefeatures-basic-tr-tr-package_fff5e7df0d6711dd478c3e17dd4ed383129aa64a.cab
+http://download.windowsupdate.com/d/msdownload/update/software/updt/2017/03/microsoft-windows-languagefeatures-handwriting-tr-tr-package_bb02755634806786e463d7fd81799171a80adc75.cab
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2017/03/microsoft-windows-languagefeatures-ocr-tr-tr-package_842a685da9906e9d50dfd424dd820d05aa70a44e.cab
 http://download.windowsupdate.com/d/msdownload/update/software/updt/2017/03/microsoft-windows-languagefeatures-texttospeech-tr-tr-package_b79466b5c46ceed866097ef1c3c80f9ccb7c5c37.cab
 uk-ua / Ukrainian

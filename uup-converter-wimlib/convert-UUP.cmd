@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v109
+@set uivr=v109u
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -555,7 +555,10 @@ if /i %arch%==arm64 if %winbuild% lss 9600 if %AddUpdates% equ 1 (
 if %_build% geq 17763 (set AddUpdates=2) else (set AddUpdates=0)
 )
 if %Cleanup% equ 0 set ResetBase=0
-if %AIO% neq 1 if %_count% leq 1 if /i "%editionid%"=="PPIPro" (set StartVirtual=0)
+if %AIO% neq 1 if %_count% leq 1 (
+if /i "%editionid%"=="PPIPro" set StartVirtual=0
+if /i "%editionid%"=="WNC" set StartVirtual=0
+)
 if %_build% lss 17063 (set StartVirtual=0)
 if %_build% lss 17763 if %AddUpdates% equ 2 (set AddUpdates=1)
 if %_build% lss 17763 if %AddUpdates% equ 1 if %W10UI% equ 0 (set AddUpdates=0)
@@ -939,7 +942,9 @@ if !_ESDSrv%%#! equ 1 (
 )
 if %_updexist% equ 1 if %_build% geq 22000 if exist "%SysPath%\ucrtbase.dll" if not exist "bin\dpx.dll" if not exist "temp\dpx.dll" call :uups_dll dpx
 if %_reMSU% equ 1 if %_build% geq 25336 call :uups_msu
-if %_reMSU% equ 1 if %_build% lss 25336 if %SkipLCUmsu% equ 0 call :uups_msu
+if %_reMSU% equ 1 if %_build% lss 25336 (
+if exist "!_UUP!\*Windows1*-KB*.wim" (call :uups_msu) else (if %SkipLCUmsu% equ 0 call :uups_msu)
+)
 if exist "!_cabdir!\" rmdir /s /q "!_cabdir!\"
 del /f /q %_dLog%\* %_Nul3%
 if not exist "%_dLog%\" mkdir "%_dLog%" %_Nul3%
@@ -1137,7 +1142,7 @@ for %%# in (ru-ru,zh-cn,zh-tw,zh-hk) do if /i !langid%%A!==%%# set "_os%%A=!_oNa
 >nul chcp %oemcp%
 del /f /q bin\info*.txt
 if %_build% geq 21382 if exist "!_UUP!\*.AggregatedMetadata*.cab" if exist "!_UUP!\*Windows1*-KB*.cab" if exist "!_UUP!\*Windows1*-KB*.psf" set _reMSU=1
-if %_build% geq 25336 if exist "!_UUP!\*.AggregatedMetadata*.cab" if exist "!_UUP!\*Windows1*-KB*.wim" if exist "!_UUP!\*Windows1*-KB*.psf" set _reMSU=1
+if %_build% geq 22621 if exist "!_UUP!\*.AggregatedMetadata*.cab" if exist "!_UUP!\*Windows1*-KB*.wim" if exist "!_UUP!\*Windows1*-KB*.psf" set _reMSU=1
 if %_build% geq 22563 (
 if exist "!_UUP!\*.appx*" set _OPA=1
 if exist "!_UUP!\*.msix*" set _OPA=1
@@ -1482,6 +1487,7 @@ if %uLang% equ 1 for %%# in (
 "ServerRdsh:%_wtx% Enterprise multi-session"
 "Starter:%_wtx% Starter"
 "StarterN:%_wtx% Starter N"
+"WNC:%_wtx% Cloud PC"
 "ServerStandardCore:%_wsr% Standard"
 "ServerStandard:%_wsr% Standard (Desktop Experience)"
 "ServerDatacenterCore:%_wsr% Datacenter"
@@ -1694,12 +1700,15 @@ copy /y "_tMSU\%_MSUonf%" "_tWIM\%_MSUonf%" %_Nul3%
 if %optSSU% equ 1 copy /y "%_MSUssu%" "_tWIM\%_MSUtsu%" %_Nul3%
 copy /y "%_MSUcab%" "_tWIM\%_MSUkbf%.wim" %_Nul3%
 copy /y "%_MSUpsf%" "_tWIM\%_MSUkbf%.psf" %_Nul3%
-%_Nul3% wimlib-imagex.exe capture _tWIM\ %_MSUkbf%.msu content --compress=none --nocheck --no-acls
+popd
+%_Nul3% wimlib-imagex.exe capture "!_UUP!\_tWIM" "!_UUP!\%_MSUkbf%.msu" content --compress=none --nocheck --no-acls
 if %ERRORLEVEL% neq 0 (
 call :dk_color1 %Red% "capture %_MSUkbf%.msu failed, skip operation." 4
 (echo.&echo capture %_MSUkbf%.msu failed)>>"!logerr!"
+pushd "!_UUP!"
 goto :eof
 )
+pushd "!_UUP!"
 rem. call :undpx
 goto :eof
 
@@ -3017,8 +3026,7 @@ if not exist "!dest!\*enablement-package*.mum" set "edge=!edge! /PackagePath:!de
 goto :eof
 )
 if exist "!dest!\update.mum" findstr /i /m "Package_for_SafeOSDU" "!dest!\update.mum" %_Nul3% && (
-if %_build% geq 26052 if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" goto :eof
-if %_build% lss 26052 if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" goto :eof
+if not exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" goto :eof
 set "safeos=!safeos! /PackagePath:!dest!\update.mum"
 goto :eof
 )
@@ -3969,7 +3977,7 @@ for /f "delims=" %%# in ('dir /b /a:-d "_tmpMD\*TargetCompDB_App_Moment_*.xml" %
 )
 >>AppsList.xml echo ^</CoreN^>
 >>AppsList.xml echo ^<Team^>
-for %%# in (PPIPro) do if exist _tmpMD\*CompDB_%%#_*.xml (
+for %%# in (PPIPro,WNC) do if exist _tmpMD\*CompDB_%%#_*.xml (
 >>AppsList.xml (find /i "PreinstalledApps" _tmpMD\*CompDB_%%#_*.xml | find /v "-")
 )
 >>AppsList.xml echo ^</Team^>
@@ -4066,6 +4074,7 @@ for %%# in (CoreN,ProfessionalN,ProfessionalEducationN,ProfessionalWorkstationN,
 if /i "%_edtn%"=="%%#" set "_appList=%_appProN%"
 )
 if /i "%_edtn%"=="PPIPro" set "_appList=%_appTeam%"
+if /i "%_edtn%"=="WNC" set "_appList=%_appTeam%"
 for %%# in (AzureStackHCICor) do (
 if /i "%_edtn%"=="%%#" set "_appList=%_appAzure%"
 )
@@ -4179,7 +4188,7 @@ if exist temp\ rmdir /s /q temp\
 if exist bin\expand.exe if not exist bin\dpx.dll del /f /q bin\expand.exe
 popd
 call :dk_color2 %Green% "Finished." %_Yellow% " You chose to start create_virtual_editions.cmd independently." 7 8
-Press 0 or q to exit.
+echo Press 0 or q to exit.
 choice /c 0Q /n
 if errorlevel 1 (exit /b) else (rem.)
 exit /b

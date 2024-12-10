@@ -17,13 +17,14 @@ if exist "%SystemRoot%\Sysnative\reg.exe" (
 set "SysPath=%SystemRoot%\Sysnative"
 set "Path=%SystemRoot%\Sysnative;%SystemRoot%;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
 )
+set "_psc=powershell -nop -c"
 set "_err===== ERROR ===="
 set winbuild=1
 for /f "tokens=6 delims=[]. " %%G in ('ver') do set winbuild=%%G
 if %winbuild% lss 7601 goto :E_Win
 set _cwmi=0
 for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
-wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+cmd /c "wmic path Win32_ComputerSystem get CreationClassName /value" 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
 )
 set _pwsh=1
 for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
@@ -555,7 +556,8 @@ set _O24Access=ON
 set _O24Excel=ON
 set _O24Outlook=ON
 set _O24PowerPoint=ON
-set _O24SkypeForBusiness=ON
+set _O24SkypeForBusiness=OFF
+if %_D24SB%==1 set _O24SkypeForBusiness=ON
 set _O24Word=ON
 set _O365Pro=ON
 set _O365Bus=OFF
@@ -751,12 +753,10 @@ if %errlvl%==1 (if !_O%xv%Pro!==ON (set _O%xv%Pro=OFF) else (set _O%xv%Pro=ON&se
 goto :Menu00Suite
 
 :Menu00Apps
-set _optSB=1
-if %xv% EQU 24 (
-set _optSB=%_D24SB%
-)
 if %xv% EQU 19 (set oe=16&set pb=%xv%) else (set oe=21&set pb=21)
-if !_O%xv%Access!==OFF if !_O%xv%Excel!==OFF if !_O%oe%OneNote!==OFF if !_O%xv%Outlook!==OFF if !_O%xv%PowerPoint!==OFF if !_O%pb%Publisher!==OFF if !_O%xv%SkypeForBusiness!==OFF if !_O%xv%Word!==OFF if !_O%xv%PrjPro!==OFF if !_O%xv%PrjStd!==OFF if !_O%xv%VisPro!==OFF if !_O%xv%VisStd!==OFF set _O%xv%Word=ON
+if %xv% EQU 24 (set _optSB=%_D24SB%) else (set _optSB=1)
+if %_optSB%==1 (set sf=%xv%) else (set sf=21)
+if !_O%xv%Access!==OFF if !_O%xv%Excel!==OFF if !_O%oe%OneNote!==OFF if !_O%xv%Outlook!==OFF if !_O%xv%PowerPoint!==OFF if !_O%pb%Publisher!==OFF if !_O%sf%SkypeForBusiness!==OFF if !_O%xv%Word!==OFF if !_O%xv%PrjPro!==OFF if !_O%xv%PrjStd!==OFF if !_O%xv%VisPro!==OFF if !_O%xv%VisStd!==OFF set _O%xv%Word=ON
 call :showPV
 cls
 echo %line%
@@ -771,9 +771,7 @@ echo. N. OneNote 20%oe%          : !_O%oe%OneNote!
 echo. O. Outlook 20%xv%          : !_O%xv%Outlook!
 echo. P. PowerPoint 20%xv%       : !_O%xv%PowerPoint!
 echo. R. Publisher 20%pb%        : !_O%pb%Publisher!
-if %_optSB%==1 (
-echo. S. SkypeForBusiness 20%xv% : !_O%xv%SkypeForBusiness!
-) else (echo.)
+echo. S. SkypeForBusiness 20%sf% : !_O%sf%SkypeForBusiness!
 echo. W. Word 20%xv%             : !_O%xv%Word!
 echo.
 echo. D. OneDrive Desktop      : %_OneDrive%
@@ -798,7 +796,7 @@ if %errlvl%==11 if %_supv%==1 (if !_O%xv%PrjStd!==ON (set _O%xv%PrjStd=OFF) else
 if %errlvl%==10 if %_supv%==1 (if !_O%xv%PrjPro!==ON (set _O%xv%PrjPro=OFF) else (set _O%xv%PrjPro=ON&set _O%xv%PrjStd=OFF)&goto :Menu00Apps)
 if %errlvl%==9 (if %_OneDrive%==ON (set _OneDrive=OFF) else (set _OneDrive=ON))&goto :Menu00Apps
 if %errlvl%==8 (if !_O%xv%Word!==ON (set _O%xv%Word=OFF) else (set _O%xv%Word=ON))&goto :Menu00Apps
-if %errlvl%==7 if %_optSB%==1 (if !_O%xv%SkypeForBusiness!==ON (set _O%xv%SkypeForBusiness=OFF) else (set _O%xv%SkypeForBusiness=ON))&goto :Menu00Apps
+if %errlvl%==7 (if !_O%sf%SkypeForBusiness!==ON (set _O%sf%SkypeForBusiness=OFF) else (set _O%sf%SkypeForBusiness=ON))&goto :Menu00Apps
 if %errlvl%==6 (if !_O%pb%Publisher!==ON (set _O%pb%Publisher=OFF) else (set _O%pb%Publisher=ON))&goto :Menu00Apps
 if %errlvl%==5 (if !_O%xv%PowerPoint!==ON (set _O%xv%PowerPoint=OFF) else (set _O%xv%PowerPoint=ON))&goto :Menu00Apps
 if %errlvl%==4 (if !_O%xv%Outlook!==ON (set _O%xv%Outlook=OFF) else (set _O%xv%Outlook=ON))&goto :Menu00Apps
@@ -1049,6 +1047,9 @@ if %winbuild% lss 10240 (set _sku!cc!=PublisherRetail&set /a cc+=1&set _sku!cc!=
 if %_O24SkypeForBusiness%==ON (
 set /a cc+=1
 if %winbuild% lss 10240 (set _sku!cc!=SkypeForBusinessRetail&set /a cc+=1&set _sku!cc!=SkypeForBusiness2024Retail) else (set _sku!cc!=SkypeForBusiness2024Retail)
+) else if %_O21SkypeForBusiness%==ON (
+set /a cc+=1
+if %winbuild% lss 10240 (set _sku!cc!=SkypeForBusinessRetail&set /a cc+=1&set _sku!cc!=SkypeForBusiness2021Retail) else (set _sku!cc!=SkypeForBusiness2021Retail)
 )
 if %_O24Word%==ON (
 set /a cc+=1
@@ -1422,7 +1423,7 @@ goto :MenuFinal
 :MenuFinal2
 cls
 if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
-if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
+if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('%_psc% "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
 copy /y nul "!_work!\#.rw" 1>nul 2>nul && (if exist "!_work!\#.rw" del /f /q "!_work!\#.rw") || (set "_ini=!_dsk!")
 
 (
@@ -1507,7 +1508,7 @@ set "cfile=!_file:\=\\!"
 if exist "!_file!" if %_cwmi% equ 1 for /f "tokens=4 delims==." %%i in ('wmic datafile where "name='!cfile!'" get Version /value ^| find "="') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
-if exist "!_file!" if %_cwmi% equ 0 for /f "tokens=3 delims==." %%i in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cfile!''').Version"') do (
+if exist "!_file!" if %_cwmi% equ 0 for /f "tokens=3 delims==." %%i in ('%_psc% "([WMI]'CIM_DataFile.Name=''!cfile!''').Version"') do (
   if %%i geq %verchk% (set CTRexe=0)
 )
 call :StopService 1>nul 2>nul
