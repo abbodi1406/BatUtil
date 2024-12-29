@@ -144,6 +144,10 @@ keep or delete DVD distribution folder after creating updated ISO
 - AutoStart  
 start the process automatically once you execute the script
 
+- WimCreateTime  
+change install.wim image creation time to match last modification time  
+require wimlib-imagex.exe, placed in system directories, or in the script directory
+
 * Note: Do not change the structure of WHD-W7UI.ini, just set your options after the equal sign =
 
 * To restore old behavior and change options by editing the script, simply detele WHD-W81UI.ini file
@@ -184,6 +188,10 @@ after installing the OS, you need to run it as administrator, it will be self-de
 [WHDownloader](https://forums.mydigitallife.net/threads/44645)
 
 ## Changelog:
+
+* 7.7:  
+few code improvements and fixes  
+add option "WimCreateTime"
 
 * 7.6:  
 fixed creating RunOnce_AfterRestart_DismCleanup.cmd for online OS  

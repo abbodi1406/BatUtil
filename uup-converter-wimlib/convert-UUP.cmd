@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v109u
+@set uivr=v110
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -48,7 +48,7 @@ set SkipWinRE=0
 set LCUwinre=0
 
 :: Change to 1 to expand Cumulative Update and install from loose files via update.mum
-:: applicable only for builds 26052 and later
+:: applicable only for builds 22621 and later
 set LCUmsuExpand=0
 
 :: Change to 1 to disable updating process optimization by using editions upgrade (Home>Pro / ServerStandard>ServerDatacenter)
@@ -568,7 +568,7 @@ if %_build% geq 22000 (
 if %LCUwinre% equ 2 (set LCUwinre=0) else (set LCUwinre=1)
 if %_build% geq 26052 (set LCUwinre=0)
 )
-if %_build% lss 26052 set LCUmsuExpand=0
+if %_build% lss 22621 set LCUmsuExpand=0
 if %_build% geq 25380 (
 if %Cleanup% equ 0 set DisableUpdatingUpgrade=1
 )
@@ -763,7 +763,7 @@ if %_build% geq 22000 (
 if %LCUwinre% equ 2 (set LCUwinre=0) else (set LCUwinre=1)
 if %_build% geq 26052 (set LCUwinre=0)
 )
-if %_build% lss 26052 set LCUmsuExpand=0
+if %_build% lss 22621 set LCUmsuExpand=0
 if %_build% geq 25380 (
 if %Cleanup% equ 0 set DisableUpdatingUpgrade=1
 )
@@ -1543,10 +1543,9 @@ set IncludeSSU=1
 set /a _rnd=%random%
 for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do if /i "%%#"=="%_MSUonf%" (
 set /a _rnd+=1
-ren "%%#" "org!_rnd!_%%#"
+ren "%%#" "org!_rnd!.cab"
 )
 for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do (set "metaf=%%#"&call :doMSU)
-rem. goto :msu_uups
 if exist "zzz.ddf" del /f /q "zzz.ddf"
 if exist "_tWIM\" rmdir /s /q "_tWIM\" %_Nul3%
 if exist "_tSSU\" rmdir /s /q "_tSSU\" %_Nul3%
@@ -2223,8 +2222,9 @@ exit /b
 if not exist "!_cabdir!\" mkdir "!_cabdir!"
 if not exist "!_cabdir!\LCUmum\" mkdir "!_cabdir!\LCUmum"
 if not exist "!_cabdir!\LCUall\" mkdir "!_cabdir!\LCUall"
-if exist "!_UUP!\*Windows1*-KB*.msu" if %LCUmsuExpand% neq 0 if %_build% geq 26052 if %winbuild% geq 9600 (
-if exist "%SysPath%\UpdateCompression.dll" (set psfwim=1) else (call :uups_dll UpdateCompression)
+if exist "!_UUP!\*Windows1*-KB*.msu" if %LCUmsuExpand% neq 0 if %_build% geq 22621 if %winbuild% geq 9600 (
+if exist "%SysPath%\UpdateCompression.dll" (set psfwim=1) else (if %_build% geq 26052 call :uups_dll UpdateCompression)
+if %_build% lss 26052 set psfwim=1
 )
 if exist "!_cabdir!\UpdateCompression.dll" if %LCUmsuExpand% neq 0 (
 set "_delta=!_cabdir!\UpdateCompression.dll"
@@ -2389,6 +2389,17 @@ if exist "!dest!\*_microsoft-windows-e..-firsttimeinstaller_*.manifest" set "_ty
 if not defined _type (
 expand.exe -f:*_adobe-flash-for-windows_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\*_adobe-flash-for-windows_*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || set "_type=[Flash]"
+)
+if not defined _type (
+expand.exe -f:*_microsoft-windows-m..update-genuineintel_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+expand.exe -f:*_microsoft-windows-m..update-authenticamd_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_microsoft-windows-m..update-*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || set "_type=[Microcode]"
+)
+if not defined _type (
+expand.exe -f:*_microsoft-onecore-c..dexperiencehost-api_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+expand.exe -f:*_microsoft-updatetargeting-windowsoobe_*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+expand.exe -f:*_microsoft-windows-oobe-*.manifest "!_UUP!\%package%" "!dest!" %_Null%
+if exist "!dest!\*_microsoft-*.manifest" findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || set "_type=[OOBE]"
 )
 echo %count%/%_cab%: %package% %_type%
 set cab_%pkgn%=1

@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v7.6
+@set uiv=v7.7
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -48,6 +48,11 @@ set "WinreMount=W81UImountre"
 :: start the process directly once you execute the script, as long as the other options are correctly set
 set AutoStart=0
 
+:: # Options for wim or distribution target only #
+
+:: change install.wim image creation time to match last modification time (require wimlib-imagex.exe)
+set WimCreateTime=0
+
 :: # Options for distribution target only #
 
 :: convert install.wim to install.esd
@@ -85,13 +90,19 @@ if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xOS=amd64"
 if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xOS=arm64"
 set "_Null=1>nul 2>nul"
 set "_err===== ERROR ===="
+set "_psc=powershell -nop -c"
+set winbuild=1
 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
-set _blue=0
-if %winbuild% geq 9600 if %winbuild% lss 9606 set _blue=1
 set _cwmi=0
 for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
-wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+cmd /c "wmic path Win32_ComputerSystem get CreationClassName /value" 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
 )
+set _pwsh=1
+for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
+cmd /c "%_psc% "$ExecutionContext.SessionState.LanguageMode"" | find /i "FullLanguage" 1>nul || (set _pwsh=0)
+if %_cwmi% equ 0 if %_pwsh% equ 0 goto :E_PWS
+set _blue=0
+if %winbuild% geq 9600 if %winbuild% lss 9606 set _blue=1
 reg.exe query HKU\S-1-5-19 %_Null% || goto :E_Admin
 set "_SbS=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\SideBySide\Configuration"
 set "_CBS=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing"
@@ -152,6 +163,7 @@ iso
 isodir
 delete_source
 autostart
+wimcreatetime
 OnlineLimit
 LDRbranch
 Hotfix
@@ -183,11 +195,27 @@ if "%ResetBase%"=="" set ResetBase=0
 if "%WinRE%"=="" set WinRE=1
 if "%ISO%"=="" set ISO=1
 if "%AutoStart%"=="" set AutoStart=0
+if "%WimCreateTime%"=="" set WimCreateTime=0
 if "%Delete_Source%"=="" set Delete_Source=0
 if "%wim2esd%"=="" set wim2esd=0
 if "%OnlineLimit%"=="" set OnlineLimit=75
 for %%# in (LDRbranch Hotfix WUSatisfy) do if "!%%#!"=="" set "%%#=YES"
 for %%# in (Windows10 WMF RSAT) do if "!%%#!"=="" set "%%#=NO"
+set _wimlib=
+set _wlib=0
+for %%# in (wimlib-imagex.exe) do @if not "%%~$PATH:#"=="" (
+set _wimlib=wimlib-imagex.exe
+)
+if not defined _wimlib (
+if exist "wimlib-imagex.exe" set _wimlib="!_work!\wimlib-imagex.exe"
+if exist "bin\wimlib-imagex.exe" set _wimlib="!_work!\bin\wimlib-imagex.exe"
+if /i %xOS%==amd64 if exist "bin\bin64\wimlib-imagex.exe" set _wimlib="!_work!\bin\bin64\wimlib-imagex.exe"
+)
+if defined _wimlib (
+set _wlib=1
+) else (
+set WimCreateTime=0
+)
 set _ADK=0
 set "showdism=Host OS"
 set "_dism2=%dismroot% /NoRestart /ScratchDir"
@@ -195,6 +223,12 @@ if /i not "!dismroot!"=="dism.exe" (
 set _ADK=1
 set "showdism=%dismroot%"
 set _dism2="%dismroot%" /NoRestart /ScratchDir
+set "dsv=!dismroot:\=\\!"
+call :DismVer
+) else (
+set "dsv=%SysPath%\dism.exe"
+set "dsv=!dsv:\=\\!"
+call :DismVer
 )
 if /i "!repo!"=="Updates" (if exist "!_work!\Updates\Windows8.1-*" (set "repo=!_work!\Updates") else (set "repo="))
 for %%# in (LDRbranch Hotfix WUSatisfy Windows10 WMF RSAT) do if /i "!%%#!"=="NO" set "%%#=NO "
@@ -202,7 +236,7 @@ set _drv=%~d0
 if /i "%cab_dir:~0,5%"=="W81UI" set "cab_dir=%_drv%\W81UItemp"
 set _ntf=NTFS
 if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('"wmic volume where DriveLetter='%_drv%' get FileSystem /value"') do set "_ntf=%%#"
-if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
+if /i not "%_drv%"=="%SystemDrive%" if %_cwmi% equ 0 for /f %%# in ('%_psc% "(([WMISEARCHER]'Select * from Win32_Volume where DriveLetter=\"%_drv%\"').Get()).FileSystem"') do set "_ntf=%%#"
 if /i not "%_ntf%"=="NTFS" set _drv=%SystemDrive%
 if /i "%mountdir:~0,5%"=="W81UI" set "mountdir=%_drv%\W81UImount"
 if /i "%winremount:~0,5%"=="W81UI" set "winremount=%_drv%\W81UImountre"
@@ -238,7 +272,8 @@ set imgcount=0
 set wimfiles=0
 set keep=0
 set targetname=0
-if %_init%==1 if "!target!"=="" if exist "*.wim" (for /f "tokens=* delims=" %%# in ('dir /b /a:-d "*.wim"') do set "target=!_work!\%%~nx#")
+if not defined _all set _all=1
+if %_init%==1 if "!target!"=="" if exist "*.wim" (for /f "tokens=* delims=" %%# in ('dir /b /a:-d "*.wim" ^| findstr /i /v "Windows1.*\-KB"') do set "target=!_work!\%%~nx#")
 if "!target!"=="" set "target=%SystemDrive%"
 if "%target:~-1%"=="\" set "target=!target:~0,-1!"
 if /i "!target!"=="%SystemDrive%" (
@@ -409,6 +444,10 @@ if %wim%==0 goto :igdvd
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :domount "%targetname%"
 if /i not "%targetname%"=="winre.wim" (if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%)
+if %WimCreateTime% equ 1 (
+cd /d "!targetpath!"
+call :wimTime "%targetname%"
+)
 goto :fin
 
 :igdvd
@@ -416,6 +455,10 @@ if %dvd%==0 goto :fin
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :domount sources\install.wim
 if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%
+if %WimCreateTime% equ 1 (
+cd /d "!target!\sources"
+call :wimTime install.wim
+)
 set keep=0&set imgcount=%bootimg%&set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :domount sources\boot.wim
 xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
@@ -432,6 +475,24 @@ if %errorlevel% neq 0 del /f /q sources\install.esd %_Nul3%
 if exist sources\install.esd del /f /q sources\install.wim
 cd /d "!_work!"
 goto :fin
+
+:wimTime
+if %_pwsh% equ 0 goto :eof
+set "_wimfile=%~1"
+if exist "wim.xml" del /f /q wim.xml
+!_wimlib! info "%_wimfile%" --extract-xml wim.xml
+if not exist "wim.xml" goto :eof
+echo.
+echo ============================================================
+echo Modifying %_wimfile% image creation time ...
+echo ============================================================
+echo.
+for %%# in (%indices%) do (
+  for /f "tokens=1,2" %%A in ('%_psc% "$x = [xml](Get-Content 'wim.xml'); $d = ($x.WIM.IMAGE | where { $_.INDEX -eq %%# }).LASTMODIFICATIONTIME; echo ($d.HIGHPART+' '+$d.LOWPART)"') do (call set "HIGHPART=%%A"&call set "LOWPART=%%B")
+  !_wimlib! info "%_wimfile%" %%# --image-property CREATIONTIME/HIGHPART=!HIGHPART! --image-property CREATIONTIME/LOWPART=!LOWPART! %_Nul1%
+)
+if exist "wim.xml" del /f /q wim.xml
+goto :eof
 
 :doupdate
 set verb=1
@@ -473,9 +534,7 @@ set "_EsuCom=x86_microsoft-windows-s..edsecurityupdatesai_%_Pkt%_%_OurVer%_none_
 set "_EsuIdn=4D6963726F736F66742D57696E646F77732D534C432D436F6D706F6E656E742D457874656E64656453656375726974795570646174657341492C2043756C747572653D6E65757472616C2C2056657273696F6E3D362E332E393630332E33303630302C205075626C69634B6579546F6B656E3D333162663338353661643336346533352C2050726F636573736F724172636869746563747572653D7838362C2076657273696F6E53636F70653D4E6F6E537853"
 set "_EsuHsh=70FC6E62A198F5D98FDDE11A6E8D6C885E17C53FCFE1D927496351EADEB78E42"
 )
-set _EsuPkg=0
-if exist "!mountdir!\Windows\WinSxS\Manifests\%_EsuCom%.manifest"  set _EsuPkg=1
-if %_EsuPkg% equ 0 call :ESUadd %_Nul3%
+if not exist "!mountdir!\Windows\WinSxS\Manifests\%_EsuCom%.manifest" call :ESUadd %_Nul3%
 if not exist "!mountdir!\Windows\WinSxS\Manifests\%_EsuCom%.manifest"  (
 echo.
 echo %_err%
@@ -1309,7 +1368,7 @@ goto :eof
 set "mumfile=%SystemRoot%\temp\update.mum"
 set "chkfile=!mumfile:\=\\!"
 if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
-if %_cwmi% equ 0 for /f %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!chkfile!''').LastModified"') do set "mumdate=%%#"
+if %_cwmi% equ 0 for /f %%# in ('%_psc% "([WMI]'CIM_DataFile.Name=''!chkfile!''').LastModified"') do set "mumdate=%%#"
 del /f /q %SystemRoot%\temp\*.mum
 set "%1=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 set "%2=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
@@ -1319,7 +1378,7 @@ goto :eof
 reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
 for /f "skip=2 tokens=3-7 delims=. " %%i in ('"reg.exe query "HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLabEx" %_Nul6%') do (set regver=%%i.%%j&set regmin=%%j&set regdate=%%m&set reglab=%%l)
 reg.exe unload HKLM\uiSOFTWARE %_Nul1%
-for /f "tokens=3-6 delims=.() " %%i in ('powershell -nop -c "(gi '!mountdir!\Windows\system32\ntoskrnl.exe').VersionInfo.FileVersion" %_Nul6%') do (set ntkver=%%i.%%j&set ntkmin=%%j&set ntkdate=%%l&set isolab=%%k)
+for /f "tokens=3-6 delims=.() " %%i in ('%_psc% "(gi '!mountdir!\Windows\system32\ntoskrnl.exe').VersionInfo.FileVersion" %_Nul6%') do (set ntkver=%%i.%%j&set ntkmin=%%j&set ntkdate=%%l&set isolab=%%k)
 goto :eof
 
 :boots
@@ -1478,21 +1537,22 @@ echo.
 echo ============================================================
 echo ERROR: Could not mount or unmount WIM image
 echo ============================================================
-echo.
-echo Press 9 to exit.
 if %_Debug% neq 0 goto :EndDebug
-choice /c 9 /n
+echo.
+echo Press 9 or q to exit.
+choice /c 9Q /n
 if errorlevel 1 (exit) else (rem.)
 
 :E_Admin
-echo.
-echo ============================================================
-echo ERROR: right click on the script and 'Run as administrator'
-echo ============================================================
-echo.
-echo Press any key to exit.
-pause >nul
-goto :eof
+echo %_err%
+echo This script require administrator privileges.
+echo To do so, right click on this script and select 'Run as administrator'
+goto :E_Exit
+
+:E_PWS
+echo %_err%
+echo WMIC or Windows PowerShell is required for this script to work.
+goto :E_Exit
 
 :checkadk
 set regKeyPathFound=1
@@ -1538,15 +1598,26 @@ if %wowRegKeyPathFound% equ 0 (
 )
 for /f "skip=2 tokens=2*" %%i in ('reg.exe query "%regKeyPath%" /v KitsRoot10') do set "KitsRoot=%%j"
 set "DandIRoot=%KitsRoot%Assessment and Deployment Kit\Deployment Tools"
+if exist "%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe" (
+set "_oscdimg=%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe"
+)
 if exist "%DandIRoot%\%xOS%\DISM\dism.exe" (
 set _ADK=1
 set "showdism=Windows NT 10.0 ADK"
 set "Path=%DandIRoot%\%xOS%\DISM;%SysPath%;%SystemRoot%;%SysPath%\Wbem;%SysPath%\WindowsPowerShell\v1.0\"
-)
-if exist "%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe" (
-set "_oscdimg=%DandIRoot%\%xOS%\Oscdimg\oscdimg.exe"
+set "dsv=%DandIRoot%\%xOS%\DISM\dism.exe"
+set "dsv=!dsv:\=\\!"
+call :DismVer
 )
 goto :mainmenu
+
+:DismVer
+set "dsmver=9600"
+if %_cwmi% equ 1 for /f "tokens=4 delims==." %%# in ('wmic datafile where "name='!dsv!'" get Version /value') do set "dsmver=%%#" 
+if %_cwmi% equ 0 for /f "tokens=3 delims=." %%# in ('%_psc% "([WMI]'CIM_DataFile.Name=''!dsv!''').Version"') do set "dsmver=%%#"
+set _all=1
+if %dsmver% geq 25115 set _all=0
+exit /b
 
 :targetmenu
 @cls
@@ -1604,10 +1675,8 @@ set /p _pp=
 if not defined _pp goto :mainmenu
 set "_pp=%_pp:"=%"
 if not exist "!_pp!" (echo.&echo ERROR: DISM path not found&pause&goto :dismmenu)
-set "cpp=!_pp:\=\\!"
-set "dsmver=9600"
-if %_cwmi% equ 1 for /f "tokens=4 delims==." %%# in ('wmic datafile where "name='!cpp!'" get Version /value') do set "dsmver=%%#" 
-if %_cwmi% equ 0 for /f "tokens=3 delims=." %%# in ('powershell -nop -c "([WMI]'CIM_DataFile.Name=''!cpp!''').Version"') do set "dsmver=%%#"
+set "dsv=!_pp:\=\\!"
+call :DismVer
 if %dsmver% lss 9600 (echo.&echo ERROR: DISM version is lower than 6.3.9600&pause&goto :dismmenu)
 set "dismroot=%_pp%"
 set "showdism=%_pp%"
@@ -1764,7 +1833,7 @@ if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_wor
 if "!isodir!"=="" set "isodir=!_work!"
 call :DATEISO
 if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
-if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('powershell -nop -c "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
+if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('%_psc% "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
 if not defined isodate set "isodate=%_date:~2,6%-%_date:~8,4%"
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set isolab=!isolab:%%#=%%#!
@@ -1841,10 +1910,13 @@ echo System restart is required to complete installation
 echo ============================================================
 echo.
 )
+
+:E_Exit
+if %autostart% neq 0 goto :eof
 if %_Debug% neq 0 goto :eof
 echo.
-echo Press 9 to exit.
-choice /c 9 /n
+echo Press 9 or q to exit.
+choice /c 9Q /n
 if errorlevel 1 (goto :eof) else (rem.)
 
 :EndDebug

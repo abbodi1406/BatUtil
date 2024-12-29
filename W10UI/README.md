@@ -133,7 +133,7 @@ force updating winre.wim with Cumulative Update even if SafeOS update detected
 
 * LCUmsuExpand  
 expand Cumulative Update and install from loose files via update.mum, instead adding msu files directly  
-applicable only for builds 26052 and later
+applicable for builds 22621 and later
 
 * UpdtBootFiles  
 update ISO boot files bootmgr/bootmgr.efi/efisys.bin from Cumulative Update
@@ -168,6 +168,10 @@ the option will also auto exit at the end without prompt
 
 * UseWimlib  
 detect and use wimlib-imagex.exe for exporting wim files instead dism.exe
+
+* WimCreateTime  
+change install.wim image creation time to match last modification time  
+this option require wimlib-imagex.exe, but it doesn't require to enable UseWimlib option itself
 
 * AddDrivers  
 add drivers to install.wim and boot.wim / winre.wim  
@@ -221,6 +225,19 @@ special thanks for testing and feedback:
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.49:  
+- Add option "WimCreateTime" to change install.wim image creation time
+- Fix repacking psf+wim for multiple updates in the same AggregatedMetadata
+
+10.48:  
+- Add type detection for Microcode and OOBE updates
+- Extend "LCUmsuExpand" option to support Windows 11 builds 22621-22635
+- Process msu wim files with wimlib-imagex.exe if "UseWimlib" option is enabled
+- Repack Windows 11 psf+wim or psf+cab into msu file  
+requires matching UUP files:  
+AggregatedMetadata cab  
+DesktopDeployment cab, and/or SSU cab
 
 10.47:  
 - 24H2: Add option "LCUmsuExpand":  
