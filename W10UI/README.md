@@ -33,7 +33,7 @@ you must run W10UI.cmd at least once after restart to perform Cleanup or Reset O
 * Creating updated iso file for a distribution target require either of:  
 > install Windows ADK  
 place oscdimg.exe or cdimage.exe in the same folder next to W10UI.cmd  
-otherwise, embedded Powershell/.NET funcion `DIR2ISO` will be used to create the iso
+otherwise, embedded Powershell/.NET function `DIR2ISO` will be used to create the iso
 
 ## Limitations:
 
@@ -128,22 +128,31 @@ or set extra manual options below:
 * Net35Source  
 specify custom "folder" path which contain microsoft-windows-netfx3-ondemand-package.cab
 
+* ResetBase  
+require first to enable Cleanup  
+change to 2 to run rebase after each LCU for builds 26052 and later
+
 * LCUwinre  
-force updating winre.wim with Cumulative Update even if SafeOS update detected
+force updating winre.wim with Cumulative Update even if SafeOS update detected  
+auto enabled for builds 22000-26050, change to 2 to disable  
+ignored and auto disabled for builds 26052 and later
 
 * LCUmsuExpand  
 expand Cumulative Update and install from loose files via update.mum, instead adding msu files directly  
-applicable for builds 22621 and later
+applicable only for builds 22621 and later  
+auto enabled for builds 26052 and later, change to 2 to disable
 
 * UpdtBootFiles  
-update ISO boot files bootmgr/bootmgr.efi/efisys.bin from Cumulative Update
+update ISO boot files bootmgr/bootmgr.efi/efisys.bin from Cumulative Update  
+this will also update new UEFI CA 2023 boot files if detected. See KB5053484 for details  
+note: the two default files bootmgr.efi/bootmgfw.efi will be updated if this option is OFF
 
 * SkipEdge  
 1 = do not install EdgeChromium with Enablement Package or Cumulative Update  
 2 = alternative workaround to skip EdgeChromium with Cumulative Update only
 
 * SkipWebView  
-do not install Edge WebView with Cumulative Update  
+do not install Edge WebView with Cumulative Update
 
 * wim2esd  
 convert install.wim to install.esd, if the target is a distribution  
@@ -176,7 +185,7 @@ this option require wimlib-imagex.exe, but it doesn't require to enable UseWimli
 * AddDrivers  
 add drivers to install.wim and boot.wim / winre.wim  
 > this is basic feature support, and should be used only with tested working compatible drivers.  
-it is ment for simple and boot critical drivers (chipsets, disk controllers, LAN/WiFi..), to allow easier installation, not for large drivers, or drivers that may break setup.  
+it is meant for simple and boot critical drivers (chipsets, disk controllers, LAN/WiFi..), to allow easier installation, not for large drivers, or drivers that may break setup.  
 it will not check or verify drivers, it simply point DISM towards the drivers folders.
 
 How To Use:
@@ -194,7 +203,7 @@ the folder must contain subfolder for each drivers target, as explained above.
 
 - Note: Do not change the structure of W10UI.ini, just set your options after the equal sign `=`
 
-- To restore old behavior and change options by editing the script, simply detele W10UI.ini file
+- To restore old behavior and change options by editing the script, simply delete W10UI.ini file
 
 ## Debug Mode (for advanced users):
 
@@ -210,14 +219,13 @@ wait until command prompt window is closed and W10UI_Debug.log is created
 
 ## Credits:
 
-[Creator](https://forums.mydigitallife.net/members/abbodi1406.204274/)  
-[Concept](https://forums.mydigitallife.net/members/burfadel.84828/)  
-[WHDownloader](https://forums.mydigitallife.net/threads/44645)  
-[PSFExtractor / th1r5bvn23](https://www.betaworld.org/)  
-[SxSExpand](https://forums.mydigitallife.net/members/superbubble.250156/)  
-[DIR2ISO code, Compressed2TXT](https://github.com/AveYo)
-[msu wim Reflection code](https://github.com/ave9858)  
-[WinSxS Suppressors](https://github.com/asdcorp/haveSxS)  
+Concept - [burfadel](https://forums.mydigitallife.net/members/burfadel.84828/)  
+WHDownloader - [Alphawaves](https://forums.mydigitallife.net/threads/44645/)  
+PSFExtractor - [th1r5bvn23](https://www.betaworld.org/)  
+SxSExpand - [Melinda Bellemore](https://forums.mydigitallife.net/members/superbubble.250156/)  
+DIR2ISO / Compressed2TXT - [AveYo](https://github.com/AveYo)
+Powershell Reflection code - [May](https://github.com/ave9858)  
+WinSxS Suppressors - [asdcorp](https://github.com/asdcorp/haveSxS)  
 
 special thanks for testing and feedback:
 @Enthousiast, @Paul Mercer, @Clusterhead
@@ -225,6 +233,15 @@ special thanks for testing and feedback:
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.50:  
+- "LCUmsuExpand" will be auto enabled for builds 26052+. Change to 2 to force disable
+- "UpdtBootFiles" will also update new UEFI CA 2023 boot files (see KB5053484)
+- Add workaround to change cleanup registry values for builds 27768+
+- Delete "DecompressOverride" cleanup registry value for builds 26052+
+- Add extra value for "ResetBase" with for builds 26052+:  
+change value to 2 to run reset base cleanup after each LCU  
+this option still require enabling Cleanup option
 
 10.49:  
 - Add option "WimCreateTime" to change install.wim image creation time
@@ -448,7 +465,7 @@ example new:
 - Enhanced Flash updates detection to avoid confliction when Flash Removal update is merged with LCU
 
 9.9:  
-- Extended `SkipEdge` option to skip EdgeChromium bunded with Cumulative Update
+- Extended `SkipEdge` option to skip EdgeChromium bundled with Cumulative Update
 
 9.8:  
 - Further enhancement to prevent setup.exe conflict (if ISO files dates are newer than DU)
@@ -584,7 +601,7 @@ or close the window with the red X button
 - Cosmetic change, option 3. DISM will now show "Windows 10 ADK" instead the long dism.exe path (if ADK is detected)
 
 6.2:  
-- Fixed already-installed detection for 1903 Cumlative Update
+- Fixed already-installed detection for 1903 Cumulative Update
 
 6.1:  
 - Added manual option "isodir" to specify alternative folder path for saving iso file
@@ -592,7 +609,7 @@ or close the window with the red X button
 - Added support for configuration file W10UI.ini to set options:  
 Values in W10UI.ini take precedence over the ones inside W10UI.cmd (by default both are the same)  
 Do not change the structure of W10UI.ini, just set your options after the equal sign  
-To restore old behavior and change options by editing the script, simply detele W10UI.ini file
+To restore old behavior and change options by editing the script, simply delete W10UI.ini file
 
 6.0:  
 - Code improvement and fixes, mostly to avoid issues with paths and spaces in files names
@@ -629,7 +646,7 @@ you can revert to all indexes by entering * alone
 5.3:  
 - Fixed Flash update integration for 17763 (non-applicable editions will be skipped)
 
-- Fixed SSU integration for 16299 and later (previously it was always re-integrated even if pesent)
+- Fixed SSU integration for 16299 and later (previously it was always re-integrated even if present)
 
 - Implemented Debug Mode (for advanced users)
 
@@ -658,7 +675,7 @@ you can revert to all indexes by entering * alone
 4.5:  
 - Added manual option "delete_source" to keep or delete DVD distribution folder after creating updated ISO
 
-4.3/4.4:  
+4.3 - 4.4:  
 - Skip .NET lang packs integration for WinPE images
 
 - Updated WinRE.wim will not be left over, if the target is direct install.wim file
@@ -699,7 +716,7 @@ you can revert to all indexes by entering * alone
 - Fixed accidental mount directory confliction when updating live OS
 
 3.2:  
-- Splitted the ResetBase option to two, Cleanup System Image / Reset Image Base
+- Split the ResetBase option to two, Cleanup System Image / Reset Image Base
 
 3.0/3.1:  
 - Added option to skip Resetbase operation

@@ -157,24 +157,28 @@
                 <li>
                     <b>LCUwinre</b><br /><br />
                     Force updating winre.wim with Cumulative Update even if SafeOS update detected.<br /><br />
-                    This option is auto enabled for Windows 11 build 22000 and later, Set this option to <strong>2</strong> to disable.
+                    This option is auto enabled for Windows 11 build 22000 and later, Set this option to <strong>2</strong> to disable.<br />
+                    This option is ignored and auto disabled for builds 26052 and later.
                 </li>
                 <br />
                 <li>
                     <b>LCUmsuExpand</b><br /><br />
                     Expand Cumulative Update and install from loose files via update.mum, instead adding direct msu files.<br /><br />
-                    This option is applicable only for Windows 11 build 26052 and later.
+                    This option is auto enabled for Windows 11 build 26052 and later, Set this option to <strong>2</strong> to disable.<br />
+                    This option is applicable only for Windows 11 build 22621 and later.
                 </li>
                 <br />
                 <li>
                     <b>DisableUpdatingUpgrade</b><br /><br />
-                    Disable updating process optimization by using editions upgrade (Home>Pro / ServerStandard>ServerDatacenter), and perform separate updating for each edition.
+                    Disable updating process optimization by using editions upgrade (Home>Pro / ServerStandard>ServerDatacenter), and perform separate updating for each edition.<br /><br />
+                    This option is auto enabled for Windows 11 build 26000 and later, Set this option to <strong>2</strong> to disable.
                 </li>
                 <br />
                 <li>
                     <b>UpdtBootFiles</b><br /><br />
                     Update ISO boot files bootmgr/memtest/efisys.bin with new files from Cumulative Update.<br /><br />
-                    note: to accommodate KB5025885 changes, the two files bootmgr.efi/bootmgfw.efi will be always updated regardless this option.
+                    This option will also update new UEFI CA 2023 boot files if detected. See <a href="https://support.microsoft.com/help/5053484" target="_blank">KB5053484</a> for more details.<br /><br />
+                    note: the two default files bootmgr.efi/bootmgfw.efi will be updated if this option is OFF.
                 </li>
                 <br />
                 <li>
