@@ -790,7 +790,7 @@ if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacem
 rmdir /s /q "!_cabdir!\du\" %_Nul3%
 
 :dvdproceed
-xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
+:: xcopy /CRY "!target!\efi\microsoft\boot\fonts" "!target!\boot\fonts\" %_Nul1%
 if %_DNF%==1 if exist "!target!\sources\sxs\*netfx3*.cab" (del /f /q "!target!\sources\sxs\*netfx3*.cab" %_Nul1%)
 cd /d "!target!\sources"
 for /f %%# in ('dir /b /a:-d install.wim') do set "_size=000000%%~z#"
