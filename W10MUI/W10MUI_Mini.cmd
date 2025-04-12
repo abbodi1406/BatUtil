@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v24.6
+@set uiv=v24.7
 @echo off
 
 set WIMPATH=
@@ -275,7 +275,7 @@ ext tra ntwrk 1st 2nd 3rd paint note
 power ppmc pwsf word step snip nots 
 ieop ethernet wifi media wmi 
 pfs tlnt tftp vbse wocr smb stcp 
-adam sync sense tsc vmp 
+adam sync sense tsc vmp srvfnt 4th 
 ) do (
 set "_OD%%#86="
 set "_OD%%#64="
@@ -339,6 +339,7 @@ findstr /i /m Microsoft-Windows-SimpleTCP-FOD update.mum %_Nul3% && (set _OD3rd%
 findstr /i /m Microsoft-Windows-SmbDirect-FOD update.mum %_Nul3% && (set _OD3rd%1=1&call set _ODsmb%1=!_ODsmb%1! /PackagePath:!ofc!\update.mum&goto :eof)
 findstr /i /m TerminalServices-AppServer-Client-FOD update.mum %_Nul3% && (set _OD1st%1=1&call set _ODtsc%1=!_ODtsc%1! /PackagePath:!ofc!\update.mum&goto :eof)
 findstr /i /m VirtualMachinePlatform-Client-Disabled-FOD update.mum %_Nul3% && (set _OD1st%1=1&call set _ODvmp%1=!_ODvmp%1! /PackagePath:!ofc!\update.mum&goto :eof)
+findstr /i /m Microsoft-Windows-ServerCoreFonts update.mum %_Nul3% && (set _OD4th%1=1&call set _ODsrvfnt%1=!_ODsrvfnt%1! /PackagePath:!ofc!\update.mum&goto :eof)
   )
 goto :eof
 
@@ -593,6 +594,10 @@ if defined _ODsense%1 if exist "%_svcn%\Microsoft-Windows-SenseClient-FoD*.mum" 
 if defined _ODsync%1 if exist "%_svcn%\Microsoft-Windows-EnterpriseClientSync-Host-FOD*.mum" set "_AP3rd=!_ODsync%1! !_AP3rd!"
 if defined _ODadam%1 if exist "%_svcn%\Microsoft-Windows-DirectoryServices-ADAM-Client-FOD*.mum" set "_AP3rd=!_ODadam%1! !_AP3rd!"
 )
+set "_AP4th="
+if defined _OD4th%1 (
+if defined _ODsrvfnt%1 if exist "%_svcn%\Microsoft-Windows-ServerCoreFonts-NonCritical-Fonts-*-FOD*.mum" set "_AP4th=!_ODsrvfnt%1!"
+)
 if defined _ODbasic%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1a.log" /Add-Package !_ODbasic%1!
 if defined _ODbasic%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1a.log" /Add-Package !_ODfont%1! !_ODtts%1! !_ODhand%1! !_ODocr%1! !_ODspeech%1! !_ODintl%1!
 if defined _APext !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1b.log" /Add-Package !_APext!
@@ -600,6 +605,7 @@ if defined _APtra !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dL
 if defined _AP1st !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1d.log" /Add-Package !_AP1st!
 if defined _AP2nd !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1e.log" /Add-Package !_AP2nd!
 if defined _AP3rd !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1f.log" /Add-Package !_AP3rd!
+if defined _AP4th !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1g.log" /Add-Package !_AP4th!
 if defined _ODntwrk%1 !_dism2!:"!TMPDISM!" /Image:"%INSTALLMOUNTDIR%" /LogPath:"%_dLog%\MUIinstallFOD%1n.log" /Add-Package !_ODethernet%1! !_ODwifi%1!
 popd
 goto :eof
@@ -695,6 +701,10 @@ if exist "Updates\msucab.txt" (
   for /f %%# in (Updates\msucab.txt) do (
   if exist "Updates\*%%~#*x86*.msu" if exist "Updates\*%%~#*x86*.cab" del /f /q "Updates\*%%~#*x86*.cab" %_Nul3%
   if exist "Updates\*%%~#*x64*.msu" if exist "Updates\*%%~#*x64*.cab" del /f /q "Updates\*%%~#*x64*.cab" %_Nul3%
+  for /f "skip=2 tokens=1* delims==" %%A in ('find /i "repo " ".\Updates\W10UI.ini" %_Nul6%') do (
+    if exist "%%~B\*%%~#*x86*.msu" if exist "%%~B\*%%~#*x86*.cab" del /f /q "%%~B\*%%~#*x86*.cab" %_Nul3%
+    if exist "%%~B\*%%~#*x64*.msu" if exist "%%~B\*%%~#*x64*.cab" del /f /q "%%~B\*%%~#*x64*.cab" %_Nul3%
+    )
   )
   del /f /q Updates\msucab.txt
 )

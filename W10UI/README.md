@@ -234,6 +234,9 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.51:  
+- Add detection for Windows 11 24H2 Dev build 26200 Enablement Package
+
 10.50:  
 - "LCUmsuExpand" will be auto enabled for builds 26052+. Change to 2 to force disable
 - "UpdtBootFiles" will also update new UEFI CA 2023 boot files (see KB5053484)

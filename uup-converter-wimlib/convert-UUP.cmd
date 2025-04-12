@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v111
+@set uivr=v112
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -1007,7 +1007,7 @@ goto :BootPE
 )
 if %_build% geq 26052 if exist "%_mount%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" (
 for /f "delims=" %%# in ('dir /b /a:-d "%_mount%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum"') do (
-  %_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Remove-Package /PackageName:%%~n#
+  %_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismNUL.log" /Remove-Package /PackageName:%%~n# %_Nul3%
   )
 %_dism1% /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
 set relite=1
@@ -2611,6 +2611,7 @@ if exist "%~1\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixSV=
 if exist "%~1\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixSV=22631"&set "_fixEP=22631"
 if exist "%~1\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixSV=22635"&set "_fixEP=22635"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-Beta-Version-Enablement-Package~*.mum" set "_fixSV=26120"&set "_fixEP=26120"
+if exist "%~1\Microsoft-Windows-Ge-Client-Server-26200-Version-Enablement-Package~*.mum" set "_fixSV=26200"&set "_fixEP=26200"
 goto :eof
 
 :inrenssu
@@ -2841,8 +2842,8 @@ set "_DsmLog=DismLCU.log"
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 set "_DsmLog=DismLCU_winpe.log"
 call :dk_color1 %Gray% "=== Adding LCU for %_wpeLCU% . . ." 4
-if %_build% geq 26052 if exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" for /f "delims=" %%# in ('dir /b /a:-d "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum"') do (
-  %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Remove-Package /PackageName:%%~n#
+if defined lcumsu if %_build% geq 26052 if exist "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" for /f "delims=" %%# in ('dir /b /a:-d "%mumtarget%\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum"') do (
+  %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNUL.log" /Remove-Package /PackageName:%%~n# %_Nul3%
   )
 )
 set idpkg=LCU
