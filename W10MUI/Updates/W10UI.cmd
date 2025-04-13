@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.51
+@set uiv=v10.52
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -865,6 +865,10 @@ echo ============================================================
 echo Modifying %_wimfile% image creation time ...
 echo ============================================================
 echo.
+if %keep%==1 (
+  for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%_wimfile%" ^| find /i "Index"') do set imgcount=%%#
+  set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
+)
 for %%# in (%indices%) do (
   for /f "tokens=1,2" %%A in ('%_psc% "$x = [xml](Get-Content 'wim.xml'); $d = ($x.WIM.IMAGE | where { $_.INDEX -eq %%# }).LASTMODIFICATIONTIME; echo ($d.HIGHPART+' '+$d.LOWPART)"') do (call set "HIGHPART=%%A"&call set "LOWPART=%%B")
   !_wimlib! info "%_wimfile%" %%# --image-property CREATIONTIME/HIGHPART=!HIGHPART! --image-property CREATIONTIME/LOWPART=!LOWPART! %_Nul1%

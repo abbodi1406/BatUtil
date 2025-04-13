@@ -234,6 +234,9 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.52:  
+- Fixed WimCreateTime option when "Keep indexes: Selected"
+
 10.51:  
 - Add detection for Windows 11 24H2 Dev build 26200 Enablement Package
 
