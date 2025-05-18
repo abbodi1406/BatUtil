@@ -600,9 +600,19 @@ if exist "%ProgramFiles(x86)%\Microsoft Office\Office%1\*.dll" set _O%1MSI=1
 goto :eof
 
 :officeREG
-reg delete HKCU\Software\Microsoft\Office\%1.0 /f
-reg delete HKCU\Software\Policies\Microsoft\Office\%1.0 /f
-reg delete HKCU\Software\Policies\Microsoft\Cloud\Office\%1.0 /f
+for /f "tokens=1" %%a in ('reg query "HKU" %_Nul6%') do (
+   reg delete %%a\Software\Microsoft\Office\%1.0 /f
+   reg delete %%a\Software\Policies\Microsoft\Office\%1.0 /f
+   reg delete %%a\Software\Policies\Microsoft\Cloud\Office\%1.0 /f
+)
+for /f "skip=2 tokens=2*" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" /s /v ProfileImagePath ^| findstr /i "ProfileImagePath" %_Nul6%') do (
+   reg load HKU\TempHive "%%b\NTUSER.DAT" %_Nul2% && (
+      reg delete HKU\TempHive\Software\Microsoft\Office\%1.0 /f
+      reg delete HKU\TempHive\Software\Policies\Microsoft\Office\%1.0 /f
+      reg delete HKU\TempHive\Software\Policies\Microsoft\Cloud\Office\%1.0 /f
+      reg unload HKU\TempHive %_Nul2%
+   )
+)
 reg delete HKLM\SOFTWARE\Microsoft\Office\%1.0 /f
 reg delete HKLM\SOFTWARE\Policies\Microsoft\Office\%1.0 /f
 reg delete HKLM\SOFTWARE\Microsoft\Office\%1.0 /f /reg:32
