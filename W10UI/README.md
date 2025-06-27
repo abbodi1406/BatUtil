@@ -234,6 +234,9 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.53:  
+- Add workaround to avoid KB5043080 msu installation error
+
 10.52:  
 - Fixed WimCreateTime option when "Keep indexes: Selected"
 

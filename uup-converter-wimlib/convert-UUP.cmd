@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v112
+@set uivr=v113
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -351,6 +351,9 @@ if %_Debug% neq 0 (
 if %AutoStart% equ 0 set AutoStart=2
 )
 set _configured=0
+set u_msulcu=%LCUmsuExpand%
+set u_winre=%LCUwinre%
+set u_upgrade=%DisableUpdatingUpgrade%
 if exist bin\temp\ rmdir /s /q bin\temp\
 if exist temp\ rmdir /s /q temp\
 if exist bin\expand.exe if not exist bin\dpx.dll del /f /q bin\expand.exe
@@ -619,6 +622,13 @@ DeleteSource
 ) do (
 if !%%#! neq 0 set _configured=1
 )
+for %%# in (
+u_msulcu
+u_winre
+u_upgrade
+) do (
+if !%%#! neq 0 set _configured=1
+)
 if %_configured% equ 1 (
 call :dk_color1 %Blue% "=== Configured Options . . ." 4 5
   if %AutoStart% neq 0 echo AutoStart %AutoStart%
@@ -626,9 +636,9 @@ call :dk_color1 %Blue% "=== Configured Options . . ." 4 5
   if %AddUpdates% equ 1 (
   if %Cleanup% neq 0 echo Cleanup
   if %Cleanup% neq 0 if %ResetBase% neq 0 echo ResetBase
-  if %LCUwinre% neq 0 echo LCUwinre
-  if %LCUmsuExpand% neq 0 echo LCUmsuExpand
-  if %DisableUpdatingUpgrade% neq 0 echo DisableUpdatingUpgrade
+  if %u_winre% neq 0 (echo LCUwinre %u_winre%) else (if %LCUwinre% neq 0 echo LCUwinre %LCUwinre%)
+  if %u_msulcu% neq 0 (echo LCUmsuExpand %u_msulcu%) else (if %LCUmsuExpand% neq 0 echo LCUmsuExpand %LCUmsuExpand%)
+  if %u_upgrade% neq 0 (echo DisableUpdatingUpgrade %u_upgrade%) else (if %DisableUpdatingUpgrade% neq 0 echo DisableUpdatingUpgrade %DisableUpdatingUpgrade%)
   )
   if %AddUpdates% neq 0 if %NetFx3% neq 0 echo NetFx3
   if %StartVirtual% neq 0 (
@@ -823,9 +833,9 @@ call :dk_color1 %Blue% "=== Configured Options . . ." 4 5
   echo AddUpdates %AddUpdates%
   if %Cleanup% neq 0 echo Cleanup
   if %Cleanup% neq 0 if %ResetBase% neq 0 echo ResetBase
-  if %LCUwinre% neq 0 echo LCUwinre
-  if %LCUmsuExpand% neq 0 echo LCUmsuExpand
-  if %DisableUpdatingUpgrade% neq 0 echo DisableUpdatingUpgrade
+  if %u_winre% neq 0 (echo LCUwinre %u_winre%) else (if %LCUwinre% neq 0 echo LCUwinre %LCUwinre%)
+  if %u_msulcu% neq 0 (echo LCUmsuExpand %u_msulcu%) else (if %LCUmsuExpand% neq 0 echo LCUmsuExpand %LCUmsuExpand%)
+  if %u_upgrade% neq 0 (echo DisableUpdatingUpgrade %u_upgrade%) else (if %DisableUpdatingUpgrade% neq 0 echo DisableUpdatingUpgrade %DisableUpdatingUpgrade%)
   )
   for %%# in (
   SkipWinRE
@@ -2556,6 +2566,10 @@ if not exist "!_cabdir!\LCUmum\Package_for_RollupFix~%_Pkt%~%_ss%~~%cver%.mum" c
 call :vrpad %kbvr%
 if %_build% geq 26052 (
 if not exist "!_cabdir!\LCUall\%cuvr%-%package%" copy /y "!_UUP!\%package%" "!_cabdir!\LCUall\%cuvr%-%package%" %_Nul1%
+echo %package% |findstr /i "KB5043080" %_Nul1% && if not exist "!_cabdir!\LCUbase\%cuvr%-%package%" (
+  mkdir "!_cabdir!\LCUbase" %_Nul3%
+  copy /y "!_UUP!\%package%" "!_cabdir!\LCUbase\%cuvr%-%package%" %_Nul1%
+  )
 )
 if %kbvr% geq %c_ver% (
 set "c_ver=%kbvr%"
@@ -2856,7 +2870,9 @@ if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" i
 )
 if defined lcumsu for %%# in (%lcumsu%) do (
 call :dk_color1 %_Yellow% "=== Adding LCU %%~nx#" 4
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\%_DsmLog%" /Add-Package /PackagePath:%%#
+set ppath=%%#
+if exist "!_cabdir!\LCUbase\%%~nx#" set ppath="!_cabdir!\LCUbase\%%~nx#"
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\%_DsmLog%" /Add-Package /PackagePath:!ppath!
 call set /a _c_+=1
 if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %ResetBase% equ 2 if %_build% geq 26052 if !_c_! lss %c_num% call :rebase
 )
@@ -3903,7 +3919,9 @@ if defined netmsu if defined netxtr (
 )
 if defined netmsu for %%# in (%netmsu%) do (
 echo.&echo Reinstalling %%~nx#
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package /PackagePath:%%#
+set ppath=%%#
+if exist "!_cabdir!\LCUbase\%%~nx#" set ppath="!_cabdir!\LCUbase\%%~nx#"
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package /PackagePath:!ppath!
 call set ERRTEMP=!ERRORLEVEL!
 )
 if not defined netmsu if defined netlcu (
@@ -4327,6 +4345,9 @@ set _extVirt=0
 set _didProf=0
 set _didProN=0
 set _didHome=0
+set u_msulcu=0
+set u_winre=0
+set u_upgrade=0
 goto :eof
 
 :checkadk
@@ -4390,7 +4411,7 @@ exit /b
 :pr_color
 set _NCS=1
 if %winbuild% LSS 10586 set _NCS=0
-if %winbuild% GEQ 10586 reg.exe query HKCU\Console /v ForceV2 %_Nul2% | find /i "0x0" %_Null% && (set _NCS=0)
+if %winbuild% GEQ 10586 reg.exe query HKCU\Console /v ForceV2 2>nul | find /i "0x0" %_Null% && (set _NCS=0)
 
 if %_NCS% EQU 1 (
 for /F %%a in ('echo prompt $E ^| cmd.exe') do set "_esc=%%a"

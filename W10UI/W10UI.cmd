@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.52
+@set uiv=v10.53
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -119,6 +119,8 @@ start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" %*"
 exit /b
 )
 
+set u_msulcu=0
+set u_winre=0
 set _offdu=0
 set _embd=0
 set _keep=0
@@ -311,6 +313,8 @@ if "%AddDrivers%"=="" set AddDrivers=0
 if "%Drv_Source%"=="" set "Drv_Source=\Drivers"
 if "%wim2esd%"=="" set wim2esd=0
 if "%wim2swm%"=="" set wim2swm=0
+set u_msulcu=%LCUmsuExpand%
+set u_winre=%LCUwinre%
 set _wimlib=
 set _wlib=0
 for %%# in (wimlib-imagex.exe) do @if not "%%~$PATH:#"=="" (
@@ -650,6 +654,12 @@ Delete_Source
 ) do (
 if !%%#! neq 0 set _configured=1
 )
+for %%# in (
+u_msulcu
+u_winre
+) do (
+if !%%#! neq 0 set _configured=1
+)
 if /i not "!dismroot!"=="dism.exe" set _configured=1
 if %_embd% equ 0 if %_configured% equ 1 (
 echo.
@@ -661,10 +671,10 @@ echo.
   echo Net35
   if not "!Net35Source!"=="" echo Net35Source
   )
+  if %u_msulcu% neq 0 (echo LCUmsuExpand %u_msulcu%) else (if %LCUmsuExpand% neq 0 echo LCUmsuExpand %LCUmsuExpand%)
   for %%# in (
   Cleanup
   ResetBase
-  LCUmsuExpand
   UpdtBootFiles
   SkipEdge
   SkipWebView
@@ -677,7 +687,7 @@ echo.
   if %wimfiles%==1 (
   if %WimCreateTime% neq 0 echo WimCreateTime
   if %WinRE% neq 0 echo WinRE
-  if %LCUwinre% neq 0 echo LCUwinre
+  if %u_winre% neq 0 (echo LCUwinre %u_winre%) else (if %LCUwinre% neq 0 echo LCUwinre %LCUwinre%)
   )
   if %dvd%==1 (
   if %wim2esd% neq 0 echo wim2esd
@@ -1287,6 +1297,10 @@ if not exist "!_cabdir!\LCUmum\Package_for_RollupFix~%_Pkt%~%sss%~~%cver%.mum" c
 call :vrpad %kbvr%
 if %_build% geq 26052 (
 if not exist "!_cabdir!\LCUall\%cuvr%-!package!" copy /y "!repo!\!package!" "!_cabdir!\LCUall\%cuvr%-!package!" %_Nul1%
+echo !package! |findstr /i "KB5043080" %_Nul1% && if not exist "!_cabdir!\LCUbase\%cuvr%-!package!" (
+  mkdir "!_cabdir!\LCUbase" %_Nul3%
+  copy /y "!repo!\!package!" "!_cabdir!\LCUbase\%cuvr%-!package!" %_Nul1%
+  )
 )
 if %kbvr% geq %c_ver% (
 set "c_ver=%kbvr%"
@@ -1600,7 +1614,9 @@ call :dNUL !errorlevel!
 )
 if defined lcumsu for %%# in (%lcumsu%) do (
 echo.&echo %%~nx#
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_winre.log" /Add-Package /PackagePath:%%#
+set ppath=%%#
+if exist "!_cabdir!\LCUbase\%%~nx#" set ppath="!_cabdir!\LCUbase\%%~nx#"
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_winre.log" /Add-Package /PackagePath:!ppath!
 call :dNUL !errorlevel!
 )
 :cuboot
@@ -1615,7 +1631,9 @@ call :dNUL !errorlevel!
 )
 if defined lcumsu for %%# in (%lcumsu%) do (
 echo.&echo %%~nx#
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_boot.log" /Add-Package /PackagePath:%%#
+set ppath=%%#
+if exist "!_cabdir!\LCUbase\%%~nx#" set ppath="!_cabdir!\LCUbase\%%~nx#"
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU_boot.log" /Add-Package /PackagePath:!ppath!
 call :dNUL !errorlevel!
 )
 :cuinstall
@@ -1630,7 +1648,9 @@ if %online% equ 0 if %ResetBase% equ 2 if %_build% geq 26052 if !_c_! lss %c_num
 )
 if defined lcumsu for %%# in (%lcumsu%) do (
 echo.&echo %%~nx#
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU.log" /Add-Package /PackagePath:%%#
+set ppath=%%#
+if exist "!_cabdir!\LCUbase\%%~nx#" set ppath="!_cabdir!\LCUbase\%%~nx#"
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU.log" /Add-Package /PackagePath:!ppath!
 call :dNUL !errorlevel!
 call set /a _c_+=1
 if %online% equ 0 if %ResetBase% equ 2 if %_build% geq 26052 if !_c_! lss %c_num% call :rebase
@@ -2300,7 +2320,9 @@ if defined netmsu if defined netxtr (
 )
 if defined netmsu for %%# in (%netmsu%) do (
 echo.&echo %%~nx#
-%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package /PackagePath:%%#
+set ppath=%%#
+if exist "!_cabdir!\LCUbase\%%~nx#" set ppath="!_cabdir!\LCUbase\%%~nx#"
+%_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package /PackagePath:!ppath!
 )
 if not defined netmsu if defined netlcu (
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismNetFx3.log" /Add-Package %netroll% %netlcu%
