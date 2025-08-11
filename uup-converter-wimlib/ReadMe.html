@@ -157,7 +157,6 @@
                 <li>
                     <b>LCUwinre</b><br /><br />
                     Force updating winre.wim with Cumulative Update even if SafeOS update detected.<br /><br />
-                    This option is auto enabled for Windows 11 build 22000 and later, Set this option to <strong>2</strong> to disable.<br />
                     This option is ignored and auto disabled for builds 26052 and later.
                 </li>
                 <br />
@@ -171,7 +170,7 @@
                 <li>
                     <b>DisableUpdatingUpgrade</b><br /><br />
                     Disable updating process optimization by using editions upgrade (Home>Pro / ServerStandard>ServerDatacenter), and perform separate updating for each edition.<br /><br />
-                    This option is auto enabled for Windows 11 build 26000 and later, Set this option to <strong>2</strong> to disable.
+                    This option is auto enabled for Windows 11 build 26000 and later, Set this option to <strong>2</strong> to revert to off state.
                 </li>
                 <br />
                 <li>
@@ -422,17 +421,35 @@
                 </li>
                 <br />
                 <li>AutoEditions<br /><br />
-                Specify editions to auto create with <b>AutoStart</b> option, separate the editions with a comma ,<br /><br />
+                Specify editions to auto create with <b>AutoStart</b> option, separate the editions with a comma ,<br />
                 Leave this option empty to create all possible target editions.<br /><br />
                 <u>Supported editions values</u>:<br />
                 Enterprise, Education, ProfessionalEducation, ProfessionalWorkstation, CloudEdition, ServerRdsh, IoTEnterprise, IoTEnterpriseK<br />
                 EnterpriseN, EducationN, ProfessionalEducationN, ProfessionalWorkstationN, CloudEditionN<br />
                 CoreSingleLanguage<br />
-                IoTEnterpriseS,  IoTEnterpriseSK<br /><br />
+                IoTEnterpriseS, IoTEnterpriseSK<br /><br />
                 Examples:<br />
                 <code>vAutoEditions=Enterprise<br />
                 vAutoEditions=Enterprise,ProfessionalWorkstation,Education<br />
                 vAutoEditions=</code>
+                </li>
+                <br />
+                <li>SortEditions<br /><br />
+                Specify all or any editions to sort according to the order, separate the editions with a comma ,<br />
+                The option will be enabled whenever you populate it. Leave it empty to keep it disabled<br /><br />
+                <u>Notice</u>:<br />
+                This should include the source editions if wanted or any edition that already exist in install.wim/install.esd<br />
+                Generally, you can specify any correct edition id, and it will be included (sorted) if detected in the source install.wim/install.esd<br /><br />
+                <u>Caution</u>:<br />
+                Any edition that is not specified with this option, will not be included in the final install.wim/install.esd<br />
+                make sure to specify all desired editions.<br /><br />
+                Examples:<br />
+                <code>- to enable:<br />
+                vSortEditions=CoreSingleLanguage,CoreCountrySpecific,Core,CoreN,Professional,ProfessionalN<br />
+                vSortEditions=Professional,ProfessionalWorkstation,Enterprise,ProfessionalN,ProfessionalWorkstationN,EnterpriseN<br />
+                vSortEditions=Enterprise EnterpriseN EnterpriseS EnterpriseSN IoTEnterpriseS IoTEnterpriseSK<br /><br />
+                - to keep it disabled:<br />
+                vSortEditions=</code>
                 </li>
                 <br />
                 <li>DeleteSource<br /><br />

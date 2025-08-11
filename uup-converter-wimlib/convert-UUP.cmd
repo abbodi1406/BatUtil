@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v113
+@set uivr=v115
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -44,7 +44,6 @@ set SkipISO=0
 set SkipWinRE=0
 
 :: Change to 1 to force updating winre.wim with Cumulative Update regardless if SafeOS update detected
-:: auto enabled for builds 22000-26050, change to 2 to disable
 :: ignored and auto disabled for builds 26052 and later
 set LCUwinre=0
 
@@ -96,7 +95,7 @@ set SkipApps=0
 
 :: # Control added Apps for Client editions (except Team)
 :: 0 / all referenced Apps
-:: 1 / only Store, Security Health, App Installer
+:: 1 / only Store, Security Health, App Installer, StartExperiencesApp
 :: 2 / level 1 + Photos, Camera, Notepad, Paint
 :: 3 / level 2 + Terminal, Widgets, Mail / Outlook, Clipchamp
 :: 4 / level 3 + Media apps (Music, Video, Codecs, Phone Link) / not for N editions
@@ -105,7 +104,7 @@ set AppsLevel=0
 :: # Control preference for Apps which are available as stubs
 :: 0 / install as stub app
 :: 1 / install as full app
-set StubAppsFull=0
+set StubAppsFull=1
 
 :: Enable using CustomAppsList.txt or CustomAppsList2.txt to pick and choose added Apps (takes precedence over AppsLevel)
 :: CustomAppsList2.txt will be used if detected
@@ -114,6 +113,7 @@ set CustomList=0
 :: ###################################################################
 
 set DeleteSource=0
+set "SortEditions="
 
 set "_Null=1>nul 2>nul"
 set DisableRebuildWim=0
@@ -336,6 +336,7 @@ CustomList
 call :ReadINI %%#
 )
 findstr /b /i vDeleteSource ConvertConfig.ini %_Nul1% && for /f "tokens=2 delims==" %%# in ('findstr /b /i vDeleteSource ConvertConfig.ini') do set "DeleteSource=%%#"
+findstr /b /i vSortEditions ConvertConfig.ini %_Nul1% && for /f "tokens=1* delims==" %%A in ('findstr /b /i vSortEditions ConvertConfig.ini') do set "SortEditions=%%B"
 goto :proceed
 
 :ReadINI
@@ -435,6 +436,11 @@ if exist OS\ dir /b /s "OS\*.inf" %_Nul3% && set "DrvSrcOS=!Drv_Source!\OS"
 if exist WinPE\ dir /b /s "WinPE\*.inf" %_Nul3% && set "DrvSrcPE=!Drv_Source!\WinPE"
 popd
 )
+set DrvOpt=
+set OSDrv=
+if defined DrvSrcALL set DrvOpt=1&set OSDrv=1
+if defined DrvSrcOS set DrvOpt=1&set OSDrv=1
+if defined DrvSrcPE set DrvOpt=1
 goto :eof
 
 :MAINMENU
@@ -571,7 +577,7 @@ if %_build% lss 17763 if %AddUpdates% equ 1 if %W10UI% equ 0 (set AddUpdates=0)
 if %_build% geq 17763 if %AddUpdates% equ 1 if %W10UI% equ 0 (set AddUpdates=2)
 if %_build% lss 17763 if %AddUpdates% equ 1 (set Cleanup=1)
 if %_build% geq 22000 (
-if %LCUwinre% equ 2 (set LCUwinre=0) else (set LCUwinre=1)
+if %LCUwinre% equ 2 (set LCUwinre=0)
 if %_build% geq 26052 (set LCUwinre=0)
 )
 if %_build% lss 22621 set LCUmsuExpand=0
@@ -591,6 +597,7 @@ if %WIMFILE%==install.esd (
 set wim2esd=0
 if %AddUpdates% equ 1 (set WIMFILE=install.wim&set wim2esd=1)
 if %_runIPA% equ 1 (set WIMFILE=install.wim&set wim2esd=1)
+if defined DrvOpt (set WIMFILE=install.wim&set wim2esd=1)
 )
 if %_Debug% neq 0 set wim2esd=0
 for %%# in (
@@ -622,6 +629,7 @@ DeleteSource
 ) do (
 if !%%#! neq 0 set _configured=1
 )
+if defined SortEditions set _configured=1
 for %%# in (
 u_msulcu
 u_winre
@@ -658,6 +666,7 @@ call :dk_color1 %Blue% "=== Configured Options . . ." 4 5
   ) do (
   if !%%#! neq 0 echo %%#
   )
+  if defined SortEditions echo SortEditions: %SortEditions%
 )
 if %_build% geq 21382 if %SkipLCUmsu% neq 0 echo SkipLCUmsu
 if %_build% geq 18362 if %AddUpdates% equ 1 if %SkipEdge% neq 0 echo SkipEdge %SkipEdge%
@@ -739,6 +748,15 @@ if %StartVirtual% neq 0 if %_SrvESD% equ 0 if %_extVirt% equ 0 (
   if %SkipISO% neq 0 (set qmsg=Finished. You chose not to create iso file.) else (set qmsg=Finished.)
   if %AutoStart% neq 0 (goto :V_Auto) else (goto :V_Manu)
 )
+set wimsort=0
+for /f "tokens=3 delims=: " %%# in ('imagex /info ISOFOLDER\sources\%WimFile% ^|findstr /i /b /c:"Image Count"') do set finalimages=%%#
+if defined SortEditions if %finalimages% gtr 1 if %_SrvESD% equ 0 (
+if %_extVirt% equ 1 (set wimsort=1) else if %StartVirtual% equ 0 (set wimsort=1)
+)
+if %wimsort% equ 1 (
+call :dk_color1 %Blue% "=== Sorting Edition{s} . . ." 4 5
+call :doSort
+)
 set isiso=1
 set _rtrn=finISO
 goto :esdSWM
@@ -776,7 +794,7 @@ if /i %arch%==arm64 if %winbuild% lss 9600 if %AddUpdates% equ 1 (set AddUpdates
 if %Cleanup% equ 0 set ResetBase=0
 if %_build% lss 17763 if %AddUpdates% equ 1 (set Cleanup=1)
 if %_build% geq 22000 (
-if %LCUwinre% equ 2 (set LCUwinre=0) else (set LCUwinre=1)
+if %LCUwinre% equ 2 (set LCUwinre=0)
 if %_build% geq 26052 (set LCUwinre=0)
 )
 if %_build% lss 22621 set LCUmsuExpand=0
@@ -796,6 +814,7 @@ if %WIMFILE%==install.esd (
 set wim2esd=0
 if %AddUpdates% equ 1 (set WIMFILE=install.wim&set wim2esd=1)
 if %_runIPA% equ 1 (set WIMFILE=install.wim&set wim2esd=1)
+if defined DrvOpt (set WIMFILE=install.wim&set wim2esd=1)
 )
 if %_Debug% neq 0 set wim2esd=0
 if exist "!_work!\%WIMFILE%" (
@@ -969,10 +988,18 @@ del /f /q %_dLog%\* %_Nul3%
 if not exist "%_dLog%\" mkdir "%_dLog%" %_Nul3%
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 del /f /q %SystemRoot%\temp\*.mum %_Nul3%
+set mounted=0
+set _runDRV=0
 if %AddUpdates% neq 1 if %W10UI% neq 0 if %_runIPA% equ 1 (
+set mounted=1
 if %_file%==%WIMFILE% (call :uups_update %WIMFILE% appx) else (call :uups_update install.iso appx)
 )
 if %AddUpdates% equ 1 if %_updexist% equ 1 (
+set mounted=1
+if %_file%==%WIMFILE% (call :uups_update %WIMFILE%) else (call :uups_update install.iso)
+)
+set _runDRV=1
+if defined DrvOpt if %mounted% equ 0 (
 if %_file%==%WIMFILE% (call :uups_update %WIMFILE%) else (call :uups_update install.iso)
 )
 if %_file%==%WIMFILE% goto :%_rtrn%
@@ -986,7 +1013,14 @@ call :dk_color1 %Blue% "=== Creating winre.wim . . ." 4 5
 wimlib-imagex.exe export "!MetadataESD!" 2 temp\winre.wim --compress=LZX --boot %_Supp%
 set ERRTEMP=%ERRORLEVEL%
 if %ERRTEMP% neq 0 goto :E_Export
+set mounted=0
+set _runDRV=0
 if %uwinpe% equ 1 if %AddUpdates% equ 1 if %_updexist% equ 1 (
+set mounted=1
+call :uups_update temp\winre.wim
+)
+set _runDRV=1
+if defined DrvOpt if %mounted% equ 0 (
 call :uups_update temp\winre.wim
 )
 if %relite% neq 0 (
@@ -1048,8 +1082,8 @@ type nul>bin\boot-wim.txt
 >>bin\boot-wim.txt echo add 'bin^\temp^\SOFTWARE' '^\Windows^\System32^\config^\SOFTWARE'
 set "_bkimg="
 wimlib-imagex.exe extract ISOFOLDER\sources\boot.wim 1 Windows\System32\winpe.jpg --dest-dir=ISOFOLDER\sources --no-acls --no-attributes --nullglob %_Null%
-for %%# in (background_cli.bmp, background_svr.bmp, background_cli.png, background_svr.png, winpe.jpg) do if exist "ISOFOLDER\sources\%%#" set "_bkimg=%%#"
-if defined _bkimg (
+for %%# in (background_cli.bmp, background_svr.bmp, background_cli.png, background_svr.png, winpe.jpg) do (if exist "ISOFOLDER\sources\%%#" if not defined _bkimg set "_bkimg=%%#")
+if defined _bkimg if not exist "ISOFOLDER\sources\winpe.jpg" (
 >>bin\boot-wim.txt echo add 'ISOFOLDER^\sources^\%_bkimg%' '^\Windows^\system32^\winpe.jpg'
 >>bin\boot-wim.txt echo add 'ISOFOLDER^\sources^\%_bkimg%' '^\Windows^\system32^\winre.jpg'
 )
@@ -1066,11 +1100,13 @@ if not defined ready2 (
 >>bin\boot-wim.txt echo add 'ISOFOLDER^\sources^\inf^\setup.cfg' '^\sources^\inf^\setup.cfg'
 if not defined _bkimg (
 wimlib-imagex.exe extract ISOFOLDER\sources\boot.wim 1 Windows\System32\winpe.jpg --dest-dir=ISOFOLDER\sources --no-acls --no-attributes --nullglob %_Null%
-for %%# in (background_cli.bmp, background_svr.bmp, background_cli.png, background_svr.png, winpe.jpg) do if exist "ISOFOLDER\sources\%%#" set "_bkimg=%%#"
+for %%# in (background_cli.bmp, background_svr.bmp, background_cli.png, background_svr.png, winpe.jpg) do (if exist "ISOFOLDER\sources\%%#" if not defined _bkimg set "_bkimg=%%#")
 )
 if defined _bkimg (
 >>bin\boot-wim.txt echo add 'ISOFOLDER^\sources^\%_bkimg%' '^\sources^\background.bmp'
 >>bin\boot-wim.txt echo add 'ISOFOLDER^\sources^\%_bkimg%' '^\Windows^\system32^\setup.bmp'
+)
+if defined _bkimg if not exist "ISOFOLDER\sources\winpe.jpg" (
 >>bin\boot-wim.txt echo add 'ISOFOLDER^\sources^\%_bkimg%' '^\Windows^\system32^\winpe.jpg'
 >>bin\boot-wim.txt echo add 'ISOFOLDER^\sources^\%_bkimg%' '^\Windows^\system32^\winre.jpg'
 )
@@ -2168,7 +2204,7 @@ goto :rbldwim
 
 :noappx
 set directcab=0
-call :extract
+if %_runDRV% equ 0 call :extract
 if %wim% equ 0 goto :dvdup
 call :updt_mount "%_target%"
 
@@ -2203,6 +2239,7 @@ exit /b
 )
 %_wrb% if %_wimopt% equ 1 wimlib-imagex.exe optimize "%_target%\sources\install.wim" %_Supp%
 if defined _upx exit /b
+if %_runDRV% equ 1 exit /b
 
 for /f "tokens=3 delims=: " %%# in ('wimlib-imagex.exe info "%_target%\sources\install.wim" ^| findstr /c:"Image Count"') do set imgcount=%%#
 for /L %%# in (1,1,%imgcount%) do (
@@ -2582,6 +2619,7 @@ call :datemum isodate isotime
 goto :eof
 
 :chkssu
+if %_build% leq 10586 exit /b
 set latest=0
 set chvr_aa=0
 set chvr_bl=0
@@ -2732,8 +2770,8 @@ if %_build% geq 21382 if exist "!_UUP!\*Windows1*-KB*.msu" (for /f "tokens=* del
 if %psfwim% equ 1 if exist "!_cabdir!\*Windows1*-KB*.wim" (for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\*Windows1*-KB*.wim"') do if defined psfx_%%~n# (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum))
 if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if exist "!_UUP!\*defender-dism*%_bit%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!_UUP!\*defender-dism*%_bit%*.cab"') do (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum))
 if %_build% geq 22621 if %winbuild% lss 10240 reg.exe query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMajorVersionNumber %_Nul3% || (
-reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMajorVersionNumber /t REG_DWORD /d 10 /f
-reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMinorVersionNumber /t REG_DWORD /d 0 /f
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMajorVersionNumber /t REG_DWORD /d 10 /f %_Nul3%
+reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMinorVersionNumber /t REG_DWORD /d 0 /f %_Nul3%
 )
 if %_build% geq 19041 if %winbuild% lss 17133 if not exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
 copy /y %SysPath%\slc.dll %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul1%
@@ -2741,25 +2779,42 @@ if /i not %xOS%==x86 copy /y %SystemRoot%\SysWOW64\slc.dll %SystemRoot%\SysWOW64
 )
 if %winbuild% lss 15063 if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 call :hiveON
-if /i %arch%==arm64 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul1%
-if %winbuild% lss 9600 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul1%
+if /i %arch%==arm64 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul3%
+if %winbuild% lss 9600 reg.exe add HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide /v AllowImproperDeploymentProcessorArchitecture /t REG_DWORD /d 1 /f %_Nul3%
 call :hiveOFF
 )
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 call :sbsconfig 9 9 1
 )
 if defined netpack set "ldr=!netpack! !ldr!"
-for %%# in (dupdt,cupdt,supdt,fupdt,safeos,secureboot,edge,ldr,cumulative,lcumsu) do if defined %%# set overall=1
-if not defined overall if not defined mpamfe if not defined servicingstack goto :eof
+for %%# in (dupdt,cupdt,supdt,fupdt,secureboot,edge,ldr,cumulative,lcumsu) do if defined %%# set overall=1
+if not defined safeos if not defined overall if not defined mpamfe if not defined servicingstack goto :eof
 if defined servicingstack (
 set idpkg=ServicingStack
 set callclean=1
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismSSU.log" /Add-Package %servicingstack%
 call :chkEC !errorlevel!
 if !_ec!==1 goto :errmount
-if not defined overall call :cleanup
+if not defined safeos if not defined overall call :cleanup
 )
-if not defined overall if not defined mpamfe goto :eof
+if not defined safeos if not defined overall if not defined mpamfe goto :eof
+set noLCU=0
+if not defined cumulative if not defined lcumsu set noLCU=1
+set mntRE=0
+set sduRE=0
+set cmtRE=0
+if defined safeos if %SkipWinRE% equ 0 if %LCUwinre% equ 0 (
+set sduRE=1
+if defined overall set mntRE=1
+)
+if %sduRE% equ 1 if %mntRE% equ 1 (
+set cmtRE=1
+)
+if %cmtRE% equ 1 (
+if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
+if defined DrvSrcPE %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcPE!" /Recurse
+%_dism2%:"!_cabdir!" /Commit-Wim /MountDir:"%_mount%" %_Supp%
+)
 if defined safeos if %SkipWinRE% equ 0 (
 set idpkg=SafeOS
 set callclean=1
@@ -2767,17 +2822,23 @@ set callclean=1
 call :chkEC !errorlevel!
 if !_ec!==1 goto :errmount
 )
-if defined safeos if %SkipWinRE% equ 0 if %LCUwinre% equ 0 (
+if %sduRE% equ 1 (
 set relite=1
 if not defined lcumsu if %_build% lss 26052 call :cleanup
 %_wrb% if not defined lcumsu if %ResetBase% equ 0 %_dism2%:"!_cabdir!" %dismtarget% /Cleanup-Image /StartComponentCleanup /ResetBase %_Null%
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
 )
-if not defined cumulative if not defined lcumsu goto :scbt
-if not defined safeos if %SkipWinRE% equ 0 if %_build% geq 26052 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
+if %noLCU% equ 0 if not defined safeos if %SkipWinRE% equ 0 if %_build% geq 26052 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 set relite=1
 %_dism2%:"!_cabdir!" /Commit-Image /MountDir:"%_mount%" /Append %_Supp%
 )
+if %mntRE% equ 1 (
+call :dk_color1 %Gray% "=== Remounting image . . ." 4
+%_dism2%:"!_cabdir!" /Unmount-Wim /MountDir:"%_mount%" /Discard
+%_dism2%:"!_cabdir!" /Mount-Wim /Wimfile:"%_www%" /Index:%_inx% /MountDir:"%_mount%"
+if !errorlevel! neq 0 (call :dismount 1 &goto :eof)
+)
+if %noLCU% equ 1 goto :scbt
 set _gobk=scbt
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :updtlcu
 :scbt
@@ -2829,7 +2890,7 @@ set "_SxsCF=64"
 set "_DsmLog=DismLCUs.log"
 for %%# in (%dupdt%) do (set "cbsn=%%~n#"&set "dest=!_cabdir!\%%~n#"&call :pXML)
 )
-if not defined cumulative if not defined lcumsu goto :cuwd
+if %noLCU% equ 1 goto :cuwd
 set _gobk=cuwd
 if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :updtlcu
 :cuwd
@@ -3619,6 +3680,11 @@ if !errorlevel! neq 0 (
 if %WimRE% equ 0 if %_build% geq 19041 if %_upgr% equ 1 if %_pmcppc% equ 1 if not exist "%_mount%\Windows\Servicing\Packages\Microsoft-Windows-Printing-PMCPPC-FoD-Package*.mum" call :pmcppcwim
 if defined isappx goto :doappx
 
+if %_runDRV% equ 1 (
+set mumtarget=%_mount%
+set dismtarget=/Image:"%_mount%"
+goto :doDrivers
+)
 if %WimRE% equ 1 goto :doupdt
 if %_runIPA% equ 0 goto :doupdt
 call :dk_color1 %Gray% "=== Adding Apps . . ." 4 5
@@ -3678,21 +3744,22 @@ for /f %%i in ('"offlinereg.exe "%_mount%\Windows\system32\config\SOFTWARE" "!is
 if exist "%_mount%\Windows\system32\UpdateAgent.dll" if not exist "%SystemRoot%\temp\UpdateAgent.dll" copy /y "%_mount%\Windows\system32\UpdateAgent.dll" %SystemRoot%\temp\ %_Nul1%
 if exist "%_mount%\Windows\system32\Facilitator.dll" if not exist "%SystemRoot%\temp\Facilitator.dll" copy /y "%_mount%\Windows\system32\Facilitator.dll" %SystemRoot%\temp\ %_Nul1%
 set _noSave=0
-goto :doProceed
+goto :doDrivers
 
 :doappx
 call :dk_color1 %Gray% "=== Adding Apps . . ." 4 5
 call :appx_wim
 
-:doProceed
-if %AddDrivers% equ 0 goto :doCommit
-if not defined DrvSrcALL if not defined DrvSrcPE if not defined DrvSrcOS goto :doCommit
+:doDrivers
+if not defined DrvOpt goto :doCommit
 set _noSave=0
 if %WimRE% equ 1 (
+if %cmtRE% equ 1 goto :doCommit
 if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
 if defined DrvSrcPE %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvWinPE.log" /Add-Driver /Driver:"!DrvSrcPE!" /Recurse
 goto :doCommit
 )
+if not defined OSDrv goto :doCommit
 call :dk_color1 %Gray% "=== Adding Drivers . . ." 4
 if defined DrvSrcALL %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.log" /Add-Driver /Driver:"!DrvSrcALL!" /Recurse
 if defined DrvSrcOS %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DrvOS.log" /Add-Driver /Driver:"!DrvSrcOS!" /Recurse
@@ -3811,6 +3878,27 @@ find /i "<EDITIONID>%1</EDITIONID>" bin\info%%#.txt %_Nul3% && (
   )
 )
 del /f /q bin\info*.txt %_Nul3%
+goto :eof
+
+:doSort
+set simages=%finalimages%
+for /l %%# in (1,1,%simages%) do imagex /info ISOFOLDER\sources\%WimFile% %%# >bin\info%%#.txt 2>&1
+set tcount=0
+for %%A in (%SortEditions%) do (
+for /L %%# in (1,1,%simages%) do (
+  find /i "<EDITIONID>%%A</EDITIONID>" bin\info%%#.txt %_Nul3% && (
+    set /a tcount+=1
+    echo !tcount!. %%A
+    wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %%# ISOFOLDER\sources\temp.wim %_Supp%
+    )
+  )
+)
+del /f /q bin\info*.txt %_Nul3%
+if exist ISOFOLDER\sources\temp.wim (
+del /f /q ISOFOLDER\sources\%WimFile%
+ren ISOFOLDER\sources\temp.wim %WimFile%
+set didsort=1
+)
 goto :eof
 
 :dismount
@@ -4290,14 +4378,14 @@ goto :eof
 set "_wsr=Windows Server 2022"
 set "pub=_8wekyb3d8bbwe"
 set "_appSrvr=Microsoft.SecHealthUI%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.WindowsFeedbackHub%pub%"
-set "_appBase=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,Microsoft.DesktopAppInstaller%pub%,microsoft.windowscommunicationsapps%pub%,Microsoft.OutlookForWindows%pub%,Microsoft.WindowsCalculator%pub%,Microsoft.Windows.Photos%pub%,Microsoft.WindowsMaps%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsFeedbackHub%pub%,Microsoft.Getstarted%pub%,Microsoft.WindowsAlarms%pub%"
-set "_appClnt=Microsoft.WindowsNotepad%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.Paint%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,Microsoft.People%pub%,Microsoft.ScreenSketch%pub%,Microsoft.MicrosoftStickyNotes%pub%,Microsoft.XboxIdentityProvider%pub%,Microsoft.XboxSpeechToTextOverlay%pub%,Microsoft.XboxGameOverlay%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt,MicrosoftTeams%pub%,MSTeams%pub%"
+set "_appBase=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,Microsoft.DesktopAppInstaller%pub%,microsoft.windowscommunicationsapps%pub%,Microsoft.OutlookForWindows%pub%,Microsoft.WindowsCalculator%pub%,Microsoft.Windows.Photos%pub%,Microsoft.WindowsMaps%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsFeedbackHub%pub%,Microsoft.Getstarted%pub%,Microsoft.WindowsAlarms%pub%,Microsoft.StartExperiencesApp%pub%,Microsoft.ApplicationCompatibilityEnhancements%pub%"
+set "_appClnt=Microsoft.WindowsNotepad%pub%,Microsoft.WindowsTerminal%pub%,Microsoft.Paint%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,Microsoft.People%pub%,Microsoft.ScreenSketch%pub%,Microsoft.MicrosoftStickyNotes%pub%,Microsoft.XboxIdentityProvider%pub%,Microsoft.XboxSpeechToTextOverlay%pub%,Microsoft.XboxGameOverlay%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt,MicrosoftTeams%pub%,MSTeams%pub%,Microsoft.WidgetsPlatformRuntime%pub%"
 set "_appCodec=Microsoft.WebMediaExtensions%pub%,Microsoft.RawImageExtension%pub%,Microsoft.HEIFImageExtension%pub%,Microsoft.HEVCVideoExtension%pub%,Microsoft.VP9VideoExtensions%pub%,Microsoft.WebpImageExtension%pub%,Microsoft.DolbyAudioExtension%pub%,Microsoft.AVCEncoderVideoExtension%pub%,Microsoft.MPEG2VideoExtension%pub%"
 set "_appMedia=Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.WindowsSoundRecorder%pub%,Microsoft.GamingApp%pub%,Microsoft.XboxGamingOverlay%pub%,Microsoft.Xbox.TCUI%pub%,Microsoft.YourPhone%pub%,Microsoft.Windows.DevHome%pub%"
 set "_appPPIP=Microsoft.MicrosoftPowerBIForWindows%pub%,microsoft.microsoftskydrive%pub%,Microsoft.MicrosoftTeamsforSurfaceHub%pub%,MicrosoftCorporationII.MailforSurfaceHub%pub%,Microsoft.Whiteboard%pub%,Microsoft.SkypeApp_kzf8qxf38zg5c"
-set "_appMin1=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,Microsoft.DesktopAppInstaller%pub%"
+set "_appMin1=Microsoft.WindowsStore%pub%,Microsoft.StorePurchaseApp%pub%,Microsoft.SecHealthUI%pub%,Microsoft.DesktopAppInstaller%pub%,Microsoft.StartExperiencesApp%pub%,Microsoft.ApplicationCompatibilityEnhancements%pub%"
 set "_appMin2=Microsoft.Windows.Photos%pub%,Microsoft.WindowsCamera%pub%,Microsoft.WindowsNotepad%pub%,Microsoft.Paint%pub%"
-set "_appMin3=Microsoft.WindowsTerminal%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,microsoft.windowscommunicationsapps%pub%,Microsoft.OutlookForWindows%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt"
+set "_appMin3=Microsoft.WindowsTerminal%pub%,MicrosoftWindows.Client.WebExperience_cw5n1h2txyewy,microsoft.windowscommunicationsapps%pub%,Microsoft.OutlookForWindows%pub%,Clipchamp.Clipchamp_yxz26nhyzhsrt,Microsoft.WidgetsPlatformRuntime%pub%"
 set "_appMin4=%_appCodec%,Microsoft.ZuneMusic%pub%,Microsoft.ZuneVideo%pub%,Microsoft.YourPhone%pub%"
 set ksub=SOFTWIM
 set SOFTWARE=uiSOFTWARE
@@ -4328,6 +4416,10 @@ set _runIPA=0
 set _appsCustom=0
 set _initial=0
 set _wimEdge=0
+set noLCU=0
+set mntRE=0
+set sduRE=0
+set cmtRE=0
 set psfwim=0
 set _delta=msdelta.dll
 set basekbn=

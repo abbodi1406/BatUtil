@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v108
+@set uivr=v115
 @echo off
 :: ### Creation Method ###
 ::
@@ -12,10 +12,14 @@ set UseDism=1
 :: Change to 1 to start the process directly, creating editions specified in AutoEditions
 set AutoStart=0
 
-:: Specify target editions to auto create separated with space or comma ,
+:: Specify target editions to auto create, separated with space or comma ,
 :: leave it empty to create *all* possible editions
 :: see ReadMe for details
 set "AutoEditions="
+
+:: Specify all or any editions to sort according to the order, separated with space or comma ,
+:: see ReadMe for details
+set "SortEditions="
 
 :: Change to 1 to delete source edition index (example: create Enterprise and delete Pro)
 set DeleteSource=0
@@ -219,6 +223,7 @@ wim2swm
 call :ReadINI %%#
 )
 findstr /b /i vAutoEditions ConvertConfig.ini %_Nul1% && for /f "tokens=1* delims==" %%A in ('findstr /b /i vAutoEditions ConvertConfig.ini') do set "AutoEditions=%%B"
+findstr /b /i vSortEditions ConvertConfig.ini %_Nul1% && for /f "tokens=1* delims==" %%A in ('findstr /b /i vSortEditions ConvertConfig.ini') do set "SortEditions=%%B"
 goto :proceed
 
 :ReadINI
@@ -235,8 +240,11 @@ if /i "%_type%"=="manuwim" set wim2esd=0&set wim2swm=0
 if /i "%_type%"=="manuesd" set wim2esd=1&set wim2swm=0
 if /i "%_type%"=="extdism" set AutoStart=1&set Preserve=0&set _Debug=1&set _exDism=1&set _exEdtn=%2
 )
-if %_uupc% equ 1 (
+if %_uupc% equ 1 if exist "ConvertConfig.ini" (
 findstr /b /i SkipISO ConvertConfig.ini %_Nul1% && for /f "tokens=2 delims==" %%# in ('findstr /b /i SkipISO ConvertConfig.ini') do set "SkipISO=%%#"
+)
+if %_uupc% equ 1 if not exist "ConvertConfig.ini" (
+for /f "tokens=2 delims==" %%# in ('findstr /i /b /c:"set SkipISO" "convert-UUP.cmd"') do if not defined _uiso (set _uiso=%%#&set SkipISO=%%#)
 )
 set _shortINF=
 if %_exDism% equ 0 goto :checkdir
@@ -350,6 +358,7 @@ wim2swm
 ) do (
 if !%%#! neq 0 set _configured=1
 )
+if defined SortEditions set _configured=1
 if %_exDism% equ 1 goto :AUTOMENU
 if %_uupc% equ 1 (call :dk_color1 %Blue% "=== Creating Virtual Editions . . ." 4) else (call :dk_color1 %Blue% "=== Checking distribution Info . . ." 4)
 if %_dvd% equ 1 set Preserve=1
@@ -551,6 +560,7 @@ call :dk_color1 %Blue% "=== Configured Virtual Options . . ." 4 5
   if !%%#! neq 0 echo %%#
   )
 if %AutoStart% neq 0 if defined AutoEditions echo AutoEditions: %_showEd%
+if defined SortEditions echo SortEditions: %SortEditions%
 echo.
 )
 if %_exDism% equ 1 goto :skipcopy
@@ -562,6 +572,7 @@ set UseDism=0
 if %winbuild% lss 9600 (
 if %UseDism% equ 2 (set UseDism=1) else (set UseDism=0)
 )
+if exist ISOFOLDER\ rmdir /s /q ISOFOLDER\
 if %Preserve% neq 0 (
 call :dk_color1 %Blue% "=== Copying source: {%ISOdir%}" %_preCopy% %_sufCopy%
 robocopy "%ISOdir%" "ISOFOLDER" /E /A-:R %_Null%
@@ -762,11 +773,10 @@ set modded=1
 exit /b
 
 :doWIM
-if /i "%channel%"=="OEM" (
-%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismVirtualEditions.log" /Set-Edition:%EditionID%
-) else (
-%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismVirtualEditions.log" /Set-Edition:%EditionID% /Channel:%channel%
-)
+set "_chn=/Channel:%channel%"
+if /i "%channel%"=="OEM" set "_chn="
+if %_build% equ 18362 set "_chn="
+%_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismVirtualEditions.log" /Set-Edition:%EditionID% %_chn%
 set ERRTEMP=%ERRORLEVEL%
 if %ERRTEMP% neq 0 (
 call :dk_color1 %Red% "Could not set %EditionID% edition." 4
@@ -831,26 +841,13 @@ if exist "%_mount%\" rmdir /s /q "%_mount%\"
 set _term=1
 exit /b
 
-:dDelete
-for /f "tokens=3 delims=: " %%# in ('imagex /info ISOFOLDER\sources\%WimFile% ^|findstr /i /b /c:"Image Count"') do set dimages=%%#
-for /l %%# in (1,1,%dimages%) do imagex /info ISOFOLDER\sources\%WimFile% %%# >bin\info%%#.txt 2>&1
-for /L %%# in (1,1,%dimages%) do (
-find /i "<EDITIONID>%1</EDITIONID>" bin\info%%#.txt %_Nul3% && (
-  echo %1
-  rem %_dism1% /Delete-Image /ImageFile:ISOFOLDER\sources\%WimFile% /Index:%%#
-  wimlib-imagex.exe delete ISOFOLDER\sources\%WimFile% %%# --soft %_Nul3%
-  )
-)
-del /f /q bin\info*.txt %_Nul3%
-exit /b
-
 :ISOCREATE
-for /f "tokens=3 delims=: " %%# in ('imagex /info ISOFOLDER\sources\%WimFile% ^|findstr /i /b /c:"Image Count"') do set finalimages=%%#
-if %finalimages% gtr 1 if not exist "ei.cfg" if not exist "UUPs\ei.cfg" if exist ISOFOLDER\sources\ei.cfg del /f /q ISOFOLDER\sources\ei.cfg
 if %UseDism% neq 1 (
 if exist ISOFOLDER\sources\%WimFile% del /f /q ISOFOLDER\sources\%WimFile%
 ren ISOFOLDER\sources\temp.wim %WimFile%
 )
+for /f "tokens=3 delims=: " %%# in ('imagex /info ISOFOLDER\sources\%WimFile% ^|findstr /i /b /c:"Image Count"') do set finalimages=%%#
+if %finalimages% gtr 1 if not exist "ei.cfg" if not exist "UUPs\ei.cfg" if exist ISOFOLDER\sources\ei.cfg del /f /q ISOFOLDER\sources\ei.cfg
 if %DeleteSource% equ 1 (
 call :dk_color1 %Blue% "=== Deleting Source Edition{s} . . ." 4 5
 if %_doProf% equ 1 call :dDelete Professional
@@ -859,7 +856,11 @@ if %_doLTSC% equ 1 call :dDelete EnterpriseS
 if %_doHome% equ 1 call :dDelete Core
 call :dPREPARE
 )
-if %wim2esd% equ 0 (
+if defined SortEditions if %finalimages% gtr 1 (
+call :dk_color1 %Blue% "=== Sorting Edition{s} . . ." 4 5
+call :doSort
+)
+if not defined didsort if %wim2esd% equ 0 (
 call :dk_color1 %Blue% "=== Rebuilding %WimFile% . . ." 4 5
 %_wrb% wimlib-imagex.exe optimize ISOFOLDER\sources\%WimFile% %_Supp%
 )
@@ -906,6 +907,40 @@ set ERRTEMP=%ERRORLEVEL%
 if %ERRTEMP% neq 0 goto :E_ISO
 set qmsg=Finished.
 goto :QUIT
+
+:dDelete
+for /f "tokens=3 delims=: " %%# in ('imagex /info ISOFOLDER\sources\%WimFile% ^|findstr /i /b /c:"Image Count"') do set dimages=%%#
+for /l %%# in (1,1,%dimages%) do imagex /info ISOFOLDER\sources\%WimFile% %%# >bin\info%%#.txt 2>&1
+for /L %%# in (1,1,%dimages%) do (
+find /i "<EDITIONID>%1</EDITIONID>" bin\info%%#.txt %_Nul3% && (
+  echo %1
+  rem %_dism1% /Delete-Image /ImageFile:ISOFOLDER\sources\%WimFile% /Index:%%#
+  wimlib-imagex.exe delete ISOFOLDER\sources\%WimFile% %%# --soft %_Nul3%
+  )
+)
+del /f /q bin\info*.txt %_Nul3%
+exit /b
+
+:doSort
+set simages=%finalimages%
+for /l %%# in (1,1,%simages%) do imagex /info ISOFOLDER\sources\%WimFile% %%# >bin\info%%#.txt 2>&1
+set tcount=0
+for %%A in (%SortEditions%) do (
+for /L %%# in (1,1,%simages%) do (
+  find /i "<EDITIONID>%%A</EDITIONID>" bin\info%%#.txt %_Nul3% && (
+    set /a tcount+=1
+    echo !tcount!. %%A
+    wimlib-imagex.exe export ISOFOLDER\sources\%WimFile% %%# ISOFOLDER\sources\temp.wim %_Supp%
+    )
+  )
+)
+del /f /q bin\info*.txt %_Nul3%
+if exist ISOFOLDER\sources\temp.wim (
+del /f /q ISOFOLDER\sources\%WimFile%
+ren ISOFOLDER\sources\temp.wim %WimFile%
+set didsort=1
+)
+exit /b
 
 :dInfo
 if exist "%ISOdir%\sources\install.wim" (set WimFile=install.wim) else (set WimFile=install.esd&set wim2esd=0&set wim2swm=0&set UseDism=0)
