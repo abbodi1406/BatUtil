@@ -236,6 +236,8 @@ special thanks for testing and feedback:
 
 10.53:  
 - Add workaround to avoid KB5043080 msu installation error
+- Install all SSUs for Windows 10 v1507 (LTSB 2015)
+- Fixed detecting EKB version and branch for latest Windows 11 24H2/25H2
 
 10.52:  
 - Fixed WimCreateTime option when "Keep indexes: Selected"

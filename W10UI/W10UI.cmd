@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.53
+@set uiv=v10.53u
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -1313,6 +1313,7 @@ call :datemum isodate isotime
 goto :eof
 
 :chkssu
+if %_build% leq 10586 exit /b
 set latest=0
 set chvr_aa=0
 set chvr_bl=0
@@ -1655,7 +1656,7 @@ call :dNUL !errorlevel!
 call set /a _c_+=1
 if %online% equ 0 if %ResetBase% equ 2 if %_build% geq 26052 if !_c_! lss %c_num% call :rebase
 )
-if %_build% equ 14393 if %wimfiles% equ 1 call :MeltdownSpectre
+if %_build% leq 14393 if %wimfiles% equ 1 call :MeltdownSpectre
 if not exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" goto :cuwd
 if %online%==1 goto :cuwd
 if not defined lcumsu goto :cuwd
@@ -2640,7 +2641,7 @@ set _fixEP=0
 set /a _fixSV=%_build%+1
 set "_tikey=HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
 reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
-for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r ".*\.OS"') do set "_oskey=%%#"
+for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r "Client\.OS Server\.OS"') do set "_oskey=%%#"
 for /f "skip=2 tokens=5,6 delims=. " %%A in ('reg.exe query "%_oskey%" /v Version') do if %%A gtr !isomaj! (
   set isover=%%A.%%B
   set isomaj=%%A
@@ -2657,7 +2658,7 @@ goto :eof
 :detectLab
 set "_tikey=HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
 reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
-for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r ".*\.OS"') do set "_oskey=%%#"
+for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r "Client\.OS Server\.OS"') do set "_oskey=%%#"
 for /f "skip=2 tokens=2*" %%A in ('reg.exe query "%_oskey%" /v Branch') do set "%1=%%B"
 reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
 reg.exe unload HKLM\uiSOFTWARE %_Nul1%
