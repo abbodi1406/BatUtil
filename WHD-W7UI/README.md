@@ -17,6 +17,13 @@ Automated batch script to install/integrate Windows 7 Updates, depending on WHDo
 
 * Detect Windows 10 ADK [imagex.exe and oscdimg.exe](https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install) for iso/wim updating
 
+## Updated ISO recommendation:
+
+* Creating updated iso file for a distribution target require either of:  
+> install Windows ADK  
+place oscdimg.exe or cdimage.exe in the same folder next to W10UI.cmd
+* Otherwise, embedded Powershell/.NET function `DIR2ISO` will be used to create the iso
+
 ## How to:
 
 * Recommended Host OS: Windows 7 or Windows 8.1
@@ -135,7 +142,6 @@ RSAT
 
 - ISO  
 create new iso file, if the target is a distribution  
-require installed ADK, or place oscdimg.exe or cdimage.exe next to the script
 
 - ISODir  
 folder path for iso file, leave it blank to create in the script current directory
@@ -191,13 +197,20 @@ if you do not want these settings, edit the script, search for this line and del
 
 ## Credits:
 
-[Creator](https://forums.mydigitallife.net/members/abbodi1406.204274/)  
-[Installer Concept](https://forums.mydigitallife.net/members/burfadel.84828/)  
-ESUpdates Concept: IMI Kurwica  
-[Special assistance](http://www.windows-update-checker.com/)  
-[WHDownloader](https://forums.mydigitallife.net/threads/44645)
+Concept - [burfadel](https://forums.mydigitallife.net/members/burfadel.84828/)  
+ESUpdates Concept / WinSxS Suppressors - [asdcorp](https://github.com/asdcorp/haveSxS)  
+NoKeyChannel ei.cfg - [awuctl](https://github.com/awuctl)  
+Special assistance - [komm](http://www.windows-update-checker.com/)  
+DIR2ISO - [AveYo](https://github.com/AveYo)  
+WHDownloader - [Alphawaves](https://forums.mydigitallife.net/threads/44645/)
 
 ## Changelog:
+
+* 7.0:  
+- Add "QualityCompat" registry to fix Windows Update supersedence chain metadata
+- Implement "DIR2ISO" function by AveYo to create iso (if oscdimg/cdimage are not detected)
+- Fix rebuilding boot.wim
+- Delete ei.cfg if install.wim have multiple images
 
 * 6.8:  
 few code improvements and fixes  

@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v6.8
+@set uiv=v7.0
 @echo off
 :: enable debug mode, you must also set target and repo (if updates folder is not beside the script)
 set _Debug=0
@@ -1369,6 +1369,7 @@ set ksub1=OFFSOFT&set ksub2=OFFSYST
 reg.exe load HKLM\!ksub1! "!mountdir!\Windows\System32\config\SOFTWARE"
 reg.exe load HKLM\!ksub2! "!mountdir!\Windows\System32\config\SYSTEM"
 )
+reg.exe add HKLM\%ksub1%\Microsoft\Windows\CurrentVersion\QualityCompat /v cadca5fe-87d3-4b96-b7fb-a231484277cc /t REG_DWORD /d 0 /f
 reg.exe add HKLM\%ksub1%\Policies\Microsoft\Windows\Gwx /v DisableGwx /t REG_DWORD /d 1 /f
 reg.exe add HKLM\%ksub1%\Policies\Microsoft\Windows\WindowsUpdate /v DisableOSUpgrade /t REG_DWORD /d 1 /f
 reg.exe delete HKLM\%ksub1%\Microsoft\Windows\CurrentVersion\WindowsUpdate\OSUpgrade /f
@@ -1700,14 +1701,14 @@ dism.exe /english /get-wiminfo /wimfile:"!mountdir!\Windows\System32\Recovery\wi
   set "mountdir=!mountdib!"
   set dismtarget=/image:"!mountdib!"
   if %winbuild% lss 9600 if %_ADK% equ 0 if /i "!DismRoot!"=="dism.exe" if not exist "!_imagex!" goto :eof
-  call :pebuild winre 1
+  call :pebuild 1 winre
   set "_wimfile=!_wimfilb!"
   set "_wimpath=!_wimpatb!"
 goto :eof
 
 :pebuild
 set verb=1
-if not "%1"=="" (
+if not "%2"=="" (
 set verb=0
 set "_wimfilb=!_wimfile!"
 set "_wimfile=winre.wim"
@@ -1722,7 +1723,7 @@ echo ============================================================
 )
 cd /d "!_wimpath!"
 if %winbuild% geq 9600 (
-for /L %%# in (1,1,%2) do %_dism2%:"!cab_dir!" /Export-Image /SourceImageFile:%_wimfile% /SourceIndex:%%# /DestinationImageFile:temp.wim
+for /L %%# in (1,1,%1) do %_dism2%:"!cab_dir!" /Export-Image /SourceImageFile:%_wimfile% /SourceIndex:%%# /DestinationImageFile:temp.wim
 if !errorlevel! equ 0 (move /y temp.wim %_wimfile% %_Nul1%) else (del /f /q temp.wim %_Nul3%)
 goto :eof
 )
@@ -1740,6 +1741,8 @@ echo Rebuilding %_wimfile%
 echo ============================================================
 )
 cd /d "!_wimpath!"
+for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"%_wimfile%" ^| find /i "Index"') do set finalimages=%%#
+if %dvd%==1 if %finalimages% gtr 1 if exist "sources\ei.cfg" del /f /q sources\ei.cfg
 if %winbuild% geq 9600 (
 if %keep%==1 (
 for %%# in (%indices%) do %_dism2%:"!cab_dir!" /Export-Image /SourceImageFile:%_wimfile% /SourceIndex:%%# /DestinationImageFile:temp.wim
@@ -2098,11 +2101,14 @@ if errorlevel 1 goto :targetmenu
 goto :mainmenu
 
 :ISO
-if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\cdimage.exe" goto :eof
+set imapi=0
+if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\bin\oscdimg.exe" if not exist "!_work!\cdimage.exe" if not exist "!_work!\bin\cdimage.exe" set imapi=1
+if %imapi%==1 if %_pwsh% equ 0 goto :eof
 if "!isodir!"=="" set "isodir=!_work!"
 call :DATEISO
 if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
 if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('%_psc% "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
+if not defined _date set "_date=000000000000"
 if not defined isodate set "isodate=%_date:~2,6%-%_date:~8,4%"
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set isolab=!isolab:%%#=%%#!
@@ -2125,11 +2131,16 @@ echo "!isodir!"
 if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else (set _ff="!_work!\cdimage.exe")
 cd /d "!target!"
 if exist "efi\microsoft\boot\efisys.bin" (
-!_ff! -bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
+set "_b_=-bootdata:2#p0,e,b".\boot\etfsboot.com"#pEF,e,b".\efi\microsoft\boot\efisys.bin""
 ) else (
-!_ff! -b".\boot\etfsboot.com" -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
+set "_b_=-b".\boot\etfsboot.com""
 )
-set errcode=%errorlevel%
+if %imapi%==0 (
+!_ff! %_b_% -o -m -u2 -udfver102 -l"%isover%" . "%isofile%"
+) else (
+call :DIR2ISO . "%isofile%" 0 "%isover%"
+)
+call set errcode=!errorlevel!
 if not exist "%isofile%" set errcode=1
 if %errcode% equ 0 move /y "%isofile%" "!isodir!\" %_Nul3%
 cd /d "!_work!"
@@ -2191,6 +2202,31 @@ echo.
 echo Press 9 or q to exit.
 choice /c 9Q /n
 if errorlevel 1 (goto :eof) else (rem.)
+
+$:DIR2ISO: #,# [PARAMS] directory file.iso
+set ^ #=& set 1=%*& set "0=%~f0"& powershell -nop -c "$f0=[IO.File]::ReadAllText($env:0); $0=($f0 -split '\$%0:.*')[1]; $1=$env:1 -replace '([`@$])','`$1'; iex(\"$0 `r`n %0 $1\")"& exit /b !errorlevel!
+[Environment]::CurrentDirectory = (Get-Location -PSProvider FileSystem).ProviderPath
+function :DIR2ISO ($dir, $iso, $efi=0, $vol='DVD_ROM') { if (!(test-path -Path $dir -pathtype Container)) {"[ERR] $dir\ :DIR2ISO";exit 1}; $dir2iso=@"
+ using System; using System.IO; using System.Runtime.Interop`Services; using System.Runtime.Interop`Services.ComTypes;
+ public class dir2iso {public int AveYo=2021; [Dll`Import("shlwapi",CharSet=CharSet.Unicode,PreserveSig=false)]
+ internal static extern void SHCreateStreamOnFileEx(string f,uint m,uint d,bool b,IStream r,out IStream s);
+ public static void Create(string file, ref object obj, int bs, int tb) { IStream dir=(IStream)obj, iso;
+ try {SHCreateStreamOnFileEx(file,0x1001,0x80,true,null,out iso);} catch(Exception e) {Console.WriteLine(e.Message); return;}
+ int d=tb>1024 ? 1024 : 1, pad=tb%d, block=bs*d, total=(tb-pad)/d, c=total>100 ? total/100 : total, i=1, MB=(bs/1024)*tb/1024;
+ Console.Write("{0,3}%  {1}MB {2}",0,MB,file); if (pad > 0) dir.CopyTo(iso, pad * block, Int`Ptr.Zero, Int`Ptr.Zero);
+ while (total-- > 0) {dir.CopyTo(iso, block, Int`Ptr.Zero, Int`Ptr.Zero); if (total % c == 0) {Console.Write("\r{0,3}%",i++);}}
+ iso.Commit(0); Console.WriteLine("\r{0,3}%  {1}MB {2}", 100, MB, file); } }
+"@; & { $cs=new-object CodeDom.Compiler.CompilerParameters; $cs.GenerateInMemory=1 #,# no`warnings
+ $compile=(new-object Microsoft.CSharp.CSharpCodeProvider).CompileAssemblyFromSource($cs, $dir2iso)
+ $BOOT=@(); $bootable=0; if ($efi) {$idx=0; $mbr_efi=@(0xEF); $images=@('efi\microsoft\boot\efisys.bin')} else {$idx=0,1; $mbr_efi=@(0,0xEF); $images=@('boot\etfsboot.com','efi\microsoft\boot\efisys.bin')}
+ $idx|% { $bootimage=join-path $dir -child $images[$_]; if (test-path -Path $bootimage -pathtype Leaf) {
+ $bin=new-object -ComObject ADODB.Stream; $bin.Open(); $bin.Type=1; $bin.LoadFromFile($bootimage)
+ $opt=new-object -ComObject IMAPI2FS.BootOptions; $opt.AssignBootImage($bin.psobject.BaseObject); $opt.Manufacturer='Microsoft'
+ $opt.PlatformId=$mbr_efi[$_]; $opt.Emulation=0; $bootable=1; $BOOT += $opt.psobject.BaseObject } }
+ $fsi=new-object -ComObject IMAPI2FS.MsftFileSystemImage; $fsi.FileSystemsToCreate=4; $fsi.FreeMediaBlocks=0; $fsi.UDFRevision=0x102
+ if ($bootable) {$fsi.BootImageOptionsArray=$BOOT}; $CONTENT=$fsi.Root; $CONTENT.AddTree($dir,$false); $fsi.VolumeName=$vol
+ $obj=$fsi.CreateResultImage(); [dir2iso]::Create($iso,[ref]$obj.ImageStream,$obj.BlockSize,$obj.TotalBlocks) };[GC]::Collect()
+} $:DIR2ISO: #,# export directory as (bootable) udf iso - lean and mean snippet by AveYo, 2021
 
 :EndDebug
 cmd /u /c type "!_log!_tmp.log">"!_log!_Debug.log"

@@ -32,8 +32,8 @@ you must run W10UI.cmd at least once after restart to perform Cleanup or Reset O
 
 * Creating updated iso file for a distribution target require either of:  
 > install Windows ADK  
-place oscdimg.exe or cdimage.exe in the same folder next to W10UI.cmd  
-otherwise, embedded Powershell/.NET function `DIR2ISO` will be used to create the iso
+place oscdimg.exe or cdimage.exe in the same folder next to W10UI.cmd
+* Otherwise, embedded Powershell/.NET function `DIR2ISO` will be used to create the iso
 
 ## Limitations:
 
