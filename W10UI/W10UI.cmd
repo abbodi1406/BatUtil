@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.53u
+@set uiv=v10.54
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -1473,6 +1473,7 @@ set lcumsu=
 set mpamfe=
 set servicingstack=
 set cumulative=
+set ekbpack=
 set netupdt=
 set netpack=
 set netroll=
@@ -1540,6 +1541,7 @@ if %online%==0 if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguageP
 call :sbsconfig 9 9 1
 )
 if defined netpack set "ldr=!netpack! !ldr!"
+if defined ekbpack set "ldr=!ekbpack! !ldr!"
 for %%# in (dupdt,cupdt,supdt,fupdt,safeos,secureboot,edge,ldr,cumulative,lcumsu) do if defined %%# set overall=1
 if defined servicingstack (
 if %verb%==1 (
@@ -1823,9 +1825,7 @@ findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i
   ))
 )
 if %_build% geq 17763 if exist "%dest%\update.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
-findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && (
-  if not exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" if not exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" if not exist "%dest%\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (if exist "%dest%\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:%dest%\update.mum") else (if exist "%dest%\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:%dest%\update.mum"))
-  ))
+findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "%dest%\*.mum" %_Nul3% && call :rollnet)
 findstr /i /m "Package_for_OasisAsset" "%dest%\update.mum" %_Nul3% && (if not exist "!mumtarget!\Windows\Servicing\packages\*OasisAssets-Package*.mum" (set /a _sum-=1&goto :eof))
 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && (
   %_Nul3% findstr /i /m "Edition\"" "%dest%\update.mum"
@@ -1863,7 +1863,7 @@ if /i "!package!"=="%s_pkg%" set "servicingstack=/PackagePath:%dest%\update.mum"
 if not defined s_pkg set "servicingstack=!servicingstack! /PackagePath:%dest%\update.mum"
 goto :eof
 )
-if exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" (
+if exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" findstr /i /m "Package_for_DotNetRollup" "%dest%\update.mum" %_Nul3% || (
 if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (set /a _sum-=1&goto :eof)
 set "netpack=!netpack! /PackagePath:%dest%\update.mum"
 goto :eof
@@ -1928,10 +1928,12 @@ if %_build% geq 16299 (
   )
 )
 if exist "%dest%\*enablement-package*.mum" (
-  set epkb=0
-  for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "%dest%\update.mum" %_Nul6%') do if exist "!mumtarget!\Windows\Servicing\packages\%%~#*.mum" set epkb=1
-  if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %verb%==1 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && set epkb=1
-  if "!epkb!"=="0" (set /a _sum-=1&goto :eof)
+set epkb=0
+for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "%dest%\update.mum" %_Nul6%') do if exist "!mumtarget!\Windows\Servicing\packages\%%~#*.mum" set epkb=1
+if exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %verb%==1 findstr /i /m "WinPE" "%dest%\update.mum" %_Nul3% && set epkb=1
+if "!epkb!"=="0" (set /a _sum-=1&goto :eof)
+set "ekbpack=!ekbpack! /PackagePath:%dest%\update.mum"
+goto :eof
 )
 for %%# in (%directcab%) do (
 if /i "!package!"=="%%~#" (
@@ -1949,6 +1951,16 @@ goto :eof
 if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 1 if not exist "!mumtarget!\Windows\WinSxS\Manifests\%_CedCom%.manifest" (set "cupdt=!cupdt! !package!"&goto :eof)
 if exist "%dest%\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 2 call :deEdge
 set "ldr=!ldr! /PackagePath:%dest%\update.mum"
+goto :eof
+
+:rollnet
+set rollnet=0
+findstr /i /m "Package_for_DotNetRollup" "%dest%\update.mum" %_Nul3% && set rollnet=1
+if not exist "%dest%\*_microsoft-windows-servicingstack_*.manifest" if not exist "%dest%\*_netfx4clientcorecomp.resources*.manifest" if not exist "%dest%\*_netfx4-netfx_detectionkeys_extended*.manifest" if not exist "%dest%\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (
+if exist "%dest%\*_*10.0.*.manifest" set rollnet=1
+if exist "%dest%\*_*11.0.*.manifest" set rollnet=1
+)
+if %rollnet% equ 1 set "netroll=!netroll! /PackagePath:%dest%\update.mum"
 goto :eof
 
 :proclcu
@@ -2622,6 +2634,7 @@ if exist "%~1\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixSV=22631"
 if exist "%~1\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixSV=22635"&set "_fixEP=22635"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-Beta-Version-Enablement-Package~*.mum" set "_fixSV=26120"&set "_fixEP=26120"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-26200-Version-Enablement-Package~*.mum" set "_fixSV=26200"&set "_fixEP=26200"
+if exist "%~1\Microsoft-Windows-Ge-Client-Server-26220-Version-Enablement-Package~*.mum" set "_fixSV=26220"&set "_fixEP=26220"
 goto :eof
 
 :fixLab
@@ -2633,6 +2646,7 @@ if %1==19044 if /i "%_tl:~0,2%"=="vb" set _tl=21h2%_tl:~2%
 if %1==19045 if /i "%_tl:~0,2%"=="vb" set _tl=22h2%_tl:~2%
 if %1==20349 if /i "%_tl:~0,2%"=="fe" set _tl=22h2%_tl:~2%
 if %1==22631 if /i "%_tl:~0,2%"=="ni" (echo %_tl% | find /i "beta" %_Nul1% || set _tl=23h2_ni%_tl:~2%)
+if %1==26200 if /i "%_tl:~0,2%"=="ge" (echo %_tl% | findstr /i /r "beta prerelease" %_Nul1% || set _tl=25h2_ge%_tl:~2%)
 set "%3=%_tl%"
 goto :eof
 
@@ -3560,7 +3574,7 @@ if "!isodir!"=="" set "isodir=!_work!"
 call :DATEISO
 if %_cwmi% equ 1 for /f "tokens=2 delims==." %%# in ('wmic os get localdatetime /value') do set "_date=%%#"
 if %_cwmi% equ 0 for /f "tokens=1 delims=." %%# in ('%_psc% "([WMI]'Win32_OperatingSystem=@').LocalDateTime"') do set "_date=%%#"
-if not defined _date set "_date=000000-0000"
+if not defined _date set "_date=000000000000"
 if not defined isodate set "isodate=%_date:~2,6%-%_date:~8,4%"
 for %%# in (A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
 set isolab=!isolab:%%#=%%#!

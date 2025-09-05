@@ -234,6 +234,11 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.54:  
+- Change non-insider 26200 iso label to 25h2_ge_release
+- Move Enablement package installation order before .NET updates
+- Fix for 25H2 .NET Rollup mistakenly detected as .NET feature pack
+
 10.53:  
 - Add workaround to avoid KB5043080 msu installation error
 - Install all SSUs for Windows 10 v1507 (LTSB 2015)
@@ -317,7 +322,7 @@ default state is OFF
 - Updated detection for SafeOS DU
 
 10.38:  
-- Fixed processing SSU-*.cab from normally-named SSU msu
+- Fixed processing `SSU-*.cab` from normally-named SSU msu
 - Changed 22631 iso label to 23h2_ni_release
 - Changed finish prompt to "Press 9 or q to exit"
 - Added detection for Net35 sxs folder from W10UI.cmd root, or updates repo folder

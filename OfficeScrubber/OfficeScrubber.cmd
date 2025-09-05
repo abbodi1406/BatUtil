@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v12
+@set uivr=v14
 @echo off
 set uac=-elevated
 for %%# in (All,C2R,UWP,M16,M15,M14,M12,M11) do set _u%%#=0
@@ -49,6 +49,11 @@ set "_psc=powershell -nop -c"
 set "_err===== ERROR ===="
 set "_ln============================================================="
 set "_sr=************************************************************"
+if /i "%PROCESSOR_ARCHITECTURE%"=="amd64" set "xBit=x64"&set "xOS=x64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xBit=x86"&set "xOS=A64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xBit=x86"&set "xOS=x86"
+if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xBit=x64"&set "xOS=x64"
+if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xBit=x86"&set "xOS=A64"
 
 set _leg=0
 ver|findstr /C:" 5." >nul && set _leg=1
@@ -63,13 +68,22 @@ set winbuild=1
 if %_leg% equ 0 for /f "tokens=6 delims=[]. " %%# in ('ver') do set winbuild=%%#
 if %_leg% equ 1 for /f "skip=%_sk% tokens=1,2,3 delims=. " %%i in ('reg.exe query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v BuildLab 2^>nul') do (if /i "%%i"=="BuildLab" if not "%%~k"=="" set "winbuild=%%~k")
 
+reg query HKLM\SYSTEM\CurrentControlSet\Services\WinMgmt /v Start 2>nul | find /i "0x4" 1>nul && (goto :E_WMS)
+
 set _cwmi=0
 for %%# in (wmic.exe) do @if not "%%~$PATH:#"=="" (
-wmic path Win32_ComputerSystem get CreationClassName /value 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+cmd /c "wmic path Win32_ComputerSystem get CreationClassName /value" 2>nul | find /i "ComputerSystem" 1>nul && set _cwmi=1
+)
+
+if not defined qerel if not defined _elev (
+echo.
+echo Checking Windows Powershell, please wait . . .
 )
 set _pwsh=1
 for %%# in (powershell.exe) do @if "%%~$PATH:#"=="" set _pwsh=0
-if not exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwsh=0
+2>nul %_psc% $ExecutionContext.SessionState.LanguageMode | find /i "Full" 1>nul || set _pwsh=0
+@cls
+:: if %_pwsh% equ 0 goto :E_PWS
 
 if %_leg% equ 1 goto :Passed
 
@@ -78,6 +92,10 @@ if %_leg% equ 1 goto :Passed
   ) || (
   if defined _elev goto :E_Admin
 )
+
+set "_work=%~dp0bin"
+cmd /v:on /c if not exist "!_work!\*.vbs" exit /b 2 1>nul 2>nul
+if %errorlevel% EQU 2 goto :E_BIN
 
 set _PSarg="""%~f0""" %* %uac%
 set _PSarg=%_PSarg:'=''%
@@ -110,6 +128,7 @@ reg.exe query HKCU\Console /v QuickEdit 2>nul | find /i "0x0" >nul && set qerel=
 )
 if defined qerel goto :skipQE
 if %_pwsh% EQU 0 goto :skipQE
+if %xOS%==A64 %_psc% $env:PROCESSOR_ARCHITECTURE 2>nul | find /i "x86" 1>nul && goto :skipQE
 if %winbuild% GEQ 17763 (
 set "launchcmd=start conhost.exe %_psc%"
 ) else (
@@ -132,24 +151,23 @@ set "_oA14=59a52881-a989-479d-af46-f275c6370663"
 set "OPPk=SOFTWARE\Microsoft\OfficeSoftwareProtectionPlatform"
 set "SPPk=SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform"
 set "_para=ALL /OSE /NOCANCEL /FORCE /ENDCURRENTINSTALLS /DELETEUSERSETTINGS /CLEARADDINREG /REMOVELYNC"
-if /i "%PROCESSOR_ARCHITECTURE%"=="amd64" set "xBit=x64"&set "xOS=x64"
-if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xBit=x86"&set "xOS=A64"
-if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xBit=x86"&set "xOS=x86"
-if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xBit=x64"&set "xOS=x64"
-if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xBit=x86"&set "xOS=A64"
 set "_Common=%CommonProgramFiles%"
 if defined PROCESSOR_ARCHITEW6432 set "_Common=%CommonProgramW6432%"
 set "_file=%_Common%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe"
 set "_fil2=%CommonProgramFiles(x86)%\Microsoft Shared\ClickToRun\OfficeClickToRun.exe"
-set "_work=%~dp0bin"
-set "_Local=%LocalAppData%"
 set "_cscript=cscript //Nologo"
 set kO16=HKCU\SOFTWARE\Microsoft\Office\16.0
+set kCTR=HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration
+set "_Local=%LocalAppData%"
+set "_work=%~dp0"
+set "_work=%_work:~0,-1%"
 setlocal EnableDelayedExpansion
 pushd "!_work!"
+set _mis=
 for %%# in (OffScrubC2R.vbs,OffScrub_O16msi.vbs,OffScrub_O15msi.vbs,OffScrub10.vbs,OffScrub07.vbs,OffScrub03.vbs,CleanOffice.txt) do (
-if not exist ".\%%#" (set "msg=ERROR: required file %%# is missing"&goto :TheEnd)
+if not exist ".\bin\%%#" set _mis=1
 )
+if defined _mis goto :E_BIN
 set "_Nul1=1>nul"
 set "_Nul2=2>nul"
 set "_Nul6=2^>nul"
@@ -405,7 +423,7 @@ echo.
 echo Scrubbing Office C2R . . .
 for %%A in (16,19,21,24) do call :cKpp %%A
 if %_O15CTR% EQU 1 call :cKpp 15
-%_cscript% OffScrubC2R.vbs ALL /OFFLINE
+%_cscript% bin\OffScrubC2R.vbs ALL /OFFLINE
 %_Nul3% call :vNextDir
 %_Nul3% call :officeREG 16
 goto :eof
@@ -464,7 +482,7 @@ goto :eof
 echo.
 echo Scrubbing Office 2016 MSI . . .
 call :cKpp 16
-%_cscript% OffScrub_O16msi.vbs %_para%
+%_cscript% bin\OffScrub_O16msi.vbs %_para%
 %_Nul3% call :officeREG 16
 goto :eof
 
@@ -472,7 +490,7 @@ goto :eof
 echo.
 echo Scrubbing Office 2013 MSI . . .
 call :cKpp 15
-%_cscript% OffScrub_O15msi.vbs %_para%
+%_cscript% bin\OffScrub_O15msi.vbs %_para%
 %_Nul3% call :officeREG 15
 goto :eof
 
@@ -480,34 +498,30 @@ goto :eof
 echo.
 echo Scrubbing Office 2010 . . .
 call :cK14
-%_cscript% OffScrub10.vbs %_para%
+%_cscript% bin\OffScrub10.vbs %_para%
 %_Nul3% call :officeREG 14
 goto :eof
 
 :rOM12
 echo.
 echo Scrubbing Office 2007 . . .
-%_cscript% OffScrub07.vbs %_para%
+%_cscript% bin\OffScrub07.vbs %_para%
 %_Nul3% call :officeREG 12
 goto :eof
 
 :rOM11
 echo.
 echo Scrubbing Office 2003 . . .
-%_cscript% OffScrub03.vbs %_para%
+%_cscript% bin\OffScrub03.vbs %_para%
 %_Nul3% call :officeREG 11
 goto :eof
 
 :cSPP
 echo.
 echo Removing Office Licenses . . .
-call :oppcln
-call :slmgr
-goto :eof
-
-:oppcln
-%_Nul3% %_psc% "cd -Lit ($env:__CD__); $f=[IO.File]::ReadAllText('.\CleanOffice.txt') -split ':embed\:.*'; iex ($f[1])"
+%_Nul3% %_psc% "cd -Lit ($env:__CD__); $f=[IO.File]::ReadAllText('.\bin\CleanOffice.txt') -split ':embed\:.*'; iex ($f[1])"
 @title Office Scrubber %uivr%
+call :slmgr
 goto :eof
 
 :slmgr
@@ -540,13 +554,13 @@ reg.exe query HKLM\SOFTWARE\Microsoft\Office\14.0\CVH %_Nul2% | findstr /I "Clic
 if %winbuild% LSS 7600 goto :eof
 
 :: sc query ClickToRunSvc %_Nul3% && set _O16CTR=1
-reg.exe query HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds %_Nul3% && (
+reg.exe query %kCTR% /v ProductReleaseIds %_Nul3% && (
 set _O16CTR=1
-for /f "skip=2 tokens=2*" %%a in ('"reg.exe query HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Configuration /v Platform" %_Nul6%') do set "_plat=%%b"
+for /f "skip=2 tokens=2*" %%a in ('"reg.exe query %kCTR% /v Platform" %_Nul6%') do set "_plat=%%b"
 )
-if not %xOS%==x86 if %_O16CTR% EQU 0 reg.exe query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration /v ProductReleaseIds %_Nul3% && (
+if not %xOS%==x86 if %_O16CTR% EQU 0 reg.exe query %kCTR% /v ProductReleaseIds /reg:32 %_Nul3% && (
 set _O16CTR=1
-for /f "skip=2 tokens=2*" %%a in ('"reg.exe query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\ClickToRun\Configuration /v Platform" %_Nul6%') do set "_plat=%%b"
+for /f "skip=2 tokens=2*" %%a in ('"reg.exe query %kCTR% /v Platform /reg:32" %_Nul6%') do set "_plat=%%b"
 )
 if exist "!_file!" set _O16CTR=1
 if exist "!_fil2!" if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set _O16CTR=1
@@ -568,7 +582,8 @@ if %_O15CTR% EQU 0 reg.exe query HKLM\SOFTWARE\WOW6432Node\Microsoft\Office\15.0
 set _O15CTR=1
 )
 
-if %winbuild% GEQ 10240 reg.exe query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msoxmled.exe" %_Nul3% && (
+if %winbuild% GEQ 10240 (
+dir /b "%ProgramData%\Packages\Microsoft.Office.Desktop*" %_Nul3% && set _O16UWP=1
 dir /b "%ProgramFiles%\WindowsApps\Microsoft.Office.Desktop*" %_Nul3% && set _O16UWP=1
 if not %xOS%==x86 dir /b "%ProgramW6432%\WindowsApps\Microsoft.Office.Desktop*" %_Nul3% && set _O16UWP=1
 if not %xOS%==x86 dir /b "%ProgramFiles(x86)%\WindowsApps\Microsoft.Office.Desktop*" %_Nul3% && set _O16UWP=1
@@ -600,26 +615,25 @@ if exist "%ProgramFiles(x86)%\Microsoft Office\Office%1\*.dll" set _O%1MSI=1
 goto :eof
 
 :officeREG
-reg delete HKCU\Software\Microsoft\Office\%1.0 /f
-reg delete HKCU\Software\Policies\Microsoft\Office\%1.0 /f
-reg delete HKCU\Software\Policies\Microsoft\Cloud\Office\%1.0 /f
-reg delete HKLM\SOFTWARE\Microsoft\Office\%1.0 /f
-reg delete HKLM\SOFTWARE\Policies\Microsoft\Office\%1.0 /f
-reg delete HKLM\SOFTWARE\Microsoft\Office\%1.0 /f /reg:32
-reg delete HKLM\SOFTWARE\Policies\Microsoft\Office\%1.0 /f /reg:32
+reg.exe delete HKCU\Software\Microsoft\Office\%1.0 /f
+reg.exe delete HKCU\Software\Policies\Microsoft\Office\%1.0 /f
+reg.exe delete HKCU\Software\Policies\Microsoft\Cloud\Office\%1.0 /f
+reg.exe delete HKLM\SOFTWARE\Microsoft\Office\%1.0 /f
+reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Office\%1.0 /f
+reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Cloud\Office\%1.0 /f
+reg.exe delete HKLM\SOFTWARE\Microsoft\Office\%1.0 /f /reg:32
+reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Office\%1.0 /f /reg:32
+reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Cloud\Office\%1.0 /f /reg:32
 goto :eof
 
 :cK14
-if %WMI_VBS% NEQ 0 cd ..
 set _spp=OfficeSoftwareProtectionProduct
 if %OsppHook% NEQ 0 (
 call :cKEY 14
 )
-if %WMI_VBS% NEQ 0 cd bin
 goto :eof
 
 :cKpp
-if %WMI_VBS% NEQ 0 cd ..
 set _spp=SoftwareLicensingProduct
 if %winbuild% GEQ 9200 (
 call :cKEY %1
@@ -628,16 +642,15 @@ set _spp=OfficeSoftwareProtectionProduct
 if %winbuild% LSS 9200 if %OsppHook% NEQ 0 (
 call :cKEY %1
 )
-if %WMI_VBS% NEQ 0 cd bin
 goto :eof
 
 :cKMS
-if %WMI_VBS% NEQ 0 cd ..
 set _spp=SoftwareLicensingProduct
 if %winbuild% GEQ 9200 (
-reg delete "HKLM\%SPPk%\%_oApp%" /f
-reg delete "HKLM\%SPPk%\%_oApp%" /f /reg:32
-reg delete "HKU\S-1-5-20\%SPPk%\%_oApp%" /f
+reg.exe delete "HKLM\%SPPk%\%_oApp%" /f
+reg.exe delete "HKLM\%SPPk%\%_oApp%" /f /reg:32
+reg.exe delete "HKU\S-1-5-20\%SPPk%\%_oApp%" /f
+reg.exe delete "HKU\S-1-5-20\%SPPk%\Policies\%_oApp%" /f
 for %%A in (15,16,19,21,24) do call :cKEY %%A
 )
 set _spp=OfficeSoftwareProtectionProduct
@@ -645,13 +658,12 @@ if %winbuild% GEQ 9200 if %OsppHook% NEQ 0 (
 call :cKEY 14
 )
 if %winbuild% LSS 9200 if %OsppHook% NEQ 0 (
-reg delete "HKLM\%OPPk%\%_oApp%" /f
-reg delete "HKLM\%OPPk%\%_oApp%" /f /reg:32
+reg.exe delete "HKLM\%OPPk%\%_oApp%" /f
+reg.exe delete "HKLM\%OPPk%\%_oApp%" /f /reg:32
 for %%A in (14,15,16,19,21,24) do call :cKEY %%A
 )
-reg delete "HKLM\%OPPk%\%_oA14%" /f
-reg delete "HKU\S-1-5-20\%OPPk%" /f
-if %WMI_VBS% NEQ 0 cd bin
+reg.exe delete "HKLM\%OPPk%\%_oA14%" /f
+reg.exe delete "HKU\S-1-5-20\%OPPk%" /f
 goto :eof
 
 :cKEY
@@ -669,14 +681,36 @@ goto :eof
 
 :vNextDir
 attrib -R "!ProgramData!\Microsoft\Office\Licenses"
+attrib -R "!ProgramData!\Microsoft\Licenses"
 attrib -R "!_Local!\Microsoft\Office\Licenses"
-rd /s /q "!ProgramData!\Microsoft\Office\Licenses\"
-rd /s /q "!_Local!\Microsoft\Office\Licenses\"
+attrib -R "!_Local!\Microsoft\Office\16.0\Licensing"
+attrib -R "!_Local!\Microsoft\IdentityCache"
+attrib -R "!_Local!\Microsoft\OneAuth"
+rmdir /s /q "!ProgramData!\Microsoft\Office\Licenses\"
+rmdir /s /q "!ProgramData!\Microsoft\Licenses\"
+rmdir /s /q "!_Local!\Microsoft\Office\Licenses\"
+rmdir /s /q "!_Local!\Microsoft\Office\16.0\Licensing\"
+rmdir /s /q "!_Local!\Microsoft\IdentityCache\"
+rmdir /s /q "!_Local!\Microsoft\OneAuth\"
 goto :eof
 
 :vNextREG
-reg delete "%kO16%\Common\Licensing" /f
-reg delete "%kO16%\Registration" /f
+reg.exe delete "HKU\S-1-5-20\%SPPk%\Policies\%_oApp%" /f
+reg.exe delete "%kO16%\Common\Licensing" /f
+reg.exe delete "%kO16%\Common\Identity" /f
+reg.exe delete "%kO16%\Registration" /f
+reg.exe delete "%kCTR%" /f /v SharedComputerLicensing
+reg.exe delete "%kCTR%" /f /v productkeys
+for /f %%# in ('reg.exe query "%kCTR%" /f *.EmailAddress ^| findstr REG_') do reg.exe delete "%kCTR%" /f /v %%#
+for /f %%# in ('reg.exe query "%kCTR%" /f *.TenantId ^| findstr REG_') do reg.exe delete "%kCTR%" /f /v %%#
+for /f %%# in ('reg.exe query "%kCTR%" /f *.DeviceBasedLicensing ^| findstr REG_') do reg.exe delete "%kCTR%" /f /v %%#
+reg.exe delete HKLM\SOFTWARE\Microsoft\Office\ClickToRun\Updates /f
+reg.exe delete HKLM\SOFTWARE\Microsoft\Office\16.0\Common\OEM /f
+reg.exe delete HKLM\SOFTWARE\Microsoft\Office\16.0\Common\Licensing /f
+reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\Licensing /f
+reg.exe delete HKLM\SOFTWARE\Microsoft\Office\16.0\Common\OEM /f /reg:32
+reg.exe delete HKLM\SOFTWARE\Microsoft\Office\16.0\Common\Licensing /f /reg:32
+reg.exe delete HKLM\SOFTWARE\Policies\Microsoft\Office\16.0\Common\Licensing /f /reg:32
 goto :eof
 
 :LcnsC
@@ -748,6 +782,12 @@ echo This script requires administrator privileges.
 echo To do so, right-click on this script and select 'Run as administrator'
 goto :E_Exit
 
+:E_PWS
+echo %_err%
+echo Windows PowerShell is not installed or not working properly.
+echo It is required for this script to work.
+goto :E_Exit
+
 :E_VBS
 echo %_err%
 echo VBScript engine is not installed.
@@ -758,6 +798,19 @@ goto :E_Exit
 echo %_err%
 echo Windows Script Host is disabled.
 echo It is required for this script to work.
+goto :E_Exit
+
+:E_WMS
+echo %_err%
+echo Windows Management Instrumentation [WinMgmt] service is disabled.
+echo It is required for this script to work.
+goto :E_Exit
+
+:E_BIN
+echo %_err%
+echo Required files are missing.
+echo Make sure to extract all files from the zip archive,
+echo and run the script from the extracted folder, not directly from the archive.
 goto :E_Exit
 
 :TheEnd

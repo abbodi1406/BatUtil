@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v115
+@set uivr=v116
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -1232,7 +1232,7 @@ if exist "bin\temp\*_microsoft-windows-coreos-revision*.manifest" for /f "tokens
 if %_build% geq 15063 (
 wimlib-imagex.exe extract "!MetadataESD!" 3 Windows\System32\config\SOFTWARE --dest-dir=.\bin\temp --no-acls --no-attributes %_Null%
 set "isokey=Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
-for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% ^| findstr /i /r ".*\.OS""') do if not errorlevel 1 (
+for /f %%i in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!" enumkeys %_Nul6% ^| findstr /i /r "Client\.OS Server\.OS""') do if not errorlevel 1 (
   for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Branch %_Nul6%"') do set "revbranch=%%~A"
   for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe .\bin\temp\SOFTWARE "!isokey!\%%i" getvalue Version %_Nul6%"') do if %%A gtr !revmaj! (
     set "revver=%%~A.%%B
@@ -1349,6 +1349,7 @@ if %1==19044 if /i "%branch:~0,2%"=="vb" set branch=21h2%branch:~2%
 if %1==19045 if /i "%branch:~0,2%"=="vb" set branch=22h2%branch:~2%
 if %1==20349 if /i "%branch:~0,2%"=="fe" set branch=22h2%branch:~2%
 if %1==22631 if /i "%branch:~0,2%"=="ni" (echo %branch% | find /i "beta" %_Nul1% || set branch=23h2_ni%branch:~2%)
+if %1==26200 if /i "%branch:~0,2%"=="ge" (echo %branch% | findstr /i /r "beta prerelease" %_Nul1% || set branch=25h2_ge%branch:~2%)
 exit /b
 
 :fixVerBrn
@@ -1392,6 +1393,11 @@ if %1==22631 (
 if /i "%_ti:~0,2%"=="ni" (echo %_ti% | find /i "beta" %_Nul1% || set _ti=23h2_ni%_ti:~2%)
 if %_tv:~0,5%==22621 set _tv=22631%_tv:~5%
 if /i "%_tb:~0,2%"=="ni" (echo %_tb% | find /i "beta" %_Nul1% || set _tb=23h2_ni%_tb:~2%)
+)
+if %1==26200 (
+if /i "%_ti:~0,2%"=="ge" (echo %_ti% | findstr /i /r "beta prerelease" %_Nul1% || set _ti=25h2_ge%_ti:~2%)
+if %_tv:~0,5%==26100 set _tv=26200%_tv:~5%
+if /i "%_tb:~0,2%"=="ge" (echo %_tb% | findstr /i /r "beta prerelease" %_Nul1% || set _tb=25h2_ge%_tb:~2%)
 )
 set "%2=%_ti%"
 set "%3=%_tv%"
@@ -2664,6 +2670,7 @@ if exist "%~1\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixSV=22631"
 if exist "%~1\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixSV=22635"&set "_fixEP=22635"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-Beta-Version-Enablement-Package~*.mum" set "_fixSV=26120"&set "_fixEP=26120"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-26200-Version-Enablement-Package~*.mum" set "_fixSV=26200"&set "_fixEP=26200"
+if exist "%~1\Microsoft-Windows-Ge-Client-Server-26220-Version-Enablement-Package~*.mum" set "_fixSV=26220"&set "_fixEP=26220"
 goto :eof
 
 :inrenssu
@@ -2735,6 +2742,7 @@ set lcumsu=
 set mpamfe=
 set servicingstack=
 set cumulative=
+set ekbpack=
 set netupdt=
 set netpack=
 set netroll=
@@ -2787,6 +2795,7 @@ if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
 call :sbsconfig 9 9 1
 )
 if defined netpack set "ldr=!netpack! !ldr!"
+if defined ekbpack set "ldr=!ekbpack! !ldr!"
 for %%# in (dupdt,cupdt,supdt,fupdt,secureboot,edge,ldr,cumulative,lcumsu) do if defined %%# set overall=1
 if not defined safeos if not defined overall if not defined mpamfe if not defined servicingstack goto :eof
 if defined servicingstack (
@@ -3104,9 +3113,7 @@ findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i
   ))
 )
 if %_build% geq 17763 if exist "!dest!\update.mum" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
-findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "!dest!\*.mum" %_Nul3% && (
-  if not exist "!dest!\*_microsoft-windows-servicingstack_*.manifest" if not exist "!dest!\*_netfx4clientcorecomp.resources*.manifest" if not exist "!dest!\*_netfx4-netfx_detectionkeys_extended*.manifest" if not exist "!dest!\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (if exist "!dest!\*_*10.0.*.manifest" (set "netroll=!netroll! /PackagePath:!dest!\update.mum") else (if exist "!dest!\*_*11.0.*.manifest" set "netroll=!netroll! /PackagePath:!dest!\update.mum"))
-  ))
+findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% || (findstr /i /m "Microsoft-Windows-NetFx" "!dest!\*.mum" %_Nul3% && call :rollnet)
 findstr /i /m "Package_for_OasisAsset" "!dest!\update.mum" %_Nul3% && (if not exist "%mumtarget%\Windows\Servicing\packages\*OasisAssets-Package*.mum" goto :eof)
 findstr /i /m "WinPE" "!dest!\update.mum" %_Nul3% && (
   %_Nul3% findstr /i /m "Edition\"" "!dest!\update.mum"
@@ -3126,7 +3133,7 @@ if /i "%package%"=="%s_pkg%" set "servicingstack=/PackagePath:!dest!\update.mum"
 if not defined s_pkg set "servicingstack=!servicingstack! /PackagePath:!dest!\update.mum"
 goto :eof
 )
-if exist "!dest!\*_netfx4-netfx_detectionkeys_extended*.manifest" (
+if exist "!dest!\*_netfx4-netfx_detectionkeys_extended*.manifest" findstr /i /m "Package_for_DotNetRollup" "!dest!\update.mum" %_Nul3% || (
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :eof
 set "netpack=!netpack! /PackagePath:!dest!\update.mum"
 goto :eof
@@ -3185,10 +3192,12 @@ if %_build% geq 16299 (
   )
 )
 if exist "!dest!\*enablement-package*.mum" (
-  set epkb=0
-  for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "!dest!\update.mum" %_Nul6%') do if exist "%mumtarget%\Windows\Servicing\packages\%%~#*.mum" set epkb=1
-  if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" findstr /i /m "WinPE" "!dest!\update.mum" %_Nul3% && set epkb=1
-  if "!epkb!"=="0" goto :eof
+set epkb=0
+for /f "tokens=3 delims== " %%# in ('findstr /i "Edition" "!dest!\update.mum" %_Nul6%') do if exist "%mumtarget%\Windows\Servicing\packages\%%~#*.mum" set epkb=1
+if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" findstr /i /m "WinPE" "!dest!\update.mum" %_Nul3% && set epkb=1
+if "!epkb!"=="0" goto :eof
+set "ekbpack=!ekbpack! /PackagePath:!dest!\update.mum"
+goto :eof
 )
 for %%# in (%directcab%) do (
 if /i "%package%"=="%%~#" (
@@ -3206,6 +3215,16 @@ goto :eof
 if exist "!dest!\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 1 if not exist "%mumtarget%\Windows\WinSxS\Manifests\%_CedCom%.manifest" (set "cupdt=!cupdt! %package%"&goto :eof)
 if exist "!dest!\*_%_CedCmp%_*.manifest" if %SkipEdge% equ 2 call :deEdge
 set "ldr=!ldr! /PackagePath:!dest!\update.mum"
+goto :eof
+
+:rollnet
+set rollnet=0
+findstr /i /m "Package_for_DotNetRollup" "!dest!\update.mum" %_Nul3% && set rollnet=1
+if not exist "!dest!\*_microsoft-windows-servicingstack_*.manifest" if not exist "!dest!\*_netfx4clientcorecomp.resources*.manifest" if not exist "!dest!\*_netfx4-netfx_detectionkeys_extended*.manifest" if not exist "!dest!\*_microsoft-windows-n..35wpfcomp.resources*.manifest" (
+if exist "!dest!\*_*10.0.*.manifest" set rollnet=1
+if exist "!dest!\*_*11.0.*.manifest" set rollnet=1
+)
+if %rollnet% equ 1 set "netroll=!netroll! /PackagePath:!dest!\update.mum"
 goto :eof
 
 :proclcu
@@ -3730,7 +3749,7 @@ set handle2=1
 set isomin=0
 for /f "tokens=%tok% delims=_." %%i in ('dir /b /a:-d /od "%_mount%\Windows\WinSxS\Manifests\%_ss%_microsoft-windows-coreos-revision*.manifest"') do (set isover=%%i.%%j&set isomaj=%%i&set isomin=%%j)
 set "isokey=Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
-for /f %%i in ('"offlinereg.exe "%_mount%\Windows\system32\config\SOFTWARE" "!isokey!" enumkeys %_Nul6% ^| findstr /i /r ".*\.OS""') do if not errorlevel 1 (
+for /f %%i in ('"offlinereg.exe "%_mount%\Windows\system32\config\SOFTWARE" "!isokey!" enumkeys %_Nul6% ^| findstr /i /r "Client\.OS Server\.OS""') do if not errorlevel 1 (
   for /f "tokens=3 delims==:" %%A in ('"offlinereg.exe "%_mount%\Windows\system32\config\SOFTWARE" "!isokey!\%%i" getvalue Branch %_Nul6%"') do set "isobranch=%%~A"
   for /f "tokens=5,6 delims==:." %%A in ('"offlinereg.exe "%_mount%\Windows\system32\config\SOFTWARE" "!isokey!\%%i" getvalue Version %_Nul6%"') do if %%A gtr !isomaj! (
     set "isover=%%~A.%%B

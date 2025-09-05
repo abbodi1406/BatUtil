@@ -120,6 +120,6 @@ Scrub ALL parameter will only remove the detected version and the default versio
 
 to force scrubbing multiple or other versions regardless detection, specify their parameters too
 
-example, this will scrub detected and default versions, and Office 2013 and 2003:
+example, this will scrub detected and default versions, plus Office 2013 and 2003:
 
 `OfficeScrubber.cmd /A /M2 /M5`
