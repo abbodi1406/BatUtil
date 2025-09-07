@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v116
+@set uivr=v117
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -1884,17 +1884,7 @@ for /f "tokens=* delims=" %%# in ('dir /b /a:-d "!_UUP!\*Windows1*-KB*.cab"') do
 	if not exist "temp\update.mum" set isoupdate=!isoupdate! "%%#"
 )
 if not defined isoupdate goto :undu
-call :dk_color1 %Blue% "=== Adding setup dynamic update{s} . . ." 4 5
-mkdir "%_cabdir%\du" %_Nul3%
-for %%# in (!isoupdate!) do (
-echo %%~#
-expand.exe -r -f:* "!_UUP!\%%~#" "%_cabdir%\du" %_Nul1%
-)
-xcopy /CDRUY "%_cabdir%\du" "ISOFOLDER\sources\" %_Nul3%
-if exist "%_cabdir%\du\*.ini" xcopy /CDRY "%_cabdir%\du\*.ini" "ISOFOLDER\sources\" %_Nul3%
-for /f %%# in ('dir /b /ad "%_cabdir%\du\*-*" %_Nul6%') do if exist "ISOFOLDER\sources\%%#\*.mui" copy /y "%_cabdir%\du\%%#\*" "ISOFOLDER\sources\%%#\" %_Nul3%
-if exist "%_cabdir%\du\replacementmanifests\" xcopy /CERY "%_cabdir%\du\replacementmanifests" "ISOFOLDER\sources\replacementmanifests\" %_Nul3%
-rmdir /s /q "%_cabdir%\du\" %_Nul3%
+call :addDU
 
 :undu
 copy /y ISOFOLDER\sources\UpdateAgent.dll %SystemRoot%\temp\ %_Nul1%
@@ -2218,6 +2208,7 @@ call :updt_mount "%_target%"
 if %dvd% equ 0 goto :nodvd
 if exist "%SystemRoot%\temp\UpdateAgent.dll" del /f /q "%SystemRoot%\temp\UpdateAgent.dll" %_Nul3%
 if exist "%SystemRoot%\temp\Facilitator.dll" del /f /q "%SystemRoot%\temp\Facilitator.dll" %_Nul3%
+if exist "%SystemRoot%\temp\ServicingCommon.dll" del /f /q "%SystemRoot%\temp\ServicingCommon.dll" %_Nul3%
 call :updt_mount "%_target%\sources\install.wim"
 
 :nodvd
@@ -2254,17 +2245,7 @@ for /L %%# in (1,1,%imgcount%) do (
   wimlib-imagex.exe info "%_target%\sources\install.wim" %%# --image-property CREATIONTIME/HIGHPART=!HIGHPART! --image-property CREATIONTIME/LOWPART=!LOWPART! %_Nul1%
 )
 if not defined isoupdate goto :nodu
-call :dk_color1 %Blue% "=== Adding setup dynamic update{s} . . ." 4 5
-mkdir "%_cabdir%\du" %_Nul3%
-for %%# in (!isoupdate!) do (
-echo %%~#
-expand.exe -r -f:* "!_UUP!\%%~#" "%_cabdir%\du" %_Nul1%
-)
-xcopy /CDRUY "%_cabdir%\du" "ISOFOLDER\sources\" %_Nul3%
-if exist "%_cabdir%\du\*.ini" xcopy /CDRY "%_cabdir%\du\*.ini" "ISOFOLDER\sources\" %_Nul3%
-for /f %%# in ('dir /b /ad "%_cabdir%\du\*-*" %_Nul6%') do if exist "ISOFOLDER\sources\%%#\*.mui" copy /y "%_cabdir%\du\%%#\*" "ISOFOLDER\sources\%%#\" %_Nul3%
-if exist "%_cabdir%\du\replacementmanifests\" xcopy /CERY "%_cabdir%\du\replacementmanifests" "ISOFOLDER\sources\replacementmanifests\" %_Nul3%
-rmdir /s /q "%_cabdir%\du\" %_Nul3%
+call :addDU
 
 :nodu
 if not defined isover exit /b
@@ -2277,6 +2258,23 @@ set _label=%isover%.%isodate%.%isobranch%
 if /i not "%branch%"=="WinBuild" if /i not "%branch%"=="GitEnlistment" if /i not "%idudate%"=="winpbld" (set _label=%iduver%.%idudate%.%branch%)
 if %isomin% neq %idumin% (set _label=%isover%.%isodate%.%isobranch%)
 call :setlabel
+exit /b
+
+:addDU
+call :dk_color1 %Blue% "=== Adding setup dynamic update{s} . . ." 4 5
+mkdir "%_cabdir%\du" %_Nul3%
+for %%# in (!isoupdate!) do (
+echo %%~#
+expand.exe -r -f:* "!_UUP!\%%~#" "%_cabdir%\du" %_Nul1%
+)
+if %_build% geq 26100 (
+if exist "%SystemRoot%\temp\ServicingCommon.dll" if not exist "%_cabdir%\du\ServicingCommon.dll" copy /y "%SystemRoot%\temp\ServicingCommon.dll" "%_cabdir%\du\" %_Nul3%
+)
+xcopy /CDRUY "%_cabdir%\du" "ISOFOLDER\sources\" %_Nul3%
+if exist "%_cabdir%\du\*.ini" xcopy /CDRY "%_cabdir%\du\*.ini" "ISOFOLDER\sources\" %_Nul3%
+for /f %%# in ('dir /b /ad "%_cabdir%\du\*-*" %_Nul6%') do if exist "ISOFOLDER\sources\%%#\*.mui" copy /y "%_cabdir%\du\%%#\*" "ISOFOLDER\sources\%%#\" %_Nul3%
+if exist "%_cabdir%\du\replacementmanifests\" xcopy /CERY "%_cabdir%\du\replacementmanifests" "ISOFOLDER\sources\replacementmanifests\" %_Nul3%
+rmdir /s /q "%_cabdir%\du\" %_Nul3%
 exit /b
 
 :extract
@@ -3762,6 +3760,7 @@ for /f %%i in ('"offlinereg.exe "%_mount%\Windows\system32\config\SOFTWARE" "!is
 :noextra
 if exist "%_mount%\Windows\system32\UpdateAgent.dll" if not exist "%SystemRoot%\temp\UpdateAgent.dll" copy /y "%_mount%\Windows\system32\UpdateAgent.dll" %SystemRoot%\temp\ %_Nul1%
 if exist "%_mount%\Windows\system32\Facilitator.dll" if not exist "%SystemRoot%\temp\Facilitator.dll" copy /y "%_mount%\Windows\system32\Facilitator.dll" %SystemRoot%\temp\ %_Nul1%
+if exist "%_mount%\Windows\system32\ServicingCommon.dll" if not exist "%SystemRoot%\temp\ServicingCommon.dll" copy /y "%_mount%\Windows\system32\ServicingCommon.dll" %SystemRoot%\temp\ %_Nul1%
 set _noSave=0
 goto :doDrivers
 

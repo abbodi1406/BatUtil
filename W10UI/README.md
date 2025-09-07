@@ -234,6 +234,9 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.55:  
+- Update ISO\sources\ServicingCommon.dll from install.wim for 26xxx builds
+
 10.54:  
 - Change non-insider 26200 iso label to 25h2_ge_release
 - Move Enablement package installation order before .NET updates
