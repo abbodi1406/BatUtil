@@ -774,8 +774,7 @@ exit /b
 
 :doWIM
 set "_chn=/Channel:%channel%"
-if /i "%channel%"=="OEM" set "_chn="
-if %_build% equ 18362 set "_chn="
+if /i "%channel%"=="OEM" if %_build% neq 18362 set "_chn="
 %_dism1% /Image:"%_mount%" /LogPath:"%_dLog%\DismVirtualEditions.log" /Set-Edition:%EditionID% %_chn%
 set ERRTEMP=%ERRORLEVEL%
 if %ERRTEMP% neq 0 (
@@ -1072,6 +1071,10 @@ if %uupver:~0,5%==22621 set uupver=22631%uupver:~5%
 )
 if %revmaj%==22635 (
 if %uupver:~0,5%==22621 set uupver=22635%uupver:~5%
+)
+if %revmaj%==26200 (
+if /i "%branch:~0,2%"=="ge" (echo %branch% | findstr /i /r "beta prerelease" %_Nul1% || set branch=25h2_ge%branch:~2%)
+if %uupver:~0,5%==26100 set uupver=26200%uupver:~5%
 )
 if %uupmin% lss %revmin% (
 set uupver=%revver%
