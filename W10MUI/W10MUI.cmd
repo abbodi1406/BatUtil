@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v24.7
+@set uiv=v24.8
 @echo off
 
 set DVDPATH=
@@ -376,7 +376,7 @@ if %_build% equ 18363 set _build=18362
 for %%# in (19042 19043 19044 19045) do if %_build% equ %%# set _build=19041
 for %%# in (22622 22623 22624 22631 22635) do if %_build% equ %%# set _build=22621
 if %_build% equ 20349 set _build=20348
-if %_build% equ 26120 set _build=26100
+for %%# in (26120 26200 26220) do if %_build% equ %%# set _build=26100
 for /L %%j in (1,1,%LANGUAGES%) do (
 if not !LPBUILD%%j!==%_build% set "ERRFILE=!LPFILE%%j!"&goto :E_VER
 )
@@ -1052,6 +1052,9 @@ if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-SV2Mome
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-SV2Moment4Enablement-Package~*.mum" set "_fixEP=22631"
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-23H2Enablement-Package~*.mum" set "_fixEP=22631"
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixEP=22635"
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Ge-Client-Server-Beta-Version-Enablement-Package~*.mum" set "_fixEP=26120"
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Ge-Client-Server-26200-Version-Enablement-Package~*.mum" set "_fixEP=26200"
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Ge-Client-Server-26220-Version-Enablement-Package~*.mum" set "_fixEP=26220"
 set "wnt=31bf3856ad364e35_10"
 if exist "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_31bf3856ad364e35_11.*.manifest" set "wnt=31bf3856ad364e35_11"
 if exist "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_31bf3856ad364e35_12.*.manifest" set "wnt=31bf3856ad364e35_12"
@@ -1069,6 +1072,7 @@ if %uupmaj%==19044 if /i "%uuplab:~0,2%"=="vb" set uuplab=21h2%uuplab:~2%
 if %uupmaj%==19045 if /i "%uuplab:~0,2%"=="vb" set uuplab=22h2%uuplab:~2%
 if %uupmaj%==20349 if /i "%uuplab:~0,2%"=="fe" set uuplab=22h2%uuplab:~2%
 if %uupmaj%==22631 if /i "%uuplab:~0,2%"=="ni" (echo %uuplab% | find /i "beta" %_Nul1% || set uuplab=23h2_ni%uuplab:~2%)
+if %uupmaj%==26200 if /i "%uuplab:~0,2%"=="ge" (echo %uuplab% | findstr /i /r "beta prerelease" %_Nul1% || set uuplab=25h2_ge%uuplab:~2%)
 goto :eof
 
 :detectLab

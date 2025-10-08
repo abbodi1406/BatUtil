@@ -78,27 +78,23 @@ ______________________________
 
 * Windows OnDemand Packs if available (Optional, recommended).
 
-* Windows Updates msu/cab files (Optional, recommended).
+* Windows updates msu/cab files (Optional, recommended).
 
 * If you want the Standard WinPE localization:
 
 Windows ADK (Deployment Tools & Preinstallation Environment).
 
-Notice:  
-if full ISO url did not work, replace `software-download.microsoft.com/download`  
-with `software-static.download.prss.microsoft.com/dbazure`
-
 <details><summary>ADK Links</summary>
 
 
-- Build 26100 - Windows 11 version 24H2 / Server 2025:
+- Build 26100 - Windows 11 versions 24H2-25H2 / Server 2025:
 ```
-https://download.microsoft.com/download/5/8/6/5866fc30-973c-40c6-ab3f-2edb2fc3f727/ADK/adksetup.exe
-https://download.microsoft.com/download/d/f/0/df0273fb-4587-4cc5-a98c-7d2359b4a387/ADKWinPEAddons/adkwinpesetup.exe
+https://download.microsoft.com/download/2/d/9/2d9c8902-3fcd-48a6-a22a-432b08bed61e/ADK/adksetup.exe
+https://download.microsoft.com/download/5/5/6/556e01ec-9d78-417d-b1e1-d83a2eff20bc/ADKWinPEAddons/adkwinpesetup.exe
 
 full ISO  
-http://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/26100.1.240331-1435.ge_release_amd64fre_ADK.iso
-http://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/26100.1.240331-1435.ge_release_amd64fre_adkwinpeaddons.iso
+http://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/26100.6584.250904-1728.ge_release_svc_prod1_amd64fre_ADK.iso
+http://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/26100.6584.250904-1728.ge_release_svc_prod1_amd64fre_adkwinpeaddons.iso
 ```
 
 - Build 22621 - Windows 11 versions 22H2-23H2:

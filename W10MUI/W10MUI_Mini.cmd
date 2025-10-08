@@ -351,7 +351,7 @@ if %_build% equ 18363 set _build=18362
 for %%# in (19042 19043 19044 19045) do if %_build% equ %%# set _build=19041
 for %%# in (22622 22623 22624 22631 22635) do if %_build% equ %%# set _build=22621
 if %_build% equ 20349 set _build=20348
-if %_build% equ 26120 set _build=26100
+for %%# in (26120 26200 26220) do if %_build% equ %%# set _build=26100
 for /L %%j in (1,1,%LANGUAGES%) do (
 if not !LPBUILD%%j!==%_build% set "ERRFILE=!LPFILE%%j!"&goto :E_VER
 )

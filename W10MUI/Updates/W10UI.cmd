@@ -1651,7 +1651,7 @@ if defined cumulative for %%# in (%cumulative%) do (
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU.log" /Add-Package /PackagePath:%%#
 call :dNUL !errorlevel!
 call set /a _c_+=1
-if %online% equ 0 if %ResetBase% equ 2 if %_build% geq 26052 if !_c_! lss %c_num% call :rebase
+if not exist "!mumtarget!\Windows\WinSxS\pending.xml" if %online% equ 0 if %ResetBase% equ 2 if %_build% geq 26052 if !_c_! lss %c_num% call :rebase
 )
 if defined lcumsu for %%# in (%lcumsu%) do (
 echo.&echo %%~nx#
@@ -1660,7 +1660,7 @@ if exist "!_cabdir!\LCUbase\%%~nx#" set ppath="!_cabdir!\LCUbase\%%~nx#"
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\DismLCU.log" /Add-Package /PackagePath:!ppath!
 call :dNUL !errorlevel!
 call set /a _c_+=1
-if %online% equ 0 if %ResetBase% equ 2 if %_build% geq 26052 if !_c_! lss %c_num% call :rebase
+if not exist "!mumtarget!\Windows\WinSxS\pending.xml" if %online% equ 0 if %ResetBase% equ 2 if %_build% geq 26052 if !_c_! lss %c_num% call :rebase
 )
 if %_build% leq 14393 if %wimfiles% equ 1 call :MeltdownSpectre
 if not exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" goto :cuwd
@@ -2515,10 +2515,10 @@ if %_build% geq 15063 (call :detectRev)
 )
 if %_actEP% equ 0 if exist "!mountdir!\Windows\Servicing\Packages\microsoft-windows-*enablement-package~*.mum" if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" call :detectEP
 if exist "!mountdir!\Windows\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _SrvEdt=1
-if exist "!mountdir!\sources\setup.exe" call :boots
 if exist "!mountdir!\Windows\system32\UpdateAgent.dll" if not exist "%SystemRoot%\temp\UpdateAgent.dll" copy /y "!mountdir!\Windows\system32\UpdateAgent.dll" %SystemRoot%\temp\ %_Nul3%
 if exist "!mountdir!\Windows\system32\Facilitator.dll" if not exist "%SystemRoot%\temp\Facilitator.dll" copy /y "!mountdir!\Windows\system32\Facilitator.dll" %SystemRoot%\temp\ %_Nul3%
 if exist "!mountdir!\Windows\system32\ServicingCommon.dll" if not exist "%SystemRoot%\temp\ServicingCommon.dll" copy /y "!mountdir!\Windows\system32\ServicingCommon.dll" %SystemRoot%\temp\ %_Nul3%
+if exist "!mountdir!\sources\setup.exe" call :boots
 )
 if %wim%==1 if exist "!_wimpath!\setup.exe" (
 if exist "!mountdir!\sources\setup.exe" copy /y "!mountdir!\sources\setup.exe" "!_wimpath!" %_Nul3%
