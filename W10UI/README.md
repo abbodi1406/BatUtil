@@ -3,7 +3,7 @@
 Automated script to install or integrate updates for:  
 - Windows 10
 - Windows 11
-- Windows Server 2016, 2019, 2022
+- Windows Server 2016, 2019, 2022, 2025
 
 ## Features:
 
@@ -233,6 +233,9 @@ special thanks for testing and feedback:
 ## Changelog:
 
 <details><summary>changelog</summary>
+
+10.56:  
+- Add support for the new 26100+ RCU update "Package_for_RevisedFix"
 
 10.55:  
 - Update ISO\sources\ServicingCommon.dll from install.wim for 26xxx builds

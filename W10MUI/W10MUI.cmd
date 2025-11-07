@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v24.8
+@set uiv=v24.9
 @echo off
 
 set DVDPATH=
@@ -1078,7 +1078,7 @@ goto :eof
 :detectLab
 set "_tikey=HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
 reg.exe load HKLM\uiSOFTWARE "%INSTALLMOUNTDIR%\Windows\system32\config\SOFTWARE" %_Nul1%
-for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r ".*\.OS"') do set "_oskey=%%#"
+for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r "Client\.OS Server\.OS"') do set "_oskey=%%#"
 for /f "skip=2 tokens=2*" %%A in ('reg.exe query "%_oskey%" /v Branch') do set "%1=%%B"
 reg.exe save HKLM\uiSOFTWARE "%INSTALLMOUNTDIR%\Windows\System32\Config\SOFTWARE2" %_Nul1%
 reg.exe unload HKLM\uiSOFTWARE %_Nul1%
