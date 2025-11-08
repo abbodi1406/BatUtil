@@ -23,6 +23,8 @@ Handle dynamic updates for setup media 'sources' folder (skip installing it, ext
 * Enable .NET Framework 3.5 if available source detected, and reinstall Cumulative updates afterwards.  
 valid locations: mounted iso, inserted dvd/usb, sxs folder for distribution target, custom specified folder path
 
+Note: .NET 3.5 is no longer included as a feature for Windows 11 builds 27965 and later.
+
 * Detect Windows ADK [Deployment Tools](https://docs.microsoft.com/windows-hardware/get-started/adk-install) for offline integration
 
 * Perform pending cleanup operation for online OS after restarting.  

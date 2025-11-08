@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.56f
+@set uiv=v10.56r
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -622,6 +622,7 @@ if %LCUmsuExpand% equ 2 (set LCUmsuExpand=0) else (set LCUmsuExpand=1)
 )
 if %_build% geq 20348 set SkipEdge=0
 if %_build% geq 26080 set SkipWebView=0
+if %_build% geq 27965 set Net35=0
 if %wimfiles% equ 0 (
 set WinRE=0
 set LCUwinre=0
@@ -1556,7 +1557,7 @@ if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" i
 if exist "!repo!\*Windows1*-KB*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.cab"') do (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procmum))
 if %_build% geq 21382 if exist "!repo!\*Windows1*-KB*%arch%*.msu" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.msu"') do if defined msu_%%~n# (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procmum))
 if %psfwim% equ 1 if exist "!_cabdir!\*Windows1*-KB*%arch%*.wim" (for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\*Windows1*-KB*%arch%*.wim"') do if defined psfx_%%~n# (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procmum))
-if exist "!repo!\RCU-*-*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\RCU-*-*.cab"') do (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procrcu)
+if exist "!repo!\RCU-*-*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\RCU-*-*.cab"') do (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procrcu))
 if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %online%==0 if exist "!repo!\*defender-dism*%_bit%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%_bit%*.cab"') do (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procmum))
 if %verb%==1 if %_sum%==0 if exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (echo.&echo All applicable updates are detected as installed&call set discard=1&goto :eof)
 if %verb%==1 if %_sum%==0 (echo.&echo All applicable updates are detected as installed&goto :eof)
