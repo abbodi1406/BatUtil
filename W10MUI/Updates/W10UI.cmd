@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.56
+@set uiv=v10.56f
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -1040,7 +1040,7 @@ if %msuwim% equ 2 (
 %_exp% -f:SSU-*%arch%*.cab "!repo!\!package!" "%dest%\chck" %_Null%
 )
 if %msuwim% equ 1 if not exist "%dest%\chck\*.wim" (
-if %_wlib% equ 1 !_wimlib! extract "!repo!\!package!" 1 SSU-*%arch%*.cab RCU-*%arch%*.cab *Windows*.wim --dest-dir="%dest%\chck" %_Null%
+if %_wlib% equ 1 !_wimlib! extract "!repo!\!package!" 1 SSU-*%arch%*.cab RCU-*%arch%*.cab *Windows*.wim --dest-dir="%dest%\chck" --nullglob %_Null%
 if %_wlib% equ 0 for /f "tokens=1 delims=\" %%# in ('dism.exe /English /List-Image /ImageFile:"!repo!\!package!" /Index:1 ^| findstr /i /r "SSU-.* RCU-.* %arch%\.wim"') do %_psc% "$f=[IO.File]::ReadAllText('!_batp!') -split ':wimmsu\:.*';iex ($f[1]);E '!repo!\!package!' '%%#' '%dest%\chck\%%#'"
 if not exist "%dest%\chck\*.wim" dism.exe /English /Apply-Image /ImageFile:"!repo!\!package!" /Index:1 /ApplyDir:"%dest%\chck" /NoAcl:all %_Null%
 )
