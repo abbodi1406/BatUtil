@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v118
+@set uivr=v119
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -590,6 +590,7 @@ if %Cleanup% equ 0 set DisableUpdatingUpgrade=1
 if %_build% geq 26000 (
 if %DisableUpdatingUpgrade% equ 2 (set DisableUpdatingUpgrade=0) else (set DisableUpdatingUpgrade=1)
 )
+if %_build% geq 27965 (set NetFx3=0)
 if %WIMFILE%==install.wim (
 if %AddUpdates% neq 1 if %wim2esd% equ 1 (set WIMFILE=install.esd)
 )
@@ -807,6 +808,7 @@ if %Cleanup% equ 0 set DisableUpdatingUpgrade=1
 if %_build% geq 26000 (
 if %DisableUpdatingUpgrade% equ 2 (set DisableUpdatingUpgrade=0) else (set DisableUpdatingUpgrade=1)
 )
+if %_build% geq 27965 (set NetFx3=0)
 if %WIMFILE%==install.wim (
 if %AddUpdates% neq 1 if %wim2esd% equ 1 (set WIMFILE=install.esd)
 )
@@ -2762,35 +2764,35 @@ set "_Wnn=HKLM\%SOFTWARE%\Microsoft\Windows\CurrentVersion\SideBySide\Winners"
 set "_Cmp=HKLM\%COMPONENTS%\DerivedData\Components"
 if exist "%mumtarget%\Windows\Servicing\Packages\*~arm64~~*.mum" (
 set "xBT=arm64"
-set "_EsuCom=arm64_%_EsuCmp%_%_Pkt%_%_OurVer%_none_e55ca6c027a999a2"
+set "_EsuCom=arm64_%_EsuCmp%_%_Pkt%_%_OurVer%_none_eeb9e0b00f513fbe"
 set "_SupCom=arm64_%_SupCmp%_%_Pkt%_%_OurVer%_none_8b15303df56a09af"
 set "_CedCom=arm64_%_CedCmp%_%_Pkt%_%_OurVer%_none_7cb088037a42a80b"
-set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0e8b3f09ce2fa7ce"
+set "_EsuKey=%_Wnn%\arm64_%_EsuCmp%_%_Pkt%_none_0e1ac5e1d0e42392"
 set "_SupKey=%_Wnn%\arm64_%_SupCmp%_%_Pkt%_none_0a035f900ca87ee9"
 set "_EdgKey=%_Wnn%\arm64_%_EdgCmp%_%_Pkt%_none_1e5e2b2c8adcf701"
 set "_CedKey=%_Wnn%\arm64_%_CedCmp%_%_Pkt%_none_df3eefecc502346d"
 ) else if exist "%mumtarget%\Windows\Servicing\Packages\*~amd64~~*.mum" (
 set "xBT=amd64"
-set "_EsuCom=amd64_%_EsuCmp%_%_Pkt%_%_OurVer%_none_e55c9e8627a9a506"
+set "_EsuCom=amd64_%_EsuCmp%_%_Pkt%_%_OurVer%_none_eeb9d8760f514b22"
 set "_SupCom=amd64_%_SupCmp%_%_Pkt%_%_OurVer%_none_8b152803f56a1513"
 set "_CedCom=amd64_%_CedCmp%_%_Pkt%_%_OurVer%_none_7cb07fc97a42b36f"
-set "_EsuKey=%_Wnn%\amd64_%_EsuCmp%_%_Pkt%_none_0e8b36cfce2fb332"
+set "_EsuKey=%_Wnn%\amd64_%_EsuCmp%_%_Pkt%_none_0e1abda7d0e42ef6"
 set "_SupKey=%_Wnn%\amd64_%_SupCmp%_%_Pkt%_none_0a0357560ca88a4d"
 set "_EdgKey=%_Wnn%\amd64_%_EdgCmp%_%_Pkt%_none_1e5e22f28add0265"
 set "_CedKey=%_Wnn%\amd64_%_CedCmp%_%_Pkt%_none_df3ee7b2c5023fd1"
 ) else (
 set "xBT=x86"
-set "_EsuCom=x86_%_EsuCmp%_%_Pkt%_%_OurVer%_none_893e03026f4c33d0"
+set "_EsuCom=x86_%_EsuCmp%_%_Pkt%_%_OurVer%_none_929b3cf256f3d9ec"
 set "_SupCom=x86_%_SupCmp%_%_Pkt%_%_OurVer%_none_2ef68c803d0ca3dd"
 set "_CedCom=x86_%_CedCmp%_%_Pkt%_%_OurVer%_none_2091e445c1e54239"
-set "_EsuKey=%_Wnn%\x86_%_EsuCmp%_%_Pkt%_none_b26c9b4c15d241fc"
+set "_EsuKey=%_Wnn%\x86_%_EsuCmp%_%_Pkt%_none_b1fc22241886bdc0"
 set "_SupKey=%_Wnn%\x86_%_SupCmp%_%_Pkt%_none_ade4bbd2544b1917"
 set "_EdgKey=%_Wnn%\x86_%_EdgCmp%_%_Pkt%_none_c23f876ed27f912f"
 set "_CedKey=%_Wnn%\x86_%_CedCmp%_%_Pkt%_none_83204c2f0ca4ce9b"
 )
 for /f "tokens=4,5,6 delims=_" %%H in ('dir /b "%mumtarget%\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-foundation_*.manifest"') do set "_Fnd=microsoft-w..-foundation_%_Pkt%_%%H_%%~nJ"
 if %_build% geq 14393 if %_build% lss 19041 if not exist "%mumtarget%\Windows\WinSxS\Manifests\%_SupCom%.manifest" call :Latent _Sup %_Nul3%
-if %_build% geq 17763 if %_build% lss 20348 if not exist "%mumtarget%\Windows\WinSxS\Manifests\%_EsuCom%.manifest" call :Latent _Esu %_Nul3%
+if %_build% geq 19041 if %_build% lss 19046 if not exist "%mumtarget%\Windows\WinSxS\Manifests\%_EsuCom%.manifest" call :Latent _Esu %_Nul3%
 if %_build% geq 17134 if %_build% lss 20348 if not exist "%mumtarget%\Windows\WinSxS\Manifests\%_CedCom%.manifest" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if not exist "%mumtarget%\Windows\WinSxS\Manifests\%xBT%_%_CedCmp%_*.manifest" if %SkipEdge% equ 1 call :Latent _Ced %_Nul3%
 set lcuall=
 set lcumsu=
@@ -4462,7 +4464,7 @@ set "_EsuCmp=microsoft-windows-s..edsecurityupdatesai"
 set "_SupIdn=Microsoft-Client-Licensing-SupplementalServicing"
 set "_EdgIdn=Microsoft-Windows-EdgeChromium-FirstTimeInstaller"
 set "_CedIdn=Microsoft-Windows-EdgeChromium"
-set "_EsuIdn=Microsoft-Windows-SLC-Component-ExtendedSecurityUpdatesAI"
+set "_EsuIdn=Microsoft-Windows-Security-SPP-Component-ExtendedSecurityUpdatesAI"
 set "_SxsCfg=Microsoft\Windows\CurrentVersion\SideBySide\Configuration"
 set "_CBS=Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages"
 set "_IFEO=HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\dismhost.exe"
