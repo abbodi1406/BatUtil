@@ -236,6 +236,10 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.57:  
+- Update ExtendedSecurityUpdates Suppressor for Windows 10 19041-19045
+- Disable Net35 option for builds 27965+
+
 10.56:  
 - Add support for the new 26100+ RCU update "Package_for_RevisedFix"
 
