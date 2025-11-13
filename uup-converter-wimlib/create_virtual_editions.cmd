@@ -291,7 +291,7 @@ goto :dCheck
 
 :checkiso
 if exist "*.iso" for /f "tokens=* delims=" %%# in ('dir /b /a:-d *.iso') do (
-set _iso+=1
+set /a _iso+=1
 set "ISOfile=%%~#"
 )
 if %_iso% equ 1 (
