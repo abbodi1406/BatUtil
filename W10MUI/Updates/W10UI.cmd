@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.57
+@set uiv=v10.58
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -926,7 +926,7 @@ echo Extracting .cab files from .msu files...
 echo ============================================================
 echo.
 )
-set msuchk=1&set count=0&set msucab=&set uuppkg=
+set msuchk=1&set count=0&set msucab=&set uuppkg=&set _rcu=
 for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.msu"') do (set "package=%%#"&set "dest=%%~n#"&call :cab1)
 )
 if %_sum%==0 (echo.&echo All applicable updates are detected as installed&goto :eof)
@@ -943,12 +943,13 @@ set _sum=0
 if %online%==0 if exist "!repo!\*defender-dism*%_bit%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%_bit%*.cab"') do (call set /a _sum+=1)
 if exist "!repo!\*Windows1*-KB*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.cab"') do (call set /a _sum+=1)
 if %psfwim% equ 1 if exist "!_cabdir!\*Windows1*-KB*%arch%*.wim" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\*Windows1*-KB*%arch%*.wim"') do (call set /a _sum+=1)
-set count=0&set isoupdate=&set tmpcmp=&set _rcu=
+if %psfwim% equ 1 if exist "!repo!\RCU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\RCU-*-*.cab"') do (call set /a _sum+=1)
+set count=0&set isoupdate=&set tmpcmp=
 if %online%==0 if exist "!repo!\*defender-dism*%_bit%*.cab" for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%_bit%*.cab"') do (set "package=%%#"&set "dest=%%~n#"&call :cab2)
 if exist "!repo!\*Windows1*-KB*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.cab" ^| findstr /i /v /c:"_inout.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=%%~n#"&call :cab2)
 if exist "!repo!\Windows1*-KB*%arch%_inout.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\Windows1*-KB*%arch%_inout.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=%%~n#"&call :cab2)
 if %psfwim% equ 1 if exist "!_cabdir!\*Windows1*-KB*%arch%*.wim" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\*Windows1*-KB*%arch%*.wim"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=%%~n#"&call :psfx2)
-if exist "!repo!\RCU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\RCU-*-*.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=%%~n#"&call :cab3)
+if %psfwim% equ 1 if exist "!repo!\RCU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\RCU-*-*.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=%%~n#"&call :cab3)
 goto :eof
 
 :cab0
@@ -1045,13 +1046,13 @@ if %_wlib% equ 1 !_wimlib! extract "!repo!\!package!" 1 SSU-*%arch%*.cab RCU-*%a
 if %_wlib% equ 0 for /f "tokens=1 delims=\" %%# in ('dism.exe /English /List-Image /ImageFile:"!repo!\!package!" /Index:1 ^| findstr /i /r "SSU-.* RCU-.* %arch%\.wim"') do %_psc% "$f=[IO.File]::ReadAllText('!_batp!') -split ':wimmsu\:.*';iex ($f[1]);E '!repo!\!package!' '%%#' '%dest%\chck\%%#'"
 if not exist "%dest%\chck\*.wim" dism.exe /English /Apply-Image /ImageFile:"!repo!\!package!" /Index:1 /ApplyDir:"%dest%\chck" /NoAcl:all %_Null%
 )
-if %msuwim% equ 1 if %psfwim% equ 1 if not exist "%dest%\chck\*.psf" (
+if %msuwim% equ 1 if %psfwim% equ 1 if not exist "%dest%\chck\*Windows*.psf" (
 if %_wlib% equ 1 !_wimlib! extract "!repo!\!package!" 1 *Windows*.psf --dest-dir="%dest%\chck" %_Null%
 if %_wlib% equ 0 for /f "tokens=1 delims=\" %%# in ('dism.exe /English /List-Image /ImageFile:"!repo!\!package!" /Index:1 ^| findstr /i /r "%arch%\.psf"') do %_psc% "$f=[IO.File]::ReadAllText('!_batp!') -split ':wimmsu\:.*';iex ($f[1]);E '!repo!\!package!' '%%#' '%dest%\chck\%%#'"
 if not exist "%dest%\chck\*.psf" dism.exe /English /Apply-Image /ImageFile:"!repo!\!package!" /Index:1 /ApplyDir:"%dest%\chck" /NoAcl:all %_Null%
 )
-if exist "%dest%\chck\*.psf" (
-if %psfwim% equ 1 move /y "%dest%\chck\*.psf" "!_cabdir!\" %_Nul3%
+if exist "%dest%\chck\*Windows*.psf" (
+if %psfwim% equ 1 move /y "%dest%\chck\*Windows*.psf" "!_cabdir!\" %_Nul3%
 del /f /q "%dest%\chck\*.psf" %_Null%
 )
 for /f "tokens=* delims=" %%# in ('dir /b /on "%dest%\chck\*Windows1*-KB*.*"') do set "compkg=%%#
@@ -1060,7 +1061,7 @@ if %msuwim% equ 2 (
 %_exp% -f:%sss%_microsoft-updatetargeting-*os_*.manifest "%dest%\chck\%compkg%" "%dest%" %_Null%
 )
 if %msuwim% equ 1 (
-if %_wlib% equ 1 !_wimlib! extract "%dest%\chck\%compkg%" 1 update.mum %sss%_microsoft-updatetargeting-*os_*.manifest --dest-dir="%dest%" %_Nul3%
+if %_wlib% equ 1 !_wimlib! extract "%dest%\chck\%compkg%" 1 update.mum %sss%_microsoft-updatetargeting-*os_*.manifest --dest-dir="%dest%" --nullglob %_Nul3%
 if %_wlib% equ 0 for /f "tokens=1 delims=\" %%# in ('dism.exe /English /List-Image /ImageFile:"%dest%\chck\%compkg%" /Index:1 ^| findstr /i /r "update.mum %sss%_microsoft-updatetargeting-.*os_"') do %_psc% "$f=[IO.File]::ReadAllText('!_batp!') -split ':wimmsu\:.*';iex ($f[1]);E '%dest%\chck\%compkg%' '%%#' '%dest%\%%#'"
 )
 if %msuwim% equ 1 if not exist "%dest%\update.mum" (
@@ -1076,10 +1077,13 @@ robocopy %_drv%\_del286 %_drv%\_tWIM /MIR %_Null%
 rmdir /s /q %_drv%\_del286\ %_Null%
 rmdir /s /q %_drv%\_tWIM\ %_Nul3%
 )
-if exist "%dest%\chck\RCU-*baseless*.cab" del /f /q "%dest%\chck\RCU-*baseless*.cab" %_Nul3%
+if exist "%dest%\chck\RCU-*baseless*.*" del /f /q "%dest%\chck\RCU-*baseless*.*" %_Nul3%
 if exist "%dest%\chck\RCU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "%dest%\chck\RCU-*%arch%*.cab"') do (
-set _rcu=%pkgid%
-set "compkg=%%#"&call :uuprcu
+set _rcu=%kb%
+%_exp% -f:update.mum "%dest%\chck\%%#" "%dest%\chck" %_Null%
+%_exp% -f:%sss%_microsoft-updatetargeting-*os_*.manifest "%dest%\chck\%%#" "%dest%" %_Null%
+call :chklcu "%dest%\chck" Package_for_RevisedFix
+if %psfwim% equ 1 set "compkg=%%#"&call :uuprcu
 )
 if exist "%dest%\chck\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "%dest%\chck\SSU-*%arch%*.cab"') do (set "compkg=%%#"&call :uupssu)
 if %msuwim% equ 1 if %psfwim% equ 1 (
@@ -1298,9 +1302,9 @@ goto :eof
 if %_embd% equ 0 if exist "%dest%\" rmdir /s /q "%dest%\"
 if not exist "%dest%\" mkdir "%dest%"
 set /a count+=1
-mkdir "checker"
-%_exp% -f:update.mum "!repo!\!package!" "checker" %_Null%
-call :chklcu "checker" Package_for_RevisedFix
+:: mkdir "checker"
+:: %_exp% -f:update.mum "!repo!\!package!" "checker" %_Null%
+:: call :chklcu "checker" Package_for_RevisedFix
 set "_type=[RCU]"
 echo %count%/%_sum%: %package% %_type%
 set cab_%pkgn%=1
@@ -1309,7 +1313,7 @@ if not exist "%dest%\update.mum" %_exp% -f:* "!repo!\!package!" "%dest%" %_Null%
   set directcab=!directcab! !package!
   goto :eof
 )
-rmdir /s /q "checker\" %_Nul3%
+:: rmdir /s /q "checker\" %_Nul3%
 goto :eof
 
 :vrpad
@@ -1331,8 +1335,8 @@ if not exist "!_cabdir!\LCUmum\%kbnm%~%_Pkt%~%sss%~~%cver%.mum" copy /y "%~1\upd
 )
 call :vrpad %kbvr%
 if %_build% geq 26052 (
-echo !package! |findstr /i "RCU\-" %_Nul1% || if not exist "!_cabdir!\LCUall\%cuvr%-!package!" (
-copy /y "!repo!\!package!" "!_cabdir!\LCUall\%cuvr%-!package!" %_Nul1%
+if not exist "!_cabdir!\LCUall\*Windows*%kb%*.msu" if not exist "!_cabdir!\LCUall\%cuvr%-!package!" (
+  copy /y "!repo!\!package!" "!_cabdir!\LCUall\%cuvr%-!package!" %_Nul1%
 )
 echo !package! |findstr /i "KB5043080" %_Nul1% && if not exist "!_cabdir!\LCUbase\%cuvr%-!package!" (
   mkdir "!_cabdir!\LCUbase" %_Nul3%
@@ -1552,12 +1556,12 @@ set _sum=0
 if exist "!repo!\*Windows1*-KB*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.cab"') do (call set /a _sum+=1))
 if %_build% geq 21382 if exist "!repo!\*Windows1*-KB*%arch%*.msu" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.msu"') do if defined msu_%%~n# (call set /a _sum+=1))
 if %psfwim% equ 1 if exist "!_cabdir!\*Windows1*-KB*%arch%*.wim" (for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\*Windows1*-KB*%arch%*.wim"') do if defined psfx_%%~n# (call set /a _sum+=1))
-if exist "!repo!\RCU-*-*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\RCU-*-*.cab"') do (call set /a _sum+=1))
+if %psfwim% equ 1 if exist "!repo!\RCU-*-*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\RCU-*-*.cab"') do (call set /a _sum+=1))
 if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %online%==0 if exist "!repo!\*defender-dism*%_bit%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%_bit%*.cab"') do (call set /a _sum+=1))
 if exist "!repo!\*Windows1*-KB*%arch%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.cab"') do (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procmum))
 if %_build% geq 21382 if exist "!repo!\*Windows1*-KB*%arch%*.msu" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\*Windows1*-KB*%arch%*.msu"') do if defined msu_%%~n# (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procmum))
 if %psfwim% equ 1 if exist "!_cabdir!\*Windows1*-KB*%arch%*.wim" (for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\*Windows1*-KB*%arch%*.wim"') do if defined psfx_%%~n# (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procmum))
-if exist "!repo!\RCU-*-*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\RCU-*-*.cab"') do (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procrcu))
+if %psfwim% equ 1 if exist "!repo!\RCU-*-*.cab" (for /f "tokens=* delims=" %%# in ('dir /b /on "!repo!\RCU-*-*.cab"') do (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procrcu))
 if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %online%==0 if exist "!repo!\*defender-dism*%_bit%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!repo!\*defender-dism*%_bit%*.cab"') do (set "packx=%%~x#"&set "package=%%#"&set "dest=%%~n#"&call :procmum))
 if %verb%==1 if %_sum%==0 if exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (echo.&echo All applicable updates are detected as installed&call set discard=1&goto :eof)
 if %verb%==1 if %_sum%==0 (echo.&echo All applicable updates are detected as installed&goto :eof)
@@ -1727,6 +1731,7 @@ call :svcpkg "%%#"
 )
 for /f %%# in ('dir /b /a:-d /od "!mumtarget!\Windows\Servicing\Packages\Package_for_RevisedFix*.mum" %_Nul6%') do if exist "!_cabdir!\LCUmum\%%#" (
 call :svcpkg "%%#"
+)
 :cuwd
 if defined basekbn if %verb%==1 call :regBase
 if defined lcupkg call :ReLCU
@@ -1908,7 +1913,7 @@ findstr /i /m "Package_for_WindowsExperienceFeaturePack" "%dest%\update.mum" %_N
 set "wnt=%_Pkt%_10"
 if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%_Pkt%_11.*.manifest" set "wnt=%_Pkt%_11"
 if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%_Pkt%_12.*.manifest" set "wnt=%_Pkt%_12"
-if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" if not defined uupmaj (
+if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" (
 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
 if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
 for /f "tokens=8 delims== " %%# in ('findstr /i Branch "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do set uuplab=%%~#
@@ -2063,6 +2068,12 @@ set "netmsu=!lcumsu!"
 goto :eof
 
 :procrcu
+if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" (
+for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
+if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
+for /f "tokens=8 delims== " %%# in ('findstr /i Branch "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do set uuplab=%%~#
+for /f "tokens=8 delims== " %%# in ('findstr /i Branch "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do set isolab=%%~#
+)
 for %%# in (%directcab%) do (
 if /i "%package%"=="%%~#" (
   set "cumulative=!cumulative! "!repo!\!package!""
