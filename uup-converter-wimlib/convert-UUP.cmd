@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v119
+@set uivr=v120
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -2057,12 +2057,12 @@ wimlib-imagex.exe extract "!_UUP!\%packf%" 1 *Windows*.wim --dest-dir="!_cabdir!
 wimlib-imagex.exe extract "!_UUP!\%packf%" 1 SSU-*%arch%*.cab --dest-dir="!_cabdir!\lcu" %_Null%
 if %_build% geq 26100 wimlib-imagex.exe extract "!_UUP!\%packf%" 1 RCU-*%arch%*.cab --dest-dir="!_cabdir!\lcu" %_Null%
 )
-if exist "!_cabdir!\lcu\RCU-*baseless*.cab" del /f /q "!_cabdir!\lcu\RCU-*baseless*.cab" %_Nul3%
 for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.*"') do set "compkg=%%#"
 7z.exe e "!_cabdir!\lcu\%compkg%" -o"!_cabdir!" update.mum -aoa %_Null%
 7z.exe e "!_cabdir!\lcu\%compkg%" -o"!_cabdir!" %_ss%_microsoft-windows-coreos-revision*.manifest -aoa %_Null%
 7z.exe e "!_cabdir!\lcu\%compkg%" -o"!_cabdir!" %_ss%_microsoft-updatetargeting-*os_*.manifest -aoa %_Null%
 if exist "!_cabdir!\lcu\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*%arch%*.cab"') do (set "compkg=%%#"&call :inrenssu)
+if exist "!_cabdir!\lcu\RCU-*baseless*.*" del /f /q "!_cabdir!\lcu\RCU-*baseless*.*" %_Nul3%
 if exist "!_cabdir!\lcu\RCU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\RCU-*%arch%*.cab"') do (
 7z.exe e "!_cabdir!\lcu\%%#" -o"!_cabdir!" update.mum -aoa %_Null%
 7z.exe e "!_cabdir!\lcu\%%#" -o"!_cabdir!" %_ss%_microsoft-windows-coreos-revision*.manifest -aoa %_Null%
@@ -2315,7 +2315,7 @@ if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_U
 if exist "!_UUP!\*Windows1*-KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\*Windows1*-KB*.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab2)
 if defined tmpcmp if exist "!_UUP!\Windows1?.?-*%arch%_inout.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\Windows1?.?-*%arch%_inout.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab2)
 if %psfwim% equ 1 if exist "!_cabdir!\*Windows1*-KB*.wim" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\*Windows1*-KB*.wim"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :psfx2)
-if exist "!_UUP!\RCU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\RCU-*-*.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab3)
+if %psfwim% equ 1 if exist "!_UUP!\RCU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\RCU-*-*.cab"') do (set "pkgn=%%~n#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :cab3)
 goto :eof
 
 :sum2msu
@@ -2384,7 +2384,7 @@ if %psfnet% equ 0 (
 set psf_%pkgn%=1
 )
 findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% && (
-call :chklcu Package_for_RollupFix
+call :chklcu "!dest!" Package_for_RollupFix
 )
 expand.exe -f:toc.xml "!_UUP!\%package%" "!dest!" %_Null%
 if exist "!dest!\toc.xml" (
@@ -2548,10 +2548,13 @@ if %psfwim% equ 1 wimlib-imagex.exe extract "!_UUP!\%package%" 1 *Windows*.psf -
 )
 for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\*Windows1*-KB*.*"') do set "compkg=%%#"
 7z.exe e "!_cabdir!\lcu\%compkg%" -o"!dest!" update.mum -aoa %_Null%
-if exist "!_cabdir!\lcu\RCU-*baseless*.cab" del /f /q "!_cabdir!\lcu\RCU-*baseless*.cab" %_Nul3%
+if exist "!_cabdir!\lcu\RCU-*baseless*.*" del /f /q "!_cabdir!\lcu\RCU-*baseless*.*" %_Nul3%
 if exist "!_cabdir!\lcu\RCU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\RCU-*%arch%*.cab"') do (
 set _rcu=%pkgid%
-set "compkg=%%#"&call :inrenrcu
+7z.exe e "!_cabdir!\lcu\%%#" -o"!_cabdir!\lcu" update.mum -aoa %_Null%
+7z.exe e "!_cabdir!\lcu\%%#" -o"!dest!" %_ss%_microsoft-updatetargeting-*os_*.manifest -aoa %_Null%
+call :chklcu "!_cabdir!\lcu" Package_for_RevisedFix
+if %psfwim% equ 1 set "compkg=%%#"&call :inrenrcu
 )
 if exist "!_cabdir!\lcu\SSU-*%arch%*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\lcu\SSU-*%arch%*.cab"') do (set "compkg=%%#"&call :inrenssu)
 if %msuwim% equ 1 if %psfwim% equ 1 (
@@ -2560,7 +2563,7 @@ move /y "!_cabdir!\lcu\*.wim" "!_cabdir!\" %_Nul3%
 rmdir /s /q "!_cabdir!\lcu\" %_Nul3%
 set msu_%pkgn%=1
 findstr /i /m "Package_for_RollupFix" "!dest!\update.mum" %_Nul3% && (
-call :chklcu Package_for_RollupFix
+call :chklcu "!dest!" Package_for_RollupFix
 )
 goto :eof
 
@@ -2614,8 +2617,8 @@ if defined cab_%pkgn% goto :eof
 if exist "!dest!\" rmdir /s /q "!dest!\"
 mkdir "!dest!"
 set /a count+=1
-7z.exe e "!_UUP!\%package%" -o"!dest!" update.mum -aoa %_Null%
-call :chklcu Package_for_RevisedFix
+:: 7z.exe e "!_UUP!\%package%" -o"!dest!" update.mum -aoa %_Null%
+:: call :chklcu "!dest!" Package_for_RevisedFix
 set "_type=[RCU]"&set uwinpe=1
 echo %count%/%_cab%: %package% %_type%
 set cab_%pkgn%=1
@@ -2637,19 +2640,19 @@ set cuvr=%1
 goto :eof
 
 :chklcu
-findstr /i /m /c:"Microsoft-Windows-CoreEdition" "!dest!\update.mum" %_Nul3% || set _eosC=1
-findstr /i /m /c:"Microsoft-Windows-ProfessionalEdition" "!dest!\update.mum" %_Nul3% || set _eosP=1
-findstr /i /m /c:"Microsoft-Windows-PPIProEdition" "!dest!\update.mum" %_Nul3% || set _eosT=1
+findstr /i /m /c:"Microsoft-Windows-CoreEdition" "%~1\update.mum" %_Nul3% || set _eosC=1
+findstr /i /m /c:"Microsoft-Windows-ProfessionalEdition" "%~1\update.mum" %_Nul3% || set _eosP=1
+findstr /i /m /c:"Microsoft-Windows-PPIProEdition" "%~1\update.mum" %_Nul3% || set _eosT=1
 set /a c_num+=1
 set kbvr=0
-set kbnm=%1
-for /f "tokens=5-8 delims==. " %%H in ('findstr /i %kbnm% "!dest!\update.mum"') do set "kbvr=%%I"&set "cver=%%~H.%%I.%%J.%%K
+set kbnm=%2
+for /f "tokens=5-8 delims==. " %%H in ('findstr /i %kbnm% "%~1\update.mum"') do set "kbvr=%%I"&set "cver=%%~H.%%I.%%J.%%K
 if %_build% geq 22621 (
-if not exist "!_cabdir!\LCUmum\%kbnm%~%_Pkt%~%_ss%~~%cver%.mum" copy /y "!dest!\update.mum" "!_cabdir!\LCUmum\%kbnm%~%_Pkt%~%_ss%~~%cver%.mum" %_Nul1%
+if not exist "!_cabdir!\LCUmum\%kbnm%~%_Pkt%~%_ss%~~%cver%.mum" copy /y "%~1\update.mum" "!_cabdir!\LCUmum\%kbnm%~%_Pkt%~%_ss%~~%cver%.mum" %_Nul1%
 )
 call :vrpad %kbvr%
 if %_build% geq 26052 (
-echo %package% |findstr /i "RCU\-" %_Nul1% || if not exist "!_cabdir!\LCUall\%cuvr%-%package%" (
+if not exist "!_cabdir!\LCUall\*Windows*%pkgid%*.msu" if not exist "!_cabdir!\LCUall\%cuvr%-%package%" (
   copy /y "!_UUP!\%package%" "!_cabdir!\LCUall\%cuvr%-%package%" %_Nul1%
 )
 echo %package% |findstr /i "KB5043080" %_Nul1% && if not exist "!_cabdir!\LCUbase\%cuvr%-%package%" (
@@ -2833,7 +2836,7 @@ if exist "!_UUP!\SSU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_U
 if exist "!_UUP!\*Windows1*-KB*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\*Windows1*-KB*.cab"') do (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum)
 if %_build% geq 21382 if exist "!_UUP!\*Windows1*-KB*.msu" (for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\*Windows1*-KB*.msu"') do if defined msu_%%~n# (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum))
 if %psfwim% equ 1 if exist "!_cabdir!\*Windows1*-KB*.wim" (for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\*Windows1*-KB*.wim"') do if defined psfx_%%~n# (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum))
-if exist "!_UUP!\RCU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\RCU-*-*.cab"') do (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procrcu)
+if %psfwim% equ 1 if exist "!_UUP!\RCU-*-*.cab" for /f "tokens=* delims=" %%# in ('dir /b /on "!_UUP!\RCU-*-*.cab"') do (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procrcu)
 if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if exist "!_UUP!\*defender-dism*%_bit%*.cab" (for /f "tokens=* delims=" %%# in ('dir /b "!_UUP!\*defender-dism*%_bit%*.cab"') do (set "pckn=%%~n#"&set "packx=%%~x#"&set "package=%%#"&set "dest=!_cabdir!\%%~n#"&call :procmum))
 if %_build% geq 22621 if %winbuild% lss 10240 reg.exe query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMajorVersionNumber %_Nul3% || (
 reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMajorVersionNumber /t REG_DWORD /d 10 /f %_Nul3%
