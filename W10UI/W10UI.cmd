@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.58
+@set uiv=v10.58r
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -600,6 +600,7 @@ goto :fin
 )
 set "mumpkgs=Package_for_ServicingStack Package_for_DotNetRollup"
 if %_build% lss 26052 set "mumpkgs=%mumpkgs% Package_for_WindowsExperienceFeaturePack Package_for_RollupFix"
+set handle2=0
 set c_pkg=
 set c_ver=0
 set c_num=0
@@ -1913,7 +1914,7 @@ findstr /i /m "Package_for_WindowsExperienceFeaturePack" "%dest%\update.mum" %_N
 set "wnt=%_Pkt%_10"
 if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%_Pkt%_11.*.manifest" set "wnt=%_Pkt%_11"
 if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%_Pkt%_12.*.manifest" set "wnt=%_Pkt%_12"
-if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" (
+if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if !handle2! equ 0 (
 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
 if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
 for /f "tokens=8 delims== " %%# in ('findstr /i Branch "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do set uuplab=%%~#
@@ -2068,7 +2069,7 @@ set "netmsu=!lcumsu!"
 goto :eof
 
 :procrcu
-if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" (
+if exist "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest" if not exist "!mumtarget!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if !handle2! equ 0 (
 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%I.%%K&set uupmaj=%%I&set uupmin=%%K)
 if %_fixEP% equ 0 for /f "tokens=5-7 delims=_." %%I in ('dir /b /a:-d /on "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do (set uupver=%%J.%%K&set uupmaj=%%J&set uupmin=%%K)
 for /f "tokens=8 delims== " %%# in ('findstr /i Branch "%dest%\%sss%_microsoft-updatetargeting-*os_%wnt%.%_fixEP%*.manifest"') do set uuplab=%%~#
@@ -2583,6 +2584,7 @@ cd /d "!_wimpath!"
 if !errorlevel! neq 0 goto :E_MOUNT
 cd /d "!_cabdir!"
 call :doupdate
+set handle2=1
 if %net35%==1 call :enablenet35
 if %dvd%==1 (
 if not defined isolab if not exist "!mountdir!\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" (
@@ -2744,7 +2746,7 @@ set _fixEP=0
 set /a _fixSV=%_build%+1
 set "_tikey=HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
 reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
-for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r "Client\.OS Server\.OS"') do set "_oskey=%%#"
+for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r "Client\.OS Server\.OS WNC\.OS WCOSDevice"') do set "_oskey=%%#"
 for /f "skip=2 tokens=5,6 delims=. " %%A in ('reg.exe query "%_oskey%" /v Version') do if %%A gtr !isomaj! (
   set isover=%%A.%%B
   set isomaj=%%A
@@ -2761,7 +2763,7 @@ goto :eof
 :detectLab
 set "_tikey=HKLM\uiSOFTWARE\Microsoft\Windows NT\CurrentVersion\Update\TargetingInfo\Installed"
 reg.exe load HKLM\uiSOFTWARE "!mountdir!\Windows\system32\config\SOFTWARE" %_Nul1%
-for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r "Client\.OS Server\.OS"') do set "_oskey=%%#"
+for /f "tokens=* delims=" %%# in ('reg.exe query "%_tikey%" ^| findstr /i /r "Client\.OS Server\.OS WNC\.OS WCOSDevice"') do set "_oskey=%%#"
 for /f "skip=2 tokens=2*" %%A in ('reg.exe query "%_oskey%" /v Branch') do set "%1=%%B"
 reg.exe save HKLM\uiSOFTWARE "!mountdir!\Windows\System32\Config\SOFTWARE2" /y %_Nul1%
 reg.exe unload HKLM\uiSOFTWARE %_Nul1%

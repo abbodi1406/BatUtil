@@ -238,6 +238,7 @@ special thanks for testing and feedback:
 
 10.58:  
 - Fix: RCU support and related issues
+- Fix: ISO label's custom branch name is lost for versions with Enablement Package
 
 10.57:  
 - Update ExtendedSecurityUpdates Suppressor for Windows 10 19041-19045
