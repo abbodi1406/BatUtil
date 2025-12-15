@@ -12,8 +12,8 @@ https://learn.microsoft.com/en-us/windows/win32/msi/applying-small-updates-by-pa
 
 - However, the setup architecture for Office 2007 and later is changed, and that ability is disabled and prevented
 
-https://learn.microsoft.com/en-us/previous-versions/office/office-2007-resource-kit/dd162398(v=office.12)
-https://learn.microsoft.com/en-us/previous-versions/office/office-2010/dd162398(v=office.14)
+https://learn.microsoft.com/en-us/previous-versions/office/office-2007-resource-kit/dd162398(v=office.12)  
+https://learn.microsoft.com/en-us/previous-versions/office/office-2010/dd162398(v=office.14)  
 https://learn.microsoft.com/en-us/previous-versions/office/office-2013-resource-kit/dd162398(v=office.15)
 
 - Setup does not let you create an administrative installation point (the required sequence table is removed from all msi files)
@@ -213,6 +213,7 @@ example location after installation:
 "%ProgramFiles%\Common Files\Microsoft Shared\OFFICE12\Office Setup Controller\"
 "%ProgramFiles(x86)%\Common Files\Microsoft Shared\OFFICE14\Office Setup Controller\"
 ```
+</details>
 
 **7) Create MakeCAB DDF directives**
 
