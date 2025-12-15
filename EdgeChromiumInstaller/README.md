@@ -10,24 +10,20 @@ ______________________________
 
 * Latest untagged meta installer for Microsoft Edge Update:
 
-https://msedgesetup.azureedge.net/latest/MicrosoftEdgeSetup.exe
-
-you can also acquire it from this page (search for: MicrosoftEdgeUpdateSetup)
+search for `MicrosoftEdgeUpdateSetup`
 
 https://edgeupdates.microsoft.com/api/products
 
 * Latest offline installer for Microsoft Edge:
 
-http://pldm.ml/edge
+https://pldm.ml/edge
+https://github.com/Bush2021/edge_installer    
+https://github.com/rnus699/edge_installer
 
-- choose desired channel / architecture  
-- choose desired / latest build  
-- click Get button  
-- download the biggest file, example: MicrosoftEdge_X64_83.0.472.0.exe  
-- rename the file after download, keeping the original name
 
-* For more info on languages codes see:  
-https://docs.microsoft.com/en-us/deployedge/microsoft-edge-supported-languages
+* For more info on languages codes see:
+
+https://learn.microsoft.com/en-us/deployedge/microsoft-edge-supported-languages
 
 ______________________________
 
@@ -37,12 +33,12 @@ ______________________________
 
 ![alt text](https://i.imgur.com/zutP24L.png)
 
-* If you run EdgeChromiumInstaller.cmd without administrator privileges:
+* If you run `EdgeChromiumInstaller.cmd` without administrator privileges:
 
 you get the option to install Edge for current user only  
 capabilities to set Edge as default browser will be missing
 
-* If you run EdgeChromiumInstaller.cmd as administrator:
+* If you run `EdgeChromiumInstaller.cmd` as administrator:
 
 you get the option to install Edge for current user, or all users / system wide (except Canary channel)  
 capabilities to set Edge as default browser will be available
@@ -77,7 +73,7 @@ if it failed, check these log files for details:
 
 * To set MS Edge Canary as default browser:
 
-run EdgeChromiumInstaller.cmd as administrator and perform the installation
+run `EdgeChromiumInstaller.cmd` as administrator and perform the installation
 
 then, go to Control Panel / Default Programs / Set your default programs
 
@@ -89,17 +85,16 @@ ______________________________
 
 * You can use the long form or the short form for channel and level
 
-* Architecture is determined based on the detected offline installer  
+* Architecture is determined based on the detected offline installer 
+
 for Windows x64/arm64, 64-bit installer takes precedence if detected with 32-bit installer (x86)
 
-- language:
-
+- language:  
 `/L lang`
 
 mandatory switch, it must be specified
 
-- channel:
-
+- channel:  
 ```
 /Canary
 /Dev
@@ -114,8 +109,7 @@ mandatory switch, it must be specified
 if not specified, default is Stable  
 if multiple switches are specified, the last one takes precedence
 
-- installation level:
-
+- installation level:  
 ```
 /System
 /User
@@ -129,24 +123,18 @@ Canary channel always default to User level
 
 * Examples:
 
-install Edge Canary, french language  
+install Edge Canary, french language:  
 `EdgeChromiumInstaller.cmd /canary /l fr`
 
-install Edge Stable, english language, system level  
+install Edge Stable, english language, system level:  
 ```
 EdgeChromiumInstaller.cmd /L en
 EdgeChromiumInstaller.cmd /L en /Stable
 EdgeChromiumInstaller.cmd /L en /Stable /System
 ```
 
-install Edge Beta, chinese language, system level  
+install Edge Beta, chinese language, system level:  
 ```
 EdgeChromiumInstaller.cmd /Beta /System /L zh-cn
 EdgeChromiumInstaller.cmd /l zh-cn /cb /s
 ```
-
-______________________________
-
-## Credits
-
-- whatever127: 32767.ga/edge

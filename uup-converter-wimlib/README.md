@@ -1,11 +1,11 @@
-# UUP -> ISO Converter ft. WimLib
+# UUP -> ISO Converter
 
 * Automated windows command script to process Microsoft Windows 10 **Unified Update Platform** files, allowing to build/convert them into a usable state (ISO / WIM).
 
 - You can get UUP files by performing upgrade from Windows 10 build to later build (starting 15063).
 
 * You can also obtain UUP canonical source using one of these projects:  
-[UUP dump website](https://uupdump.ml/)  
+[UUP dump website](https://uupdump.net/)  
 [UUP Generation Project](https://uup.rg-adguard.net/)
 
 - Refer to ReadMe.html for detailed usage and info.

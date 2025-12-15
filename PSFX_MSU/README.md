@@ -11,7 +11,7 @@
 - Mandatory  : AggregatedMetadata cab file
 - Mandatory  : DesktopDeployment cab file or SSU cab file
 - Recommended: DesktopDeployment cab file and SSU cab file
-- Optional   : DesktopDeployment_x86.cab file
+- Optional   : DesktopDeployment_x86 cab file
 
 example:  
 ```
@@ -51,15 +51,18 @@ example:
 - The script do not require administrator privileges  
 however, if you get Access Denied errors, run it as administrator
 
-- DesktopDeployment.cab and DesktopDeployment_x86.cab will be constructed, if not provided
+- `DesktopDeployment.cab` and `DesktopDeployment_x86.cab` will be constructed, if not provided
 
-- If DesktopDeployment_x86.cab is not provided or creation failed, the result msu can be used as follows:
+- If `DesktopDeployment_x86.cab` is not provided or creation failed, the result msu can be used as follows:
 
 x64 msu: installed on live OS only, or require x64 Host OS to add msu for x64 image
 
 arm64 msu: installed on live OS only, or require arm64 Host OS to add msu for arm64 image
 
-- The script can create MSU only for one LCU at a time (based on AggregatedMetadata.cab)
+- The script can create MSU file(s) per each `AggregatedMetadata.cab`
+
+however, it's best not to mix files  
+because DesktopDeployment files can't coexist for different builds, and SSU extraction might fail
 
 - Advanced: edit the script to change the manual option `IncludeSSU` or enable debug mode `_Debug`
 

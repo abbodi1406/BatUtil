@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uivr=v0.4
+@set uivr=v0.5
 @echo off
 :: Change to 0 to skip adding SSU to the msu file
 set IncludeSSU=1
@@ -19,11 +19,8 @@ exit /b
 )
 set _dpx=0
 set _exd=0
-set _fail=0
-set DD64create=0
-set DD86create=0
-set "sdl=dpx.dll ReserveManager.dll TurboStack.dll UpdateAgent.dll UpdateCompression.dll wcp.dll"
-set "onf=onepackage.AggregatedMetadata.cab"
+set "_MSUdll=dpx.dll ReserveManager.dll TurboStack.dll UpdateAgent.dll UpdateCompression.dll wcp.dll"
+set "_MSUonf=onepackage.AggregatedMetadata.cab"
 set "_Null=1>nul 2>nul"
 set "_err===== ERROR ===="
 set "_ntc===== NOTICE ===="
@@ -45,6 +42,8 @@ if /i "%PROCESSOR_ARCHITECTURE%"=="arm64" set "xBT=x86"
 if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if "%PROCESSOR_ARCHITEW6432%"=="" set "xBT=x86"
 if /i "%PROCESSOR_ARCHITEW6432%"=="amd64" set "xBT=x64"
 if /i "%PROCESSOR_ARCHITEW6432%"=="arm64" set "xBT=x86"
+set "line============================================================="
+set "WowPath=%SystemRoot%\SysWOW64"
 set "_log=%~dpn0"
 set "_work=%~dp0"
 set "_work=%_work:~0,-1%"
@@ -53,30 +52,23 @@ for /f "skip=2 tokens=2*" %%a in ('reg.exe query "HKCU\Software\Microsoft\Window
 if exist "%PUBLIC%\Desktop\desktop.ini" set "_dsk=%PUBLIC%\Desktop"
 setlocal EnableDelayedExpansion
 
-if defined _args goto :chkarg
-if not exist "!_work!\*.AggregatedMetadata*.cab" (goto :continue
-) else if not exist "!_work!\Windows1*-KB*.psf" (goto :continue
-)
-if not exist "!_work!\Windows1*-KB*.cab" if not exist "!_work!\Windows1*-KB*.wim" goto :continue
-if exist "!_work!\*DesktopDeployment*.cab" set "_repo=!_work!"
-if exist "!_work!\SSU-*-*.cab" set "_repo=!_work!"
-if not defined _repo goto :continue
-if exist "!_work!\Windows1*-KB*.cab" (set xmf=cab
-) else if exist "!_work!\Windows1*-KB*.wim" (set xmf=wim
-)
+set "_loc=!_work!"
+if defined _args set "_loc=!_args!"
+if not exist "!_loc!\*.AggregatedMetadata*.cab" (
+echo.
+echo No AggregatedMetadata file detected in the source directory
 goto :continue
-
-:chkarg
-if not exist "!_args!\*.AggregatedMetadata*.cab" (goto :continue
-) else if not exist "!_args!\Windows1*-KB*.psf" (goto :continue
+) else if not exist "!_loc!\*Windows1*-KB*.psf" (
+echo.
+echo No psf file detected in the source directory
+goto :continue
 )
-if not exist "!_args!\Windows1*-KB*.cab" if not exist "!_args!\Windows1*-KB*.wim" goto :continue
-if exist "!_args!\*DesktopDeployment*.cab" set "_repo=!_args!"
-if exist "!_args!\SSU-*-*.cab" set "_repo=!_args!"
-if not defined _repo goto :continue
-if exist "!_args!\Windows1*-KB*.cab" (set xmf=cab
-) else if exist "!_args!\Windows1*-KB*.wim" (set xmf=wim
+if not exist "!_loc!\*Windows1*-KB*.cab" if not exist "!_loc!\*Windows1*-KB*.wim" (
+echo No cab or wim file detected in the source directory
+goto :continue
 )
+if exist "!_loc!\*DesktopDeployment*.cab" set "_repo=!_loc!"
+if exist "!_loc!\SSU-*-*.cab" set "_repo=!_loc!"
 goto :continue
 
 :continue
@@ -100,7 +92,7 @@ if %_Debug% equ 0 (
 copy /y nul "!_work!\#.rw" %_Null% && (if exist "!_work!\#.rw" del /f /q "!_work!\#.rw") || (set "_log=!_dsk!\%~n0")
 echo.
 echo Running in Debug Mode...
-echo The window will be closed when finished
+if not defined _args (echo The window will be closed when finished) else (echo please wait)
 @echo on
 @prompt $G
 @call :Begin >"!_log!_tmp.log" 2>&1 &cmd /u /c type "!_log!_tmp.log">"!_log!_Debug.log"&del "!_log!_tmp.log"
@@ -109,165 +101,244 @@ echo The window will be closed when finished
 @exit /b
 
 :Begin
+if not defined _repo goto :N_PT
+if not exist "!_work!\bin\imagex_%xBT%.exe" goto :E_Bin
 title PSFXv2 MSU Maker %uivr%
 if %_Debug% equ 0 if not defined _args @cls
-if not defined _repo goto :N_PT
-if %xmf%==wim if not exist "!_work!\bin\imagex_%xBT%.exe" goto :E_Bin
+set /a _ref+=1
+set /a _rnd=%random%
 pushd "!_repo!"
-for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do set "metaf=%%#"
-if /i "%metaf%"=="%onf%" (
-ren "%metaf%" "org_%metaf%"
-set "metaf=org_%metaf%"
+for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do if /i "%%#"=="%_MSUonf%" (
+set /a _rnd+=1
+ren "%%#" "org!_rnd!_%%#"
 )
-if %xmf%==cab (
-expand.exe -f:LCUCompDB*.xml.cab "%metaf%" . %_Null%
-if not exist "LCUCompDB*.xml.cab" goto :E_DB
-)
-if %xmf%==wim (
+for /f "delims=" %%# in ('dir /b /a:-d "*.AggregatedMetadata*.cab"') do (set "metaf=%%#"&call :doMSU)
+echo.
+echo Finished
+goto :TheEnd
+
+:doMSU
+echo.
+echo %line%
+echo %metaf%
+echo %line%
+set "_MSUssu="
+set optSSU=%IncludeSSU%
+set _mcfail=0
 if exist "_tMSU\" rmdir /s /q "_tMSU\" %_Nul3%
 mkdir "_tMSU"
+expand.exe -f:LCUCompDB*.xml.cab "%metaf%" "_tMSU" %_Null%
+expand.exe -f:SSUCompDB*.xml.cab "%metaf%" "_tMSU" %_Null%
 expand.exe -f:*.AggregatedMetadata*.cab "%metaf%" "_tMSU" %_Null%
-if not exist "_tMSU\*.AggregatedMetadata*.cab" goto :E_DB
+if not exist "_tMSU\LCUCompDB*.xml.cab" if not exist "_tMSU\*.AggregatedMetadata*.cab" (
+echo.
+echo LCUCompDB file is missing
+goto :eof
+)
+if exist "_tMSU\SSU*-express.xml.cab" del /f /q "_tMSU\SSU*-express.xml.cab"
+
+set xtn=cab
+if not exist "_tMSU\*.AggregatedMetadata*.cab" goto :skpwim
+set xtn=wim
 for /f %%# in ('dir /b /a:-d "_tMSU\*.AggregatedMetadata*.cab"') do expand.exe -f:*.xml "_tMSU\%%#" "_tMSU" %_Null%
-if not exist "_tMSU\LCUCompDB*.xml" goto :E_DB
+if not exist "_tMSU\LCUCompDB*.xml" (
+echo.
+echo LCUCompDB file is missing
+goto :eof
+)
 for /f %%# in ('dir /b /a:-d "_tMSU\LCUCompDB*.xml"') do (
 %_Null% makecab.exe /D Compress=ON /D CompressionType=MSZIP "_tMSU\%%~n#.xml" "_tMSU\%%~n#.xml.cab"
 )
 if exist "_tMSU\SSUCompDB*.xml" for /f %%# in ('dir /b /a:-d "_tMSU\SSUCompDB*.xml"') do (
 %_Null% makecab.exe /D Compress=ON /D CompressionType=MSZIP "_tMSU\%%~n#.xml" "_tMSU\%%~n#.xml.cab"
 )
-if not exist "_tMSU\LCUCompDB*.xml.cab" (echo makecab.exe LCUCompDB failed&goto :TheEnd)
-del /f /q "_tMSU\*.AggregatedMetadata*.cab" %_Nul3%
-copy /y "_tMSU\*.cab" . %_Nul3%
-rmdir /s /q "_tMSU\" %_Nul3%
+if not exist "_tMSU\LCUCompDB*.xml.cab" (
+echo.
+echo makecab.exe LCUCompDB file failed
+goto :eof
 )
-for /f %%# in ('dir /b /a:-d "LCUCompDB*.xml.cab"') do set "dblcu=%%#"
-for /f "tokens=2 delims=_." %%# in ('echo %dblcu%') do set "kbn=%%#"
-if not exist "Windows1*%kbn%*.%xmf%" set xtn=%xmf%&goto :E_KB
-if not exist "Windows1*%kbn%*.psf" set xtn=psf&goto :E_KB
-for /f "tokens=3 delims=-_" %%# in ('dir /b /a:-d "Windows1*%kbn%*.psf"') do set "bit=%%~n#"
-if exist "Windows1*%kbn%*%bit%*.msu" goto :N_MS
-for /f "delims=" %%# in ('dir /b /a:-d "Windows1*%kbn%*%bit%*.%xmf%"') do set "_sCAB=%%#"
-for /f "delims=" %%# in ('dir /b /a:-d "Windows1*%kbn%*%bit%*.psf"') do set "_sPSF=%%#"
-set "kbf=Windows10.0-%kbn%-%bit%"
-if /i "%_sCAB:~0,10%"=="Windows11." set "kbf=Windows11.0-%kbn%-%bit%"
-if /i "%_sCAB:~0,10%"=="Windows12." set "kbf=Windows12.0-%kbn%-%bit%"
-if exist "SSU-*%bit%*.cab" (
-for /f "tokens=2 delims=-" %%# in ('dir /b /a:-d "SSU-*%bit%*.cab"') do set "suf=SSU-%%#-%bit%.cab"
-for /f "delims=" %%# in ('dir /b /a:-d "SSU-*%bit%*.cab"') do set "_sSSU=%%#"
+del /f /q "_tMSU\*.xml" %_Nul3%
+
+:skpwim
+set "_MSUkbn="
+for /f "tokens=2 delims=_." %%# in ('dir /b /a:-d "_tMSU\LCUCompDB*.xml.cab"') do (
+set "_MSUkbn=%%#"
+)
+if exist "*Windows1*%_MSUkbn%*.msu" (
+echo.
+echo %_MSUkbn% msu file already exist
+goto :eof
+)
+if not exist "*Windows1*%_MSUkbn%*.psf" (
+echo.
+echo %_MSUkbn% psf file is missing
+goto :eof
+)
+if exist "*Windows1*%_MSUkbn%*.cab" (
+set xmf=cab
+) else if exist "*Windows1*%_MSUkbn%*.wim" (
+set xmf=wim
 ) else (
-set IncludeSSU=0
+echo.
+echo %_MSUkbn% %xtn% file is missing
+goto :eof
 )
-if %IncludeSSU% equ 1 if not exist "SSUCompDB*.xml.cab" (
-expand.exe -f:SSUCompDB*.xml.cab "%metaf%" . %_Null%
-if exist "SSU*-express.xml.cab" del /f /q "SSU*-express.xml.cab"
-)
-if exist "SSUCompDB*.xml.cab" (for /f %%# in ('dir /b /a:-d "SSUCompDB*.xml.cab"') do set "dbssu=%%#") else (set IncludeSSU=0)
-set "_sDDD=DesktopDeployment_x86.cab"
+
+for /f %%# in ('dir /b /a:-d "_tMSU\LCUCompDB_%_MSUkbn%*.xml.cab"') do set "_MSUcdb=%%#"
+for /f "tokens=3 delims=-_" %%# in ('dir /b /a:-d "*Windows1*%_MSUkbn%*.psf"') do set "arch=%%~n#"
+for /f "delims=" %%# in ('dir /b /a:-d "*Windows1*%_MSUkbn%*%arch%*.%xmf%"') do set "_MSUcab=%%#"
+for /f "delims=" %%# in ('dir /b /a:-d "*Windows1*%_MSUkbn%*%arch%*.psf"') do set "_MSUpsf=%%#"
+set "_MSUkbf=Windows10.0-%_MSUkbn%-%arch%"
+echo %_MSUcab%| findstr /i "Windows11\." %_Nul1% && set "_MSUkbf=Windows11.0-%_MSUkbn%-%arch%"
+echo %_MSUcab%| findstr /i "Windows12\." %_Nul1% && set "_MSUkbf=Windows12.0-%_MSUkbn%-%arch%"
+
+if not exist "SSU-*%arch%*.cab" set optSSU=0&goto :skpssu
+for /f "delims=" %%# in ('dir /b /a:-d "SSU-*%arch%*.cab"') do (set "_chk=%%#"&call :doSSU)
+if not defined _MSUssu set optSSU=0&goto :skpssu
+goto :skpssu
+
+:doSSU
+if defined _MSUssu goto :eof
+if exist "_tMSU\update.mum" del /f /q "_tMSU\update.mum"
+expand.exe -f:update.mum "%_chk%" "_tMSU" %_Null%
+set "_SSUkbn="
+if exist "_tMSU\update.mum" for /f "tokens=3 delims== " %%# in ('findstr /i releaseType "_tMSU\update.mum"') do set _SSUkbn=%%~#
+if "%_SSUkbn%"=="" goto :eof
+if not exist "_tMSU\SSUCompDB_%_SSUkbn%*.xml.cab" goto :eof
+for /f %%# in ('dir /b /a:-d "_tMSU\SSUCompDB_%_SSUkbn%*.xml.cab"') do set "_MSUsdb=%%#"
+for /f "tokens=2 delims=-" %%# in ('dir /b /a:-d "%_chk%"') do set "_MSUtsu=SSU-%%#-%arch%.cab"
+set "_MSUssu=%_chk%"
+goto :eof
+
+:skpssu
+set "_MSUddc="
+set "_MSUddd=DesktopDeployment_x86.cab"
 if exist "*DesktopDeployment*.cab" (
-for /f "delims=" %%# in ('dir /b /a:-d "*DesktopDeployment*.cab" ^|find /i /v "%_sDDD%"') do set "_sDDC=%%#"
+for /f "delims=" %%# in ('dir /b /a:-d "*DesktopDeployment*.cab" ^|find /i /v "%_MSUddd%"') do set "_MSUddc=%%#"
 )
 if exist "%SysPath%\ucrtbase.dll" call :dodpx
-if not defined _sDDC (
-call set "_sDDC=DesktopDeployment.cab"
+if not defined _MSUddc (
+call set "_MSUddc=_tMSU\DesktopDeployment.cab"
+call set "_MSUddd=_tMSU\DesktopDeployment_x86.cab"
 call :DDCAB
 )
-if %_fail% equ 1 goto :TheEnd
-if defined suf if /i not %bit%==x86 if not exist "%_sDDD%" call :DDC86
-call :DDF %onf%
-(echo "%dblcu%"
-if %IncludeSSU% equ 1 echo "%dbssu%"
+if %_mcfail% equ 1 goto :eof
+if /i not %arch%==x86 if not exist "DesktopDeployment_x86.cab" if not exist "_tMSU\DesktopDeployment_x86.cab" if defined _MSUtsu (
+call set "_MSUddd=_tMSU\DesktopDeployment_x86.cab"
+call :DDC86
+)
+:: if %_mcfail% equ 1 goto :eof
+call :crDDF _tMSU\%_MSUonf%
+(echo "_tMSU\%_MSUcdb%" "%_MSUcdb%"
+if %optSSU% equ 1 echo "_tMSU\%_MSUsdb%" "%_MSUsdb%"
 )>>zzz.ddf
 %_Null% makecab.exe /F zzz.ddf /D Compress=ON /D CompressionType=MSZIP
-if %ERRORLEVEL% neq 0 (echo makecab.exe %onf% failed&goto :TheEnd)
-if %xmf%==wim goto :DDWIM
-call :DDF %kbf%.msu
-(echo "%_sDDC%" "DesktopDeployment.cab"
-if exist "%_sDDD%" echo "%_sDDD%" "DesktopDeployment_x86.cab"
-echo "%onf%"
-if %IncludeSSU% equ 1 echo "%_sSSU%" "%suf%"
-echo "%_sCAB%" "%kbf%.cab"
-echo "%_sPSF%" "%kbf%.psf"
+if %ERRORLEVEL% neq 0 (
+echo.
+echo makecab.exe %_MSUonf% failed
+goto :eof
+)
+if %xmf%==wim goto :msu_wim
+call :crDDF %_MSUkbf%.msu
+(echo "%_MSUddc%" "DesktopDeployment.cab"
+if exist "%_MSUddd%" echo "%_MSUddd%" "DesktopDeployment_x86.cab"
+echo "_tMSU\%_MSUonf%" "%_MSUonf%"
+if %optSSU% equ 1 echo "%_MSUssu%" "%_MSUtsu%"
+echo "%_MSUcab%" "%_MSUkbf%.cab"
+echo "%_MSUpsf%" "%_MSUkbf%.psf"
 )>>zzz.ddf
 %_Null% makecab.exe /F zzz.ddf /D Compress=OFF
-if %ERRORLEVEL% neq 0 (echo makecab.exe %kbf%.msu failed&goto :TheEnd)
+if %ERRORLEVEL% neq 0 (
 echo.
-echo Finished
-echo.
-goto :TheEnd
+echo makecab.exe %_MSUkbf%.msu failed
+goto :eof
+)
+call :undpx
+goto :eof
 
-:DDWIM
+:msu_wim
 echo.
-echo Creating: %kbf%.msu
+echo Creating: %_MSUkbf%.msu
 if exist "_tWIM\" rmdir /s /q "_tWIM\" %_Nul3%
 mkdir "_tWIM"
-copy /y "%_sDDC%" "_tWIM\DesktopDeployment.cab" %_Nul3%
-if exist "%_sDDD%" copy /y "%_sDDD%" "_tWIM\DesktopDeployment_x86.cab" %_Nul3%
-copy /y "%onf%" "_tWIM\%onf%" %_Nul3%
-if %IncludeSSU% equ 1 copy /y "%_sSSU%" "_tWIM\%suf%" %_Nul3%
-copy /y "%_sCAB%" "_tWIM\%kbf%.wim" %_Nul3%
-copy /y "%_sPSF%" "_tWIM\%kbf%.psf" %_Nul3%
-:: %_Nul3% dism.exe /Capture-Image /ImageFile:%kbf%.msu /CaptureDir:_tWIM\ /Name:content /Compress:none /noacl:all
-%_Nul3% "!_work!\bin\imagex_%xBT%.exe" /CAPTURE _tWIM\ %kbf%.msu content /COMPRESS none /NOACL ALL /NOTADMIN /TEMP "!_temp!"
-if %ERRORLEVEL% neq 0 (echo wim capture %kbf%.msu failed&goto :TheEnd)
+copy /y "%_MSUddc%" "_tWIM\DesktopDeployment.cab" %_Nul3%
+if exist "%_MSUddd%" if /i not %arch%==x86 copy /y "%_MSUddd%" "_tWIM\DesktopDeployment_x86.cab" %_Nul3%
+copy /y "_tMSU\%_MSUonf%" "_tWIM\%_MSUonf%" %_Nul3%
+if %optSSU% equ 1 copy /y "%_MSUssu%" "_tWIM\%_MSUtsu%" %_Nul3%
+copy /y "%_MSUcab%" "_tWIM\%_MSUkbf%.wim" %_Nul3%
+copy /y "%_MSUpsf%" "_tWIM\%_MSUkbf%.psf" %_Nul3%
+%_Nul3% "!_work!\bin\imagex_%xBT%.exe" /CAPTURE _tWIM\ %_MSUkbf%.msu content /COMPRESS none /NOACL ALL /NOTADMIN /TEMP "!_temp!"
+if %ERRORLEVEL% neq 0 (
 echo.
-echo Finished
-echo.
-goto :TheEnd
+echo wim capture %_MSUkbf%.msu failed
+goto :eof
+)
+call :undpx
+goto :eof
 
 :DDCAB
 echo.
-echo Extracting: %_sSSU%
-if exist "_tmpSSU\" rmdir /s /q "_tmpSSU\" %_Nul3%
-mkdir "_tmpSSU\000"
-expand.exe -f:* %_sSSU% _tmpSSU %_Null% || (
-  rmdir /s /q "_tmpSSU\" %_Nul3%
-  echo failed.
-  echo.
-  echo Provide ready DesktopDeployment.cab and try again
-  echo.
-  set _fail=1
-  goto :eof
+echo Extracting: %_MSUssu%
+if exist "_tSSU\" rmdir /s /q "_tSSU\" %_Nul3%
+mkdir "_tSSU\000"
+expand.exe -f:* "%_MSUssu%" "_tSSU" %_Null% || (
+echo failed.
+echo Provide ready DesktopDeployment.cab or dpx.dll and try again
+set _mcfail=1
+rmdir /s /q "_tSSU\" %_Nul3%
+goto :eof
 )
-set xbt=%bit%
-if /i %bit%==x64 set xbt=amd64
-for /f %%# in ('dir /b /ad "_tmpSSU\%xbt%_microsoft-windows-servicingstack_*"') do set "src=%%#"
-for %%# in (%sdl%) do if exist "_tmpSSU\%src%\%%#" (move /y "_tmpSSU\%src%\%%#" "_tmpSSU\000\%%#" %_Nul1%)
-set DD64create=1
-call :DDF %_sDDC%
-call :ADD _tmpSSU\000
+:ssuouter64
+set btx=%arch%
+if /i %arch%==x64 set btx=amd64
+for /f %%# in ('dir /b /ad "_tSSU\%btx%_microsoft-windows-servicingstack_*"') do set "src=%%#"
+for %%# in (%_MSUdll%) do if exist "_tSSU\%src%\%%#" (move /y "_tSSU\%src%\%%#" "_tSSU\000\%%#" %_Nul1%)
+call :crDDF %_MSUddc%
+call :apDDF _tSSU\000
 %_Null% makecab.exe /F zzz.ddf /D Compress=ON /D CompressionType=MSZIP
-mkdir "_tmpSSU\111"
-if /i not %bit%==x86 if not exist "DesktopDeployment_x86.cab" goto :DDCdu
-rmdir /s /q "_tmpSSU\" %_Nul3%
+if %ERRORLEVEL% neq 0 (
+echo.
+echo makecab.exe %_MSUddc% failed
+set _mcfail=1
+exit /b
+)
+mkdir "_tSSU\111"
+if /i not %arch%==x86 if not exist "DesktopDeployment_x86.cab" goto :DDCdual
+rmdir /s /q "_tSSU\" %_Nul3%
 exit /b
 
 :DDC86
 echo.
-echo Extracting: %_sSSU%
-if exist "_tmpSSU\" rmdir /s /q "_tmpSSU\" %_Nul3%
-mkdir "_tmpSSU\111"
-expand.exe -f:* %_sSSU% _tmpSSU %_Null% || (
-  rmdir /s /q "_tmpSSU\" %_Nul3%
-  echo failed.
-  echo.
-  echo Skipping DesktopDeployment_x86.cab
-  echo see ReadMe.txt for more details
-  goto :eof
+echo Extracting: %_MSUssu%
+if exist "_tSSU\" rmdir /s /q "_tSSU\" %_Nul3%
+mkdir "_tSSU\111"
+expand.exe -f:* "%_MSUssu%" "_tSSU" %_Null% || (
+echo failed.
+echo Skipping DesktopDeployment_x86.cab
+echo see ReadMe.txt for more details
+set _mcfail=1
+rmdir /s /q "_tSSU\" %_Nul3%
+goto :eof
 )
-:DDCdu
-for /f %%# in ('dir /b /ad "_tmpSSU\x86_microsoft-windows-servicingstack_*"') do set "src=%%#"
-for %%# in (%sdl%) do if exist "_tmpSSU\%src%\%%#" (move /y "_tmpSSU\%src%\%%#" "_tmpSSU\111\%%#" %_Nul1%)
-set DD86create=1
-call :DDF %_sDDD%
-call :ADD _tmpSSU\111
+:ssuouter86
+:DDCdual
+for /f %%# in ('dir /b /ad "_tSSU\x86_microsoft-windows-servicingstack_*"') do set "src=%%#"
+for %%# in (%_MSUdll%) do if exist "_tSSU\%src%\%%#" (move /y "_tSSU\%src%\%%#" "_tSSU\111\%%#" %_Nul1%)
+call :crDDF %_MSUddd%
+call :apDDF _tSSU\111
 %_Null% makecab.exe /F zzz.ddf /D Compress=ON /D CompressionType=MSZIP
-rmdir /s /q "_tmpSSU\" %_Nul3%
+if %ERRORLEVEL% neq 0 (
+echo.
+echo makecab.exe %_MSUddd% failed
+set _mcfail=1
+exit /b
+)
+rmdir /s /q "_tSSU\" %_Nul3%
 exit /b
 
-:DDF
+:crDDF
 echo.
-echo Creating: %1
+echo Creating: %~nx1
 (echo .Set DiskDirectoryTemplate="."
 echo .Set CabinetNameTemplate="%1"
 echo .Set MaxCabinetSize=0
@@ -279,7 +350,7 @@ echo .Set Cabinet=ON
 )>zzz.ddf
 exit /b
 
-:ADD
+:apDDF
 (echo .Set SourceDir="%1"
 echo "dpx.dll"
 echo "ReserveManager.dll"
@@ -293,25 +364,24 @@ exit /b
 :dodpx
 set _nat=0
 set _wow=0
-if /i %bit%==%xBT% set _nat=1
+if /i %arch%==%xBT% set _nat=1
 if %_nat% equ 0 set _wow=1
-
-if exist "!_repo!\dpx.dll" if not exist "!_repo!\expand.exe" (
-  if %_wow% equ 1 copy /y %SystemRoot%\SysWOW64\expand.exe "!_repo!\" %_Nul3%
+if %_dpx% equ 0 if exist "!_repo!\dpx.dll" if not exist "!_repo!\expand.exe" (
+  if %_wow% equ 1 copy /y %WowPath%\expand.exe "!_repo!\" %_Nul3%
   if %_nat% equ 1 copy /y %SysPath%\expand.exe "!_repo!\" %_Nul3%
   set _exd=1
   exit /b
 )
-if %_wow% equ 1 if exist "%_sDDD%" (
-expand.exe -f:dpx.dll "%_sDDD%" "!_repo!" %_Nul3%
+if %_wow% equ 1 if exist "%_MSUddd%" (
+expand.exe -f:dpx.dll "%_MSUddd%" "!_repo!" %_Nul3%
 if exist "!_repo!\dpx.dll" (
-  copy /y %SystemRoot%\SysWOW64\expand.exe "!_repo!\" %_Nul3%
+  copy /y %WowPath%\expand.exe "!_repo!\" %_Nul3%
   set _dpx=1
   exit /b
   )
 )
-if %_nat% equ 1 if defined _sDDC (
-expand.exe -f:dpx.dll "%_sDDC%" "!_repo!" %_Nul3%
+if %_nat% equ 1 if defined _MSUddc (
+expand.exe -f:dpx.dll "%_MSUddc%" "!_repo!" %_Nul3%
 if exist "!_repo!\dpx.dll" (
   copy /y %SysPath%\expand.exe "!_repo!\" %_Nul3%
   set _dpx=1
@@ -320,35 +390,21 @@ if exist "!_repo!\dpx.dll" (
 )
 exit /b
 
+:undpx
+if %_exd% equ 1 (
+if exist "expand.exe" del /f /q "expand.exe" %_Nul3%
+)
+if %_dpx% equ 1 (
+if exist "dpx.dll" del /f /q "dpx.dll" %_Nul3%
+if exist "expand.exe" del /f /q "expand.exe" %_Nul3%
+)
+exit /b
+
 :E_Bin
 echo.
 echo %_err%
 echo.
 echo Required file "bin\imagex_%xBT%.exe" is missing
-echo.
-goto :TheEnd
-
-:E_KB
-echo.
-echo %_err%
-echo.
-echo LCU %kbn% %xtn% file is missing
-echo.
-goto :TheEnd
-
-:E_DB
-echo.
-echo %_err%
-echo.
-echo LCUCompDB file is missing from AggregatedMetadata
-echo.
-goto :TheEnd
-
-:N_MS
-echo.
-echo %_ntc%
-echo.
-echo LCU %kbn% msu file already exist
 echo.
 goto :TheEnd
 
@@ -362,20 +418,10 @@ goto :TheEnd
 
 :TheEnd
 if exist "zzz.ddf" del /f /q "zzz.ddf"
-if exist "LCUCompDB*.xml.cab" del /f /q "LCUCompDB*.xml.cab"
-if exist "SSUCompDB*.xml.cab" del /f /q "SSUCompDB*.xml.cab"
-if exist "%onf%" del /f /q "%onf%"
-if %DD86create% equ 1 if exist "DesktopDeployment_x86.cab" del /f /q "DesktopDeployment_x86.cab"
-if %DD64create% equ 1 if exist "DesktopDeployment.cab" del /f /q "DesktopDeployment.cab"
-if %_exd% equ 1 (
-if exist "expand.exe" del /f /q "expand.exe" %_Nul3%
-)
-if %_dpx% equ 1 (
-if exist "dpx.dll" del /f /q "dpx.dll" %_Nul3%
-if exist "expand.exe" del /f /q "expand.exe" %_Nul3%
-)
 if exist "_tWIM\" rmdir /s /q "_tWIM\" %_Nul3%
+if exist "_tSSU\" rmdir /s /q "_tSSU\" %_Nul3%
 if exist "_tMSU\" rmdir /s /q "_tMSU\" %_Nul3%
+call :undpx
 %_Exit%
 %_Pause%
 goto :eof

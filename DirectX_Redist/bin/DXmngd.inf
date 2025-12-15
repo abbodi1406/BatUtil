@@ -1,0 +1,356 @@
+; Credits:
+; * DXCB - DirectX Collector and addon Builder Ver: 2.2.1 - 2011-12-14
+; Written by: bphlpt using work by redxii as a model
+; * INF AddOn Template: *Reaper*
+; * INF tips and tricks: ricktendo / ricktendo64
+; * LaunchINFSectionEx: Yumeyao
+
+[Version]
+Signature=$Windows NT$
+
+[DefaultInstall.ntx86]
+RegisterDLLs           =Start.Registerx86
+
+[DefaultInstall.ntamd64]
+RegisterDLLs           =Start.Registerx64
+
+[Install.ntx86]
+OptionDesc             =%AppName%
+Tip                    =%Comment%
+Modes                  =0,1,2,3
+BeginPrompt            =BeginInsPrompt
+CopyFiles              =DX2902.Copy,DX2903.Copy,DX2904.Copy,DX2905.Copy,DX2906.Copy,DX2907.Copy,DX2908.Copy,DX2909.Copy,DX2910.Copy,DX2911.Copy,MDXGAC.Copy, @DXmngd.inf
+AddReg                 =MDX.Install
+RunPostSetupCommands   =GAC.Install:1
+EndPrompt              =EndInsPrompt
+
+[Install.ntamd64]
+OptionDesc             =%AppName%
+Tip                    =%Comment%
+Modes                  =0,1,2,3
+BeginPrompt            =BeginInsPrompt
+CopyFiles              =DX2902.Copy,DX2903.Copy,DX2904.Copy,DX2905.Copy,DX2906.Copy,DX2907.Copy,DX2908.Copy,DX2909.Copy,DX2910.Copy,DX2911.Copy,MDXGAC.Copy, @DXmngd.inf
+AddReg                 =MDX.wow.Install
+RunPostSetupCommands   =GAC.Install:1
+EndPrompt              =EndInsPrompt
+
+[Passive.ntx86]
+CopyFiles              =DX2902.Copy,DX2903.Copy,DX2904.Copy,DX2905.Copy,DX2906.Copy,DX2907.Copy,DX2908.Copy,DX2909.Copy,DX2910.Copy,DX2911.Copy,MDXGAC.Copy, @DXmngd.inf
+AddReg                 =MDX.Install
+RunPostSetupCommands   =GAC.Install:1
+
+[Passive.ntamd64]
+CopyFiles              =DX2902.Copy,DX2903.Copy,DX2904.Copy,DX2905.Copy,DX2906.Copy,DX2907.Copy,DX2908.Copy,DX2909.Copy,DX2910.Copy,DX2911.Copy,MDXGAC.Copy, @DXmngd.inf
+AddReg                 =MDX.wow.Install
+RunPostSetupCommands   =GAC.Install:1
+
+[Uninstall.ntx86]
+BeginPrompt            =BeginUnInsPrompt
+EndPrompt              =EndUnInsPrompt
+RunPreSetupCommands    =GAC.Uninstall:1
+DelReg                 =MDX.Uninstall
+DelFiles               =DX2902.Copy,DX2903.Copy,DX2904.Copy,DX2905.Copy,DX2906.Copy,DX2907.Copy,DX2908.Copy,DX2909.Copy,DX2910.Copy,DX2911.Copy,MDXGAC.Copy, Inf.File, PNF.File
+RunPostSetupCommands   =DelDirsSection
+
+[Uninstall.ntamd64]
+BeginPrompt            =BeginUnInsPrompt
+EndPrompt              =EndUnInsPrompt
+RunPreSetupCommands    =GAC.Uninstall:1
+DelReg                 =MDX.wow.Uninstall
+DelFiles               =DX2902.Copy,DX2903.Copy,DX2904.Copy,DX2905.Copy,DX2906.Copy,DX2907.Copy,DX2908.Copy,DX2909.Copy,DX2910.Copy,DX2911.Copy,MDXGAC.Copy, Inf.File, PNF.File
+RunPostSetupCommands   =DelDirsSection
+
+[BeginInsPrompt]
+Title                  =%TitleInsPrompt%
+Prompt                 =%BeginInsPrompt%
+ButtonType             =YESNO
+
+[EndInsPrompt]
+Prompt                 =%EndInsPrompt%
+
+[BeginUnInsPrompt]
+Title                  =%TitleUnInsPrompt%
+Prompt                 =%BeginUnInsPrompt%
+ButtonType             =YESNO
+
+[EndUnInsPrompt]
+Prompt                 =%EndUnInsPrompt%
+
+[Inf.File]
+DXmngd.inf
+
+[PNF.File]
+DXmngd.PNF
+
+[SourceDisksNames.x86]
+1 = %DiskId%
+
+[SourceDisksNames.amd64]
+1 = %DiskId%
+
+[DestinationDirs]
+DX2902.Copy            =10, %COPYDX2902%
+DX2903.Copy            =10, %COPYDX2903%
+DX2904.Copy            =10, %COPYDX2904%
+DX2905.Copy            =10, %COPYDX2905%
+DX2906.Copy            =10, %COPYDX2906%
+DX2907.Copy            =10, %COPYDX2907%
+DX2908.Copy            =10, %COPYDX2908%
+DX2909.Copy            =10, %COPYDX2909%
+DX2910.Copy            =10, %COPYDX2910%
+DX2911.Copy            =10, %COPYDX2911%
+MDXGAC.Copy            =10, %COPYMDXGAC%
+Inf.File               =10, inf
+PNF.File               =10, inf
+DefaultDestDir         =17
+
+[SourceDisksFiles.x86]
+2902avp.dll=1
+2902avp.xml=1
+2902dia.dll=1
+2902dia.xml=1
+2902d3d.dll=1
+2902d3d.xml=1
+29023dx.dll=1
+29023dx.xml=1
+2902drw.dll=1
+2902drw.xml=1
+2902inp.dll=1
+2902inp.xml=1
+2902pla.dll=1
+2902pla.xml=1
+2902snd.dll=1
+2902snd.xml=1
+2902NO.dll=1
+2902NO.xml=1
+29033dx.dll=1
+29033dx.xml=1
+29043dx.dll=1
+29043dx.xml=1
+29053dx.dll=1
+29053dx.xml=1
+29063dx.dll=1
+29063dx.xml=1
+29073dx.dll=1
+29073dx.xml=1
+29083dx.dll=1
+29083dx.xml=1
+29093dx.dll=1
+29093dx.xml=1
+29103dx.dll=1
+29103dx.xml=1
+29113dx.dll=1
+29113dx.xml=1
+mdxi.exe=1
+mdxu.exe=1
+
+[SourceDisksFiles.amd64]
+2902avp.dll=1
+2902avp.xml=1
+2902dia.dll=1
+2902dia.xml=1
+2902d3d.dll=1
+2902d3d.xml=1
+29023dx.dll=1
+29023dx.xml=1
+2902drw.dll=1
+2902drw.xml=1
+2902inp.dll=1
+2902inp.xml=1
+2902pla.dll=1
+2902pla.xml=1
+2902snd.dll=1
+2902snd.xml=1
+2902NO.dll=1
+2902NO.xml=1
+29033dx.dll=1
+29033dx.xml=1
+29043dx.dll=1
+29043dx.xml=1
+29053dx.dll=1
+29053dx.xml=1
+29063dx.dll=1
+29063dx.xml=1
+29073dx.dll=1
+29073dx.xml=1
+29083dx.dll=1
+29083dx.xml=1
+29093dx.dll=1
+29093dx.xml=1
+29103dx.dll=1
+29103dx.xml=1
+29113dx.dll=1
+29113dx.xml=1
+mdxi.exe=1
+mdxu.exe=1
+
+[DX2902.Copy]
+Microsoft.DirectX.AudioVideoPlayback.xml,2902avp.xml,,0x00010000
+Microsoft.DirectX.AudioVideoPlayback.dll,2902avp.dll,,0x00010000
+Microsoft.DirectX.Diagnostics.xml,2902dia.xml,,0x00010000
+Microsoft.DirectX.Diagnostics.dll,2902dia.dll,,0x00010000
+Microsoft.DirectX.Direct3D.xml,2902d3d.xml,,0x00010000
+Microsoft.DirectX.Direct3D.dll,2902d3d.dll,,0x00010000
+Microsoft.DirectX.Direct3DX.xml,29023dx.xml,,0x00010000
+Microsoft.DirectX.Direct3DX.dll,29023dx.dll,,0x00010000
+Microsoft.DirectX.DirectDraw.xml,2902drw.xml,,0x00010000
+Microsoft.DirectX.DirectDraw.dll,2902drw.dll,,0x00010000
+Microsoft.DirectX.DirectInput.xml,2902inp.xml,,0x00010000
+Microsoft.DirectX.DirectInput.dll,2902inp.dll,,0x00010000
+Microsoft.DirectX.DirectPlay.xml,2902pla.xml,,0x00010000
+Microsoft.DirectX.DirectPlay.dll,2902pla.dll,,0x00010000
+Microsoft.DirectX.DirectSound.xml,2902snd.xml,,0x00010000
+Microsoft.DirectX.DirectSound.dll,2902snd.dll,,0x00010000
+Microsoft.DirectX.xml,2902NO.xml,,0x00010000
+Microsoft.DirectX.dll,2902NO.dll,,0x00010000
+
+[DX2903.Copy]
+Microsoft.DirectX.Direct3DX.xml,29033dx.xml,,0x00010000
+Microsoft.DirectX.Direct3DX.dll,29033dx.dll,,0x00010000
+
+[DX2904.Copy]
+Microsoft.DirectX.Direct3DX.xml,29043dx.xml,,0x00010000
+Microsoft.DirectX.Direct3DX.dll,29043dx.dll,,0x00010000
+
+[DX2905.Copy]
+Microsoft.DirectX.Direct3DX.xml,29053dx.xml,,0x00010000
+Microsoft.DirectX.Direct3DX.dll,29053dx.dll,,0x00010000
+
+[DX2906.Copy]
+Microsoft.DirectX.Direct3DX.xml,29063dx.xml,,0x00010000
+Microsoft.DirectX.Direct3DX.dll,29063dx.dll,,0x00010000
+
+[DX2907.Copy]
+Microsoft.DirectX.Direct3DX.xml,29073dx.xml,,0x00010000
+Microsoft.DirectX.Direct3DX.dll,29073dx.dll,,0x00010000
+
+[DX2908.Copy]
+Microsoft.DirectX.Direct3DX.xml,29083dx.xml,,0x00010000
+Microsoft.DirectX.Direct3DX.dll,29083dx.dll,,0x00010000
+
+[DX2909.Copy]
+Microsoft.DirectX.Direct3DX.xml,29093dx.xml,,0x00010000
+Microsoft.DirectX.Direct3DX.dll,29093dx.dll,,0x00010000
+
+[DX2910.Copy]
+Microsoft.DirectX.Direct3DX.xml,29103dx.xml,,0x00010000
+Microsoft.DirectX.Direct3DX.dll,29103dx.dll,,0x00010000
+
+[DX2911.Copy]
+Microsoft.DirectX.Direct3DX.xml,29113dx.xml,,0x00010000
+Microsoft.DirectX.Direct3DX.dll,29113dx.dll,,0x00010000
+
+[MDXGAC.Copy]
+mdxi.exe,,,0x00010000
+mdxu.exe,,,0x00010000
+
+[MDX.Install]
+HKLM,"%ASMREG%\DX_1.0.2902.0",,,"%10%\%COPYDX2902%\"
+HKLM,"%ASMREG%\DX_1.0.2903.0",,,"%10%\%COPYDX2903%\"
+HKLM,"%ASMREG%\DX_1.0.2904.0",,,"%10%\%COPYDX2904%\"
+HKLM,"%ASMREG%\DX_1.0.2905.0",,,"%10%\%COPYDX2905%\"
+HKLM,"%ASMREG%\DX_1.0.2906.0",,,"%10%\%COPYDX2906%\"
+HKLM,"%ASMREG%\DX_1.0.2907.0",,,"%10%\%COPYDX2907%\"
+HKLM,"%ASMREG%\DX_1.0.2908.0",,,"%10%\%COPYDX2908%\"
+HKLM,"%ASMREG%\DX_1.0.2909.0",,,"%10%\%COPYDX2909%\"
+HKLM,"%ASMREG%\DX_1.0.2910.0",,,"%10%\%COPYDX2910%\"
+HKLM,"%ASMREG%\DX_1.0.2911.0",,,"%10%\%COPYDX2911%\"
+HKLM,"%UnKey%\%AppName%","DisplayIcon",,"%11%\msiexec.exe,0"
+HKLM,"%UnKey%\%AppName%","DisplayName",,"Microsoft %AppName%"
+HKLM,"%UnKey%\%AppName%","DisplayVersion",,"%Version%"
+HKLM,"%UnKey%\%AppName%","HelpLink",,"https://aka.ms/dxsetup"
+HKLM,"%UnKey%\%AppName%","URLInfoAbout",,"http://go.microsoft.com/fwlink/?LinkID=194352"
+HKLM,"%UnKey%\%AppName%","Publisher",,"Microsoft Corporation"
+HKLM,"%UnKey%\%AppName%","UninstallString",,"rundll32.exe advpack.dll,LaunchINFSection DXmngd.inf,Uninstall"
+HKLM,"%UnKey%\%AppName%","NoModify",0x00010001,0x1
+HKLM,"%UnKey%\%AppName%","NoRepair",0x00010001,0x1
+HKLM,"%UnKey%\%AppName%","EstimatedSize",0x00010001,0x9ebb
+
+[MDX.Uninstall]
+HKLM,"%ASMREG%\DX_1.0.2902.0"
+HKLM,"%ASMREG%\DX_1.0.2903.0"
+HKLM,"%ASMREG%\DX_1.0.2904.0"
+HKLM,"%ASMREG%\DX_1.0.2905.0"
+HKLM,"%ASMREG%\DX_1.0.2906.0"
+HKLM,"%ASMREG%\DX_1.0.2907.0"
+HKLM,"%ASMREG%\DX_1.0.2908.0"
+HKLM,"%ASMREG%\DX_1.0.2909.0"
+HKLM,"%ASMREG%\DX_1.0.2910.0"
+HKLM,"%ASMREG%\DX_1.0.2911.0"
+HKLM,"%UnKey%\%AppName%"
+
+[MDX.wow.Install]
+HKLM,"%ASMWOW%\DX_1.0.2902.0",,,"%10%\%COPYDX2902%\"
+HKLM,"%ASMWOW%\DX_1.0.2903.0",,,"%10%\%COPYDX2903%\"
+HKLM,"%ASMWOW%\DX_1.0.2904.0",,,"%10%\%COPYDX2904%\"
+HKLM,"%ASMWOW%\DX_1.0.2905.0",,,"%10%\%COPYDX2905%\"
+HKLM,"%ASMWOW%\DX_1.0.2906.0",,,"%10%\%COPYDX2906%\"
+HKLM,"%ASMWOW%\DX_1.0.2907.0",,,"%10%\%COPYDX2907%\"
+HKLM,"%ASMWOW%\DX_1.0.2908.0",,,"%10%\%COPYDX2908%\"
+HKLM,"%ASMWOW%\DX_1.0.2909.0",,,"%10%\%COPYDX2909%\"
+HKLM,"%ASMWOW%\DX_1.0.2910.0",,,"%10%\%COPYDX2910%\"
+HKLM,"%ASMWOW%\DX_1.0.2911.0",,,"%10%\%COPYDX2911%\"
+HKLM,"%UnKey%\%AppName%","DisplayIcon",,"%11%\msiexec.exe,0"
+HKLM,"%UnKey%\%AppName%","DisplayName",,"Microsoft %AppName%"
+HKLM,"%UnKey%\%AppName%","DisplayVersion",,"%Version%"
+HKLM,"%UnKey%\%AppName%","HelpLink",,"https://aka.ms/dxsetup"
+HKLM,"%UnKey%\%AppName%","URLInfoAbout",,"http://go.microsoft.com/fwlink/?LinkID=194352"
+HKLM,"%UnKey%\%AppName%","Publisher",,"Microsoft Corporation"
+HKLM,"%UnKey%\%AppName%","UninstallString",,"rundll32.exe advpack.dll,LaunchINFSection DXmngd.inf,Uninstall"
+HKLM,"%UnKey%\%AppName%","NoModify",0x00010001,0x1
+HKLM,"%UnKey%\%AppName%","NoRepair",0x00010001,0x1
+HKLM,"%UnKey%\%AppName%","EstimatedSize",0x00010001,0x9ebb
+
+[MDX.wow.Uninstall]
+HKLM,"%ASMWOW%\DX_1.0.2902.0"
+HKLM,"%ASMWOW%\DX_1.0.2903.0"
+HKLM,"%ASMWOW%\DX_1.0.2904.0"
+HKLM,"%ASMWOW%\DX_1.0.2905.0"
+HKLM,"%ASMWOW%\DX_1.0.2906.0"
+HKLM,"%ASMWOW%\DX_1.0.2907.0"
+HKLM,"%ASMWOW%\DX_1.0.2908.0"
+HKLM,"%ASMWOW%\DX_1.0.2909.0"
+HKLM,"%ASMWOW%\DX_1.0.2910.0"
+HKLM,"%ASMWOW%\DX_1.0.2911.0"
+HKLM,"%UnKey%\%AppName%"
+
+[GAC.Install]
+"%10%\%COPYMDXGAC%\mdxi.exe"
+
+[GAC.Uninstall]
+"%10%\%COPYMDXGAC%\mdxu.exe"
+
+[Start.Registerx86]
+11,,rundll32.exe,,,"advpack.dll,LaunchINFSection %1%\DXmngd.inf,Install.ntx86"
+
+[Start.Registerx64]
+11,,rundll32.exe,,,"advpack.dll,LaunchINFSection %1%\DXmngd.inf,Install.ntamd64"
+
+[DelDirsSection]
+rundll32 advpack.dll,DelNodeRunDLL32 "%10%\%COPYMDXGAC%",8
+
+[Strings]
+DiskId                 ="DirectXManaged"
+AppName                ="DirectX Managed Assemblies"
+Comment                ="Managed DirectX 1.1"
+Version                ="1.1"
+TitleInsPrompt         ="Microsoft DirectX Setup"
+BeginInsPrompt         ="This will install Managed DirectX. Do you wish to continue?"
+EndInsPrompt           ="Managed DirectX has been installed successfully."
+TitleUnInsPrompt       ="Programs and Features"
+BeginUnInsPrompt       ="Are you sure you want to uninstall Managed DirectX?"
+EndUnInsPrompt         ="Managed DirectX has been uninstalled successfully."
+UnKey                  ="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+COPYDX2902             ="Microsoft.NET\DirectX for Managed Code\1.0.2902.0"
+COPYDX2903             ="Microsoft.NET\DirectX for Managed Code\1.0.2903.0"
+COPYDX2904             ="Microsoft.NET\DirectX for Managed Code\1.0.2904.0"
+COPYDX2905             ="Microsoft.NET\DirectX for Managed Code\1.0.2905.0"
+COPYDX2906             ="Microsoft.NET\DirectX for Managed Code\1.0.2906.0"
+COPYDX2907             ="Microsoft.NET\DirectX for Managed Code\1.0.2907.0"
+COPYDX2908             ="Microsoft.NET\DirectX for Managed Code\1.0.2908.0"
+COPYDX2909             ="Microsoft.NET\DirectX for Managed Code\1.0.2909.0"
+COPYDX2910             ="Microsoft.NET\DirectX for Managed Code\1.0.2910.0"
+COPYDX2911             ="Microsoft.NET\DirectX for Managed Code\1.0.2911.0"
+COPYMDXGAC             ="Microsoft.NET\DirectX for Managed Code"
+ASMREG                 ="SOFTWARE\Microsoft\.NETFramework\AssemblyFolders"
+ASMWOW                 ="SOFTWARE\WOW6432Node\Microsoft\.NETFramework\AssemblyFolders"

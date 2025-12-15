@@ -52,6 +52,7 @@ Microsoft.DesktopAppInstaller_8wekyb3d8bbwe
 # Microsoft.MicrosoftPCManager_8wekyb3d8bbwe
 # Microsoft.StartExperiencesApp_8wekyb3d8bbwe
 # Microsoft.WidgetsPlatformRuntime_8wekyb3d8bbwe
+# Microsoft.Copilot_8wekyb3d8bbwe
 
 ### Media Apps / Client non-N editions
 # Microsoft.ZuneMusic_8wekyb3d8bbwe

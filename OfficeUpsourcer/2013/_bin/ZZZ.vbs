@@ -1,0 +1,1 @@
+Wscript.Quit 48

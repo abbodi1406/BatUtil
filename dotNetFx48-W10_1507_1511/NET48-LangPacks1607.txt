@@ -1,0 +1,108 @@
+Microsoft .NET Framework 4.8 Language Packs for Windows 10 Version 1607 (KB4087515)
+
+- Make sure to install update KB4486129 first
+- You need to install the file matching your system's display language.
+- You can install multiple files if your system has more than one display language.
+- If your language is not listed, then your system do not need extra language pack.
+
+================================================================
+
+Download 32-bit (x86):
+
+Arabic (ar-SA)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486130-x86_2f13d180f47d3db30af63d48ea0d1c76becf14fc.msu
+Chinese-China (zh-CN)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486131-x86_f9b1c5794a9a399a4f3ee2b1b72d9d304b3884ab.msu
+Chinese-Taiwan (zh-TW)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486132-x86_b48a70bcce683483fed1edc0fc595b8158c95db2.msu
+Czech (cs-CZ)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486133-x86_ea0ddbfb5309873fba725ca3d4922bc105c2ff08.msu
+Danish (da-DK)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486134-x86_b6fe3454fae5ae51b80769078c0a34c20444b6b5.msu
+German (de-DE)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486135-x86_0aacc9c69807ae868882ec279e275d4da3ae7beb.msu
+Greek (el-GR)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486136-x86_a946d4887ce8eb86486757c41441d4437f00580d.msu
+Spanish (es-ES)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486137-x86_858fa135eec9af95367e6a96e3200374a28fac8f.msu
+Finnish (fi-FI)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486138-x86_6a817eba6c0d1dc8251617d00b0d1bccc6909a5b.msu
+French (fr-FR)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486139-x86_d208937c561ff60985e3dea427205f0208c39f47.msu
+Hebrew (he-IL)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486140-x86_035d96e2b3423c2ef94c67919565f7d89da07d5c.msu
+Hungarian (hu-HU)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486141-x86_f2e034a3efaf588edfc3a94b1337901dd01f89bf.msu
+Italian (it-IT)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486142-x86_279e23325ace3ad7d5416fa13421f0678726a5c8.msu
+Japanese (ja-JP)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486143-x86_fca6b0d79d834e7edebf7d00fdffa45d9e2c4477.msu
+Korean (ko-KR)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486144-x86_e11dae34a09f05eb762a3667b173cb7a9bb7d604.msu
+Dutch (nl-NL)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486145-x86_1c8df639ba75b30257eaf106f9151bf7537f61e8.msu
+Norwegian (nb- NO)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486146-x86_18b628c22081fe31702dd44444f1feb4e7066c9a.msu
+Polish (pl-PL)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486147-x86_b71bdc830d61d815f32e165a352dbff0f1db1165.msu
+Portuguese - Brazil (pt-BR)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486148-x86_143ff731a89ec7a7e22d85ad37390cfe86ae21c8.msu
+Portuguese - Portugal (pt- PT)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486149-x86_093311cc4b56448d68af9414e07b86eb4fe8f12e.msu
+Russian (ru-RU)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486150-x86_7ea7a2a64fbf2c19b603157d47d717705c9aaedc.msu
+Swedish (sv-SE)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486151-x86_5d87cc69200ca229deeb31d2444a395ba7c52b5b.msu
+Turkish (tr-TR)
+http://download.windowsupdate.com/c/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486152-x86_a0d78f419ae23cb56b927ef379760044b7d23f96.msu
+
+================================================================
+
+Download 64-bit (x64):
+
+Arabic (ar-SA)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486130-x64_d6142b5af88538a6cfa6330f50d69e38c52b13d7.msu
+Chinese-China (zh-CN)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486131-x64_d465cd43653b92a9b8ee7a4ed4ad671e33699f67.msu
+Chinese-Taiwan (zh-TW)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486132-x64_b0f730756fe128e1e4aced10fba3107f9155baf8.msu
+Czech (cs-CZ)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486133-x64_ddf6d2c5060bd86891ed433a426b8f62410c7626.msu
+Danish (da-DK)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486134-x64_f036b53a7863ba35c9675710fde5a1baa641aa99.msu
+German (de-DE)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486135-x64_86d6823a7c80977389e985fcf9b100d2924770cf.msu
+Greek (el-GR)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486136-x64_a4f7eab1ce43ff4d4d22965f500d7058270ed8d3.msu
+Spanish (es-ES)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486137-x64_f16041b9003e9da6463827ec26c5c7c9c72e99af.msu
+Finnish (fi-FI)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486138-x64_8b1a1412ac93e95ab1416ee593bcb20e2a8130a5.msu
+French (fr-FR)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486139-x64_4fcd87960ecead7059e1e0cee5073dc607bed889.msu
+Hebrew (he-IL)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486140-x64_0588c9bd2f8842449c952f2286536c17f3767cd6.msu
+Hungarian (hu-HU)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486141-x64_f1046794f614d22712d3036665a438b5933ddf9b.msu
+Italian (it-IT)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486142-x64_45f351dffdd05f6ca259eac09ac7a26ca8cddabd.msu
+Japanese (ja-JP)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486143-x64_f17e2d978784706715ed5cc59ef3a6c3f4d1e647.msu
+Korean (ko-KR)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486144-x64_ab7219ec23f3f5c080f2b960538bc4f1352bf62a.msu
+Dutch (nl-NL)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486145-x64_95ce013be454fdeff777adee3ac099a68e0d712f.msu
+Norwegian (nb- NO)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486146-x64_9295afe4366e89dae8a6731f7d598959c44a32ad.msu
+Polish (pl-PL)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486147-x64_b316b3e7712a4ad67bf2735e2d55f6f29158442f.msu
+Portuguese - Brazil (pt-BR)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486148-x64_b2822d7dc0bb47cfea276c86ac2799eeebce2a1c.msu
+Portuguese - Portugal (pt- PT)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486149-x64_803d4a30d4b5c4791f73da66db01cc71219c033f.msu
+Russian (ru-RU)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486150-x64_aa66bed541a67eabf39f41f8ea1be9287d4670db.msu
+Swedish (sv-SE)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486151-x64_8274022414f1fbd29229e803ba6d0713666d0ef7.msu
+Turkish (tr-TR)
+http://download.windowsupdate.com/d/msdownload/update/software/ftpk/2019/08/windows10.0-kb4486152-x64_3169390b2ad378adcffe912f1bf2d4349e6d32bd.msu

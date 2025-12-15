@@ -10,6 +10,8 @@
 
 Additionally, when uninstalling Office 2013+ on Windows 8 or later, the licenses will be left installed in the system SPP token store
 
+* `OfficeScrubberAIO.cmd` is a standalone variant that have the binaries embedded, and it require Windows Powershell
+
 ## Scrub ALL Overview
 
 * By default, this operation will remove detected versions only  
@@ -116,10 +118,9 @@ Scrub ALL
 
 * Note:
 
-Scrub ALL parameter will only remove the detected version and the default versions (as explained in Overview)
+**Scrub ALL** parameter will only remove the detected version and the default versions (as explained in Overview)
 
 to force scrubbing multiple or other versions regardless detection, specify their parameters too
 
-example, this will scrub detected and default versions, plus Office 2013 and 2003:
-
+example, this will scrub detected and default versions, plus Office 2013 and 2003:  
 `OfficeScrubber.cmd /A /M2 /M5`

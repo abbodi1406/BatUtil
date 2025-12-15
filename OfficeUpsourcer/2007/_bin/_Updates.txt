@@ -1,0 +1,424 @@
+[ Security Update for Microsoft Office Access 2007 (KB2596614) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2015/10/access-x-none_94bb0571b974e7b019dfa9fcae3cc459ef0132a7.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2596825) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2013/08/ace-x-none_3ba0467e65edec6f29d483fc745cfa69ab6c3ab3.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB3213646) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-ar-sa_21f6bc1a57317f774fb828097bea9cbd946c3e5c.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-bg-bg_cf1963743ef0e4ac4173986121b92889e280aeb2.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-cs-cz_f3deea7f6d115477d3fac1f2cf6c8b096f72ae62.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-da-dk_a0115487e79bfd1a3f610fbb2d75a5bd75373f22.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-de-de_b50a3940154a6cec261ea01811661f67c6cbe10f.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-el-gr_e30f131c63e7f17b1ef5c5f1456f0820b0bf8bac.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-en-us_0bea0c27e57296c4c13575ecd8884fc6be8ae77c.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-es-es_3000d41f4c090cb5b72baefd44077587eea5674f.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-et-ee_9a5d6b43a199d3560fec89016462f9b8f1e8ca3b.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-fi-fi_8d1c5942b14d255192c598e51549cbc918a2f5d2.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-fr-fr_c4d5c4abf7e5b88f47df1e80d8d663081167b4fc.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-he-il_90ed00b6de372e0702f8c4be828a2a332b528f7d.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-hi-in_dc15697c17bb3e007739e0f8c2a9a1506b773b81.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-hr-hr_bc22beac4f3bfe07a2db6ef645417b6f7f2f58e5.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-hu-hu_8ff8a4eb7399075a5ee4913c7ff1076f1b08e32a.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-it-it_44e8513c2b7b89b9e8f51467f4782fd17ff51285.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-ja-jp_a1e328e16c0a8ae96d46201fc8315abd8551608c.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-kk-kz_8b160730b74135dcbeca1cbe9cdd2af3782e91c2.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-ko-kr_db6aa55605e1cd1bf0fcff32ad04267e18ac1fe6.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-lt-lt_840a927d6b5e3c0cbb781bf60c47366b65222fdc.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-lv-lv_abbd90a7507f62e235618d65b81cab3122c5ce8e.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-nb-no_f170b0c9be11fb93dd64c2233597a1fbe95830a3.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-nl-nl_77dd86caad93c6ce691f2f2c00c53ffc36e5d78f.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-pl-pl_0bb95045d0504cb15f9f842ff4bccb371a7e623e.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-pt-br_52e9480453dad58a4384cf88f03c8755ac282b06.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-pt-pt_82c299602f1f70d84481f1a3bc011acedc267680.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-ro-ro_660c0691b3c1a200b2d5d988639536280709db25.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-ru-ru_a6eb5a4f6e2c6433df7eaae95795d629f1195ea8.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-sk-sk_56ebc19875582f709864b0c042fba613a43baa50.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-sl-si_393f6317d4f844c5ce98b7e693341d15906ef6a6.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-sr-latn-cs_fdbca65a0fc3b7f95d760be1f4f35cd9f275744f.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-sv-se_b058d6ce33da97b4f8184f7ce72c56c350642f9a.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-th-th_a21a2a03d4f94b3cc6fe47d761a86f76ccfe229d.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-tr-tr_f785cbe6036a2a34185c8386e7d43e6e534407a5.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-uk-ua_f1836e63c6290213ad748d5b68129a9ca7aecae8.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-zh-cn_0860448ef01fecb1ba6e991c7e782ce74dcef04d.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-zh-hk_19bb7305cfa1eb8116eb10582d1157440d518903.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/conv-zh-tw_78613c6a00d7999a067464607c64aba02eab43aa.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB4011656) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-ar-sa_ec90b39910605f4b8aa2aa580676a4da0e1e51f7.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-bg-bg_b4557aaa89e240cb3503d2716a44940ec62a421b.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-cs-cz_faacae024be548dc5d709143882ed05c8bc10f7b.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-da-dk_91e78abc6ccd8c451ece925a225e8fdd978458cb.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-de-de_bf11f96dc4acc1e3b0692bfc799c1668d02b6941.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-el-gr_8f056d7eb0cc7dc5b4f202f068bddc18995a9cec.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-en-us_d914258e92be1b0d80a7f045731796a333e1ecf9.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-es-es_fe40994b0cb52bc5a7e0a3986f716163e34cac71.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-et-ee_4811621d177a02b766bf34cbc51bcfd057ab3a90.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-fi-fi_8671c371c2fa0f94aa1bf9d01db12dbb1df9d451.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-fr-fr_a6a4c0d3358b76fe0b1391205e741aa20ce7a477.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-he-il_6e2fdc1b04972eb437222ff8a84ff9b18cdd9697.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-hi-in_834fdc98cab670bfab781c75809d600bb130f995.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-hr-hr_5cdda4c53631127f8adc857d543e12619ee7b33d.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-hu-hu_1405d55e6139fefda56dc7842ffdc34e1158ca2b.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-it-it_40cd9d394c184c7eb7413cd1649610f5ab7681bc.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-ja-jp_091549d3804cfb6cb4a318849bb02afdb3bfc28f.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-kk-kz_64fc58b6fd2d27e1dfdae50bd81337af46b8df3d.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-ko-kr_8781b5b02e90ec00d6e0db50ea4b33c43d48d845.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-lt-lt_aab2350c971ecf60ca061eef32a5df695a7096f0.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-lv-lv_d6f2631b1d6fdf3a8c854dc4824ddad66733bccf.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-nb-no_1b2e4901a3a77cbda6c50bb3033d191191a898bd.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-nl-nl_7e34c01d426e4fc0a07272f811e631faf1ffade3.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-pl-pl_8484c3c3b53ea3c01424b6bf2d40ba2639875164.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-pt-br_8edd3d99f484b852bcc0daa629c4b328bbca62d3.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-pt-pt_1d68832c0bcf57dc6c1450043758bb36c30b5a11.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-ro-ro_b3dacb482b5fd684d9b2628cf3ea4ba096e57ca5.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-ru-ru_e11f6f09dd43f5bfcc089ac9fbdd523d1570f0e9.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-sk-sk_07513172a2dacf64711e58133b113615122c9046.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-sl-si_f7a4b7cf9741caa799f52df526ca605db5a5c68d.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-sr-latn-cs_97bfd11046bccb4acae7f2ccd17b958d376eb91f.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-sv-se_2ab00d48af563ff226bf60b554100d233187ef3d.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-th-th_0d3e31a6755f66859ce7e465ef39b781cfb598d7.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-tr-tr_10d3bece51a4d5578bb2baec1ddecb4218376f1d.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-uk-ua_3fd99b83227d2de8e704e24883987f7eb8ef1c23.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-zh-cn_541c3882434ec9a466300f9579e78c60d793b4e5.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-zh-hk_637f56d93a3d7968044d754c4c7ddb2bc37ce01b.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/12/eqnedt32-zh-tw_b8c5ee62b6ba2951868abc8bc316a3e19d5ee17b.cab
+
+[ Security Update for Microsoft Office Excel 2007 (KB4018353) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2018/03/excel-x-none_63301c149948cb9611f4d602c062c8667a1142b5.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2596927) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2014/11/fm20-x-none_92763f2d8e8eb8ca5bbb5c82deb5b0da19d0637a.cab
+
+[ Update for Microsoft Office 2007 suites (KB2965286) ]
+http://download.windowsupdate.com/d/msdownload/update/software/crup/2015/07/fm20-x-none_547d2955145167dfdd485605d30173a35d36a834.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2597969) ]
+http://download.windowsupdate.com/msdownload/update/software/secu/2012/04/graph-x-none_227b016896b8df0fbaf847d9efef99c64e61e4e9.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2596650) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2015/07/ieawsdc-x-none_724e0bda5052a709502837a58fb61bcfadecd2b2.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2899473) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2015/11/ime32-ja-jp_934c876c5fba41be5e66e2c36ae070f92ff42ccf.cab
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2015/11/ime64-ja-jp_ec3d45188ec41b65e060fafc3e26233bb6e301c8.cab
+
+[ Security Update for Microsoft Office InfoPath 2007 (KB3114426) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2016/02/infopath-x-none_71d2a0afc26bf3bb6e562e4338bd0c6fb0de995e.cab
+
+[ Security Update for Microsoft Office InfoPath 2007 (KB2687440) ]
+http://download.windowsupdate.com/msdownload/update/software/secu/2012/09/ipeditor-x-none_26db2600931e6d35cdf5f1f48f0db17256b508b6.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2596792) ]
+http://download.windowsupdate.com/msdownload/update/software/secu/2012/04/mdivwctl-x-none_dba4c97c15c18bd37b7bf8b0a77bbc041a3f1493.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2880508) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2014/04/msaddndr-x-none_f89a844529ada1c13dad41d7134728961fbd0daf.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2881067) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2015/12/mscomctlocx-x-none_c3f4413edca140fc4410f20fbc71d2cf9f248902.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2596754) ]
+http://download.windowsupdate.com/msdownload/update/software/secu/2012/08/msconv97-x-none_9ce382047f6934c9e8517c408f8475b85e7f75ef.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2850022) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2013/11/mshelp-x-none_9b2804fa67221580841e0cc8ae42ec8d6891f284.cab
+
+[ Security Update for Microsoft Office Excel Viewer 2007 (KB2596760) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/12/msohevi-x-none_e48c60973af4804fe2332736e11b87730e753db6.cab
+
+[ Security Update for Microsoft Office Viewers Microsoft Office Compatibility Pack (KB4092465) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2019/02/mso-x-none_2691005d80512c451fabd2ba8f749718663917f4.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB3085549) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2015/11/msptls-x-none_a5d776f93ef02716fd846433094b66f5c3587a94.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2880507) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2014/04/msstdfmt-x-none_cb82f2054646404a4f3f225fb7d8beda42f723e0.cab
+
+[ Update for Microsoft Office 2007 suites (KB2596787) ]
+http://download.windowsupdate.com/c/msdownload/update/software/crup/2015/02/mstore-x-none_2fc3379c8483383f609351987bc30e1d5916a5f4.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2825645) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2015/07/msxml5-x-none_bde91082d8c630f1365f2d6460d0743a8492c109.cab
+
+[ Update for Microsoft Office 2007 suites (KB2767916) ]
+http://download.windowsupdate.com/msdownload/update/software/crup/2013/02/niceclass-x-none_5554d9377ffd6e3845d48c36a43e09eacfb22e82.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2984938) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2016/04/oartconv-x-none_c6cc3b553f9bba7f830565688db0f974ae27b8a0.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2984943) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2016/04/oart-x-none_1e6b3f103e036ea41144a0edb3c6f26fd6e7f9ea.cab
+
+[ Security Update for Microsoft Office Viewers Microsoft Office Compatibility Pack (KB4092444) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2018/09/ogl-x-none_d033046d584664432e3432e446b90523263a3612.cab
+
+[ Security Update for Microsoft Office OneNote 2007 (KB3114456) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2016/07/onenote-x-none_ecf5f65d6f78f099c700ecea8a0b66113dd660b2.cab
+
+[ Update for Microsoft Office 2007 suites (KB2596620) ]
+http://download.windowsupdate.com/msdownload/update/software/crup/2013/02/osetup-x-none_acc7138235a6cf7507163d54ee477f76f66d0f64.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2956110) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2016/02/otkruntimertl-x-none_fd6033403e6db599a2ea9e51c4e9b929a58128fd.cab
+
+[ Update for Microsoft Office Outlook 2007 Junk Email Filter (KB2825642) ]
+http://download.windowsupdate.com/d/msdownload/update/software/crup/2013/11/outlfltr-x-none_e2f142caaf17ce646d38ef6f94d69efa651712fa.cab
+
+[ Update for Microsoft Office Outlook 2007 Junk Email Filter (KB2880505) ]
+http://download.windowsupdate.com/c/msdownload/update/software/crup/2014/05/outlfltr-x-none_637c8eb5d5a23c967927334ed99fab3d907e4d63.cab
+
+[ Update for Microsoft Office Outlook 2007 Junk Email Filter (KB3115461) ]
+http://download.windowsupdate.com/c/msdownload/update/software/crup/2016/07/outlfltr-x-none_6fdf11a75a9159bc0a3ab9efac5027ebb39420f7.cab
+
+[ Security Update for Microsoft Office Outlook 2007 (KB4011200) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-x-none_d42dfc4386ca25044f4b8cd1390715ef32135c45.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-ar-sa_eb4a9eef36ee3a2b2265b6e0e58ac6ffd4515751.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-bg-bg_743ad09679025055b48f6255238c4564f6aff889.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-cs-cz_0746a1bb252e61fa92910d63c4d3f464f5d12e39.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-da-dk_323d88bce110f6bedfedad45d31d027064565dc4.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-de-de_29991f5a0c6b481cc9559c00e510aa84ca4b47b1.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-el-gr_4d5e4edd1a76082e3fde041333117ec8185637bc.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-en-us_642d9d9119412ac11fbf8d24d768841206031e00.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-es-es_261dbbcbe5e7a7c4693f62024df1ffafe777c3e0.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-et-ee_878bee383f78952feb206b73b3311926655a22ce.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-fi-fi_944eeb5f5acc878039946839a9d3cecffdfd9239.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-fr-fr_2136f35b56bf6725eae0edb326884e645cf214c8.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-he-il_07099e4c20cb34e7d640d611467d0c1210e62d88.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-hi-in_d96ebb2caca9cb7fa41ba0596f7c1aca17028286.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-hr-hr_9bf85432bc2c69e24836ae490a7415f6b4f481b0.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-hu-hu_684bcea2f25e863b73af7100f291ad27ba6ea2c9.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-it-it_9caa684e58f536a743018651bdc35943e919e866.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-ja-jp_79eac1a91c0b67b9c61631932a16c163b53067e1.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-kk-kz_5a2252af3f78195ff76fe129a9fa55eff1300d2b.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-ko-kr_65cf959f4c03febb90ff05e9d8b223011c728544.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-lt-lt_f6d1b1a3ceb8391e7fa73cf3c911b6692a98221a.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-lv-lv_c31781fc850154561f1d2a9f1cbb0992c01a9313.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-nb-no_bdee6887701e73d5281285ce97aa6ca1016cd5de.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-nl-nl_be49bcba0cf6f6b645b255a5ec05509183d13ca2.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-pl-pl_296f04d92ce1c177b815e5f43ac105a6f9a366c4.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-pt-br_ee2165bd6ec637f883546235d2825a9e98b609ab.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-pt-pt_f307f59dfb664d790f360c21134ac81a6eacea3d.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-ro-ro_728917ced8e4d0d143a6c39bcfe97aa72416e6e6.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-ru-ru_5bea33bf8dde3399907e3fae140c448a68a42121.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-sk-sk_4514f1844f285919bc2a546285107368b9a6bba3.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-sl-si_55786432ddd1e835f7007f2d77b1a793933d92d6.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-sr-latn-cs_22a069e95f03ed225282b0c1ea98de565cc6f454.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-sv-se_801b1e37c59cf6d72dc49647418e16843c2ea8d8.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-th-th_96912ec9f08a985c71c7a19ea2ad5ee6d197e953.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-tr-tr_105dadeb71d9fc8fddb4f06d45ed23039b50366b.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-uk-ua_83c0a5d0343fe890bc065b31867d50619d8993fa.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-zh-cn_5ff96a3a9720889df71923c369b613124a0044e6.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-zh-hk_1da5a2e17b523c93eb853a979390e0cc6752120e.cab
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/01/outlook-zh-tw_d439e487f1521a699a9808ed340956cb595844bb.cab
+
+[ Security Update for Microsoft Office PowerPoint 2007 (KB3213642) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/powerpoint-x-none_00a4572d8b157f176af9d371a84185d35eb60c28.cab
+
+[ Security Update for Microsoft Office PowerPoint Viewer 2007 (KB2597975) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2018/11/pptview-x-none_d9c65819668f664d96a2dc88ca4afc174b98b69c.cab
+
+[ Security Update for Microsoft Office Publisher 2007 (KB3114428) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/publisher-x-none_e81b2ef8fccfe68b43ca2396071e79dcf44bdc38.cab
+
+[ Update for Microsoft Office Publisher 2007 (KB4011203) ]
+http://download.windowsupdate.com/d/msdownload/update/software/crup/2017/10/publisher-x-none_c6832a2217eb8273222d8e6f17062351fd820677.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2596904) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/04/riched20-x-none_c0165062fec4927687dca3ad073d75982ede9408.cab
+
+[ Update for the 2007 Microsoft Office System (KB967642) ]
+http://download.windowsupdate.com/msdownload/update/software/crup/2009/04/targetdir_6e283ea8ce0f01524f9e125369b56c716209f711.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB3213649) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2017/09/usp10-x-none_bb58868bc7bdff81b7fcfde47ca16f301986f69c.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2986253) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2016/11/vbe6-x-none_2a029e55a2106b6fcceb07bc4da3b15aff15865e.cab
+
+[ Security Update for Microsoft Office Visio Viewer 2007 (KB2596915) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2016/05/vviewer-x-none_6ed81cb8fc110f79a902d326e118caed561ed75f.cab
+
+[ Security Update for Microsoft Office OneNote 2007 (KB3191829) ]
+http://download.windowsupdate.com/d/msdownload/update/software/secu/2017/03/wce-x-none_dbd7dc1840ba55b857b65c2d16425a8a4d1fd1c2.cab
+
+[ Security Update for Microsoft Office 2007 suites (KB2596871) ]
+http://download.windowsupdate.com/msdownload/update/software/secu/2011/11/works632-x-none_789f22ef5dc8da40058d637c5456411306ae003d.cab
+
+[ Security Update for Microsoft Office Word 2007 (KB4018355) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2018/03/word-x-none_a530f12126b973fecaae541316adb2ec9ab14414.cab
+
+[ Security Update for Microsoft Office Compatibility Pack Service Pack 3 (KB4018354) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2018/03/wordconv-x-none_e43ba3d79fecdcfc51977caef2ce7a65340ed5cf.cab
+
+[ Security Update for Microsoft Office Compatibility Pack Service Pack 3 (KB4461607) ]
+http://download.windowsupdate.com/c/msdownload/update/software/secu/2019/01/xlconv-x-none_b6e95623c283d720c11369d14b9c2d95890f832c.cab
+
+=========================================
+
+[ Update for Microsoft Office Access 2007 Help (KB963663) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/accesshelp-en-us_0c55102ceb4984a67e1c364ac95d91086f437b46.cab
+
+[ Update for Microsoft Office Excel 2007 Help (KB963678) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-ar-sa_953f23fa14f025609b19a92549acdf9602a4c577.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-bg-bg_36fa212db16ad6dcd1eb108f732ed2510e11e386.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-cs-cz_72dfa16718cf8917407fa9a4bc332fc029702889.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-da-dk_7a22e67abd4b009404cd3d25aa5840463a53d726.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-de-de_6a3c01b2ce3ff9dabb9c3f9fdd74364ea21b876d.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-el-gr_88fd6ba53fd19f0e2e7ee67862f5ff5f2101d10f.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-en-us_7d627011e67de650e0e7c2b97478784cf6dac845.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-es-es_cb0e4b6a38d753cef3954aac9972e16bd4618d99.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-et-ee_8507cd0e277e3bbc18a4f5b871f24343e4f2d1e7.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-fi-fi_0f810fdf1066bb40b6470e62368b137bb74c3df1.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-fr-fr_efb1905f426e109223aebfa5547790a3fed100c4.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-he-il_5ca2327e2a3df0c5e0a2b5eacdcb46f1a80c4343.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-hi-in_da27da56d05ebed4a97564e52eb5f278ce2768eb.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-hr-hr_e2c837da8fd199407bc188c6760d54bfe2bc1808.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-hu-hu_05dbab9005db8acc372e06dee5709764980a298a.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-it-it_ee56be55fea06a55d8a0c5fd5f79e7746db4bb98.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-ja-jp_42c1a54f0a8ce4ed51e0d1dd2a0bdd38993b75e3.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/excelhelp-kk-kz_9b985188f6561296556f1a264cecf9e760996b53.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-ko-kr_895345ebf2c5f8959e65420da34a906f9fb85088.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-lt-lt_9961bcaa52b44aada161adb8b949f1cdd44593da.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-lv-lv_4daec3eaac620fba8f106b3668e4beecf7cb81d9.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-nb-no_20b5c0838bd96b2c1910fdd5f9f56343ca253dc7.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-nl-nl_f1762a2555e01ebb317bcbdcb28f03028cbe7670.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-pl-pl_328d059a3978714aea104c2b874b2936dbe71e2f.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-pt-br_87822f2479559d566425b69b34efcdc2e4d5eccb.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-pt-pt_8f57c2a7e99118df3ed48319cb38591eac7cd852.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-ro-ro_cc45be8788017c3d91ddad75f3b9e8cbaba57c2f.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-ru-ru_b3ad8b0ae3f195a7245a5c10922fe81291eb6b0a.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-sk-sk_84fbd9e2407662024d994b44c7d9a08348e1fb24.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-sl-si_116899d9d72da5c366eed18dea68b3a4e517c3d3.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-sr-latn-cs_b2bb2047d88c74411e5ff5f7a6e59984f9839c04.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-sv-se_1c647e979f985802b1c171cbbc73528e53876038.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-th-th_399115811f8cbe82f9a963c955faa684ea3d43d2.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-tr-tr_c9b36f2b8ac4165d7f92f6516da2bee9e5b46f49.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-uk-ua_eb6371f5cf2ba5229150c227bdd955c744978ef3.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-zh-cn_f76cf09e9604293ce55b54f0d6737b6e9dca00a1.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/excelhelp-zh-hk_9a89cc7a1593a8aeff4f20354f727e96c08c2762.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/excelhelp-zh-tw_1e44a1d3ad1c5e772594470d92def6e55fa3526a.cab
+
+[ Update for Microsoft Office InfoPath 2007 Help (KB963662) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/infopathhelp-en-us_c26e8015a12946c6362b6a7ad11c9f062f09a4f8.cab
+
+[ Update for Microsoft Script Editor Help (KB963671) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/officehelp-en-us_6f8a64f23f24f723964b73e542cb8a53fce583f4.cab
+
+[ Update for Microsoft Office OneNote 2007 Help (KB963670) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/onenotehelp-en-us_63dc6dd0e2f537196aa6eb8a70788dc28b94fcd9.cab
+
+[ Update for Microsoft Office Outlook 2007 Help (KB963677) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/outlookhelp-de-de_f73782108e7c66b8977b6387b25898c7c35c3cd0.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/outlookhelp-en-us_e0bb04d67616acb7302e541414b46e402bfd1fa5.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/outlookhelp-es-es_bb10ffeb9c809377504d2b6f4775d3207f8b3e34.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/outlookhelp-fr-fr_0b96fd2af880804435c9e5b355b4e4d5141f6f95.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/outlookhelp-it-it_b5ec90d945c9f3a7691d674afacc8d1732e4c174.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/outlookhelp-ja-jp_8d66ae03327294a949a7c71166a28e9607c46cec.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/outlookhelp-pt-br_a504e90748f263e4b4febe21109643ba68398dda.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/outlookhelp-ru-ru_83e2aa9ac588be6ec9e68282fcf37ad63d94a230.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/outlookhelp-zh-cn_25ae0dcdcd3272b77f7e54ec18ffe28364c5c411.cab
+
+[ Update for Microsoft Office PowerPoint 2007 Help (KB963669) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-ar-sa_db983a8422ec93539a0b2901bdcacbf1617a74d3.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-bg-bg_a860b18a4b07772a3bdf803044d2bb44b039d456.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-cs-cz_1cf01e44464e2814bdc1a05875c8e1219418d420.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-da-dk_1fa7b17639c553e020925bde4e17080ea7cab8fd.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-de-de_99c7542594a9bc004126d3440ac1319f6e7548a8.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-el-gr_e5ff05e6f1bb8dcf0aa81c65bfacd6b5de10fa19.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-en-us_48401dfa97c9ef640775d13f601ffcd116807aee.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-es-es_3c14612100b8b509ab98e4e6296de8ae3ccd7b26.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-et-ee_b54ea72e8f92b2d9d6e6ac6b6750d900e211c5d5.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-fi-fi_6415955995defb76c1e67935aea43af60d39d07f.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-fr-fr_6bedd5e82d9ea661dd3cfeb5df703fd4095e1913.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-he-il_3bc8484502a63d4722b3db3df6efc6b7a429243d.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-hi-in_fdcaeab0510324bd496f3ed53505370d1a5056cf.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-hr-hr_fe543200b6d3c84a5996e2deb772003a3f8c2e85.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-hu-hu_994e192923fc8dc5f01658a93d08e4512d0518e9.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-it-it_85ceb7db43b8fc2fa8ce79af591583530cf2ecdd.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-ja-jp_6908ea21ce0f2f5142b03a313aafb6e8f76d42ab.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/powerpointhelp-kk-kz_c3c1293cec1b60481999dd6887964e100508938a.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-ko-kr_0d1a9473743e02f41dcf5bf36bc814286545891a.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-lt-lt_f518cc32f9c6408032ba2ebdd72c4183a08087e5.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-lv-lv_e05f83d0f47ec8e3bc8a939401f02f64543bacec.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-nb-no_9ede7dc37cf4b200a57873b272764432a79ee68f.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-nl-nl_6ff413a1856cdde5ad69a749df097d06ec6fc4c5.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-pl-pl_40f6ccf77b61a2bc4fdc525b82d81e2477ae95b6.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-pt-br_3ac9fbafb81a00b04c317fb634f2bc6954a83f33.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-pt-pt_0d4659102f323f914273644f8c05d7547226c49e.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-ro-ro_3b662042bfdf0d96fdf1e7a2a0e555570e1ab092.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-ru-ru_34d9a1ec877dae82df5b03f838434912e30db718.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-sk-sk_ee2e760861f5ec4da2f5562830037f45ef359d56.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-sl-si_e4c85715acd3382a03af425a1bef070a9e86e817.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-sr-latn-cs_0279cd9b83dda5494c2a959ad28970384add4f1b.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-sv-se_edb700d68d94ab7e8609f20db8f2ff49f8c1dd0a.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-th-th_32149baac5f37781cb0bb5d1bc69d3711c25d3ea.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-tr-tr_270e66188e7e95d69c03fc0038048db8f629d792.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-uk-ua_c5cbe715094f9c1e15e1fcba1d863f26224ff81f.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-zh-cn_d628999d358172da7b818ce707010a7b68ec4d00.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/powerpointhelp-zh-hk_7b9d727200ec41ae7a50540b658636d68345a494.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/powerpointhelp-zh-tw_483447b9f557603c24fef7adfb4bdbef5175f30c.cab
+
+[ Update for Microsoft Office Project Standard 2007 Help (KB963668) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/projecthelp-en-us_b044635d8f06ee8f122acb822e86e6393ad04822.cab
+
+[ Update for Microsoft Office Publisher 2007 Help (KB963667) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/publisherhelp-en-us_4d5de2274ac67512edc0d77f41d6fdcb02ec1e7a.cab
+
+[ Update for the 2007 Microsoft Office System Help for Common Features (KB963673) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/ribbonhelp-en-us_a54c1e7fe8b5eaf82ba32cde9cce5bd6e7a7e891.cab
+
+[ Update for Microsoft Office SharePoint Designer 2007 Help (KB963675) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/spdhelp-en-us_0f78808a244cd80cbeb8372c117363519a839526.cab
+
+[ Update for Microsoft Office Visio 2007 Help (KB963666) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/visiohelp-en-us_e2f5b51b26f88775f3df17996ebfa96c9445190f.cab
+
+[ Update for Microsoft Office Word 2007 Help (KB963665) ]
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-ar-sa_2db04e567f154a49869b526a2749ae57cc6ae920.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-bg-bg_2437a4e9d601352236c8ae5ec98340dc245b854b.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-cs-cz_d468fd7386b9da0b2450c3d760fa4ba5277d64b2.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-da-dk_a1b4837786c1f5817cc6daf3d989a292b07e7562.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-de-de_c2c8f6f79a55b7c5ff7e597634c49ec5ef2ae7a9.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-el-gr_47e26c8721f4a8d37e4837196b1a142fa4dbb25b.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-en-us_c61e7e47d2224edf2b54034282bbeb2500c333a4.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-es-es_330c6264f29cb5b0defa9c83542a9c39f2ab5553.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-et-ee_0f26a630ab2fc7ae4999155e20d2b602f77bea35.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-fi-fi_bce5117498b76b8a5c399dd473647cab20759337.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-fr-fr_58999c60dade1f8b1d7bc899fe71613e1c5f8bbd.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-he-il_b1ad38a7dfa4133fb3e7ebc07601624032bf487b.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-hi-in_dfa283b2e0852e9b6af82ba4405b9a6b92c11c46.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-hr-hr_680314a60c563ca6226c3703087ae96187aaaa12.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-hu-hu_58d678357ac0eca3fb8273ed0402765d2633fd2b.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-it-it_2e40686ce057c62e66aaf6de9cccca35a4b2413f.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-ja-jp_8d87c1b12849346e86ed8e1e5ac9ee3da7d5024d.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/wordhelp-kk-kz_0d9b76aa5847fabbc19be3b626e730a1b25b492d.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-ko-kr_c809659ef59cfa91cd9329fcd42f2e95e64d8c71.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-lt-lt_bd715a10fd35a0dfaec24b258ec866e5d94b3286.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-lv-lv_230b0336d68f306b6c0fda40173a33c79fceba64.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-nb-no_516b83e1a28e236f2a7086b505e404116d6ba8a8.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-nl-nl_02277a05195160160d044345abbeda4c8531589a.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-pl-pl_995ab79cde5d86bd3860b01fc44d94aa16d8fca2.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-pt-br_8c05f125e68605945b0ab252762854d195e57833.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-pt-pt_0fb6c48971f49ba97b31083bc9d16a24ca246ee8.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-ro-ro_d5baca643847675bc9cfa10c268dab4abfb2f796.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-ru-ru_a5dfcf194fd1b4bebc29fc87d71b62f8260d429d.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-sk-sk_7085f3af6c1d94a562831b96a80dd92b8bb7069c.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-sl-si_206f1397b0339c6b29753de3a35fec2128fb4ef3.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-sr-latn-cs_5aac429ae14ddd74f7f3d7ae5f62b32ee529b608.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-sv-se_7795670bc7a0abbb0bef482291e1fbdacc482796.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-th-th_4287f8d6b3c8f18ed53011558da7e7b22e7cb08d.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-tr-tr_01ca046fe73cc2a752d9c429d1a5098f3875f8bf.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-uk-ua_5e22a96bc0bada3402475488534f5aba5e09ad47.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-zh-cn_90b0f6cf0c80085686d305380893072b19568606.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/05/wordhelp-zh-hk_25fcea1e40c97e1bac490c96bb404d086efb2622.cab
+http://download.windowsupdate.com/msdownload/update/software/updt/2009/04/wordhelp-zh-tw_87ac9586c930a85f216c2268b1dbb574d4ce9132.cab
+
+=========================================
+
+[ Microsoft Office File Validation Add-in ]
+http://download.windowsupdate.com/msdownload/update/software/crup/2011/06/ofv_475de2eccfddbb06f945efb53472963e8ff88d0b.cab
+
+[ Update for Microsoft Office File Validation Add-in ]
+http://download.windowsupdate.com/d/msdownload/update/software/crup/2016/06/gkall-x-none_b77a1de492d2701b6e8ecb2c627d4e8ec2e76fb3.cab

@@ -14,7 +14,6 @@ X19-57139_SW_DVD9_NTRL_Win_with_Bing_8.1_32BIT_ChnSimp_OEM.img
 
 X19-57277_SW_DVD9_NTRL_Win_with_Bing_8.1_64BIT_ChnSimp_OEM.img
 
-
 - Chinese - Hong Kong "Windows 8.1 with Bing"
 
 X19-57141_SW_DVD9_NTRL_Win_with_Bing_8.1_32BIT_ChnTrad_Hong_Kong_OEM.img
@@ -33,7 +32,7 @@ X19-57224_SW_DVD9_Win_with_Bing_SL_8.1_32BIT_ChnSimp_OEM.img
 
 ## Note:
 
-Bing-Update3.cmd script is ment to use MSDN Windows 8.1 with Update ISOs (released in April 2014, no longer available from MSDN).
+Bing-Update1.cmd script is ment to use MSDN Windows 8.1 with Update ISOs (released in April 2014, no longer available from MSDN).
 
 ## Requirements:
 

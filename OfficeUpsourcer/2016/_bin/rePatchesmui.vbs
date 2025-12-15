@@ -1,0 +1,149 @@
+On Error Resume Next
+
+Const HKCR          = &H80000000
+Const HKCU          = &H80000001
+Const HKLM          = &H80000002
+
+Dim oFso, oReg, oWSh, MsiDb, dbView, record, sProductCode, sWI, fMSP
+
+Set oFso  = CreateObject("Scripting.FileSystemObject")
+Set oWSh  = CreateObject("WScript.Shell")
+Set oReg  = GetObject("winmgmts:\\.\root\default:StdRegProv")
+Set MsiDb = Nothing
+Set MsiDb = Session.Database
+
+sProductCode = ""
+sProductCode = Session.Property("ProductCode")
+
+Dim sPatchCode, sProductCC, sPatchCC, sRegPatch1, sRegPatch2, sRegClasses, sRegCurrent, sPatchesCC, sPatchProperty, foundPatches, arrUpper, arrLower
+
+' applied patches to check against
+arrUpper = Array()
+AddItem arrUpper, "B8286A7D_6B6F_4F1C_8625_BE29AD5F6B69" : AddItem arrUpper, "AC7565EF_E108_49D4_9F46_5A1AEC72B27B" ' lync_kb5002567
+AddItem arrUpper, "89269927_54F4_4298_88B5_1D443B817591" : AddItem arrUpper, "EC09F6B2_325C_4E28_B51D_967F010140BE" ' onenote_kb5002761
+AddItem arrUpper, "641B1AD9_C24A_4E5A_840B_A44F9AA5F64D" : AddItem arrUpper, "6457D29F_8B18_4085_8512_3BFFC9815A29" ' outlook_kb5002747
+AddItem arrUpper, "CDB13E57_DC07_4DD1_99A6_1F1B89F3671F" : AddItem arrUpper, "FC118D77_E399_4BD1_BA89_03675D9E7CE8" ' osetup_kb4032254
+
+' superseded patches to register
+arrLower = Array()
+AddItem arrLower, "88C3EC32_7F1A_4A1D_A685_B3C892A7B615" : AddItem arrLower, "D1030839_331B_4847_B3E8_BA9F9CB19037" ' lync_kb5002181
+AddItem arrLower, "E8C31778_563F_4015_9E7C_DACCF7926F43" : AddItem arrLower, "BE062AE4_F1BC_4ABB_97EE_899DE28978BA" ' onenote_kb5002622
+AddItem arrLower, "1DD87E8E_4984_4379_B2C7_9742F035BEC9" : AddItem arrLower, "C5521F8D_6209_415B_AAA4_34A64E7F95DF" ' outlook_kb5002683
+AddItem arrLower, "DCB15A3A_EB74_4172_B603_AC35A788BB7D" : AddItem arrLower, "9CF53FC4_FDC8_46D4_980F_AF8851E5EA57" ' osetup_kb4022172
+
+sPatchesCC = Array()
+sProductCC = ""
+sProductCC = GetCompressedGuid(sProductCode)
+'sRegClasses = "Installer\Products\"&sProductCC&"\Patches"
+sRegCurrent = "Software\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Products\"&sProductCC&"\Patches"
+
+sWI = oWSh.ExpandEnvironmentStrings("%SYSTEMROOT%\Installer") & "\"
+fMSP = LCase(Mid(sProductCC,5,2) & Mid(sProductCC,9,3) & Mid(sProductCC,13,3)) & ".msp"
+
+oReg.CreateKey HKLM, sRegCurrent
+
+foundPatches = False
+Set dbView = MsiDb.OpenView("SELECT `Property` FROM `Property`")
+dbView.Execute
+Do
+	Set record = dbView.Fetch
+	If record Is Nothing Then Exit Do
+	sPatchProperty = ""
+	sPatchProperty = record.StringData(1)
+	If InStr(1, sPatchProperty, "Patch._", vbTextCompare) > 0 Then
+		foundPatches = True
+		AddPatch Mid(sPatchProperty, 8, 36)
+		AddExtra Mid(sPatchProperty, 8, 36)
+	End If
+Loop
+dbView.Close
+
+If foundPatches Then
+'	oReg.CreateKey HKCR, sRegClasses
+'	oReg.SetMultiStringValue HKCR, sRegClasses , "Patches", sPatchesCC
+	oReg.SetMultiStringValue HKLM, sRegCurrent , "AllPatches", sPatchesCC
+	If Not oFso.FileExists(sWI & fMSP) Then
+		If oFso.FileExists(sWI & "fffff.msp") Then
+			oFso.CopyFile sWI & "fffff.msp", sWI & fMSP, True
+		Else
+			AddMSP fMSP
+		End If
+	End If
+End If
+
+Wscript.Quit 0
+
+Sub AddPatch(sPatchProperty)
+	sPatchCode = ""
+	sPatchCode = "{" & Replace(sPatchProperty, "_", "-") & "}"
+	sPatchCC = ""
+	sPatchCC = GetCompressedGuid(sPatchCode)
+	sRegPatch1 = sRegCurrent&"\"&sPatchCC
+	sRegPatch2 = "Software\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Patches\"&sPatchCC
+	AddItem sPatchesCC, sPatchCC
+
+	oReg.CreateKey HKLM, sRegPatch1
+	oReg.CreateKey HKLM, sRegPatch2
+	oReg.SetDWordValue  HKLM, sRegPatch1, "State", 1
+	oReg.SetDWordValue  HKLM, sRegPatch1, "Uninstallable", 1
+	oReg.SetDWordValue  HKLM, sRegPatch1, "MSI3", 1
+	oReg.SetDWordValue  HKLM, sRegPatch1, "PatchType", 0
+	oReg.SetDWordValue  HKLM, sRegPatch1, "LUAEnabled", 0
+	oReg.SetStringValue HKLM, sRegPatch2, "LocalPackage", sWI & fMSP
+End Sub
+
+Sub AddExtra(sPatchProperty)
+	Dim i
+	For i = 0 To UBound(arrUpper)
+	  If UCase(sPatchProperty) = arrUpper(i) Then AddPatch arrLower(i)
+	Next
+End Sub
+
+Sub AddItem(arr, val)
+	ReDim Preserve arr(UBound(arr) + 1)
+	arr(UBound(arr)) = val
+End Sub
+
+Function GetCompressedGuid(sGuid)
+	If NOT Len(sGuid) = 38 Then Exit Function
+	Dim sCompGUID
+	Dim i
+	sCompGUID = StrReverse(Mid(sGuid, 2, 8))  & _
+				StrReverse(Mid(sGuid, 11, 4)) & _
+				StrReverse(Mid(sGuid, 16, 4)) 
+	For i = 21 To 24
+		If i Mod 2 Then
+			sCompGUID = sCompGUID & Mid(sGuid, (i + 1), 1)
+		Else
+			sCompGUID = sCompGUID & Mid(sGuid, (i - 1), 1)
+		End If
+	Next
+	For i = 26 To 37
+		If i Mod 2 Then
+			sCompGUID = sCompGUID & Mid(sGuid, (i - 1), 1)
+		Else
+			sCompGUID = sCompGUID & Mid(sGuid, (i + 1), 1)
+		End If
+	Next
+	GetCompressedGuid = sCompGUID
+End Function
+
+Sub AddMSP(fFile)
+	Dim hexstr, hexarr, binarr, binstr, File
+	hexstr = "4D 53 43 46 00 00 00 00 88 08 00 00 00 00 00 00 2C 00 00 00 00 00 00 00 03 01 01 00 01 00 00 00 00 00 00 00 46 00 00 00 01 00 03 15 00 26 00 00 00 00 00 00 00 00 9F 4B 33 9B 20 00 66 66 66 66 66 2E 6D 73 70 00 D1 40 38 6C 3A 08 00 26 5B 80 80 8D 02 20 07 60 71 14 00 42 02 00 33 43 00 57 60 00 DE 7F EB DA B6 7F 6B B7 95 25 CB 96 69 2F EB 6C EB 6C 5D DB AD BF DD D6 93 25 6F 6F 71 59 5B D7 AD 1B 50 4E FA 0C EB 5D 99 6F B6 EB 7B 9B AF 31 38 1C C9 83 E8 14 1E 1D 5F 45 44 80 28 60 0B 27 02 CA A1 02 3F C0 F2 28 02 72 24 FC 0F 42 40 C0 08 16 03 82 80 D4 00 00 91 8C 1C 5C 01 00 FF 82 7E 24 07 BD AC 3E E1 18 DE 44 C0 B9 C2 1D DC 19 05 67 07 16 C9 45 C6 72 6C 9E E7 F6 12 8E AE EC 6C 3D 7A 01 BD 30 15 46 B2 4E B9 5A 33 44 03 71 E3 88 98 65 B4 15 3B 16 00 BC 00 A7 81 31 FF FB EF 7F 70 FD 00 80 00 00 8C 14 00 D0 17 11 7D 26 29 6C 05 09 04 F0 42 08 22 C3 DC 92 C9 B6 01 ED D0 01 F6 18 D4 45 98 1E 8F EA 78 58 5E 82 E4 CF EA 46 D7 BD 23 63 44 F3 E8 72 7C C4 AD 5D 21 92 EE 44 1B C5 BB ED FB 74 8D 18 DC 85 EF D9 C9 72 0E FD F5 F7 1E 1F C4 16 BA FD F9 2B 12 4B 81 08 E4 0B 8C A0 04 12 46 58 6B 02 9C C8 77 23 0A 14 F2 1D 4E A4 46 2D 40 89 13 88 89 7B AC D0 69 45 78 9C 62 90 98 87 C9 FD 13 EC DE A5 97 1D 65 E4 EA 25 7F 2A DA 79 F6 A3 5E DA 64 D0 7B 1B 9E 3C A1 E5 BE 12 3E E5 2E 22 DB 09 CD 75 2C D9 8A DC 6F B6 EE 96 F0 A4 F0 2C E2 1E 43 88 96 0D B0 C4 34 7C 2D B8 5D 07 7D DA 77 0F F1 A4 E0 73 35 66 E5 BD 84 82 A9 E7 0F 53 C0 34 3F 50 88 D0 D6 F0 0C 47 11 1C 23 30 00 C1 72 7A AC 35 C8 6B 9F 5B 69 3A F3 40 2A EC 1D 6D 7F 19 B7 3E C7 5A B1 E7 08 75 2B 56 4E 69 86 87 63 BC 2C 02 9C 10 DC 19 90 EE 18 83 A5 FA B2 DA 36 33 9F 86 FE 67 22 91 92 9F F8 30 2C 98 1F 05 63 C1 76 34 F4 AF 0A 44 0F 0E 46 6A 76 B1 7A B0 DE FC 89 A4 A6 93 48 34 39 21 96 D7 CD 3E 9A 00 E0 09 2D AC F9 44 59 9F A0 79 D1 CA DB 38 AA 5B 8B 68 DE 7C 8C D3 18 C7 10 C0 06 6B 95 00 F4 E6 E6 02 37 C4 20 28 F3 45 00 6D F5 EC 47 5F DC EA FD 4F 1C 4B F6 98 E3 12 A3 F2 89 FB 68 97 12 8C 5D 9C 27 28 2E 86 70 9C 47 04 93 30 8E 65 EE 05 2C 89 45 F7 C6 A0 C9 BE C9 3E 70 84 31 65 FA 16 D6 4B 2F D9 C9 BE E9 BE 60 39 01 73 FD 28 D2 7D C0 63 7B 26 A7 DB 3B 05 41 45 0A 34 60 C1 DE 4D C1 05 13 3C B4 E0 02 28 28 84 19 B6 0A BE 3D D3 85 0E 21 DC 1C 39 14 1E 0C 06 55 FB 7B D6 6F 9D A8 D3 4F AF B5 EF 45 08 2F 33 BE F0 17 66 17 1F 6A F0 C1 3B E2 D4 F5 1D 88 38 A6 3D 1D 22 9F 4D E6 C7 FC 1A 63 BE B3 CE 7B 9C 1B A6 03 93 1B AE 77 92 8D DB 53 FA 7D 57 2C FF C8 6C 2E 33 D3 B1 6E 87 4D 2B 51 51 5B 5B 8A B6 D2 50 97 BC 36 45 CE 50 92 AD 82 89 D7 1B 5B 18 FC BA 89 D2 6B B5 DF 15 4B 1C 02 3A AC 4D 15 AF 1F C9 22 05 87 3B 76 4E B6 BB E1 16 E0 BD 0C 48 9A 9B 8B 51 0B B0 39 39 E0 BB 03 EA A1 AA 39 E0 AF 3A A9 EB E7 DA B6 C8 AA ED 37 15 F6 39 29 69 0E 16 57 47 E5 76 D5 4A BB 2D E5 D9 37 4B ED 2A DE FC E5 AC 7E 3E 7F D1 1B 0E B7 77 29 48 A4 41 43 C2 27 F7 52 3C 4F 9C 1C 6C 61 96 85 4E DA 02 44 3E A2 D7 8C FB 3B 5A 98 0D 3C DE C7 4C 88 86 D2 2D 28 C1 82 0B 69 D5 1E 79 9C 96 35 86 93 53 88 6A 48 EA 85 6B 9F F9 C6 31 93 84 FF 1A 8D 1F D1 48 C3 BC 43 78 CD 62 EB 70 6D C1 DA 6D BA 3B EC D5 7A 3F 05 EB 16 AB 9B 35 22 9E AC 7D 0A ED AD D5 07 68 F9 EF 24 AD 0E DB A0 FC AE 63 9C 9F AF 1D 39 14 5A 71 E5 36 37 36 77 80 22 E8 27 EF CA AA C5 19 C1 53 AA E0 38 A8 51 D1 D9 6E DE 96 95 11 6B 6E 12 9D AF D8 85 F6 F1 CA 9E 3B 7C 7A 36 50 F4 18 13 46 A2 87 15 45 45 06 D7 A5 0D 0B 97 AE 0B 7F 80 8C AD 5D 87 1F B1 3B 50 20 97 24 70 9E 90 19 38 8E 76 3D B2 75 A6 F9 FC 13 60 FD 5F A9 04 24 14 C7 44 A8 DE 43 C6 81 19 78 A8 70 FF 19 A3 61 46 1F 59 9C A6 60 24 38 FC 17 FA 35 3D 2A F5 4A FA 4B 66 68 7F 84 1F 19 B1 EF 96 66 E9 93 36 11 D9 C7 5A 2F A6 3B 4A 27 FB D8 71 24 04 48 C1 99 C6 52 35 10 FB 63 CB F5 4B 98 2D 52 24 61 76 C2 BD 92 B3 8C 9D 03 67 23 7E 93 5E 59 1F DA 02 9E 86 73 00 1D 7E 07 FA 18 34 3F A7 74 DC BD 8E 97 6B 2D C1 E4 0F 5D 14 20 8C 68 9C 00 93 7A 25 70 B1 08 02 46 4E 60 0F 24 3C F0 5A 88 BF 6E 1F 16 A0 21 94 80 0A 43 22 28 34 42 A3 36 46 C2 08 F9 E3 45 64 12 2A 77 93 20 B6 B8 C2 47 12 48 6E 06 33 DD A0 B7 8B 47 DB B2 A2 59 B8 26 C4 AD B3 C9 9B 32 4B 16 75 58 D5 9B BA 92 F5 05 D2 43 1D B5 0A 7B 2A 8F 5A 46 2B EF 34 6C BD 93 39 56 53 0F 53 AF 53 AF 52 AF 3A 72 85 B6 52 1B 2A 43 95 76 E9 4B 9A A9 48 C1 20 7E D4 CB 9D 39 12 43 5B 2F EF CD B0 38 7C 79 07 9A 3B 45 C2 28 0D AB CB BB 5D D5 83 EE EE 26 24 CD 3B C3 42 BD 76 FA 3C 2A 7E 83 46 F5 7E 73 DE 9C 10 1C 39 73 29 29 2A BF 1A 28 AE 0D 66 FE 94 F3 1F 8C 05 F3 EC 96 E0 3B DA FE 20 EB 08 F2 37 9D EC 5F 62 72 80 7A 07 5D 09 15 EC CF E9 BC B3 AF E5 FC 09 14 68 33 20 3D 9F 82 7F F3 D8 A7 1B 1F 84 1F A7 DE 3F D3 4F AB 32 D4 F7 6A DE D0 8A FB BA 2C 93 EF EB 9F 92 68 31 43 D8 EF 18 87 BF 04 4F EB 80 45 8F 32 47 56 61 CE C1 1E F9 6A F6 75 FC C7 82 E3 30 40 06 73 3D 74 D5 41 FF F9 F0 D7 73 CA 1F A2 A6 BB 70 04 E0 FB 6C 3C 7E 91 67 54 F8 0F B1 53 09 67 68 B3 63 55 45 C7 62 9B AD A2 62 CB 29 4D 87 9B 32 45 5A 6F AE E2 9A A6 D3 BC BB 5C 9A A2 76 9A CB F1 A8 9B AB 6A 3D 0F AA 3A C5 B1 D6 84 43 8B 3A 35 62 AD FF C9 82 FC 2C 0C 80 5D F9 42 4B 54 EF AA 85 39 67 C3 86 95 93 D3 08 61 CB 2E D8 FE 77 D6 9E 50 49 12 C4 F4 F0 98 F3 AF 4B 08 1F 7B C7 C7 3A 25 B3 85 12 9E 2C E3 3A 85 B0 61 7A 7E 2A 03 0C F3 A4 71 2A A9 C7 C1 24 AB 8C C5 18 F0 B4 F2 C3 9A 7E 78 27 60 48 8D 0C 76 EE F1 BC BF 8B AA 6D BB 50 5D 03 F8 6B 35 40 59 5A A1 29 BA EF B9 FD 1D 8C 55 54 22 36 39 17 EC 79 EB 5F A1 E1 B3 DD 8E 3A 82 DA FF A1 71 37 5A 37 85 7B 84 D2 71 75 13 58 E6 CB FE DF E3 09 0F 9A 17 A2 6B 2F F4 29 0D 35 DF 19 35 BD 0A 30 07 78 97 E2 1C C7 33 86 7F 91 FD 00 D6 EE 28 F0 8B D9 FD A0 C0 77 F4 06 F0 BE CA 9C 7F 7B E0 FB D7 ED 88 58 33 1E 4C F1 B4 84 3B 9E 05 57 2D 15 E5 1D AE C5 28 02 B0 8E 89 87 A1 5F 99 39 DB 13 A5 6A 93 17 58 C2 76 17 1B A1 E5 5B 62 26 B7 63 13 43 FD 4A AC F9 77 6E 69 0C 7F 3E C7 22 A9 4D 9D 45 5B DA 4C 1A 68 DB 1A 27 19 BD EF 3F E2 C5 81 8D EE 1E E0 4A 61 DE 29 68 58 74 4A E1 C1 36 66 91 EF C6 20 A1 74 42 04 D0 3F 2D 97 02 51 6D CA 87 12 9F 6C E5 9C 71 4D B7 24 04 4C F0 6E 82 88 40 B0 D9 75 40 0F C0 7A 07 42 97 82 80 1B 32 6F D7 A3 57 84 BE 6F 28 3F 04 11 F1 95 14 4C F4 DF 54 F1 7D 12 13 11 BD D1 B2 53 38 35 E4 4B 5C 64 1C BE 34 B9 1D 5B 77 F7 58 D1 2C 64 45 9B 7B 2B C1 FC 47 70 E3 21 F9 66 A0 2E 8C 0C B8 0B 03 37 42 91 8C 60 E1 0E DE 16 DD 8E 8F 88 54 0F D0 1F 4E 8A 9D 48 17 D3 0F 7F D6 5F 17 37 32 84 24 5E 5F 45 96 CB 6C 14 35 BE 61 97 A7 65 5C B6 78 5A 42 8D A9 4B C1 CB 92 F6 01 3B 9E 9E 7D 7A DD EF 1E 22 21 F4 22 11 0A CB 59 48 35 78 9D 85 80 FD 5D C4 FF CB 91 CD 46 7C F1 C6 90 F5 60 16 A2 52 F0 CC CA BC 58 0A C4 47 85 97 F0 04 FA A9 05 83 06 A1 98 F1 6A 16 13 0A 8C C8 A9 A5 74 20 79 BC 05 8A 87 02 00 7D"
+	hexarr = Split(hexstr)
+	ReDim binarr(UBound(hexarr))
+
+	Dim i
+	For i = 0 To UBound(hexarr)
+	  binarr(i) = Chr(CInt("&h" & hexarr(i)))
+	Next
+	binstr = Join(binarr, "")
+
+	Set File = oFso.CreateTextFile("1._", True)
+	File.Write binstr
+	File.Close
+	oWSh.Run "expand.exe -R -F:* 1._ " & sWI, 0, True
+	oFso.DeleteFile "1._"
+	oFso.CopyFile sWI & "fffff.msp", sWI & fFile, True
+End Sub

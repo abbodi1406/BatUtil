@@ -1,4 +1,4 @@
-# ESD -> ISO Decrypter ft. WimLib
+# ESD -> ISO Decrypter
 
 * Automated command script to process Microsoft Windows full ESD file (encrypted or decrypted), and convert it into a usable state (ISO / WIM / decrypted ESD).
 
@@ -183,23 +183,13 @@ ______________________________
 ## Credits
 
 * qad - esddecrypt.exe program
-
 * [@tfwboredom](https://twitter.com/tfwboredom) - new key support for esddecrypt.exe
-
 * [Eric Biggers](http://wimlib.net) - wimlib
-
 * [mkuba50](https://gitlab.com/users/mkuba50) - busybox.exe method to create identical single ISO from the same ESD
-
 * [Igor Pavlov](https://www.7-zip.org/) - 7-zip
-
 * [erwan.l](http://reboot.pro/files/file/313-offlinereg) - offlinereg
-
 * [cdob](http://reboot.pro/topic/20471-windows-pe-5x-boot-problem) - create aio efisys.bin
-
 * [@rgadguard](https://twitter.com/rgadguard) - RSA cryptokeys key.cmd host server / update script
-
 * MrMagic, Chris123NT, mohitbajaj143, Superwzt, timster - RSA cryptokeys
-
 * murphy78 - original script
-
 * nosferati87, NiFu, s1ave77, Enthousiast, ztsoft, and any other MDL forums members contributed in the ESD project

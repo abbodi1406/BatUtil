@@ -61,6 +61,6 @@ edit the script and uncomment this line:
 
 ## Credits
 
-- [PSFExtractor / th1r5bvn23](https://github.com/Secant1006/PSFExtractor)  
-- [OnePiece / DXTool](https://ryanvm.net/forum/viewtopic.php?f=7&t=9945)
+- [PSFExtractor / BetaWorld](https://github.com/Secant1006/PSFExtractor)  
+- [OnePiece / DXTool](https://www.wincert.net/forum/topic/9409-tool-dx-tool-x86x64/)
 - [Melinda Bellemore / SxSExpand](https://forums.mydigitallife.net/members/superbubble.250156/)

@@ -1,0 +1,1054 @@
+; Credits:
+; * DXCB - DirectX Collector and addon Builder Ver: 2.2.1 - 2011-12-14
+; Written by: bphlpt using work by Code65536, Yumeyao, user_hidden, and redxii as models
+; * INF AddOn Template: *Reaper*
+; * INF tips and tricks: ricktendo / ricktendo64
+; * LaunchINFSectionEx: Yumeyao
+
+[Version]
+Signature=$Windows NT$
+
+[DefaultInstall.ntx86]
+RegisterDLLs           =Start.Registerx86
+
+[DefaultInstall.ntamd64]
+RegisterDLLs           =Start.Registerx64
+
+[Install.ntx86]
+OptionDesc             =%AppName%
+Tip                    =%Comment%
+Modes                  =0,1,2,3
+BeginPrompt            =BeginInsPrompt
+CopyFiles              =File.Copy.x86, XIP9.Copy.x86, @DXeurt.inf
+AddReg                 =Registry.Install
+EndPrompt              =EndInsPrompt
+
+[Install.ntamd64]
+OptionDesc             =%AppName%
+Tip                    =%Comment%
+Modes                  =0,1,2,3
+BeginPrompt            =BeginInsPrompt
+CopyFiles              =File.Copy.x64, XIP9.Copy.x64, File.Copy.wow, XIP9.Copy.wow, @DXeurt.inf
+AddReg                 =Registry.Install, Registry.wow.Install
+EndPrompt              =EndInsPrompt
+
+[Passive.ntx86]
+CopyFiles              =File.Copy.x86, XIP9.Copy.x86, @DXeurt.inf
+AddReg                 =Registry.Install
+
+[Passive.ntamd64]
+CopyFiles              =File.Copy.x64, XIP9.Copy.x64, File.Copy.wow, XIP9.Copy.wow, @DXeurt.inf
+AddReg                 =Registry.Install, Registry.wow.Install
+
+[Uninstall.ntx86]
+BeginPrompt            =BeginUnInsPrompt
+EndPrompt              =EndUnInsPrompt
+DelReg                 =Registry.Uninstall
+DelFiles               =File.Copy.x86, Inf.File, PNF.File
+
+[Uninstall.ntamd64]
+BeginPrompt            =BeginUnInsPrompt
+EndPrompt              =EndUnInsPrompt
+DelReg                 =Registry.Uninstall, Registry.wow.Uninstall
+DelFiles               =File.Copy.x64, File.Copy.wow, Inf.File, PNF.File
+
+[BeginInsPrompt]
+Title                  =%TitleInsPrompt%
+Prompt                 =%BeginInsPrompt%
+ButtonType             =YESNO
+
+[EndInsPrompt]
+Prompt                 =%EndInsPrompt%
+
+[BeginUnInsPrompt]
+Title                  =%TitleUnInsPrompt%
+Prompt                 =%BeginUnInsPrompt%
+ButtonType             =YESNO
+
+[EndUnInsPrompt]
+Prompt                 =%EndUnInsPrompt%
+
+[Inf.File]
+DXeurt.inf
+
+[PNF.File]
+DXeurt.PNF
+
+[SourceDisksNames.x86]
+1 = %DiskId%
+
+[SourceDisksNames.amd64]
+1 = %DiskId%
+
+[DestinationDirs]
+File.Copy.x86          =11
+File.Copy.x64          =11
+File.Copy.wow          =10, SysWOW64
+XIP9.Copy.x86          =11
+XIP9.Copy.x64          =11
+XIP9.Copy.wow          =10, SysWOW64
+Inf.File               =10, inf
+PNF.File               =10, inf
+DefaultDestDir         =17
+
+[SourceDisksFiles.x86]
+d3dcompiler_33.dll=1
+d3dcompiler_34.dll=1
+d3dcompiler_35.dll=1
+d3dcompiler_36.dll=1
+D3DCompiler_37.dll=1
+D3DCompiler_38.dll=1
+D3DCompiler_39.dll=1
+D3DCompiler_40.dll=1
+D3DCompiler_41.dll=1
+D3DCompiler_42.dll=1
+D3DCompiler_43.dll=1
+d3dcsx_42.dll=1
+d3dcsx_43.dll=1
+d3dx10.dll=1
+d3dx10_33.dll=1
+d3dx10_34.dll=1
+d3dx10_35.dll=1
+d3dx10_36.dll=1
+d3dx10_37.dll=1
+d3dx10_38.dll=1
+d3dx10_39.dll=1
+d3dx10_40.dll=1
+d3dx10_41.dll=1
+d3dx10_42.dll=1
+d3dx10_43.dll=1
+d3dx11_42.dll=1
+d3dx11_43.dll=1
+d3dx9_24.dll=1
+d3dx9_25.dll=1
+d3dx9_26.dll=1
+d3dx9_27.dll=1
+d3dx9_28.dll=1
+d3dx9_29.dll=1
+d3dx9_30.dll=1
+d3dx9_31.dll=1
+d3dx9_32.dll=1
+d3dx9_33.dll=1
+d3dx9_34.dll=1
+d3dx9_35.dll=1
+d3dx9_36.dll=1
+d3dx9_37.dll=1
+d3dx9_38.dll=1
+d3dx9_39.dll=1
+d3dx9_40.dll=1
+d3dx9_41.dll=1
+d3dx9_42.dll=1
+d3dx9_43.dll=1
+x3daudio1_0.dll=1
+x3daudio1_1.dll=1
+x3daudio1_2.dll=1
+X3DAudio1_3.dll=1
+X3DAudio1_4.dll=1
+X3DAudio1_5.dll=1
+X3DAudio1_6.dll=1
+X3DAudio1_7.dll=1
+xactengine2_0.dll=1
+xactengine2_1.dll=1
+xactengine2_10.dll=1
+xactengine2_2.dll=1
+xactengine2_3.dll=1
+xactengine2_4.dll=1
+xactengine2_5.dll=1
+xactengine2_6.dll=1
+xactengine2_7.dll=1
+xactengine2_8.dll=1
+xactengine2_9.dll=1
+xactengine3_0.dll=1
+xactengine3_1.dll=1
+xactengine3_2.dll=1
+xactengine3_3.dll=1
+xactengine3_4.dll=1
+xactengine3_5.dll=1
+xactengine3_6.dll=1
+xactengine3_7.dll=1
+XAPOFX1_0.dll=1
+XAPOFX1_1.dll=1
+XAPOFX1_2.dll=1
+XAPOFX1_3.dll=1
+XAPOFX1_4.dll=1
+XAPOFX1_5.dll=1
+XAudio2_0.dll=1
+XAudio2_1.dll=1
+XAudio2_2.dll=1
+XAudio2_3.dll=1
+XAudio2_4.dll=1
+XAudio2_5.dll=1
+XAudio2_6.dll=1
+XAudio2_7.dll=1
+XAudio2_9redist.dll=1
+xinput1_1.dll=1
+xinput1_2.dll=1
+xinput1_3.dll=1
+xinput9_1_0.dll=1
+
+[SourceDisksFiles.amd64]
+64d3dcompiler_33.dll=1
+64d3dcompiler_34.dll=1
+64d3dcompiler_35.dll=1
+64d3dcompiler_36.dll=1
+64D3DCompiler_37.dll=1
+64D3DCompiler_38.dll=1
+64D3DCompiler_39.dll=1
+64D3DCompiler_40.dll=1
+64D3DCompiler_41.dll=1
+64D3DCompiler_42.dll=1
+64D3DCompiler_43.dll=1
+64d3dcsx_42.dll=1
+64d3dcsx_43.dll=1
+64d3dx10.dll=1
+64d3dx10_33.dll=1
+64d3dx10_34.dll=1
+64d3dx10_35.dll=1
+64d3dx10_36.dll=1
+64d3dx10_37.dll=1
+64d3dx10_38.dll=1
+64d3dx10_39.dll=1
+64d3dx10_40.dll=1
+64d3dx10_41.dll=1
+64d3dx10_42.dll=1
+64d3dx10_43.dll=1
+64d3dx11_42.dll=1
+64d3dx11_43.dll=1
+64d3dx9_24.dll=1
+64d3dx9_25.dll=1
+64d3dx9_26.dll=1
+64d3dx9_27.dll=1
+64d3dx9_28.dll=1
+64d3dx9_29.dll=1
+64d3dx9_30.dll=1
+64d3dx9_31.dll=1
+64d3dx9_32.dll=1
+64d3dx9_33.dll=1
+64d3dx9_34.dll=1
+64d3dx9_35.dll=1
+64d3dx9_36.dll=1
+64d3dx9_37.dll=1
+64d3dx9_38.dll=1
+64d3dx9_39.dll=1
+64d3dx9_40.dll=1
+64d3dx9_41.dll=1
+64d3dx9_42.dll=1
+64d3dx9_43.dll=1
+64x3daudio1_0.dll=1
+64x3daudio1_1.dll=1
+64x3daudio1_2.dll=1
+64X3DAudio1_3.dll=1
+64X3DAudio1_4.dll=1
+64X3DAudio1_5.dll=1
+64X3DAudio1_6.dll=1
+64X3DAudio1_7.dll=1
+64xactengine2_0.dll=1
+64xactengine2_1.dll=1
+64xactengine2_10.dll=1
+64xactengine2_2.dll=1
+64xactengine2_3.dll=1
+64xactengine2_4.dll=1
+64xactengine2_5.dll=1
+64xactengine2_6.dll=1
+64xactengine2_7.dll=1
+64xactengine2_8.dll=1
+64xactengine2_9.dll=1
+64xactengine3_0.dll=1
+64xactengine3_1.dll=1
+64xactengine3_2.dll=1
+64xactengine3_3.dll=1
+64xactengine3_4.dll=1
+64xactengine3_5.dll=1
+64xactengine3_6.dll=1
+64xactengine3_7.dll=1
+64XAPOFX1_0.dll=1
+64XAPOFX1_1.dll=1
+64XAPOFX1_2.dll=1
+64XAPOFX1_3.dll=1
+64XAPOFX1_4.dll=1
+64XAPOFX1_5.dll=1
+64XAudio2_0.dll=1
+64XAudio2_1.dll=1
+64XAudio2_2.dll=1
+64XAudio2_3.dll=1
+64XAudio2_4.dll=1
+64XAudio2_5.dll=1
+64XAudio2_6.dll=1
+64XAudio2_7.dll=1
+64XAudio2_9redist.dll=1
+64xinput1_1.dll=1
+64xinput1_2.dll=1
+64xinput1_3.dll=1
+64xinput9_1_0.dll=1
+d3dcompiler_33.dll=1
+d3dcompiler_34.dll=1
+d3dcompiler_35.dll=1
+d3dcompiler_36.dll=1
+D3DCompiler_37.dll=1
+D3DCompiler_38.dll=1
+D3DCompiler_39.dll=1
+D3DCompiler_40.dll=1
+D3DCompiler_41.dll=1
+D3DCompiler_42.dll=1
+D3DCompiler_43.dll=1
+d3dcsx_42.dll=1
+d3dcsx_43.dll=1
+d3dx10.dll=1
+d3dx10_33.dll=1
+d3dx10_34.dll=1
+d3dx10_35.dll=1
+d3dx10_36.dll=1
+d3dx10_37.dll=1
+d3dx10_38.dll=1
+d3dx10_39.dll=1
+d3dx10_40.dll=1
+d3dx10_41.dll=1
+d3dx10_42.dll=1
+d3dx10_43.dll=1
+d3dx11_42.dll=1
+d3dx11_43.dll=1
+d3dx9_24.dll=1
+d3dx9_25.dll=1
+d3dx9_26.dll=1
+d3dx9_27.dll=1
+d3dx9_28.dll=1
+d3dx9_29.dll=1
+d3dx9_30.dll=1
+d3dx9_31.dll=1
+d3dx9_32.dll=1
+d3dx9_33.dll=1
+d3dx9_34.dll=1
+d3dx9_35.dll=1
+d3dx9_36.dll=1
+d3dx9_37.dll=1
+d3dx9_38.dll=1
+d3dx9_39.dll=1
+d3dx9_40.dll=1
+d3dx9_41.dll=1
+d3dx9_42.dll=1
+d3dx9_43.dll=1
+x3daudio1_0.dll=1
+x3daudio1_1.dll=1
+x3daudio1_2.dll=1
+X3DAudio1_3.dll=1
+X3DAudio1_4.dll=1
+X3DAudio1_5.dll=1
+X3DAudio1_6.dll=1
+X3DAudio1_7.dll=1
+xactengine2_0.dll=1
+xactengine2_1.dll=1
+xactengine2_10.dll=1
+xactengine2_2.dll=1
+xactengine2_3.dll=1
+xactengine2_4.dll=1
+xactengine2_5.dll=1
+xactengine2_6.dll=1
+xactengine2_7.dll=1
+xactengine2_8.dll=1
+xactengine2_9.dll=1
+xactengine3_0.dll=1
+xactengine3_1.dll=1
+xactengine3_2.dll=1
+xactengine3_3.dll=1
+xactengine3_4.dll=1
+xactengine3_5.dll=1
+xactengine3_6.dll=1
+xactengine3_7.dll=1
+XAPOFX1_0.dll=1
+XAPOFX1_1.dll=1
+XAPOFX1_2.dll=1
+XAPOFX1_3.dll=1
+XAPOFX1_4.dll=1
+XAPOFX1_5.dll=1
+XAudio2_0.dll=1
+XAudio2_1.dll=1
+XAudio2_2.dll=1
+XAudio2_3.dll=1
+XAudio2_4.dll=1
+XAudio2_5.dll=1
+XAudio2_6.dll=1
+XAudio2_7.dll=1
+XAudio2_9redist.dll=1
+xinput1_1.dll=1
+xinput1_2.dll=1
+xinput1_3.dll=1
+xinput9_1_0.dll=1
+
+[File.Copy.x86]
+d3dcompiler_33.dll,,,0x00010000
+d3dcompiler_34.dll,,,0x00010000
+d3dcompiler_35.dll,,,0x00010000
+d3dcompiler_36.dll,,,0x00010000
+D3DCompiler_37.dll,,,0x00010000
+D3DCompiler_38.dll,,,0x00010000
+D3DCompiler_39.dll,,,0x00010000
+D3DCompiler_40.dll,,,0x00010000
+D3DCompiler_41.dll,,,0x00010000
+D3DCompiler_42.dll,,,0x00010000
+D3DCompiler_43.dll,,,0x00010000
+d3dcsx_42.dll,,,0x00010000
+d3dcsx_43.dll,,,0x00010000
+d3dx10.dll,,,0x00010000
+d3dx10_33.dll,,,0x00010000
+d3dx10_34.dll,,,0x00010000
+d3dx10_35.dll,,,0x00010000
+d3dx10_36.dll,,,0x00010000
+d3dx10_37.dll,,,0x00010000
+d3dx10_38.dll,,,0x00010000
+d3dx10_39.dll,,,0x00010000
+d3dx10_40.dll,,,0x00010000
+d3dx10_41.dll,,,0x00010000
+d3dx10_42.dll,,,0x00010000
+d3dx10_43.dll,,,0x00010000
+d3dx11_42.dll,,,0x00010000
+d3dx11_43.dll,,,0x00010000
+d3dx9_24.dll,,,0x00010000
+d3dx9_25.dll,,,0x00010000
+d3dx9_26.dll,,,0x00010000
+d3dx9_27.dll,,,0x00010000
+d3dx9_28.dll,,,0x00010000
+d3dx9_29.dll,,,0x00010000
+d3dx9_30.dll,,,0x00010000
+d3dx9_31.dll,,,0x00010000
+d3dx9_32.dll,,,0x00010000
+d3dx9_33.dll,,,0x00010000
+d3dx9_34.dll,,,0x00010000
+d3dx9_35.dll,,,0x00010000
+d3dx9_36.dll,,,0x00010000
+d3dx9_37.dll,,,0x00010000
+d3dx9_38.dll,,,0x00010000
+d3dx9_39.dll,,,0x00010000
+d3dx9_40.dll,,,0x00010000
+d3dx9_41.dll,,,0x00010000
+d3dx9_42.dll,,,0x00010000
+d3dx9_43.dll,,,0x00010000
+x3daudio1_0.dll,,,0x00010000
+x3daudio1_1.dll,,,0x00010000
+x3daudio1_2.dll,,,0x00010000
+X3DAudio1_3.dll,,,0x00010000
+X3DAudio1_4.dll,,,0x00010000
+X3DAudio1_5.dll,,,0x00010000
+X3DAudio1_6.dll,,,0x00010000
+X3DAudio1_7.dll,,,0x00010000
+xactengine2_0.dll,,,0x00010000
+xactengine2_1.dll,,,0x00010000
+xactengine2_10.dll,,,0x00010000
+xactengine2_2.dll,,,0x00010000
+xactengine2_3.dll,,,0x00010000
+xactengine2_4.dll,,,0x00010000
+xactengine2_5.dll,,,0x00010000
+xactengine2_6.dll,,,0x00010000
+xactengine2_7.dll,,,0x00010000
+xactengine2_8.dll,,,0x00010000
+xactengine2_9.dll,,,0x00010000
+xactengine3_0.dll,,,0x00010000
+xactengine3_1.dll,,,0x00010000
+xactengine3_2.dll,,,0x00010000
+xactengine3_3.dll,,,0x00010000
+xactengine3_4.dll,,,0x00010000
+xactengine3_5.dll,,,0x00010000
+xactengine3_6.dll,,,0x00010000
+xactengine3_7.dll,,,0x00010000
+XAPOFX1_0.dll,,,0x00010000
+XAPOFX1_1.dll,,,0x00010000
+XAPOFX1_2.dll,,,0x00010000
+XAPOFX1_3.dll,,,0x00010000
+XAPOFX1_4.dll,,,0x00010000
+XAPOFX1_5.dll,,,0x00010000
+XAudio2_0.dll,,,0x00010000
+XAudio2_1.dll,,,0x00010000
+XAudio2_2.dll,,,0x00010000
+XAudio2_3.dll,,,0x00010000
+XAudio2_4.dll,,,0x00010000
+XAudio2_5.dll,,,0x00010000
+XAudio2_6.dll,,,0x00010000
+XAudio2_7.dll,,,0x00010000
+XAudio2_9redist.dll,,,0x00010000
+xinput1_1.dll,,,0x00010000
+xinput1_2.dll,,,0x00010000
+xinput1_3.dll,,,0x00010000
+
+[File.Copy.x64]
+d3dcompiler_33.dll,64d3dcompiler_33.dll,,0x00010000
+d3dcompiler_34.dll,64d3dcompiler_34.dll,,0x00010000
+d3dcompiler_35.dll,64d3dcompiler_35.dll,,0x00010000
+d3dcompiler_36.dll,64d3dcompiler_36.dll,,0x00010000
+D3DCompiler_37.dll,64D3DCompiler_37.dll,,0x00010000
+D3DCompiler_38.dll,64D3DCompiler_38.dll,,0x00010000
+D3DCompiler_39.dll,64D3DCompiler_39.dll,,0x00010000
+D3DCompiler_40.dll,64D3DCompiler_40.dll,,0x00010000
+D3DCompiler_41.dll,64D3DCompiler_41.dll,,0x00010000
+D3DCompiler_42.dll,64D3DCompiler_42.dll,,0x00010000
+D3DCompiler_43.dll,64D3DCompiler_43.dll,,0x00010000
+d3dcsx_42.dll,64d3dcsx_42.dll,,0x00010000
+d3dcsx_43.dll,64d3dcsx_43.dll,,0x00010000
+d3dx10.dll,64d3dx10.dll,,0x00010000
+d3dx10_33.dll,64d3dx10_33.dll,,0x00010000
+d3dx10_34.dll,64d3dx10_34.dll,,0x00010000
+d3dx10_35.dll,64d3dx10_35.dll,,0x00010000
+d3dx10_36.dll,64d3dx10_36.dll,,0x00010000
+d3dx10_37.dll,64d3dx10_37.dll,,0x00010000
+d3dx10_38.dll,64d3dx10_38.dll,,0x00010000
+d3dx10_39.dll,64d3dx10_39.dll,,0x00010000
+d3dx10_40.dll,64d3dx10_40.dll,,0x00010000
+d3dx10_41.dll,64d3dx10_41.dll,,0x00010000
+d3dx10_42.dll,64d3dx10_42.dll,,0x00010000
+d3dx10_43.dll,64d3dx10_43.dll,,0x00010000
+d3dx11_42.dll,64d3dx11_42.dll,,0x00010000
+d3dx11_43.dll,64d3dx11_43.dll,,0x00010000
+d3dx9_24.dll,64d3dx9_24.dll,,0x00010000
+d3dx9_25.dll,64d3dx9_25.dll,,0x00010000
+d3dx9_26.dll,64d3dx9_26.dll,,0x00010000
+d3dx9_27.dll,64d3dx9_27.dll,,0x00010000
+d3dx9_28.dll,64d3dx9_28.dll,,0x00010000
+d3dx9_29.dll,64d3dx9_29.dll,,0x00010000
+d3dx9_30.dll,64d3dx9_30.dll,,0x00010000
+d3dx9_31.dll,64d3dx9_31.dll,,0x00010000
+d3dx9_32.dll,64d3dx9_32.dll,,0x00010000
+d3dx9_33.dll,64d3dx9_33.dll,,0x00010000
+d3dx9_34.dll,64d3dx9_34.dll,,0x00010000
+d3dx9_35.dll,64d3dx9_35.dll,,0x00010000
+d3dx9_36.dll,64d3dx9_36.dll,,0x00010000
+d3dx9_37.dll,64d3dx9_37.dll,,0x00010000
+d3dx9_38.dll,64d3dx9_38.dll,,0x00010000
+d3dx9_39.dll,64d3dx9_39.dll,,0x00010000
+d3dx9_40.dll,64d3dx9_40.dll,,0x00010000
+d3dx9_41.dll,64d3dx9_41.dll,,0x00010000
+d3dx9_42.dll,64d3dx9_42.dll,,0x00010000
+d3dx9_43.dll,64d3dx9_43.dll,,0x00010000
+x3daudio1_0.dll,64x3daudio1_0.dll,,0x00010000
+x3daudio1_1.dll,64x3daudio1_1.dll,,0x00010000
+x3daudio1_2.dll,64x3daudio1_2.dll,,0x00010000
+X3DAudio1_3.dll,64X3DAudio1_3.dll,,0x00010000
+X3DAudio1_4.dll,64X3DAudio1_4.dll,,0x00010000
+X3DAudio1_5.dll,64X3DAudio1_5.dll,,0x00010000
+X3DAudio1_6.dll,64X3DAudio1_6.dll,,0x00010000
+X3DAudio1_7.dll,64X3DAudio1_7.dll,,0x00010000
+xactengine2_0.dll,64xactengine2_0.dll,,0x00010000
+xactengine2_1.dll,64xactengine2_1.dll,,0x00010000
+xactengine2_10.dll,64xactengine2_10.dll,,0x00010000
+xactengine2_2.dll,64xactengine2_2.dll,,0x00010000
+xactengine2_3.dll,64xactengine2_3.dll,,0x00010000
+xactengine2_4.dll,64xactengine2_4.dll,,0x00010000
+xactengine2_5.dll,64xactengine2_5.dll,,0x00010000
+xactengine2_6.dll,64xactengine2_6.dll,,0x00010000
+xactengine2_7.dll,64xactengine2_7.dll,,0x00010000
+xactengine2_8.dll,64xactengine2_8.dll,,0x00010000
+xactengine2_9.dll,64xactengine2_9.dll,,0x00010000
+xactengine3_0.dll,64xactengine3_0.dll,,0x00010000
+xactengine3_1.dll,64xactengine3_1.dll,,0x00010000
+xactengine3_2.dll,64xactengine3_2.dll,,0x00010000
+xactengine3_3.dll,64xactengine3_3.dll,,0x00010000
+xactengine3_4.dll,64xactengine3_4.dll,,0x00010000
+xactengine3_5.dll,64xactengine3_5.dll,,0x00010000
+xactengine3_6.dll,64xactengine3_6.dll,,0x00010000
+xactengine3_7.dll,64xactengine3_7.dll,,0x00010000
+XAPOFX1_0.dll,64XAPOFX1_0.dll,,0x00010000
+XAPOFX1_1.dll,64XAPOFX1_1.dll,,0x00010000
+XAPOFX1_2.dll,64XAPOFX1_2.dll,,0x00010000
+XAPOFX1_3.dll,64XAPOFX1_3.dll,,0x00010000
+XAPOFX1_4.dll,64XAPOFX1_4.dll,,0x00010000
+XAPOFX1_5.dll,64XAPOFX1_5.dll,,0x00010000
+XAudio2_0.dll,64XAudio2_0.dll,,0x00010000
+XAudio2_1.dll,64XAudio2_1.dll,,0x00010000
+XAudio2_2.dll,64XAudio2_2.dll,,0x00010000
+XAudio2_3.dll,64XAudio2_3.dll,,0x00010000
+XAudio2_4.dll,64XAudio2_4.dll,,0x00010000
+XAudio2_5.dll,64XAudio2_5.dll,,0x00010000
+XAudio2_6.dll,64XAudio2_6.dll,,0x00010000
+XAudio2_7.dll,64XAudio2_7.dll,,0x00010000
+XAudio2_9redist.dll,64XAudio2_9redist.dll,,0x00010000
+xinput1_1.dll,64xinput1_1.dll,,0x00010000
+xinput1_2.dll,64xinput1_2.dll,,0x00010000
+xinput1_3.dll,64xinput1_3.dll,,0x00010000
+
+[File.Copy.wow]
+d3dcompiler_33.dll,,,0x00010000
+d3dcompiler_34.dll,,,0x00010000
+d3dcompiler_35.dll,,,0x00010000
+d3dcompiler_36.dll,,,0x00010000
+D3DCompiler_37.dll,,,0x00010000
+D3DCompiler_38.dll,,,0x00010000
+D3DCompiler_39.dll,,,0x00010000
+D3DCompiler_40.dll,,,0x00010000
+D3DCompiler_41.dll,,,0x00010000
+D3DCompiler_42.dll,,,0x00010000
+D3DCompiler_43.dll,,,0x00010000
+d3dcsx_42.dll,,,0x00010000
+d3dcsx_43.dll,,,0x00010000
+d3dx10.dll,,,0x00010000
+d3dx10_33.dll,,,0x00010000
+d3dx10_34.dll,,,0x00010000
+d3dx10_35.dll,,,0x00010000
+d3dx10_36.dll,,,0x00010000
+d3dx10_37.dll,,,0x00010000
+d3dx10_38.dll,,,0x00010000
+d3dx10_39.dll,,,0x00010000
+d3dx10_40.dll,,,0x00010000
+d3dx10_41.dll,,,0x00010000
+d3dx10_42.dll,,,0x00010000
+d3dx10_43.dll,,,0x00010000
+d3dx11_42.dll,,,0x00010000
+d3dx11_43.dll,,,0x00010000
+d3dx9_24.dll,,,0x00010000
+d3dx9_25.dll,,,0x00010000
+d3dx9_26.dll,,,0x00010000
+d3dx9_27.dll,,,0x00010000
+d3dx9_28.dll,,,0x00010000
+d3dx9_29.dll,,,0x00010000
+d3dx9_30.dll,,,0x00010000
+d3dx9_31.dll,,,0x00010000
+d3dx9_32.dll,,,0x00010000
+d3dx9_33.dll,,,0x00010000
+d3dx9_34.dll,,,0x00010000
+d3dx9_35.dll,,,0x00010000
+d3dx9_36.dll,,,0x00010000
+d3dx9_37.dll,,,0x00010000
+d3dx9_38.dll,,,0x00010000
+d3dx9_39.dll,,,0x00010000
+d3dx9_40.dll,,,0x00010000
+d3dx9_41.dll,,,0x00010000
+d3dx9_42.dll,,,0x00010000
+d3dx9_43.dll,,,0x00010000
+x3daudio1_0.dll,,,0x00010000
+x3daudio1_1.dll,,,0x00010000
+x3daudio1_2.dll,,,0x00010000
+X3DAudio1_3.dll,,,0x00010000
+X3DAudio1_4.dll,,,0x00010000
+X3DAudio1_5.dll,,,0x00010000
+X3DAudio1_6.dll,,,0x00010000
+X3DAudio1_7.dll,,,0x00010000
+xactengine2_0.dll,,,0x00010000
+xactengine2_1.dll,,,0x00010000
+xactengine2_10.dll,,,0x00010000
+xactengine2_2.dll,,,0x00010000
+xactengine2_3.dll,,,0x00010000
+xactengine2_4.dll,,,0x00010000
+xactengine2_5.dll,,,0x00010000
+xactengine2_6.dll,,,0x00010000
+xactengine2_7.dll,,,0x00010000
+xactengine2_8.dll,,,0x00010000
+xactengine2_9.dll,,,0x00010000
+xactengine3_0.dll,,,0x00010000
+xactengine3_1.dll,,,0x00010000
+xactengine3_2.dll,,,0x00010000
+xactengine3_3.dll,,,0x00010000
+xactengine3_4.dll,,,0x00010000
+xactengine3_5.dll,,,0x00010000
+xactengine3_6.dll,,,0x00010000
+xactengine3_7.dll,,,0x00010000
+XAPOFX1_0.dll,,,0x00010000
+XAPOFX1_1.dll,,,0x00010000
+XAPOFX1_2.dll,,,0x00010000
+XAPOFX1_3.dll,,,0x00010000
+XAPOFX1_4.dll,,,0x00010000
+XAPOFX1_5.dll,,,0x00010000
+XAudio2_0.dll,,,0x00010000
+XAudio2_1.dll,,,0x00010000
+XAudio2_2.dll,,,0x00010000
+XAudio2_3.dll,,,0x00010000
+XAudio2_4.dll,,,0x00010000
+XAudio2_5.dll,,,0x00010000
+XAudio2_6.dll,,,0x00010000
+XAudio2_7.dll,,,0x00010000
+XAudio2_9redist.dll,,,0x00010000
+xinput1_1.dll,,,0x00010000
+xinput1_2.dll,,,0x00010000
+xinput1_3.dll,,,0x00010000
+
+[XIP9.Copy.x86]
+xinput9_1_0.dll,,,0x00010010
+XAudio2_9.dll,XAudio2_9redist.dll,,0x00010010
+
+[XIP9.Copy.x64]
+xinput9_1_0.dll,64xinput9_1_0.dll,,0x00010010
+XAudio2_9.dll,64XAudio2_9redist.dll,,0x00010010
+
+[XIP9.Copy.wow]
+xinput9_1_0.dll,,,0x00010010
+XAudio2_9.dll,XAudio2_9redist.dll,,0x00010010
+
+[Registry.Install]
+HKLM,"%CLDK%\{03219E78-5BC3-44D1-B92E-F63D89CC6526}",,,"XAudio2"
+HKLM,"%CLDK%\{03219E78-5BC3-44D1-B92E-F63D89CC6526}\InProcServer32",,,"%11%\XAudio2_4.dll"
+HKLM,"%CLDK%\{03219E78-5BC3-44D1-B92E-F63D89CC6526}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{074B110F-7F58-4743-AEA5-12F15B5074ED}",,,"XACT Engine"
+HKLM,"%CLDK%\{074B110F-7F58-4743-AEA5-12F15B5074ED}\InProcServer32",,,"%11%\xactengine3_5.dll"
+HKLM,"%CLDK%\{074B110F-7F58-4743-AEA5-12F15B5074ED}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{0977D092-2D95-4E43-8D42-9DDCC2545ED5}",,,"XACT Engine"
+HKLM,"%CLDK%\{0977D092-2D95-4E43-8D42-9DDCC2545ED5}\InProcServer32",,,"%11%\xactengine3_4.dll"
+HKLM,"%CLDK%\{0977D092-2D95-4E43-8D42-9DDCC2545ED5}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{0AA000AA-F404-11D9-BD7A-0010DC4F8F81}",,,"XACT Engine"
+HKLM,"%CLDK%\{0AA000AA-F404-11D9-BD7A-0010DC4F8F81}\InProcServer32",,,"%11%\xactengine2_0.dll"
+HKLM,"%CLDK%\{0AA000AA-F404-11D9-BD7A-0010DC4F8F81}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{1138472B-D187-44E9-81F2-AE1B0E7785F1}",,,"XACT Engine"
+HKLM,"%CLDK%\{1138472B-D187-44E9-81F2-AE1B0E7785F1}\InProcServer32",,,"%11%\xactengine2_3.dll"
+HKLM,"%CLDK%\{1138472B-D187-44E9-81F2-AE1B0E7785F1}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{1F1B577E-5E5A-4E8A-BA73-C657EA8E8598}",,,"XACT Engine"
+HKLM,"%CLDK%\{1F1B577E-5E5A-4E8A-BA73-C657EA8E8598}\InProcServer32",,,"%11%\xactengine2_1.dll"
+HKLM,"%CLDK%\{1F1B577E-5E5A-4E8A-BA73-C657EA8E8598}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{2139E6DA-C341-4774-9AC3-B4E026347F64}",,,"AudioVolumeMeter"
+HKLM,"%CLDK%\{2139E6DA-C341-4774-9AC3-B4E026347F64}\InProcServer32",,,"%11%\XAudio2_5.dll"
+HKLM,"%CLDK%\{2139E6DA-C341-4774-9AC3-B4E026347F64}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{248D8A3B-6256-44D3-A018-2AC96C459F47}",,,"XACT Engine"
+HKLM,"%CLDK%\{248D8A3B-6256-44D3-A018-2AC96C459F47}\InProcServer32",,,"%11%\xactengine3_6.dll"
+HKLM,"%CLDK%\{248D8A3B-6256-44D3-A018-2AC96C459F47}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{343E68E6-8F82-4A8D-A2DA-6E9A944B378C}",,,"XACT Engine"
+HKLM,"%CLDK%\{343E68E6-8F82-4A8D-A2DA-6E9A944B378C}\InProcServer32",,,"%11%\xactengine2_9.dll"
+HKLM,"%CLDK%\{343E68E6-8F82-4A8D-A2DA-6E9A944B378C}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{3A2495CE-31D0-435B-8CCF-E9F0843FD960}",,,"XACT Engine"
+HKLM,"%CLDK%\{3A2495CE-31D0-435B-8CCF-E9F0843FD960}\InProcServer32",,,"%11%\xactengine2_6.dll"
+HKLM,"%CLDK%\{3A2495CE-31D0-435B-8CCF-E9F0843FD960}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{3B80EE2A-B0F5-4780-9E30-90CB39685B03}",,,"XACT Engine"
+HKLM,"%CLDK%\{3B80EE2A-B0F5-4780-9E30-90CB39685B03}\InProcServer32",,,"%11%\xactengine3_0.dll"
+HKLM,"%CLDK%\{3B80EE2A-B0F5-4780-9E30-90CB39685B03}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{3EDA9B49-2085-498B-9BB2-39A6778493DE}",,,"XAudio2"
+HKLM,"%CLDK%\{3EDA9B49-2085-498B-9BB2-39A6778493DE}\InProcServer32",,,"%11%\XAudio2_6.dll"
+HKLM,"%CLDK%\{3EDA9B49-2085-498B-9BB2-39A6778493DE}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{4C5E637A-16C7-4DE3-9C46-5ED22181962D}",,,"XAudio2"
+HKLM,"%CLDK%\{4C5E637A-16C7-4DE3-9C46-5ED22181962D}\InProcServer32",,,"%11%\XAudio2_3.dll"
+HKLM,"%CLDK%\{4C5E637A-16C7-4DE3-9C46-5ED22181962D}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{4C9B6DDE-6809-46E6-A278-9B6A97588670}",,,"XAudio2"
+HKLM,"%CLDK%\{4C9B6DDE-6809-46E6-A278-9B6A97588670}\InProcServer32",,,"%11%\XAudio2_5.dll"
+HKLM,"%CLDK%\{4C9B6DDE-6809-46E6-A278-9B6A97588670}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{54B68BC7-3A45-416B-A8C9-19BF19EC1DF5}",,,"XACT Engine"
+HKLM,"%CLDK%\{54B68BC7-3A45-416B-A8C9-19BF19EC1DF5}\InProcServer32",,,"%11%\xactengine2_5.dll"
+HKLM,"%CLDK%\{54B68BC7-3A45-416B-A8C9-19BF19EC1DF5}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{5A508685-A254-4FBA-9B82-9A24B00306AF}",,,"XAudio2"
+HKLM,"%CLDK%\{5A508685-A254-4FBA-9B82-9A24B00306AF}\InProcServer32",,,"%11%\XAudio2_7.dll"
+HKLM,"%CLDK%\{5A508685-A254-4FBA-9B82-9A24B00306AF}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{629CF0DE-3ECC-41E7-9926-F7E43EEBEC51}",,,"AudioReverb"
+HKLM,"%CLDK%\{629CF0DE-3ECC-41E7-9926-F7E43EEBEC51}\InProcServer32",,,"%11%\XAudio2_2.dll"
+HKLM,"%CLDK%\{629CF0DE-3ECC-41E7-9926-F7E43EEBEC51}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{65D822A4-4799-42C6-9B18-D26CF66DD320}",,,"XACT Engine"
+HKLM,"%CLDK%\{65D822A4-4799-42C6-9B18-D26CF66DD320}\InProcServer32",,,"%11%\xactengine2_10.dll"
+HKLM,"%CLDK%\{65D822A4-4799-42C6-9B18-D26CF66DD320}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{6A93130E-1D53-41D1-A9CF-E758800BB179}",,,"AudioReverb"
+HKLM,"%CLDK%\{6A93130E-1D53-41D1-A9CF-E758800BB179}\InProcServer32",,,"%11%\XAudio2_7.dll"
+HKLM,"%CLDK%\{6A93130E-1D53-41D1-A9CF-E758800BB179}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{6F6EA3A9-2CF5-41CF-91C1-2170B1540063}",,,"AudioReverb"
+HKLM,"%CLDK%\{6F6EA3A9-2CF5-41CF-91C1-2170B1540063}\InProcServer32",,,"%11%\XAudio2_0.dll"
+HKLM,"%CLDK%\{6F6EA3A9-2CF5-41CF-91C1-2170B1540063}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{77C56BF4-18A1-42B0-88AF-5072CE814949}",,,"XACT Engine"
+HKLM,"%CLDK%\{77C56BF4-18A1-42B0-88AF-5072CE814949}\InProcServer32",,,"%11%\xactengine2_8.dll"
+HKLM,"%CLDK%\{77C56BF4-18A1-42B0-88AF-5072CE814949}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{8BB7778B-645B-4475-9A73-1DE3170BD3AF}",,,"AudioReverb"
+HKLM,"%CLDK%\{8BB7778B-645B-4475-9A73-1DE3170BD3AF}\InProcServer32",,,"%11%\XAudio2_4.dll"
+HKLM,"%CLDK%\{8BB7778B-645B-4475-9A73-1DE3170BD3AF}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{94C1AFFA-66E7-4961-9521-CFDEF3128D4F}",,,"XACT Engine"
+HKLM,"%CLDK%\{94C1AFFA-66E7-4961-9521-CFDEF3128D4F}\InProcServer32",,,"%11%\xactengine3_3.dll"
+HKLM,"%CLDK%\{94C1AFFA-66E7-4961-9521-CFDEF3128D4F}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{962F5027-99BE-4692-A468-85802CF8DE61}",,,"XACT Engine"
+HKLM,"%CLDK%\{962F5027-99BE-4692-A468-85802CF8DE61}\InProcServer32",,,"%11%\xactengine3_1.dll"
+HKLM,"%CLDK%\{962F5027-99BE-4692-A468-85802CF8DE61}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{9CAB402C-1D37-44B4-886D-FA4F36170A4C}",,,"AudioReverb"
+HKLM,"%CLDK%\{9CAB402C-1D37-44B4-886D-FA4F36170A4C}\InProcServer32",,,"%11%\XAudio2_3.dll"
+HKLM,"%CLDK%\{9CAB402C-1D37-44B4-886D-FA4F36170A4C}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{B802058A-464A-42DB-BC10-B650D6F2586A}",,,"XAudio2"
+HKLM,"%CLDK%\{B802058A-464A-42DB-BC10-B650D6F2586A}\InProcServer32",,,"%11%\XAudio2_2.dll"
+HKLM,"%CLDK%\{B802058A-464A-42DB-BC10-B650D6F2586A}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{BC3E0FC6-2E0D-4C45-BC61-D9C328319BD8}",,,"XACT Engine"
+HKLM,"%CLDK%\{BC3E0FC6-2E0D-4C45-BC61-D9C328319BD8}\InProcServer32",,,"%11%\xactengine2_4.dll"
+HKLM,"%CLDK%\{BC3E0FC6-2E0D-4C45-BC61-D9C328319BD8}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{BCC782BC-6492-4C22-8C35-F5D72FE73C6E}",,,"XACT Engine"
+HKLM,"%CLDK%\{BCC782BC-6492-4C22-8C35-F5D72FE73C6E}\InProcServer32",,,"%11%\xactengine3_7.dll"
+HKLM,"%CLDK%\{BCC782BC-6492-4C22-8C35-F5D72FE73C6E}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{C0C56F46-29B1-44E9-9939-A32CE86867E2}",,,"AudioVolumeMeter"
+HKLM,"%CLDK%\{C0C56F46-29B1-44E9-9939-A32CE86867E2}\InProcServer32",,,"%11%\XAudio2_0.dll"
+HKLM,"%CLDK%\{C0C56F46-29B1-44E9-9939-A32CE86867E2}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{C1E3F122-A2EA-442C-854F-20D98F8357A1}",,,"AudioVolumeMeter"
+HKLM,"%CLDK%\{C1E3F122-A2EA-442C-854F-20D98F8357A1}\InProcServer32",,,"%11%\XAudio2_1.dll"
+HKLM,"%CLDK%\{C1E3F122-A2EA-442C-854F-20D98F8357A1}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{C60FAE90-4183-4A3F-B2F7-AC1DC49B0E5C}",,,"XACT Engine"
+HKLM,"%CLDK%\{C60FAE90-4183-4A3F-B2F7-AC1DC49B0E5C}\InProcServer32",,,"%11%\xactengine2_2.dll"
+HKLM,"%CLDK%\{C60FAE90-4183-4A3F-B2F7-AC1DC49B0E5C}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{C7338B95-52B8-4542-AA79-42EB016C8C1C}",,,"AudioVolumeMeter"
+HKLM,"%CLDK%\{C7338B95-52B8-4542-AA79-42EB016C8C1C}\InProcServer32",,,"%11%\XAudio2_4.dll"
+HKLM,"%CLDK%\{C7338B95-52B8-4542-AA79-42EB016C8C1C}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{CAC1105F-619B-4D04-831A-44E1CBF12D57}",,,"AudioVolumeMeter"
+HKLM,"%CLDK%\{CAC1105F-619B-4D04-831A-44E1CBF12D57}\InProcServer32",,,"%11%\XAudio2_7.dll"
+HKLM,"%CLDK%\{CAC1105F-619B-4D04-831A-44E1CBF12D57}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{CD0D66EC-8057-43F5-ACBD-66DFB36FD78C}",,,"XACT Engine"
+HKLM,"%CLDK%\{CD0D66EC-8057-43F5-ACBD-66DFB36FD78C}\InProcServer32",,,"%11%\xactengine2_7.dll"
+HKLM,"%CLDK%\{CD0D66EC-8057-43F5-ACBD-66DFB36FD78C}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{CECEC95A-D894-491A-BEE3-5E106FB59F2D}",,,"AudioReverb"
+HKLM,"%CLDK%\{CECEC95A-D894-491A-BEE3-5E106FB59F2D}\InProcServer32",,,"%11%\XAudio2_6.dll"
+HKLM,"%CLDK%\{CECEC95A-D894-491A-BEE3-5E106FB59F2D}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{D06DF0D0-8518-441E-822F-5451D5C595B8}",,,"AudioReverb"
+HKLM,"%CLDK%\{D06DF0D0-8518-441E-822F-5451D5C595B8}\InProcServer32",,,"%11%\XAudio2_5.dll"
+HKLM,"%CLDK%\{D06DF0D0-8518-441E-822F-5451D5C595B8}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{D3332F02-3DD0-4DE9-9AEC-20D85C4111B6}",,,"XACT Engine"
+HKLM,"%CLDK%\{D3332F02-3DD0-4DE9-9AEC-20D85C4111B6}\InProcServer32",,,"%11%\xactengine3_2.dll"
+HKLM,"%CLDK%\{D3332F02-3DD0-4DE9-9AEC-20D85C4111B6}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{E180344B-AC83-4483-959E-18A5C56A5E19}",,,"AudioVolumeMeter"
+HKLM,"%CLDK%\{E180344B-AC83-4483-959E-18A5C56A5E19}\InProcServer32",,,"%11%\XAudio2_3.dll"
+HKLM,"%CLDK%\{E180344B-AC83-4483-959E-18A5C56A5E19}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{E21A7345-EB21-468E-BE50-804DB97CF708}",,,"XAudio2"
+HKLM,"%CLDK%\{E21A7345-EB21-468E-BE50-804DB97CF708}\InProcServer32",,,"%11%\XAudio2_1.dll"
+HKLM,"%CLDK%\{E21A7345-EB21-468E-BE50-804DB97CF708}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{E48C5A3F-93EF-43BB-A092-2C7CEB946F27}",,,"AudioVolumeMeter"
+HKLM,"%CLDK%\{E48C5A3F-93EF-43BB-A092-2C7CEB946F27}\InProcServer32",,,"%11%\XAudio2_6.dll"
+HKLM,"%CLDK%\{E48C5A3F-93EF-43BB-A092-2C7CEB946F27}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{F4769300-B949-4DF9-B333-00D33932E9A6}",,,"AudioReverb"
+HKLM,"%CLDK%\{F4769300-B949-4DF9-B333-00D33932E9A6}\InProcServer32",,,"%11%\XAudio2_1.dll"
+HKLM,"%CLDK%\{F4769300-B949-4DF9-B333-00D33932E9A6}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{F5CA7B34-8055-42C0-B836-216129EB7E30}",,,"AudioVolumeMeter"
+HKLM,"%CLDK%\{F5CA7B34-8055-42C0-B836-216129EB7E30}\InProcServer32",,,"%11%\XAudio2_2.dll"
+HKLM,"%CLDK%\{F5CA7B34-8055-42C0-B836-216129EB7E30}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CLDK%\{FAC23F48-31F5-45A8-B49B-5225D61401AA}",,,"XAudio2"
+HKLM,"%CLDK%\{FAC23F48-31F5-45A8-B49B-5225D61401AA}\InProcServer32",,,"%11%\XAudio2_0.dll"
+HKLM,"%CLDK%\{FAC23F48-31F5-45A8-B49B-5225D61401AA}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%UnKey%\%AppName%","DisplayIcon",,"%11%\msiexec.exe,0"
+HKLM,"%UnKey%\%AppName%","DisplayName",,"Microsoft %AppName%"
+HKLM,"%UnKey%\%AppName%","DisplayVersion",,"%Version%"
+HKLM,"%UnKey%\%AppName%","HelpLink",,"https://aka.ms/dxsetup"
+HKLM,"%UnKey%\%AppName%","URLInfoAbout",,"http://go.microsoft.com/fwlink/?LinkID=194352"
+HKLM,"%UnKey%\%AppName%","Publisher",,"Microsoft Corporation"
+HKLM,"%UnKey%\%AppName%","UninstallString",,"rundll32.exe advpack.dll,LaunchINFSection DXeurt.inf,Uninstall"
+HKLM,"%UnKey%\%AppName%","NoModify",0x00010001,0x1
+HKLM,"%UnKey%\%AppName%","NoRepair",0x00010001,0x1
+HKLM,"%UnKey%\%AppName%","EstimatedSize",0x00010001,0x18016
+
+[Registry.Uninstall]
+HKLM,"%CLDK%\{03219E78-5BC3-44D1-B92E-F63D89CC6526}"
+HKLM,"%CLDK%\{074B110F-7F58-4743-AEA5-12F15B5074ED}"
+HKLM,"%CLDK%\{0977D092-2D95-4E43-8D42-9DDCC2545ED5}"
+HKLM,"%CLDK%\{0AA000AA-F404-11D9-BD7A-0010DC4F8F81}"
+HKLM,"%CLDK%\{1138472B-D187-44E9-81F2-AE1B0E7785F1}"
+HKLM,"%CLDK%\{1F1B577E-5E5A-4E8A-BA73-C657EA8E8598}"
+HKLM,"%CLDK%\{2139E6DA-C341-4774-9AC3-B4E026347F64}"
+HKLM,"%CLDK%\{248D8A3B-6256-44D3-A018-2AC96C459F47}"
+HKLM,"%CLDK%\{343E68E6-8F82-4A8D-A2DA-6E9A944B378C}"
+HKLM,"%CLDK%\{3A2495CE-31D0-435B-8CCF-E9F0843FD960}"
+HKLM,"%CLDK%\{3B80EE2A-B0F5-4780-9E30-90CB39685B03}"
+HKLM,"%CLDK%\{3EDA9B49-2085-498B-9BB2-39A6778493DE}"
+HKLM,"%CLDK%\{4C5E637A-16C7-4DE3-9C46-5ED22181962D}"
+HKLM,"%CLDK%\{4C9B6DDE-6809-46E6-A278-9B6A97588670}"
+HKLM,"%CLDK%\{54B68BC7-3A45-416B-A8C9-19BF19EC1DF5}"
+HKLM,"%CLDK%\{5A508685-A254-4FBA-9B82-9A24B00306AF}"
+HKLM,"%CLDK%\{629CF0DE-3ECC-41E7-9926-F7E43EEBEC51}"
+HKLM,"%CLDK%\{65D822A4-4799-42C6-9B18-D26CF66DD320}"
+HKLM,"%CLDK%\{6A93130E-1D53-41D1-A9CF-E758800BB179}"
+HKLM,"%CLDK%\{6F6EA3A9-2CF5-41CF-91C1-2170B1540063}"
+HKLM,"%CLDK%\{77C56BF4-18A1-42B0-88AF-5072CE814949}"
+HKLM,"%CLDK%\{8BB7778B-645B-4475-9A73-1DE3170BD3AF}"
+HKLM,"%CLDK%\{94C1AFFA-66E7-4961-9521-CFDEF3128D4F}"
+HKLM,"%CLDK%\{962F5027-99BE-4692-A468-85802CF8DE61}"
+HKLM,"%CLDK%\{9CAB402C-1D37-44B4-886D-FA4F36170A4C}"
+HKLM,"%CLDK%\{B802058A-464A-42DB-BC10-B650D6F2586A}"
+HKLM,"%CLDK%\{BC3E0FC6-2E0D-4C45-BC61-D9C328319BD8}"
+HKLM,"%CLDK%\{BCC782BC-6492-4C22-8C35-F5D72FE73C6E}"
+HKLM,"%CLDK%\{C0C56F46-29B1-44E9-9939-A32CE86867E2}"
+HKLM,"%CLDK%\{C1E3F122-A2EA-442C-854F-20D98F8357A1}"
+HKLM,"%CLDK%\{C60FAE90-4183-4A3F-B2F7-AC1DC49B0E5C}"
+HKLM,"%CLDK%\{C7338B95-52B8-4542-AA79-42EB016C8C1C}"
+HKLM,"%CLDK%\{CAC1105F-619B-4D04-831A-44E1CBF12D57}"
+HKLM,"%CLDK%\{CD0D66EC-8057-43F5-ACBD-66DFB36FD78C}"
+HKLM,"%CLDK%\{CECEC95A-D894-491A-BEE3-5E106FB59F2D}"
+HKLM,"%CLDK%\{D06DF0D0-8518-441E-822F-5451D5C595B8}"
+HKLM,"%CLDK%\{D3332F02-3DD0-4DE9-9AEC-20D85C4111B6}"
+HKLM,"%CLDK%\{E180344B-AC83-4483-959E-18A5C56A5E19}"
+HKLM,"%CLDK%\{E21A7345-EB21-468E-BE50-804DB97CF708}"
+HKLM,"%CLDK%\{E48C5A3F-93EF-43BB-A092-2C7CEB946F27}"
+HKLM,"%CLDK%\{F4769300-B949-4DF9-B333-00D33932E9A6}"
+HKLM,"%CLDK%\{F5CA7B34-8055-42C0-B836-216129EB7E30}"
+HKLM,"%CLDK%\{FAC23F48-31F5-45A8-B49B-5225D61401AA}"
+HKLM,"%UnKey%\%AppName%"
+
+[Registry.wow.Install]
+HKLM,"%CL2K%\{03219E78-5BC3-44D1-B92E-F63D89CC6526}",,,"XAudio2"
+HKLM,"%CL2K%\{03219E78-5BC3-44D1-B92E-F63D89CC6526}\InProcServer32",,,"%16425%\XAudio2_4.dll"
+HKLM,"%CL2K%\{03219E78-5BC3-44D1-B92E-F63D89CC6526}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{074B110F-7F58-4743-AEA5-12F15B5074ED}",,,"XACT Engine"
+HKLM,"%CL2K%\{074B110F-7F58-4743-AEA5-12F15B5074ED}\InProcServer32",,,"%16425%\xactengine3_5.dll"
+HKLM,"%CL2K%\{074B110F-7F58-4743-AEA5-12F15B5074ED}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{0977D092-2D95-4E43-8D42-9DDCC2545ED5}",,,"XACT Engine"
+HKLM,"%CL2K%\{0977D092-2D95-4E43-8D42-9DDCC2545ED5}\InProcServer32",,,"%16425%\xactengine3_4.dll"
+HKLM,"%CL2K%\{0977D092-2D95-4E43-8D42-9DDCC2545ED5}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{0AA000AA-F404-11D9-BD7A-0010DC4F8F81}",,,"XACT Engine"
+HKLM,"%CL2K%\{0AA000AA-F404-11D9-BD7A-0010DC4F8F81}\InProcServer32",,,"%16425%\xactengine2_0.dll"
+HKLM,"%CL2K%\{0AA000AA-F404-11D9-BD7A-0010DC4F8F81}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{1138472B-D187-44E9-81F2-AE1B0E7785F1}",,,"XACT Engine"
+HKLM,"%CL2K%\{1138472B-D187-44E9-81F2-AE1B0E7785F1}\InProcServer32",,,"%16425%\xactengine2_3.dll"
+HKLM,"%CL2K%\{1138472B-D187-44E9-81F2-AE1B0E7785F1}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{1F1B577E-5E5A-4E8A-BA73-C657EA8E8598}",,,"XACT Engine"
+HKLM,"%CL2K%\{1F1B577E-5E5A-4E8A-BA73-C657EA8E8598}\InProcServer32",,,"%16425%\xactengine2_1.dll"
+HKLM,"%CL2K%\{1F1B577E-5E5A-4E8A-BA73-C657EA8E8598}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{2139E6DA-C341-4774-9AC3-B4E026347F64}",,,"AudioVolumeMeter"
+HKLM,"%CL2K%\{2139E6DA-C341-4774-9AC3-B4E026347F64}\InProcServer32",,,"%16425%\XAudio2_5.dll"
+HKLM,"%CL2K%\{2139E6DA-C341-4774-9AC3-B4E026347F64}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{248D8A3B-6256-44D3-A018-2AC96C459F47}",,,"XACT Engine"
+HKLM,"%CL2K%\{248D8A3B-6256-44D3-A018-2AC96C459F47}\InProcServer32",,,"%16425%\xactengine3_6.dll"
+HKLM,"%CL2K%\{248D8A3B-6256-44D3-A018-2AC96C459F47}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{343E68E6-8F82-4A8D-A2DA-6E9A944B378C}",,,"XACT Engine"
+HKLM,"%CL2K%\{343E68E6-8F82-4A8D-A2DA-6E9A944B378C}\InProcServer32",,,"%16425%\xactengine2_9.dll"
+HKLM,"%CL2K%\{343E68E6-8F82-4A8D-A2DA-6E9A944B378C}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{3A2495CE-31D0-435B-8CCF-E9F0843FD960}",,,"XACT Engine"
+HKLM,"%CL2K%\{3A2495CE-31D0-435B-8CCF-E9F0843FD960}\InProcServer32",,,"%16425%\xactengine2_6.dll"
+HKLM,"%CL2K%\{3A2495CE-31D0-435B-8CCF-E9F0843FD960}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{3B80EE2A-B0F5-4780-9E30-90CB39685B03}",,,"XACT Engine"
+HKLM,"%CL2K%\{3B80EE2A-B0F5-4780-9E30-90CB39685B03}\InProcServer32",,,"%16425%\xactengine3_0.dll"
+HKLM,"%CL2K%\{3B80EE2A-B0F5-4780-9E30-90CB39685B03}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{3EDA9B49-2085-498B-9BB2-39A6778493DE}",,,"XAudio2"
+HKLM,"%CL2K%\{3EDA9B49-2085-498B-9BB2-39A6778493DE}\InProcServer32",,,"%16425%\XAudio2_6.dll"
+HKLM,"%CL2K%\{3EDA9B49-2085-498B-9BB2-39A6778493DE}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{4C5E637A-16C7-4DE3-9C46-5ED22181962D}",,,"XAudio2"
+HKLM,"%CL2K%\{4C5E637A-16C7-4DE3-9C46-5ED22181962D}\InProcServer32",,,"%16425%\XAudio2_3.dll"
+HKLM,"%CL2K%\{4C5E637A-16C7-4DE3-9C46-5ED22181962D}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{4C9B6DDE-6809-46E6-A278-9B6A97588670}",,,"XAudio2"
+HKLM,"%CL2K%\{4C9B6DDE-6809-46E6-A278-9B6A97588670}\InProcServer32",,,"%16425%\XAudio2_5.dll"
+HKLM,"%CL2K%\{4C9B6DDE-6809-46E6-A278-9B6A97588670}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{54B68BC7-3A45-416B-A8C9-19BF19EC1DF5}",,,"XACT Engine"
+HKLM,"%CL2K%\{54B68BC7-3A45-416B-A8C9-19BF19EC1DF5}\InProcServer32",,,"%16425%\xactengine2_5.dll"
+HKLM,"%CL2K%\{54B68BC7-3A45-416B-A8C9-19BF19EC1DF5}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{5A508685-A254-4FBA-9B82-9A24B00306AF}",,,"XAudio2"
+HKLM,"%CL2K%\{5A508685-A254-4FBA-9B82-9A24B00306AF}\InProcServer32",,,"%16425%\XAudio2_7.dll"
+HKLM,"%CL2K%\{5A508685-A254-4FBA-9B82-9A24B00306AF}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{629CF0DE-3ECC-41E7-9926-F7E43EEBEC51}",,,"AudioReverb"
+HKLM,"%CL2K%\{629CF0DE-3ECC-41E7-9926-F7E43EEBEC51}\InProcServer32",,,"%16425%\XAudio2_2.dll"
+HKLM,"%CL2K%\{629CF0DE-3ECC-41E7-9926-F7E43EEBEC51}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{65D822A4-4799-42C6-9B18-D26CF66DD320}",,,"XACT Engine"
+HKLM,"%CL2K%\{65D822A4-4799-42C6-9B18-D26CF66DD320}\InProcServer32",,,"%16425%\xactengine2_10.dll"
+HKLM,"%CL2K%\{65D822A4-4799-42C6-9B18-D26CF66DD320}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{6A93130E-1D53-41D1-A9CF-E758800BB179}",,,"AudioReverb"
+HKLM,"%CL2K%\{6A93130E-1D53-41D1-A9CF-E758800BB179}\InProcServer32",,,"%16425%\XAudio2_7.dll"
+HKLM,"%CL2K%\{6A93130E-1D53-41D1-A9CF-E758800BB179}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{6F6EA3A9-2CF5-41CF-91C1-2170B1540063}",,,"AudioReverb"
+HKLM,"%CL2K%\{6F6EA3A9-2CF5-41CF-91C1-2170B1540063}\InProcServer32",,,"%16425%\XAudio2_0.dll"
+HKLM,"%CL2K%\{6F6EA3A9-2CF5-41CF-91C1-2170B1540063}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{77C56BF4-18A1-42B0-88AF-5072CE814949}",,,"XACT Engine"
+HKLM,"%CL2K%\{77C56BF4-18A1-42B0-88AF-5072CE814949}\InProcServer32",,,"%16425%\xactengine2_8.dll"
+HKLM,"%CL2K%\{77C56BF4-18A1-42B0-88AF-5072CE814949}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{8BB7778B-645B-4475-9A73-1DE3170BD3AF}",,,"AudioReverb"
+HKLM,"%CL2K%\{8BB7778B-645B-4475-9A73-1DE3170BD3AF}\InProcServer32",,,"%16425%\XAudio2_4.dll"
+HKLM,"%CL2K%\{8BB7778B-645B-4475-9A73-1DE3170BD3AF}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{94C1AFFA-66E7-4961-9521-CFDEF3128D4F}",,,"XACT Engine"
+HKLM,"%CL2K%\{94C1AFFA-66E7-4961-9521-CFDEF3128D4F}\InProcServer32",,,"%16425%\xactengine3_3.dll"
+HKLM,"%CL2K%\{94C1AFFA-66E7-4961-9521-CFDEF3128D4F}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{962F5027-99BE-4692-A468-85802CF8DE61}",,,"XACT Engine"
+HKLM,"%CL2K%\{962F5027-99BE-4692-A468-85802CF8DE61}\InProcServer32",,,"%16425%\xactengine3_1.dll"
+HKLM,"%CL2K%\{962F5027-99BE-4692-A468-85802CF8DE61}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{9CAB402C-1D37-44B4-886D-FA4F36170A4C}",,,"AudioReverb"
+HKLM,"%CL2K%\{9CAB402C-1D37-44B4-886D-FA4F36170A4C}\InProcServer32",,,"%16425%\XAudio2_3.dll"
+HKLM,"%CL2K%\{9CAB402C-1D37-44B4-886D-FA4F36170A4C}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{B802058A-464A-42DB-BC10-B650D6F2586A}",,,"XAudio2"
+HKLM,"%CL2K%\{B802058A-464A-42DB-BC10-B650D6F2586A}\InProcServer32",,,"%16425%\XAudio2_2.dll"
+HKLM,"%CL2K%\{B802058A-464A-42DB-BC10-B650D6F2586A}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{BC3E0FC6-2E0D-4C45-BC61-D9C328319BD8}",,,"XACT Engine"
+HKLM,"%CL2K%\{BC3E0FC6-2E0D-4C45-BC61-D9C328319BD8}\InProcServer32",,,"%16425%\xactengine2_4.dll"
+HKLM,"%CL2K%\{BC3E0FC6-2E0D-4C45-BC61-D9C328319BD8}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{BCC782BC-6492-4C22-8C35-F5D72FE73C6E}",,,"XACT Engine"
+HKLM,"%CL2K%\{BCC782BC-6492-4C22-8C35-F5D72FE73C6E}\InProcServer32",,,"%16425%\xactengine3_7.dll"
+HKLM,"%CL2K%\{BCC782BC-6492-4C22-8C35-F5D72FE73C6E}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{C0C56F46-29B1-44E9-9939-A32CE86867E2}",,,"AudioVolumeMeter"
+HKLM,"%CL2K%\{C0C56F46-29B1-44E9-9939-A32CE86867E2}\InProcServer32",,,"%16425%\XAudio2_0.dll"
+HKLM,"%CL2K%\{C0C56F46-29B1-44E9-9939-A32CE86867E2}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{C1E3F122-A2EA-442C-854F-20D98F8357A1}",,,"AudioVolumeMeter"
+HKLM,"%CL2K%\{C1E3F122-A2EA-442C-854F-20D98F8357A1}\InProcServer32",,,"%16425%\XAudio2_1.dll"
+HKLM,"%CL2K%\{C1E3F122-A2EA-442C-854F-20D98F8357A1}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{C60FAE90-4183-4A3F-B2F7-AC1DC49B0E5C}",,,"XACT Engine"
+HKLM,"%CL2K%\{C60FAE90-4183-4A3F-B2F7-AC1DC49B0E5C}\InProcServer32",,,"%16425%\xactengine2_2.dll"
+HKLM,"%CL2K%\{C60FAE90-4183-4A3F-B2F7-AC1DC49B0E5C}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{C7338B95-52B8-4542-AA79-42EB016C8C1C}",,,"AudioVolumeMeter"
+HKLM,"%CL2K%\{C7338B95-52B8-4542-AA79-42EB016C8C1C}\InProcServer32",,,"%16425%\XAudio2_4.dll"
+HKLM,"%CL2K%\{C7338B95-52B8-4542-AA79-42EB016C8C1C}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{CAC1105F-619B-4D04-831A-44E1CBF12D57}",,,"AudioVolumeMeter"
+HKLM,"%CL2K%\{CAC1105F-619B-4D04-831A-44E1CBF12D57}\InProcServer32",,,"%16425%\XAudio2_7.dll"
+HKLM,"%CL2K%\{CAC1105F-619B-4D04-831A-44E1CBF12D57}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{CD0D66EC-8057-43F5-ACBD-66DFB36FD78C}",,,"XACT Engine"
+HKLM,"%CL2K%\{CD0D66EC-8057-43F5-ACBD-66DFB36FD78C}\InProcServer32",,,"%16425%\xactengine2_7.dll"
+HKLM,"%CL2K%\{CD0D66EC-8057-43F5-ACBD-66DFB36FD78C}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{CECEC95A-D894-491A-BEE3-5E106FB59F2D}",,,"AudioReverb"
+HKLM,"%CL2K%\{CECEC95A-D894-491A-BEE3-5E106FB59F2D}\InProcServer32",,,"%16425%\XAudio2_6.dll"
+HKLM,"%CL2K%\{CECEC95A-D894-491A-BEE3-5E106FB59F2D}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{D06DF0D0-8518-441E-822F-5451D5C595B8}",,,"AudioReverb"
+HKLM,"%CL2K%\{D06DF0D0-8518-441E-822F-5451D5C595B8}\InProcServer32",,,"%16425%\XAudio2_5.dll"
+HKLM,"%CL2K%\{D06DF0D0-8518-441E-822F-5451D5C595B8}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{D3332F02-3DD0-4DE9-9AEC-20D85C4111B6}",,,"XACT Engine"
+HKLM,"%CL2K%\{D3332F02-3DD0-4DE9-9AEC-20D85C4111B6}\InProcServer32",,,"%16425%\xactengine3_2.dll"
+HKLM,"%CL2K%\{D3332F02-3DD0-4DE9-9AEC-20D85C4111B6}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{E180344B-AC83-4483-959E-18A5C56A5E19}",,,"AudioVolumeMeter"
+HKLM,"%CL2K%\{E180344B-AC83-4483-959E-18A5C56A5E19}\InProcServer32",,,"%16425%\XAudio2_3.dll"
+HKLM,"%CL2K%\{E180344B-AC83-4483-959E-18A5C56A5E19}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{E21A7345-EB21-468E-BE50-804DB97CF708}",,,"XAudio2"
+HKLM,"%CL2K%\{E21A7345-EB21-468E-BE50-804DB97CF708}\InProcServer32",,,"%16425%\XAudio2_1.dll"
+HKLM,"%CL2K%\{E21A7345-EB21-468E-BE50-804DB97CF708}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{E48C5A3F-93EF-43BB-A092-2C7CEB946F27}",,,"AudioVolumeMeter"
+HKLM,"%CL2K%\{E48C5A3F-93EF-43BB-A092-2C7CEB946F27}\InProcServer32",,,"%16425%\XAudio2_6.dll"
+HKLM,"%CL2K%\{E48C5A3F-93EF-43BB-A092-2C7CEB946F27}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{F4769300-B949-4DF9-B333-00D33932E9A6}",,,"AudioReverb"
+HKLM,"%CL2K%\{F4769300-B949-4DF9-B333-00D33932E9A6}\InProcServer32",,,"%16425%\XAudio2_1.dll"
+HKLM,"%CL2K%\{F4769300-B949-4DF9-B333-00D33932E9A6}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{F5CA7B34-8055-42C0-B836-216129EB7E30}",,,"AudioVolumeMeter"
+HKLM,"%CL2K%\{F5CA7B34-8055-42C0-B836-216129EB7E30}\InProcServer32",,,"%16425%\XAudio2_2.dll"
+HKLM,"%CL2K%\{F5CA7B34-8055-42C0-B836-216129EB7E30}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%CL2K%\{FAC23F48-31F5-45A8-B49B-5225D61401AA}",,,"XAudio2"
+HKLM,"%CL2K%\{FAC23F48-31F5-45A8-B49B-5225D61401AA}\InProcServer32",,,"%16425%\XAudio2_0.dll"
+HKLM,"%CL2K%\{FAC23F48-31F5-45A8-B49B-5225D61401AA}\InProcServer32","ThreadingModel",,"Both"
+HKLM,"%UnKey%\%AppName%","EstimatedSize",0x00010001,0x37930
+
+[Registry.wow.Uninstall]
+HKLM,"%CL2K%\{03219E78-5BC3-44D1-B92E-F63D89CC6526}"
+HKLM,"%CL2K%\{074B110F-7F58-4743-AEA5-12F15B5074ED}"
+HKLM,"%CL2K%\{0977D092-2D95-4E43-8D42-9DDCC2545ED5}"
+HKLM,"%CL2K%\{0AA000AA-F404-11D9-BD7A-0010DC4F8F81}"
+HKLM,"%CL2K%\{1138472B-D187-44E9-81F2-AE1B0E7785F1}"
+HKLM,"%CL2K%\{1F1B577E-5E5A-4E8A-BA73-C657EA8E8598}"
+HKLM,"%CL2K%\{2139E6DA-C341-4774-9AC3-B4E026347F64}"
+HKLM,"%CL2K%\{248D8A3B-6256-44D3-A018-2AC96C459F47}"
+HKLM,"%CL2K%\{343E68E6-8F82-4A8D-A2DA-6E9A944B378C}"
+HKLM,"%CL2K%\{3A2495CE-31D0-435B-8CCF-E9F0843FD960}"
+HKLM,"%CL2K%\{3B80EE2A-B0F5-4780-9E30-90CB39685B03}"
+HKLM,"%CL2K%\{3EDA9B49-2085-498B-9BB2-39A6778493DE}"
+HKLM,"%CL2K%\{4C5E637A-16C7-4DE3-9C46-5ED22181962D}"
+HKLM,"%CL2K%\{4C9B6DDE-6809-46E6-A278-9B6A97588670}"
+HKLM,"%CL2K%\{54B68BC7-3A45-416B-A8C9-19BF19EC1DF5}"
+HKLM,"%CL2K%\{5A508685-A254-4FBA-9B82-9A24B00306AF}"
+HKLM,"%CL2K%\{629CF0DE-3ECC-41E7-9926-F7E43EEBEC51}"
+HKLM,"%CL2K%\{65D822A4-4799-42C6-9B18-D26CF66DD320}"
+HKLM,"%CL2K%\{6A93130E-1D53-41D1-A9CF-E758800BB179}"
+HKLM,"%CL2K%\{6F6EA3A9-2CF5-41CF-91C1-2170B1540063}"
+HKLM,"%CL2K%\{77C56BF4-18A1-42B0-88AF-5072CE814949}"
+HKLM,"%CL2K%\{8BB7778B-645B-4475-9A73-1DE3170BD3AF}"
+HKLM,"%CL2K%\{94C1AFFA-66E7-4961-9521-CFDEF3128D4F}"
+HKLM,"%CL2K%\{962F5027-99BE-4692-A468-85802CF8DE61}"
+HKLM,"%CL2K%\{9CAB402C-1D37-44B4-886D-FA4F36170A4C}"
+HKLM,"%CL2K%\{B802058A-464A-42DB-BC10-B650D6F2586A}"
+HKLM,"%CL2K%\{BC3E0FC6-2E0D-4C45-BC61-D9C328319BD8}"
+HKLM,"%CL2K%\{BCC782BC-6492-4C22-8C35-F5D72FE73C6E}"
+HKLM,"%CL2K%\{C0C56F46-29B1-44E9-9939-A32CE86867E2}"
+HKLM,"%CL2K%\{C1E3F122-A2EA-442C-854F-20D98F8357A1}"
+HKLM,"%CL2K%\{C60FAE90-4183-4A3F-B2F7-AC1DC49B0E5C}"
+HKLM,"%CL2K%\{C7338B95-52B8-4542-AA79-42EB016C8C1C}"
+HKLM,"%CL2K%\{CAC1105F-619B-4D04-831A-44E1CBF12D57}"
+HKLM,"%CL2K%\{CD0D66EC-8057-43F5-ACBD-66DFB36FD78C}"
+HKLM,"%CL2K%\{CECEC95A-D894-491A-BEE3-5E106FB59F2D}"
+HKLM,"%CL2K%\{D06DF0D0-8518-441E-822F-5451D5C595B8}"
+HKLM,"%CL2K%\{D3332F02-3DD0-4DE9-9AEC-20D85C4111B6}"
+HKLM,"%CL2K%\{E180344B-AC83-4483-959E-18A5C56A5E19}"
+HKLM,"%CL2K%\{E21A7345-EB21-468E-BE50-804DB97CF708}"
+HKLM,"%CL2K%\{E48C5A3F-93EF-43BB-A092-2C7CEB946F27}"
+HKLM,"%CL2K%\{F4769300-B949-4DF9-B333-00D33932E9A6}"
+HKLM,"%CL2K%\{F5CA7B34-8055-42C0-B836-216129EB7E30}"
+HKLM,"%CL2K%\{FAC23F48-31F5-45A8-B49B-5225D61401AA}"
+
+[Start.Registerx86]
+11,,rundll32.exe,,,"advpack.dll,LaunchINFSection %1%\DXeurt.inf,Install.ntx86"
+
+[Start.Registerx64]
+11,,rundll32.exe,,,"advpack.dll,LaunchINFSection %1%\DXeurt.inf,Install.ntamd64"
+
+[Strings]
+DiskId                 ="DirectXRuntimes"
+AppName                ="DirectX End-User Runtime"
+Comment                ="The Microsoft DirectX End-User Runtime installs a number of runtime libraries from the legacy DirectX SDK for some games that use D3DX9, D3DX10, D3DX11, XAudio 2.7, XInput 1.3, XACT, and/or Managed DirectX 1.1."
+Version                ="9.29.1974.3"
+TitleInsPrompt         ="Microsoft DirectX Setup"
+BeginInsPrompt         ="This will install DirectX End-User Runtime. Do you wish to continue?"
+EndInsPrompt           ="DirectX End-User Runtime has been installed successfully."
+TitleUnInsPrompt       ="Programs and Features"
+BeginUnInsPrompt       ="Are you sure you want to uninstall DirectX End-User Runtime?"
+EndUnInsPrompt         ="DirectX End-User Runtime has been uninstalled successfully."
+UnKey                  ="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+CLDK                   ="SOFTWARE\Classes\CLSID"
+CL2K                   ="SOFTWARE\Classes\Wow6432Node\CLSID"

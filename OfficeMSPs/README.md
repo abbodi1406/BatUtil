@@ -6,18 +6,21 @@
 
 ## Variables:
 
-- "dirOfEXE" the path to parent office updates folder
+- `dirOfEXE` the path to parent office updates folder
 
-- "dirOfMSP" extracted MSP files path, default is 'MSPs' folder next to the script
+- `dirOfMSP` extracted MSP files path, default is **MSPs** folder next to the script
 
-- "OldMSPdir" Folder to move old MSP versions, default is 'OLD' inside dirOfMSP
+- `OldMSPdir` Folder to move old MSP versions, default is **OLD** inside dirOfMSP.
 
-- "langOfMSP" language files to keep. Leaving it empty will keep all langs.
+- `langOfMSP` language files to keep. Leaving it **empty** will keep all langs.
 
-- "ProofLang" comma separated companion proofing languages. Leaving it empty will keep all proof msp files.  
-[Office 2010](https://technet.microsoft.com/en-us/library/ee942198(office.14).aspx)  
-[Office 2013](https://technet.microsoft.com/en-us/library/ee942198(office.15).aspx)  
-Office 2016: Not needed, Proof msp update contain all languages
+- `ProofLang` comma separated companion proofing languages. Leaving it **empty** will keep all proof msp files.
+
+## Companion proofing languages
+
+- [Office 2010](https://technet.microsoft.com/en-us/library/ee942198(office.14).aspx)
+- [Office 2013](https://technet.microsoft.com/en-us/library/ee942198(office.15).aspx)
+- Office 2016: Not needed, Proof msp update contain all languages
 
 ## Remark
 
