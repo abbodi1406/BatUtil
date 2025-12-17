@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v120u
+@set uivr=v120z
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -1577,6 +1577,7 @@ if %_nat% equ 0 (
 set _ddc=DesktopDeployment_x86.cab
 set _dsp=SysWOW64
 set _wow=1
+if not "%_f_%"=="dpx.dll" set "_pspsfx=%SystemRoot%\SysWOW64\WindowsPowerShell\v1.0\powershell.exe -nop -c"
 )
 if exist "%_t_%\%_f_%" goto :get_end
 set msuwim=0
@@ -2590,7 +2591,7 @@ set _sbst=0
 subst %_sdr% "!_cabdir!" %_Nul3% && set _sbst=1
 if !_sbst! equ 1 pushd %_sdr%
 if not exist "psfx.txt" copy /y "!_work!\bin\psfx.txt" . %_Nul3%
-%_Nul3% %_psc% "Set-Location -LiteralPath '!_cabdir!'; $f=[IO.File]::ReadAllText('.\psfx.txt') -split ':cabpsf\:.*';iex ($f[1]);P '!_cabdir!\%package%' '%_delta%'"
+%_Nul3% %_pspsfx% "Set-Location -LiteralPath '!_cabdir!'; $f=[IO.File]::ReadAllText('.\psfx.txt') -split ':cabpsf\:.*';iex ($f[1]);P '!_cabdir!\%package%' '%_delta%'"
 dir /b /ad "!dest!\*_microsoft*" %_Null% || (
   call :dk_color1 %Red% "Error: failed to extract %pkgn%.psf"
   (echo.&echo failed to extract %pkgn%.psf)>>"!logerr!"
@@ -2718,6 +2719,9 @@ if exist "%~1\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixSV=226
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-Beta-Version-Enablement-Package~*.mum" set "_fixSV=26120"&set "_fixEP=26120"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-26200-Version-Enablement-Package~*.mum" set "_fixSV=26200"&set "_fixEP=26200"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-26220-Version-Enablement-Package~*.mum" set "_fixSV=26220"&set "_fixEP=26220"
+if exist "%~1\Microsoft-Windows-Client-Br-28020-Version-Enablement-Package~*.mum" set "_fixSV=28020"&set "_fixEP=28020"
+if exist "%~1\Microsoft-Windows-Client-Br-28100-Version-Enablement-Package~*.mum" set "_fixSV=28100"&set "_fixEP=28100"
+if exist "%~1\Microsoft-Windows-Client-Br-28120-Version-Enablement-Package~*.mum" set "_fixSV=28120"&set "_fixEP=28120"
 goto :eof
 
 :inrenrcu
@@ -2995,8 +2999,10 @@ if defined lcumsu if %_build% geq 26052 if exist "%mumtarget%\Windows\Servicing\
 set idpkg=LCU
 set callclean=1
 set _c_=0
+set _e_=0
 if defined cumulative for %%# in (%cumulative%) do (
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\%_DsmLog%" /Add-Package /PackagePath:%%#
+call set _e_=!errorlevel!
 call set /a _c_+=1
 if not exist "%mumtarget%\Windows\WinSxS\pending.xml" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %ResetBase% equ 2 if %_build% geq 26052 if !_c_! lss %c_num% call :rebase
 )
@@ -3005,10 +3011,11 @@ call :dk_color1 %_Yellow% "=== Adding LCU %%~nx#" 4
 set ppath=%%#
 if exist "!_cabdir!\LCUbase\%%~nx#" set ppath="!_cabdir!\LCUbase\%%~nx#"
 %_dism2%:"!_cabdir!" %dismtarget% /LogPath:"%_dLog%\%_DsmLog%" /Add-Package /PackagePath:!ppath!
+call set _e_=!errorlevel!
 call set /a _c_+=1
 if not exist "%mumtarget%\Windows\WinSxS\pending.xml" if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %ResetBase% equ 2 if %_build% geq 26052 if !_c_! lss %c_num% call :rebase
 )
-call :chkEC !errorlevel!
+call :chkEC %_e_%
 if !_ec!==1 if not exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" goto :errmount
 if exist "%mumtarget%\Windows\Servicing\Packages\*WinPE-LanguagePack*.mum" if %SkipWinRE% equ 0 if %LCUwinre% equ 1 (
 set _clnwinpe=1
@@ -4523,6 +4530,7 @@ set sduRE=0
 set cmtRE=0
 set psfwim=0
 set _delta=msdelta.dll
+set _pspsfx=%_psc%
 set basekbn=
 set basepkg=
 set "_mount=%_drv%\MountUUP"

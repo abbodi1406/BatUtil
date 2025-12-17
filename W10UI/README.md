@@ -236,6 +236,10 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.58z:  
+- Add detection for 28020 Enablement Package
+- Add WaaS_reset.reg fix when installing updates online on Win10 1703-22H2
+
 10.58:  
 - Fix: RCU support and related issues
 - Fix: ISO label's custom branch name is lost for versions with Enablement Package

@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.58r
+@set uiv=v10.58z
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -2726,6 +2726,9 @@ if exist "%~1\Microsoft-Windows-SV2BetaEnablement-Package~*.mum" set "_fixSV=226
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-Beta-Version-Enablement-Package~*.mum" set "_fixSV=26120"&set "_fixEP=26120"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-26200-Version-Enablement-Package~*.mum" set "_fixSV=26200"&set "_fixEP=26200"
 if exist "%~1\Microsoft-Windows-Ge-Client-Server-26220-Version-Enablement-Package~*.mum" set "_fixSV=26220"&set "_fixEP=26220"
+if exist "%~1\Microsoft-Windows-Client-Br-28020-Version-Enablement-Package~*.mum" set "_fixSV=28020"&set "_fixEP=28020"
+if exist "%~1\Microsoft-Windows-Client-Br-28100-Version-Enablement-Package~*.mum" set "_fixSV=28100"&set "_fixEP=28100"
+if exist "%~1\Microsoft-Windows-Client-Br-28120-Version-Enablement-Package~*.mum" set "_fixSV=28120"&set "_fixEP=28120"
 goto :eof
 
 :fixLab
@@ -3760,6 +3763,21 @@ del /f /q "!_fvr1!" "!_fvr2!" "!_fvr3!" "!_fvr4!" %_Nul3%
 goto :eof
 
 :fin
+if %online%==1 if %_build% geq 15063 if %_build% lss 19046 (
+(echo Windows Registry Editor Version 5.00
+echo.
+echo [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WaaSAssessment]
+echo.
+echo [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WaaSAssessment]
+echo "Endpoint"="settings-win.data.microsoft.com"
+echo.
+echo [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WaaSAssessment\Cache]
+echo "UpToDateStatus"=dword:00000000
+echo "UpToDateImpact"=dword:00000000
+echo "UpToDateDays"=dword:00000000
+echo.)>"!_cabdir!\WaaS_reset.reg"
+regedit.exe /S "!_cabdir!\WaaS_reset.reg"
+)
 if %online%==0 if %_build% geq 19041 if %winbuild% lss 17133 if exist "%SysPath%\ext-ms-win-security-slc-l1-1-0.dll" (
 del /f /q %SysPath%\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
 if /i not %xOS%==x86 del /f /q %SystemRoot%\SysWOW64\ext-ms-win-security-slc-l1-1-0.dll %_Nul3%
