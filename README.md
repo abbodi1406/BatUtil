@@ -1,8 +1,14 @@
 # BatUtil
 
-- Collection of mostly batch scripts utilities for Windows.
+- Collection of mostly batch scripts utilities for Microsoft Windows and Office.
 
-- For download releases, see [here](https://github.com/abbodi1406/WHD/tree/master/scripts) - [mirror](https://mega.nz/folder/Twd2RKBA#gqbgugoOwxR59IiAkI0JGg).
+- Releases download mirrors:
+
+[GitHub](https://github.com/abbodi1406/WHD/tree/master/scripts)  
+[Box](https://app.box.com/s/t9yieu0odqy43wdc64ol9il82ufifigq/folder/356287775702)  
+[MEGA](https://mega.nz/folder/Twd2RKBA#gqbgugoOwxR59IiAkI0JGg/folder/CwsjzSLQ)  
+[GDrive](https://drive.google.com/drive/folders/1JrkT1_-W07IvOlfh-cgO1onX_La0B-VU)  
+[Download.ru](https://download.ru/folders/541nMhgT)  
 
 |Project|Description|
 |--|--|
