@@ -5,8 +5,8 @@
 - Releases download mirrors:
 
 [GitHub](https://github.com/abbodi1406/WHD/tree/master/scripts)  
-[Box](https://app.box.com/s/t9yieu0odqy43wdc64ol9il82ufifigq/folder/356287775702)  
-[MEGA](https://mega.nz/folder/Twd2RKBA#gqbgugoOwxR59IiAkI0JGg/folder/CwsjzSLQ)  
+[Box](https://app.box.com/s/t9yieu0odqy43wdc64ol9il82ufifigq)  
+[MEGA](https://mega.nz/folder/Twd2RKBA#gqbgugoOwxR59IiAkI0JGg/folder)  
 [GDrive](https://drive.google.com/drive/folders/1JrkT1_-W07IvOlfh-cgO1onX_La0B-VU)  
 [Download.ru](https://download.ru/folders/541nMhgT)  
 
@@ -44,3 +44,6 @@
 |**ActionListUUP**|Create ActionList.xml, used with WindowsUpdateBox.exe to directly Upgrade/Install from Windows 10 UUP set|
 |**EdgeChromiumInstaller**|Offline installer for Microsoft Edge Chromium with working Edge Update|
 |**DirectX_Redist**|INF-based installer/uninstaller for Microsoft DirectX End-User Runtime (June 2010) redistributable|
+
+---
+[![ko-fi.com](https://img.shields.io/badge/Ko--fi-Buy_Me_a_Coffee-F16000)](https://ko-fi.com/abbodi1406)
