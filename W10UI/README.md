@@ -236,6 +236,11 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.59:  
+- Add build 14393 as supported for ESU Suppressor
+- Add detection for 26300 Enablement Package
+- Enhance detection for defender-dism file architecture
+
 10.58z:  
 - Add detection for 28020 Enablement Package
 - Add WaaS_reset.reg fix when installing updates online on Win10 1703-22H2

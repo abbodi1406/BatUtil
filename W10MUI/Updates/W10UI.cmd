@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.58z
+@set uiv=v10.59
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -534,8 +534,6 @@ goto :main2board
 goto :main0board
 
 :main1board
-set _bit=%arch%
-if /i %arch%==arm64 set _bit=arm
 call :counter
 set "brep=!repo!"
 if %_sum%==0 set "repo="
@@ -893,6 +891,8 @@ if exist "wim.xml" del /f /q wim.xml
 goto :eof
 
 :extract
+set _bit=%arch%
+if /i %arch%==arm64 set _bit=arm
 if /i %arch%==x86 (set efifile=bootia32.efi&set sss=x86) else if /i %arch%==x64 (set efifile=bootx64.efi&set sss=amd64) else (set efifile=bootaa64.efi&set sss=arm64)
 if %_embd% equ 0 call :cleaner
 if not exist "!_cabdir!\" mkdir "!_cabdir!"
@@ -2462,6 +2462,8 @@ set /a _sum=%_msu%+%_cab%
 goto :eof
 
 :counter
+set _bit=%arch%
+if /i %arch%==arm64 set _bit=arm
 set _msu=0
 set _cab=0
 set _sum=0
