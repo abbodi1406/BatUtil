@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v24.9
+@set uiv=v25.0
 @echo off
 
 set DVDPATH=
@@ -376,7 +376,8 @@ if %_build% equ 18363 set _build=18362
 for %%# in (19042 19043 19044 19045) do if %_build% equ %%# set _build=19041
 for %%# in (22622 22623 22624 22631 22635) do if %_build% equ %%# set _build=22621
 if %_build% equ 20349 set _build=20348
-for %%# in (26120 26200 26220) do if %_build% equ %%# set _build=26100
+for %%# in (26120 26200 26220 26300 26320) do if %_build% equ %%# set _build=26100
+for %%# in (28020 28120 28200) do if %_build% equ %%# set _build=28000
 for /L %%j in (1,1,%LANGUAGES%) do (
 if not !LPBUILD%%j!==%_build% set "ERRFILE=!LPFILE%%j!"&goto :E_VER
 )
@@ -1055,6 +1056,11 @@ if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-SV2Beta
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Ge-Client-Server-Beta-Version-Enablement-Package~*.mum" set "_fixEP=26120"
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Ge-Client-Server-26200-Version-Enablement-Package~*.mum" set "_fixEP=26200"
 if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Ge-Client-Server-26220-Version-Enablement-Package~*.mum" set "_fixEP=26220"
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Ge-Client-Server-26300-Version-Enablement-Package~*.mum" set "_fixEP=26300"
+if exist "%INSTALLMOUNTDIR%\Windows\Servicing\Packages\Microsoft-Windows-Ge-Client-Server-26320-Version-Enablement-Package~*.mum" set "_fixEP=26320"
+if exist "%INSTALLMOUNTDIR%\Microsoft-Windows-Client-Br-28020-Version-Enablement-Package~*.mum" set "_fixEP=28020"
+if exist "%INSTALLMOUNTDIR%\Microsoft-Windows-Client-Br-28100-Version-Enablement-Package~*.mum" set "_fixEP=28100"
+if exist "%INSTALLMOUNTDIR%\Microsoft-Windows-Client-Br-28120-Version-Enablement-Package~*.mum" set "_fixEP=28120"
 set "wnt=31bf3856ad364e35_10"
 if exist "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_31bf3856ad364e35_11.*.manifest" set "wnt=31bf3856ad364e35_11"
 if exist "%INSTALLMOUNTDIR%\Windows\WinSxS\Manifests\*_microsoft-updatetargeting-*os_31bf3856ad364e35_12.*.manifest" set "wnt=31bf3856ad364e35_12"
