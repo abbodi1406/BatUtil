@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v124
+@set uivr=v124t
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -1251,7 +1251,7 @@ if %_build% geq 22478 (
 wimlib-imagex.exe extract "!MetadataESD!" 3 Windows\System32\UpdateAgent.dll --dest-dir=.\bin\temp --no-acls --no-attributes --ref="!_UUP!\*.esd" %_Nul3%
 if exist "bin\temp\UpdateAgent.dll" 7z.exe l .\bin\temp\UpdateAgent.dll >.\bin\temp\version.txt 2>&1
 )
-for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l)
+for /f "tokens=4-7 delims=.() " %%i in ('"findstr /i /b "FileVersion" .\bin\temp\version.txt" %_Nul6%') do (set uupver=%%i.%%j&set uupmaj=%%i&set uupmin=%%j&set branch=%%k&set uupdate=%%l&set bkpdate=%%l)
 set revver=%uupver%&set revmaj=%uupmaj%&set revmin=%uupmin%
 set "tok=6,7"&set "toe=5,6,7"
 if /i %arch%==x86 (set _ss=x86) else if /i %arch%==x64 (set _ss=amd64) else (set _ss=arm64)
@@ -1274,9 +1274,7 @@ call :fixBranch %revmaj%
 if %uupmin% lss %revmin% (
 set uupver=%revver%
 set uupmin=%revmin%
-wimlib-imagex.exe extract "!MetadataESD!" 3 Windows\Servicing\Packages\Package_for_RollupFix*.mum --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-for /f %%# in ('dir /b /a:-d /od bin\temp\Package_for_RollupFix*.mum') do copy /y "bin\temp\%%#" %SystemRoot%\temp\update.mum %_Nul1%
-call :datemum uupdate placebo
+call :get_lcu_pkg
 )
 set _legacy=
 set _useold=0
@@ -1437,6 +1435,17 @@ if /i "%_tb:~0,2%"=="ge" (echo %_tb% | findstr /i /r "beta prerelease" %_Nul1% |
 set "%2=%_ti%"
 set "%3=%_tv%"
 set "%4=%_tb%"
+exit /b
+
+:get_lcu_pkg
+if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
+wimlib-imagex.exe extract "!MetadataESD!" 3 Windows\Servicing\Packages\Package_for_RollupFix*.mum --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+if not exist "bin\temp\Package_for_RollupFix*.mum" (
+call set uupdate=%bkpdate%
+exit /b
+)
+for /f %%# in ('dir /b /a:-d /od bin\temp\Package_for_RollupFix*.mum') do copy /y "bin\temp\%%#" %SystemRoot%\temp\update.mum %_Nul1%
+call :datemum uupdate placebo
 exit /b
 
 :datemum
@@ -1934,6 +1943,7 @@ if /i "%xdubranch%"=="WinBuild" exit /b
 if /i "%xdubranch%"=="GitEnlistment" exit /b
 if /i "%xdudate%"=="winpbld" exit /b
 if /i "%xdudate%"=="160101" exit /b
+echo %xdudate% | findstr /i "BldB" %_Nul1% && exit /b
 set tmpval=tmpval
 call :fixVerBrn %uupmaj% xdubranch xduver tmpval
 set _label=%xduver%.%xdudate%.%xdubranch%
@@ -2304,8 +2314,14 @@ del /f /q .\bin\version.txt %_Nul3%
 if not defined isobranch set "isobranch=%branch%"
 call :fixVerBrn %isomaj% isobranch iduver branch
 set _label=%isover%.%isodate%.%isobranch%
-if /i not "%branch%"=="WinBuild" if /i not "%branch%"=="GitEnlistment" if /i not "%idudate%"=="winpbld" if /i not "%idudate%"=="160101" (set _label=%iduver%.%idudate%.%branch%)
-if %isomin% neq %idumin% (set _label=%isover%.%isodate%.%isobranch%)
+set newlbl=1
+if /i "%branch%"=="WinBuild" set newlbl=0
+if /i "%branch%"=="GitEnlistment" set newlbl=0
+if /i "%idudate%"=="winpbld" set newlbl=0
+if /i "%idudate%"=="160101" set newlbl=0
+echo %idudate% | findstr /i "BldB" %_Nul1% && set newlbl=0
+if %isomin% neq %idumin% set newlbl=0
+if %newlbl% equ 1 (set _label=%iduver%.%idudate%.%branch%)
 call :setlabel
 exit /b
 

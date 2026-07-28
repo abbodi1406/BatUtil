@@ -238,6 +238,7 @@ special thanks for testing and feedback:
 
 10.62:  
 - Add wlanapi.dll and mobilenetworking.dll to boot.wim for builds 26100+
+- Enhance detection for ISO label branch and timestamp
 
 10.61:  
 - Prioritize SetupHost.exe and SetupPrep.exe for detecting ISO label (branch and timestamp)
