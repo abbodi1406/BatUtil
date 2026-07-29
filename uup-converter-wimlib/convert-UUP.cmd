@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v124t
+@set uivr=v124x
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -4434,6 +4434,7 @@ if %apiver% geq 19040 (set _appWay=1) else (set _appWay=0)
 if not exist "%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\ngen.exe" set _appWay=0
 if %winbuild% LSS 9600 if not exist "%SystemRoot%\servicing\Packages\Microsoft-Windows-PowerShell-WTR-Package~*.mum" set _appWay=0
 if not exist "!_work!\bin\APAP.*" set _appWay=0
+if %_build% geq 29620 if %winbuild% lss 26052 set _appWay=0
 set _addApps=1
 set _fndApps=0
 for /f %%# in ('dir /b /ad . %_Nul6% ^| findstr /i /v MSIXFramework') do (
