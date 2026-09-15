@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.63
+@set uiv=v10.63f
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -1362,7 +1362,12 @@ if %_build% geq 22621 (
 if not exist "!_cabdir!\LCUmum\%kbnm%~%_Pkt%~%sss%~~%cver%.mum" copy /y "%~1\update.mum" "!_cabdir!\LCUmum\%kbnm%~%_Pkt%~%sss%~~%cver%.mum" %_Nul1%
 )
 call :vrpad %kbvr%
-if %_build% geq 26052 if %LCUmsuExpand% neq 1 (
+set copyLCU=0
+if %_build% geq 26052 (
+if %online%==1 set copyLCU=1
+if %online%==0 if %LCUmsuExpand% neq 1 set copyLCU=1
+)
+if %copyLCU% equ 1 (
 if not exist "!_cabdir!\LCUall\*Windows*%kb%*.msu" if not exist "!_cabdir!\LCUall\%cuvr%-!package!" (
   copy /y "!repo!\!package!" "!_cabdir!\LCUall\%cuvr%-!package!" %_Nul1%
 )
