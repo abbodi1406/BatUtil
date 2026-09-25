@@ -144,8 +144,7 @@ expand Cumulative Update and install from loose files via update.mum, instead ad
 applicable only for builds 22621 and later  
 for builds 26052 and later:  
 > auto enabled  
-change to 2 to disable and add LCUs msu one by one  
-change to 3 to disable and add highest LCU msu only  
+change to 2 or 3 to disable and add highest LCU msu only  
 auto set to 3 for insider builds with baseline KB5122055
 
 * UpdtBootFiles  
@@ -161,8 +160,9 @@ note: the two default files bootmgr.efi/bootmgfw.efi will be updated if this opt
 do not install Edge WebView with Cumulative Update
 
 * LtscAddEP  
-install applicable Enablement Package for LTSC editions (EnterpriseS variants, or Server)  
-applicable only for builds 26100 and later
+install Enablement Package for LTSC editions (EnterpriseS variants, or Server)  
+change to 1 to install applicable EP (for builds 26100 and later)  
+change to 2 to force install inapplicable EP (example 22H2 for LTSC 2021)
 
 * wim2esd  
 convert install.wim to install.esd, if the target is a distribution  

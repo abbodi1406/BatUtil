@@ -97,10 +97,10 @@ http://software-static.download.prss.microsoft.com/dbazure/998969d5-f34g-4e03-ac
 http://software-static.download.prss.microsoft.com/dbazure/998969d5-f34g-4e03-ac9d-1f9786c66749/28000.1.251103-1709.br_release_amd64fre_adkwinpeaddons.iso
 ```
 
-- Build 26100 - Windows 11 versions 24H2-25H2 / Server 2025:
+- Build 26100 - Windows 11 versions 24H2-25H2-26H2 / Server 2025:
 ```
-https://download.microsoft.com/download/2/d/9/2d9c8902-3fcd-48a6-a22a-432b08bed61e/ADK/adksetup.exe
-https://download.microsoft.com/download/5/5/6/556e01ec-9d78-417d-b1e1-d83a2eff20bc/ADKWinPEAddons/adkwinpesetup.exe
+https://download.microsoft.com/download/8e0c0f5a-abb5-4358-a51b-168eb40b1590/adk/adksetup.exe
+https://download.microsoft.com/download/a4a79e7a-f085-41c4-aebf-2538fd000790/adkwinpeaddons/adkwinpesetup.exe
 
 full ISO  
 http://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/26100.6584.250904-1728.ge_release_svc_prod1_amd64fre_ADK.iso
