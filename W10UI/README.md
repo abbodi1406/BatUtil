@@ -244,6 +244,20 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.65:  
+- Fix missing typo "lcuwpe" which prevent updating 26100+ boot.wim
+- Force LCU msu for 26100+ boot.wim only if the integrated LCU is not Baseline
+- Precheck 26100+ boot.wim target to avoid unnecessary LCU expand, or copying LCUs msu to temp directory
+when the "Force LCU msu" conditions are met:
+if the target is mounted or direct boot.wim file, LCUmsuExpand value will be auto changed to 3
+if the target is distribution (iso), LCU msu will be used for boot.wim, regardless LCUmsuExpand value
+
+10.64:  
+- Builds 26100+: Use UpdateCompression.dll from target, regardless Host OS
+- Builds 26100+: Change "LCUmsuExpand" value 2 behavior to match value 3
+- Builds 26100+: Force add LCU(s) via msu for boot.wim if it contains an integrated LCU
+- Add "LtscAddEP" new value 2 to force install Enablement Package for LTSC editions (e.g. 22H2 for LTSC 2021)
+
 10.63:  
 - Implement new value 3 for option "LCUmsuExpand" to add highest LCU msu only
 - Change WinPE images detection to check for wpeinit.exe

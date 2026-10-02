@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.64
+@set uiv=v10.65
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -439,6 +439,8 @@ set targetname=0
 set _skpd=0
 set _skpp=0
 set uupboot=0
+set peTarget=0
+set pe_lcu=0
 if not defined _all set _all=1
 if %_init%==1 if "!target!"=="" if exist "*.wim" (for /f "tokens=* delims=" %%# in ('dir /b /a:-d "*.wim" ^| findstr /i /v "Windows1.*\-KB"') do set "target=!_work!\%%~nx#")
 if "!target!"=="" set "target=%SystemDrive%"
@@ -466,6 +468,9 @@ set "mountdir=!target!"
 set arch=x86
 if exist "!target!\Windows\Servicing\Packages\*~amd64~~*.mum" set arch=x64
 if exist "!target!\Windows\Servicing\Packages\*~arm64~~*.mum" set arch=arm64
+dir /b /s "!target!\Windows\Servicing\Version\amd64_installed" %_Nul3% && set arch=x64
+dir /b /s "!target!\Windows\Servicing\Version\arm64_installed" %_Nul3% && set arch=arm64
+if exist "!target!\Windows\System32\wpeinit.exe" set peTarget=1
 )
 if %wim%==1 (
 echo.
@@ -484,6 +489,7 @@ for /L %%# in (1,1,!imgcount!) do (
   )
 set "indices=*"
 set wimfiles=1
+dism.exe /english /get-wiminfo /wimfile:"%targetname%" /index:1 | find /i ": WindowsPE" %_Nul1% && set peTarget=1
 cd /d "!_work!"
 )
 if %dvd%==1 (
@@ -503,9 +509,10 @@ for /f "tokens=2 delims=: " %%# in ('dism.exe /english /get-wiminfo /wimfile:"so
 for /L %%# in (1,1,!imgcount!) do (
   for /f "tokens=1* delims=: " %%i in ('dism.exe /english /get-wiminfo /wimfile:"sources\install.wim" /index:%%# ^| findstr /b /c:"Name"') do set name%%#="%%j"
   )
-set "indices=*"
 set "targetname=install.wim"
+set "indices=*"
 set wimfiles=1
+set peTarget=1
 cd /d "!_work!"
 )
 if %_init%==1 (goto :check) else (goto :mainmenu)
@@ -629,6 +636,13 @@ if %_build% geq 22000 (
 if %LCUwinre% equ 2 (set LCUwinre=0) else (set LCUwinre=1)
 if %_build% geq 26052 (set LCUwinre=0)
 )
+if %_build% geq 26052 (
+if %peTarget% equ 1 call :boot_lcu
+)
+if %pe_lcu% equ 1 (
+if %offline%==1 (set LCUmsuExpand=3&set u_msulcu=3)
+if %wim%==1 (set LCUmsuExpand=3&set u_msulcu=3)
+)
 if %_build% lss 22621 set LCUmsuExpand=0
 if %_build% geq 26052 (
 if %LCUmsuExpand% equ 2 (set LCUmsuExpand=0) else if %LCUmsuExpand% equ 3 (set LCUmsuExpand=0) else if %LCUmsuExpand% equ 9 (set LCUmsuExpand=0) else (set LCUmsuExpand=1)
@@ -730,6 +744,25 @@ set "target=!_work!\DVD10UI"
 )
 call :extract
 if %_sum%==0 goto :fin
+goto :igonline
+
+:boot_lcu
+if %offline%==1 (
+if exist "!target!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" findstr /i Baseline "!target!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" %_Nul1% || set pe_lcu=1
+goto :eof
+)
+if %wim%==1 set "_w_=!target!"
+if %dvd%==1 set "_w_=!target!\sources\boot.wim"
+if %_wlib% equ 0 for /f %%# in ('dism.exe /English /List-Image /ImageFile:"!_w_!" /Index:1 ^| findstr /i "Package_for_RollupFix.*.mum"') do (
+%_psc% "$f=[IO.File]::ReadAllText('!_batp!') -split ':wimmsu\:.*';iex ($f[1]);E '!_w_!' '%%#' '%SystemRoot%\temp\%%~nx#'"
+)
+if %_wlib% equ 1 for /f %%# in ('^"!_wimlib! dir "!_w_!" 1 --path=Windows\Servicing ^| findstr /i "Package_for_RollupFix.*.mum"^"') do (
+!_wimlib! extract "!_w_!" 1 %%# --dest-dir="%SystemRoot%\temp" --no-acls --no-attributes %_Nul3%
+)
+if exist "%SystemRoot%\temp\Package_for_RollupFix*.mum" findstr /i Baseline "%SystemRoot%\temp\Package_for_RollupFix*.mum" %_Nul1% || set pe_lcu=1
+if exist "%SystemRoot%\temp\Package_for_RollupFix*.mumx*" set pe_lcu=1
+del /f /q %SystemRoot%\temp\*.mum %_Nul3%
+goto :eof
 
 :igonline
 if %online%==0 goto :igoffline
@@ -1376,7 +1409,7 @@ if %u_msulcu% equ 9 if not exist "!_cabdir!\LCUbase\%cuvr%-!package!" echo !pack
   copy /y "!repo!\!package!" "!_cabdir!\LCUbase\%cuvr%-!package!" %_Nul1%
   )
 )
-if %online%==0 if %_build% geq 26052 if %copyLCU% equ 0 (
+if %online%==0 if %_build% geq 26052 if %pe_lcu% equ 1 if %copyLCU% equ 0 (
 if not exist "!_cabdir!\LCUwpe\*Windows*%kb%*.msu" if not exist "!_cabdir!\LCUwpe\%cuvr%-!package!" (
   copy /y "!repo!\!package!" "!_cabdir!\LCUwpe\%cuvr%-!package!" %_Nul1%
   )
@@ -1614,19 +1647,19 @@ if %verb%==0 if %_sum%==0 (echo.&echo All applicable updates are detected as ins
 set dowinre=0
 set doboot=0
 set doinstall=0
-if defined cumulative if exist "!mumtarget!\Windows\System32\wpeinit.exe" (
+set dowinpe=0
+if exist "!mumtarget!\Windows\System32\wpeinit.exe" (
+if defined cumulative set dowinpe=1
+if defined lcumsu set dowinpe=1
+if defined lcuwpe set dowinpe=1
+)
+if %dowinpe% equ 1 (
 if %verb%==0 if %LCUwinre%==1 set dowinre=1
 if %verb%==1 set doboot=1
 )
-if defined cumulative if not exist "!mumtarget!\Windows\System32\wpeinit.exe" (
-if %verb%==1 set doinstall=1
-)
-if defined lcumsu if exist "!mumtarget!\Windows\System32\wpeinit.exe" (
-if %verb%==0 if %LCUwinre%==1 set dowinre=1
-if %verb%==1 set doboot=1
-)
-if defined lcumsu if not exist "!mumtarget!\Windows\System32\wpeinit.exe" (
-if %verb%==1 set doinstall=1
+if not exist "!mumtarget!\Windows\System32\wpeinit.exe" (
+if defined cumulative if %verb%==1 set doinstall=1
+if defined lcumsu if %verb%==1 set doinstall=1
 )
 if %verb%==0 if %dowinre%==0 if not defined safeos (echo.&echo No other updates are detected, skipping servicing stack update&call set discardre=1&goto :eof)
 if %listc% lss %ac% set "ldr%list%=%ldr%"
@@ -1649,7 +1682,7 @@ call :sbsconfig 9 9 1
 )
 if defined netpack set "ldr=!netpack! !ldr!"
 if defined ekbpack set "ldr=!ekbpack! !ldr!"
-for %%# in (dupdt,cupdt,supdt,fupdt,safeos,secureboot,edge,ldr,cumulative,lcumsu) do if defined %%# set overall=1
+for %%# in (dupdt,cupdt,supdt,fupdt,safeos,secureboot,edge,ldr,cumulative,lcumsu,lcuwpe) do if defined %%# set overall=1
 if defined servicingstack (
 if %verb%==1 (
 echo.
@@ -2081,8 +2114,12 @@ if %_build% geq 20231 if %_build% lss 26052 if %xmsu% equ 0 (
   set "lcudir=%dest%"
   set "lcupkg=!package!"
 )
+set in_cu=0
+if exist "!mumtarget!\Windows\System32\wpeinit.exe" if exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
+findstr /i Baseline "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" %_Nul1% || set in_cu=1
+)
 if exist "!mumtarget!\Windows\System32\wpeinit.exe" (
-if exist "!_cabdir!\LCUwpe\*.msu" if exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
+if %in_cu% equ 1 if exist "!_cabdir!\LCUwpe\*.msu" (
   if defined lcuwpe goto :eof
   for /f "tokens=* delims=" %%# in ('dir /b /on "!_cabdir!\LCUwpe\*.msu"') do set "lcuwpe="!_cabdir!\LCUwpe\%%#""
   goto :eof
