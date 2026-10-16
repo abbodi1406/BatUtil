@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v128
+@set uivr=v128f
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -2384,10 +2384,7 @@ exit /b
 
 :mumx_features
 if %msumumx% equ 1 if %winbuild% geq 19041 (
-pushd "!_cabdir!"
-if not exist "mumxFCon.txt" copy /y "!_work!\bin\mumxFCon.txt" . %_Nul3%
-%_Nul3% %_psc% "Set-Location -LiteralPath '!_cabdir!'; $f=[IO.File]::ReadAllText('.\mumxFCon.txt') -split ':fconf\:.*';iex ($f[1]);Clean"
-popd
+%_Nul3% %_psc% "$f=[IO.File]::ReadAllText('!_work!\bin\mumxFCon.txt') -split ':fconf\:.*';iex ($f[1]);Clean"
 )
 goto :eof
 
