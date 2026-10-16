@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.66
+@set uiv=v10.66m
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -812,7 +812,6 @@ goto :fin
 
 :igoffline
 if %offline%==0 goto :igwim
-call :mumx_features
 call :doupdate
 if %net35%==1 call :enablenet35
 if %_offdu%==1 if not exist "!_cabdir!\cmd_dvd\#.tag" (
@@ -853,7 +852,6 @@ goto :fin
 
 :igwim
 if %wim%==0 goto :igdvd
-call :mumx_features
 if "%indices%"=="*" set "indices="&for /L %%# in (1,1,!imgcount!) do set "indices=!indices! %%#"
 call :mount "%targetname%"
 if /i not "%targetname%"=="winre.wim" (if exist "!_work!\winre.wim" del /f /q "!_work!\winre.wim" %_Nul1%)
@@ -865,7 +863,6 @@ goto :fin
 
 :igdvd
 if %dvd%==0 goto :fin
-call :mumx_features
 for %%# in (%du_tmp%, %du_mig%) do (
 if exist "%SystemRoot%\temp\%%#" del /f /q "%SystemRoot%\temp\%%#" %_Nul3%
 )
@@ -988,12 +985,6 @@ for %%# in (%indices%) do (
   !_wimlib! info "%_wimfile%" %%# --image-property CREATIONTIME/HIGHPART=!HIGHPART! --image-property CREATIONTIME/LOWPART=!LOWPART! %_Nul1%
 )
 if exist "wim.xml" del /f /q wim.xml
-goto :eof
-
-:mumx_features
-if %msumumx% equ 1 if %winbuild% geq 19041 (
-%_Nul3% %_psc% "$f=[IO.File]::ReadAllText('!_batp!') -split ':fconf\:.*';iex ($f[1]);Clean"
-)
 goto :eof
 
 :extract
@@ -4126,54 +4117,6 @@ $hImage = $WIMG::WIMLoadImage($hWim, 1)
 [void]$WIMG::WIMCloseHandle($hWim)
 }
 :wimmsu:
-:: ============
-
-:fconf:
-$fps = @(1,2,3,4,5,6,7,8,11,12,13,14)
-$fKeyFM = 'HKLM:\SYSTEM\CurrentControlSet\Control\FeatureManagement\Overrides\'
-$fKey10 = 'HKLM:\SYSTEM\CurrentControlSet\Policies\Microsoft\FeatureManagement\Overrides'
-$TN = "ReconcileFeatures"; $TP = "\Microsoft\Windows\Flighting\FeatureConfig\"
-function Native
-{
-$t = [AppDomain]::CurrentDomain.DefineDynamicAssembly((Get-Random), 1).DefineDynamicModule((Get-Random), $False).DefineType((Get-Random))
-$t.DefinePInvokeMethod('RtlQueryFeatureConfiguration', 'ntdll.dll', 22, 1, [Int32], @([UInt32], [UInt32], [UInt64].MakeByRefType(), [UInt32[]]), 1, 3).SetImplementationFlags(128)
-$t.DefinePInvokeMethod('RtlQueryFeatureConfigurationChangeStamp', 'ntdll.dll', 22, 1, [UInt64], @(), 1, 3).SetImplementationFlags(128)
-$t.DefinePInvokeMethod('RtlSetFeatureConfigurations', 'ntdll.dll', 22, 1, [Int32], @([UInt64].MakeByRefType(), [UInt32], [Byte[]], [Int32]), 1, 3).SetImplementationFlags(128)
-$Win32 = $t.CreateType()
-}
-function RunTask
-{
-try {$task = Get-ScheduledTask $TN $TP -ErrorAction Stop} catch {return}
-$null = Enable-ScheduledTask $TN $TP
-Start-ScheduledTask $TN $TP; while ((Get-ScheduledTask $TN $TP).State.value__ -eq 4) {start-sleep -sec 1}
-}
-function Clear($fID, $fReg)
-{
-try {
-$fInfo = [UInt32[]]::new(3)
-$nRet = $Win32::RtlQueryFeatureConfiguration([UInt32]$fID, 1, [ref]$null, $fInfo)
-if ($nRet -eq 0) {$fPriority = ($fInfo[1] -band 0xF)} else {return}
-} catch {return}
-if ($fPriority -eq 0 -Or $fPriority -eq 9 -Or $fPriority -eq 15) {return}
-[byte[]]$fcon = [BitConverter]::GetBytes([UInt32]$fID) + [BitConverter]::GetBytes($fPriority) + [BitConverter]::GetBytes(0) + [BitConverter]::GetBytes(0) + [BitConverter]::GetBytes(0) + [BitConverter]::GetBytes(0) + [BitConverter]::GetBytes(0) + [BitConverter]::GetBytes(4)
-try {[UInt64]$fccs = $Win32::RtlQueryFeatureConfigurationChangeStamp()} catch {[UInt64]$fccs = 0}
-try {$nRet = $Win32::RtlSetFeatureConfigurations([ref]$fccs, 1, $fcon, 1)} catch {}
-$fps | foreach {Remove-Item ($fKeyFM + $_ + '\' + $fReg) -Force -EA 0}
-$null = Remove-ItemProperty $fKey10 $fReg -Force -EA 0
-return
-}
-. Native
-function Clean
-{
-Clear 58675091 "653262991"
-Clear 60057432 "2963396238"
-Clear 61590854 "2381686926"
-Clear 61870936 "2957614734"
-Clear 62857393 "1647280271"
-Clear 63736907 "2541184654"
-RunTask
-}
-:fconf:
 :: ============
 
 :cbsreg:

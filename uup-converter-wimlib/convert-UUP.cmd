@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v128f
+@set uivr=v128m
 @echo off
 :: Change to 1 to enable debug mode
 set _Debug=0
@@ -1034,7 +1034,6 @@ set mounted=1
 if %_file%==%WIMFILE% (call :uups_update %WIMFILE% appx) else (call :uups_update install.iso appx)
 )
 if %AddUpdates% equ 1 if %_updexist% equ 1 (
-call :mumx_features
 set mounted=1
 if %_file%==%WIMFILE% (call :uups_update %WIMFILE%) else (call :uups_update install.iso)
 )
@@ -2381,12 +2380,6 @@ for /f %%# in ('dir /b /ad "%_cabdir%\du\*-*" %_Nul6%') do if exist "ISOFOLDER\s
 if exist "%_cabdir%\du\replacementmanifests\" xcopy /CERY "%_cabdir%\du\replacementmanifests" "ISOFOLDER\sources\replacementmanifests\" %_Nul3%
 rmdir /s /q "%_cabdir%\du\" %_Nul3%
 exit /b
-
-:mumx_features
-if %msumumx% equ 1 if %winbuild% geq 19041 (
-%_Nul3% %_psc% "$f=[IO.File]::ReadAllText('!_work!\bin\mumxFCon.txt') -split ':fconf\:.*';iex ($f[1]);Clean"
-)
-goto :eof
 
 :scanmsu
 expand.exe -d -f:*Windows*.psf "!_UUP!\%package%" %_Nul2% | findstr /i %arch%\.psf %_Nul3% && goto :eof
