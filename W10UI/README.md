@@ -145,7 +145,8 @@ applicable only for builds 22621 and later
 for builds 26052 and later:  
 > auto enabled  
 change to 2 or 3 to disable and add highest LCU msu only  
-auto set to 3 for insider builds with baseline KB5122055
+auto set to 3 for insider builds with baseline KB5122055  
+auto set to 3 if LCU msu contain MumX v2
 
 * UpdtBootFiles  
 update ISO boot files bootmgr/bootmgr.efi/efisys.bin from Cumulative Update  

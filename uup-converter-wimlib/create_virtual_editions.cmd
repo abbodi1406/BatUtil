@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v125
+@set uivr=v128
 @echo off
 :: ### Creation Method ###
 ::
@@ -957,7 +957,7 @@ set didsort=1
 exit /b
 
 :dInfo
-if exist "%ISOdir%\sources\install.wim" (set WimFile=install.wim&set wim2esd=0) else (set WimFile=install.esd&set wim2esd=0&set wim2swm=0&set UseDism=0)
+if exist "%ISOdir%\sources\install.wim" (set WimFile=install.wim) else (set WimFile=install.esd&set wim2esd=0&set wim2swm=0&set UseDism=0)
 imagex /info "%ISOdir%\sources\%WimFile%" | findstr /i /c:"LZMS" %_Nul1% && (set wim2esd=0&set wim2swm=0&set UseDism=0)
 wimlib-imagex.exe info "%ISOdir%\sources\%WimFile%" 1 %_Nul3%
 set ERRTEMP=%ERRORLEVEL%
