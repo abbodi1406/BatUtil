@@ -1,5 +1,5 @@
 @setlocal DisableDelayedExpansion
-@set uiv=v10.66m
+@set uiv=v10.67
 @echo off
 :: enable debug mode, you must also set target and repo (if updates are not beside the script)
 set _Debug=0
@@ -36,7 +36,6 @@ set WinRE=1
 
 :: Force updating winre.wim with Cumulative Update regardless if SafeOS update detected
 :: auto enabled for builds 22000-26050, change to 2 to disable
-:: ignored and auto disabled for builds 26052 and later
 set LCUwinre=0
 
 :: Expand Cumulative Update and install from loose files via update.mum
@@ -595,7 +594,7 @@ del /f /q %_dLog%\* %_Nul3%
 del /f /q %systemroot%\Logs\MoSetup\* %_Nul3%
 )
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
-del /f /q %SystemRoot%\temp\*.mum %_Nul3%
+del /f /q %SystemRoot%\temp\*.mum* %_Nul3%
 if defined onlineclean (
 if exist "%SystemRoot%\WinSxS\pending.xml" (
   echo.
@@ -634,9 +633,8 @@ set savc=0&set savr=1&set rbvr=0
 if %_build% geq 18362 (set savc=3&set savr=3)
 if %_build% geq 25380 (set rbvr=1)
 if %Cleanup% equ 0 set ResetBase=0
-if %_build% geq 22000 (
+if %_build% geq 22000 if %_build% lss 26052 (
 if %LCUwinre% equ 2 (set LCUwinre=0) else (set LCUwinre=1)
-if %_build% geq 26052 (set LCUwinre=0)
 )
 if %_build% geq 26052 (
 if %peTarget% equ 1 call :boot_lcu
@@ -760,6 +758,7 @@ goto :igonline
 :boot_lcu
 if %offline%==1 (
 if exist "!target!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" findstr /i Baseline "!target!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" %_Nul1% || set pe_lcu=1
+if exist "!target!\Windows\Servicing\MumX\Package_for_RollupFix*.mumx*" set pe_lcu=1
 goto :eof
 )
 if %wim%==1 set "_w_=!target!"
@@ -772,7 +771,7 @@ if %_wlib% equ 1 for /f %%# in ('^"!_wimlib! dir "!_w_!" 1 --path=Windows\Servic
 )
 if exist "%SystemRoot%\temp\Package_for_RollupFix*.mum" findstr /i Baseline "%SystemRoot%\temp\Package_for_RollupFix*.mum" %_Nul1% || set pe_lcu=1
 if exist "%SystemRoot%\temp\Package_for_RollupFix*.mumx*" set pe_lcu=1
-del /f /q %SystemRoot%\temp\*.mum %_Nul3%
+del /f /q %SystemRoot%\temp\*.mum* %_Nul3%
 goto :eof
 
 :scanmsu
@@ -829,7 +828,7 @@ if %_offdu%==1 if not exist "!_cabdir!\du\" (
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
   if %_build% geq 26100 if exist "!mountdir!\Windows\System32\ServicingCommon.dll" if not exist "!_cabdir!\du\ServicingCommon.dll" copy /y "!mountdir!\Windows\System32\ServicingCommon.dll" "!_cabdir!\du\" %_Nul3%
   if %_build% geq 26100 if exist "!mountdir!\Windows\System32\migwiz\unbcl.dll" if not exist "!_cabdir!\du\unbcl.dll" copy /y "!mountdir!\Windows\System32\migwiz\unbcl.dll" "!_cabdir!\du\" %_Nul3%
-  if exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" (
+  if exist "!mountdir!\Windows\WinSxS\Manifests\*_microsoft-windows-winpe-oc-setup_*.manifest" (
   if exist "!mountdir!\sources\setup.exe" if exist "!_cabdir!\du\setup.exe" del /f /q "!_cabdir!\du\setup.exe" %_Nul3%
   if %_build% geq 26052 if exist "!mountdir!\sources\setuphost.exe" if exist "!_cabdir!\du\setuphost.exe" del /f /q "!_cabdir!\du\setuphost.exe" %_Nul3%
   )
@@ -838,7 +837,7 @@ if %_offdu%==1 if not exist "!_cabdir!\du\" (
   for /f %%# in ('dir /b /ad "!_cabdir!\du\*-*" %_Nul6%') do if exist "!cmd_source!\%%#\*.mui" copy /y "!_cabdir!\du\%%#\*" "!cmd_source!\%%#\" %_Nul3%
   if exist "!_cabdir!\du\replacementmanifests\" xcopy /CERY "!_cabdir!\du\replacementmanifests" "!cmd_source!\replacementmanifests\" %_Nul3%
 )
-if exist "!mountdir!\sources\setup.exe" if not exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" (
+if exist "!mountdir!\sources\setup.exe" if not exist "!mountdir!\Windows\WinSxS\Manifests\*_microsoft-windows-winpe-oc-setup_*.manifest" (
   if not exist "!_cabdir!\du\" (
   mkdir "!_cabdir!\du" %_Nul3%
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
@@ -1877,7 +1876,7 @@ set "kbnm=%~1"
 goto :eof
 
 :regBase
-if not exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" goto :eof
+if not exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" if not exist "!mumtarget!\Windows\Servicing\MumX\Package_for_RollupFix*.mumx*" goto :eof
 if exist "!_cabdir!\W10UI*.*" del /f /q "!_cabdir!\W10UI*.*" %_Nul3%
 if %online%==0 call :hiveON
 set "_k_=HKEY_LOCAL_MACHINE\%SOFTWARE%\%_CBS%"
@@ -2060,14 +2059,14 @@ if not exist "%dest%\*enablement-package*.mum" set "edge=!edge! /PackagePath:%de
 goto :eof
 )
 if exist "%dest%\update.mum" findstr /i /m "Package_for_SafeOSDU" "%dest%\update.mum" %_Nul3% && (
-if %_build% geq 26052 if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" (set /a _sum-=1&goto :eof)
-if %_build% lss 26052 if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" (set /a _sum-=1&goto :eof)
+if %_build% geq 26052 if not exist "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-i..dsetup-rejuvenation_*.manifest" (set /a _sum-=1&goto :eof)
+if %_build% lss 26052 if not exist "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-i..dsetup-rejuvenation_*.manifest" if not exist "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-srt_*.manifest" if not exist "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-winpe-oc-setup_*.manifest" (set /a _sum-=1&goto :eof)
 if %verb%==1 (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /PackagePath:%dest%\update.mum"
 goto :eof
 )
 if exist "%dest%\*_microsoft-windows-sysreset_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
-if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" (set /a _sum-=1&goto :eof)
+if not exist "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-srt_*.manifest" (set /a _sum-=1&goto :eof)
 if %verb%==1 (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /PackagePath:%dest%\update.mum"
 goto :eof
@@ -2079,13 +2078,13 @@ set "safeos=!safeos! /PackagePath:%dest%\update.mum"
 goto :eof
 )
 if exist "%dest%\*_microsoft-windows-winre-tools_*.manifest" if not exist "%dest%\*_microsoft-windows-sysreset_*.manifest" if not exist "%dest%\*_microsoft-windows-winpe_tools_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
-if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-SRT-Package~*.mum" (set /a _sum-=1&goto :eof)
+if not exist "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-srt_*.manifest" (set /a _sum-=1&goto :eof)
 if %verb%==1 (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /PackagePath:%dest%\update.mum"
 goto :eof
 )
 if exist "%dest%\*_microsoft-windows-i..dsetup-rejuvenation_*.manifest" if not exist "%dest%\*_microsoft-windows-sysreset_*.manifest" if not exist "%dest%\*_microsoft-windows-winpe_tools_*.manifest" if not exist "%dest%\*_microsoft-windows-winre-tools_*.manifest" findstr /i /m "Package_for_RollupFix" "%dest%\update.mum" %_Nul3% || (
-if not exist "!mumtarget!\Windows\Servicing\Packages\WinPE-Rejuv-Package~*.mum" (set /a _sum-=1&goto :eof)
+if not exist "!mumtarget!\Windows\WinSxS\Manifests\%xBT%_microsoft-windows-i..dsetup-rejuvenation_*.manifest" (set /a _sum-=1&goto :eof)
 if %verb%==1 (set /a _sum-=1&goto :eof)
 set "safeos=!safeos! /PackagePath:%dest%\update.mum"
 goto :eof
@@ -2155,8 +2154,9 @@ if %_build% geq 20231 if %_build% lss 26052 if %xmsu% equ 0 (
   set "lcupkg=!package!"
 )
 set in_cu=0
-if exist "!mumtarget!\Windows\System32\wpeinit.exe" if exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" (
-findstr /i Baseline "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" %_Nul1% || set in_cu=1
+if exist "!mumtarget!\Windows\System32\wpeinit.exe" (
+if exist "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" findstr /i Baseline "!mumtarget!\Windows\Servicing\Packages\Package_for_RollupFix*.mum" %_Nul1% || set in_cu=1
+if exist "!mumtarget!\Windows\Servicing\MumX\Package_for_RollupFix*.mumx*" set in_cu=1
 )
 if exist "!mumtarget!\Windows\System32\wpeinit.exe" (
 if %in_cu% equ 1 if exist "!_cabdir!\LCUwpe\*.msu" (
@@ -2922,12 +2922,12 @@ for /f "tokens=5 delims=.( " %%# in ('%_psc% "(gi '!mountdir!\Windows\system32\n
 goto :eof
 
 :boots
-if exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" xcopy /CRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
+if exist "!mountdir!\Windows\WinSxS\Manifests\*_microsoft-windows-winpe-oc-setup_*.manifest" xcopy /CRUY "!mountdir!\sources" "!target!\sources\" %_Nul3%
 del /f /q "!target!\sources\background.bmp" %_Nul3%
 del /f /q "!target!\sources\xmllite.dll" %_Nul3%
 call :doBootFiles "!target!"
 if exist "!target!\setup.exe" copy /y "!mountdir!\setup.exe" "!target!\" %_Nul3%
-if defined isoupdate if not exist "!mountdir!\Windows\Servicing\Packages\WinPE-Setup-Package~*.mum" (
+if defined isoupdate if not exist "!mountdir!\Windows\WinSxS\Manifests\*_microsoft-windows-winpe-oc-setup_*.manifest" (
   set uupboot=1
   mkdir "!_cabdir!\du" %_Nul3%
   for %%i in (!isoupdate!) do expand.exe -r -f:* "!repo!\%%~i" "!_cabdir!\du" %_Nul1%
@@ -3502,7 +3502,7 @@ exit /b
 (echo .Set SourceDir="%1"
 echo "dpx.dll"
 echo "ReserveManager.dll"
-echo "TurboContainer.dll"
+if exist "%1\TurboContainer.dll" echo "TurboContainer.dll"
 echo "TurboStack.dll"
 echo "UpdateAgent.dll"
 echo "wcp.dll"
@@ -3811,7 +3811,9 @@ goto :mainmenu
 
 :ISO
 set imapi=0
-if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\bin\oscdimg.exe" if not exist "!_work!\cdimage.exe" if not exist "!_work!\bin\cdimage.exe" set imapi=1
+if not exist "!_oscdimg!" if not exist "!_work!\oscdimg.exe" if not exist "!_work!\bin\oscdimg.exe" if not exist "!_work!\cdimage.exe" if not exist "!_work!\bin\cdimage.exe" (
+if /i %xOS%==amd64 (if not exist "!_work!\bin\bin64\oscdimg.exe" if not exist "!_work!\bin\bin64\cdimage.exe" set imapi=1) else (set imapi=1)
+)
 if %imapi%==1 if %_pwsh% equ 0 goto :eof
 if "!isodir!"=="" set "isodir=!_work!"
 call :DATEISO
@@ -3838,7 +3840,10 @@ echo ============================================================
 echo.
 echo ISO Location:
 echo "!isodir!"
-if exist "!_oscdimg!" (set _ff="!_oscdimg!") else if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else if exist "!_work!\bin\oscdimg.exe" (set _ff="!_work!\bin\oscdimg.exe") else if exist "!_work!\cdimage.exe" (set _ff="!_work!\cdimage.exe") else (set _ff="!_work!\bin\cdimage.exe")
+if exist "!_oscdimg!" (set _ff="!_oscdimg!") else (
+if exist "!_work!\oscdimg.exe" (set _ff="!_work!\oscdimg.exe") else if exist "!_work!\bin\oscdimg.exe" (set _ff="!_work!\bin\oscdimg.exe") else if exist "!_work!\cdimage.exe" (set _ff="!_work!\cdimage.exe") else if exist "!_work!\bin\cdimage.exe" (set _ff="!_work!\bin\cdimage.exe")
+if /i %xOS%==amd64 (if exist "!_work!\bin\bin64\oscdimg.exe" (set _ff="!_work!\bin\bin64\oscdimg.exe") else if exist "!_work!\bin\bin64\cdimage.exe" (set _ff="!_work!\bin\bin64\cdimage.exe"))
+)
 cd /d "!target!"
 if /i not %arch%==arm64 (
 set "_u_=0"

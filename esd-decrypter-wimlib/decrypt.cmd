@@ -1,6 +1,6 @@
 <!-- : Begin batch script
 @setlocal DisableDelayedExpansion
-@set uivr=v67t
+@set uivr=v68
 @echo off
 :: ### Auto processing option ###
 :: 1 - create ISO with install.wim
@@ -731,7 +731,8 @@ call :get_lcu_pkg
 if %uupmin% gtr %revmin% (
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
-if not exist "%SystemRoot%\temp\Package_for_RollupFix*.mum" set branch=WinBuild
+if %_build% geq 26052 wimlib-imagex.exe extract "%ISOdir%\sources\%WimFile%" 1 Windows\servicing\MumX\Package_for_RollupFix*.mumx* --dest-dir=%SystemRoot%\temp --no-acls --no-attributes %_Nul3%
+if not exist "%SystemRoot%\temp\Package_for_RollupFix*.mum*" set branch=WinBuild
 )
 set _legacy=
 set _useold=0
@@ -908,13 +909,16 @@ exit /b
 
 :get_lcu_pkg
 if not exist "%SystemRoot%\temp\" mkdir "%SystemRoot%\temp" %_Nul3%
-wimlib-imagex.exe extract "!SrcEsd!" 4 Windows\servicing\Packages\Package_for_RollupFix*.mum --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
-if not exist "bin\temp\Package_for_RollupFix*.mum" (
+for /f %%# in ('wimlib-imagex.exe dir "!SrcEsd!" 4 --path=Windows\Servicing ^| findstr /i "Package_for_RollupFix.*.mum"') do (
+wimlib-imagex.exe extract "!SrcEsd!" 4 %%# --dest-dir=.\bin\temp --no-acls --no-attributes %_Nul3%
+)
+if not exist "bin\temp\Package_for_RollupFix*.mum*" (
 call set uupdate=%bkpdate%
 rem. set "isotime=!uupdate:~2,2!/!uupdate:~4,2!/20!uupdate:~0,2!,!uupdate:~7,2!:!uupdate:~9,2!:10"
 exit /b
 )
-for /f %%# in ('dir /b /a:-d /od bin\temp\Package_for_RollupFix*.mum') do copy /y "bin\temp\%%#" %SystemRoot%\temp\update.mum %_Nul1%
+if exist "bin\temp\Package_for_RollupFix*.mum" for /f %%# in ('dir /b /a:-d /od bin\temp\Package_for_RollupFix*.mum') do copy /y "bin\temp\%%#" %SystemRoot%\temp\update.mum %_Nul1%
+if exist "bin\temp\Package_for_RollupFix*.mumx*" for /f %%# in ('dir /b /a:-d /os bin\temp\Package_for_RollupFix*.mumx*') do copy /y "bin\temp\%%#" %SystemRoot%\temp\update.mum %_Nul1%
 call :datemum uupdate isotime
 exit /b
 
@@ -923,7 +927,7 @@ set "mumfile=%SystemRoot%\temp\update.mum"
 set "chkfile=!mumfile:\=\\!"
 if %_cwmi% equ 1 for /f "tokens=2 delims==" %%# in ('wmic datafile where "name='!chkfile!'" get LastModified /value') do set "mumdate=%%#"
 if %_cwmi% equ 0 for /f %%# in ('%_psc% "([WMI]'CIM_DataFile.Name=''!chkfile!''').LastModified"') do set "mumdate=%%#"
-del /f /q %SystemRoot%\temp\*.mum
+del /f /q %SystemRoot%\temp\*.mum*
 set "%1=!mumdate:~2,2!!mumdate:~4,2!!mumdate:~6,2!-!mumdate:~8,4!"
 :: set "%2=!mumdate:~4,2!/!mumdate:~6,2!/!mumdate:~0,4!,!mumdate:~8,2!:!mumdate:~10,2!:!mumdate:~12,2!"
 exit /b

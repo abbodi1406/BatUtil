@@ -245,6 +245,14 @@ special thanks for testing and feedback:
 
 <details><summary>changelog</summary>
 
+10.67:  
+- Detect WinPE components manifest files instead packages mum files
+- Option "LCUwinre" is now available for builds 26052+ (not auto enabled)
+- Detect and use oscdimg.exe/cdimage.exe from script's bin\bin64 folder, if Windows ADK is not installed
+
+10.66:  
+- 26100+: Detect LCU with MumX v2, and disable LCUmsuExpand accordingly
+
 10.65:  
 - Fix missing typo "lcuwpe" which prevent updating 26100+ boot.wim
 - Force LCU msu for 26100+ boot.wim only if the integrated LCU is not Baseline
